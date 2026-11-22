@@ -218,6 +218,8 @@
       "xhigh": "极高"
     },
     "translateInfoBanner": "当说话人使用与目标相同的语言时，该模型会保持沉默。混合语言场景可能会有片段缺失。",
+    "translateDetectParticipantLanguage": "自动标注对方的中文、日语和英语",
+    "translateDetectParticipantLanguageHelp": "对方语言设为中文、日语或英语时，从原文为每段字幕标注语种。译文仍使用所选的目标语言。",
     "translateModelNotAvailable": "API key 有效，但当前 key 没有 gpt-realtime-translate 访问权限。",
     "participantSectionHeader": "对方音频",
     "participantSectionDescriptionElectron": "翻译此系统上任何正在播放的应用程序的音频。",

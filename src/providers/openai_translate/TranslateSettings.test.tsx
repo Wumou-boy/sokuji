@@ -23,7 +23,7 @@ describe("OpenAI Translate's settings view", () => {
     expect(inner.querySelector('span')?.textContent).toBe('settings.translateInfoBanner');
   });
 
-  it('draws the noise reduction, writing its own field; nothing else — no model, transcript model or transport (rulings 1, 7, 8)', () => {
+  it('updates noise reduction and automatic caption labels through their own controls', () => {
     const update = vi.fn();
     const { container } = render(<TranslateSettingsView settings={TRANSLATE_DEFAULTS} update={update} />);
     const select = screen.getByLabelText('settings.noiseReduction') as HTMLSelectElement;
@@ -32,13 +32,17 @@ describe("OpenAI Translate's settings view", () => {
     fireEvent.change(select, { target: { value: 'Near field' } });
     expect(update).toHaveBeenCalledWith({ noiseReduction: 'Near field' });
     expect(container.querySelectorAll('select')).toHaveLength(1);
-    expect(container.querySelectorAll('input, button')).toHaveLength(0);
+    const detection = screen.getByRole('switch', { name: 'settings.translateDetectParticipantLanguage' });
+    expect(detection).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(detection);
+    expect(update).toHaveBeenCalledWith({ detectParticipantLanguage: false });
     expect(container.textContent).not.toMatch(/transport|webrtc|model/i);
   });
 
   it('locks the noise reduction while disabled', () => {
     render(<TranslateSettingsView settings={TRANSLATE_DEFAULTS} update={vi.fn()} disabled />);
     expect(screen.getByLabelText('settings.noiseReduction')).toBeDisabled();
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('keeps the banner styled: its rules are in the compiled Settings.scss', () => {

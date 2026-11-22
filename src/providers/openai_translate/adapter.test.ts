@@ -482,6 +482,33 @@ describe('the OpenAI Translate adapter: what comes down', () => {
     expect(exchanges).toHaveLength(1);
     for (const ex of exchanges) { if (ex.kind === 'exchange') expect(ex.pairing).toBe('stated'); }
   });
+
+  it('labels incoming EN, JA and ZH in one connection and preserves the original when the API skips translation', async () => {
+    const context = { ...AUTO_CTX, speech: false, direction: { source: 'en', target: 'zh' } };
+    const h = await liveTranslate({ context });
+    const samples = [
+      { source: 'The test meeting starts at three p.m. Use thirty frames per second.', language: 'en', translation: '测试会议下午三点开始。请使用每秒三十帧。' },
+      { source: 'フランス人シェフと日本人シェフは全然違う。', language: 'ja', translation: '法国厨师和日本厨师完全不同。' },
+      { source: '第二版不支持高动态范围。', language: 'zh' },
+      { source: '今日', language: 'und' },
+      { source: 'よろしくお願いします。Please check the file.', language: 'und' },
+      { source: 'HDR V2', language: 'und' },
+    ];
+    for (const sample of samples) {
+      h.socket().receive(SERVER.input(sample.source));
+      if (sample.translation) h.socket().receive(SERVER.output(sample.translation));
+      h.clock.advance(3_001);
+    }
+
+    const conv = new Conversation({ leg: 'participant', session: 'mixed', languages: context.direction, clock: h.clock });
+    for (const event of h.content()) conv.apply(event);
+    const source = conv.snapshot().segments.filter((segment) => segment.side === 'source');
+    expect(source.map((segment) => ({ text: segment.text, language: segment.language }))).toEqual(
+      samples.map(({ source: text, language }) => ({ text, language })),
+    );
+    expect(h.sent().filter((frame) => frame.type === 'session.update')).toHaveLength(1);
+    expect(h.sent()[0]).toMatchObject({ session: { audio: { output: { language: 'zh' } } } });
+  });
 });
 
 describe('the OpenAI Translate adapter: failures and stop', () => {

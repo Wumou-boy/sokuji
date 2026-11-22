@@ -218,6 +218,8 @@
       "xhigh": "最高"
     },
     "translateInfoBanner": "話者が出力言語と同じ言語を話す場合、このモデルは無音になります。混合言語の発話では空白が生じる可能性があります。",
+    "translateDetectParticipantLanguage": "相手の中国語・日本語・英語を自動判定",
+    "translateDetectParticipantLanguageHelp": "相手の言語が中国語、日本語、英語の場合、原文から字幕ごとの言語を判定します。翻訳先は選択した言語のままです。",
     "translateModelNotAvailable": "APIキーは有効ですが、このキーでは gpt-realtime-translate にアクセスできません。",
     "participantSectionHeader": "相手の音声",
     "participantSectionDescriptionElectron": "このシステムで再生されている任意のアプリケーションの音声を翻訳します。",

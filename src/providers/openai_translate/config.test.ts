@@ -23,6 +23,7 @@ describe("OpenAI Translate's builder", () => {
       target: 'en',
       transcriptModel: 'gpt-live-transcribe',
       noiseReduction: null,
+      detectParticipantLanguage: false,
       silence: { sourceMs: 1500, translationMs: 2000, deferMidSentence: false },
       transport: 'websocket',
     });
@@ -36,6 +37,13 @@ describe("OpenAI Translate's builder", () => {
 
   it("builds the participant as the same call on the reversed direction: its target is the pair's source (D17)", () => {
     expect(build({}, PARTICIPANT).target).toBe('ja');
+  });
+
+  it('detects incoming languages from the requested set and allows opting out', () => {
+    expect(build({}, PARTICIPANT).detectParticipantLanguage).toBe(true);
+    expect(build({ detectParticipantLanguage: false }, PARTICIPANT).detectParticipantLanguage).toBe(false);
+    const french = { ...PARTICIPANT, direction: { source: 'fr', target: 'zh' } };
+    expect(build({}, french, shared({ reversed: () => true })).detectParticipantLanguage).toBe(false);
   });
 
   it('runs a stored WebRTC choice over WebSocket: it is not read (ruling 1)', () => {

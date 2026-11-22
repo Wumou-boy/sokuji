@@ -51,6 +51,13 @@ describe('ConversationList — rows', () => {
     expect(container.querySelector('.lang-badge.src')?.textContent).toBe('EN');
   });
 
+  it('labels an undetermined source as Original instead of the configured language', () => {
+    const items = [rowItem({ row: row({ side: 'source', text: '今日', language: 'und' }) })];
+    const { container } = render(<ConversationList {...props({ items })} />);
+    expect(container.querySelector('.lang-badge.src')?.textContent).toBe('Original');
+    expect(container.querySelector('.row-text.src')?.textContent).toBe('今日');
+  });
+
   it('draws a grouped row without a header, and a dot instead of header and badge when compact', () => {
     const { container, rerender } = render(<ConversationList {...props({ items: [rowItem({ header: false })] })} />);
     expect(container.querySelector('.conversation-row.grouped')).not.toBeNull();

@@ -18,9 +18,10 @@ export const NOISE_REDUCTIONS: readonly NoiseReduction[] = ['None', 'Near field'
 
 export interface TranslateSettings {
   noiseReduction: NoiseReduction;
+  detectParticipantLanguage: boolean;
 }
 
-export const TRANSLATE_DEFAULTS: TranslateSettings = { noiseReduction: 'None' };
+export const TRANSLATE_DEFAULTS: TranslateSettings = { noiseReduction: 'None', detectParticipantLanguage: true };
 
 /** The model every session runs (ruling 7): the endpoint fixes it at creation, and the old builder always sent it (`OpenAITranslateProviderConfig.ts:106`). */
 export const TRANSLATE_MODEL = 'gpt-realtime-translate';
@@ -43,6 +44,9 @@ const NOISE_VALUES: readonly unknown[] = NOISE_REDUCTIONS;
 export function migrateTranslateSettings(stored: Readonly<Record<string, unknown>>): TranslateSettings {
   return {
     noiseReduction: NOISE_VALUES.includes(stored.noiseReduction) ? (stored.noiseReduction as NoiseReduction) : TRANSLATE_DEFAULTS.noiseReduction,
+    detectParticipantLanguage: typeof stored.detectParticipantLanguage === 'boolean'
+      ? stored.detectParticipantLanguage
+      : TRANSLATE_DEFAULTS.detectParticipantLanguage,
   };
 }
 

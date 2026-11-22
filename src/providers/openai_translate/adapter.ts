@@ -111,6 +111,7 @@ class TranslateLeg implements AdapterSession {
       clock,
       silence: config.silence,
       sink: events,
+      detectParticipantLanguage: config.detectParticipantLanguage,
       // Each translation cut and why, for the live test (Stage 2 translation cuts, choice 14).
       cut: (summary) => this.frame('out', 'translation.cut', summary),
     });

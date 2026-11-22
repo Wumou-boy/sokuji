@@ -29,7 +29,7 @@ export class RefusingWebSocket {
 
 export const SHARED: SharedSettings = {
   pauses: { sourceSeconds: 1.5, translationSeconds: 1.5 },
-  reversed: (d) => d.source === 'en' && d.target === 'ja',
+  reversed: (d) => d.source === 'en' && (d.target === 'ja' || d.target === 'zh'),
   segmentation: { mode: 'pause', sentencesPerRow: 0 },
   models: [{ id: 'gpt-realtime-translate' }],
 };
