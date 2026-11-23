@@ -349,7 +349,9 @@
     "voiceTheyHear": "الصوت الذي يسمعه الطرف الآخر",
     "voiceIHear": "الصوت الذي أسمعه",
     "voiceIHearSame": "هو نفس الصوت الذي يسمعه الطرف الآخر، لذا يقرأ {{voice}} بدلًا منه.",
-    "voiceCustom": "صوت مخصص"
+    "voiceCustom": "صوت مخصص",
+    "translateDetectParticipantLanguage": "اكتشاف الصينية واليابانية والإنجليزية لدى الطرف الآخر تلقائيًا",
+    "translateDetectParticipantLanguageHelp": "عندما تكون لغة الطرف الآخر الصينية أو اليابانية أو الإنجليزية، حدّد لغة كل تسمية توضيحية من النص الأصلي. تظل لغة الترجمة هي اللغة المختارة."
   },
   "simpleSettings": {
     "autoAuthenticated": "تمت المصادقة تلقائيًا عبر حسابك",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "سجّل الدخول، أو أضف مفتاح OpenAI في «الحسابات والمفاتيح» ثم اختر OpenAI هنا، لتُكتب الملاحظات.",
       "speechNotUsed": "لا يُقرأ شيء بصوت عالٍ هذه المرة: تظهر الترجمة نصًّا فقط.",
       "speechHowToHear": "لتُقرأ بصوت عالٍ، اختر «السماع» في الجملة أعلاه.",
-      "notesCompatibleName": "متوافق مع OpenAI",
+      "notesCompatibleName": "متوافق مع OpenAI (للملاحظات فقط)",
       "notesCompatibleNeedsConfig": "اضبط نقطة النهاية والطراز"
     },
     "display": {

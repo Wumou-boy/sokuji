@@ -349,7 +349,9 @@
     "voiceTheyHear": "Stimme, die das Gegenüber hört",
     "voiceIHear": "Stimme, die ich höre",
     "voiceIHearSame": "Dieselbe Stimme, die das Gegenüber hört, daher liest stattdessen {{voice}}.",
-    "voiceCustom": "Benutzerdefinierte Stimme"
+    "voiceCustom": "Benutzerdefinierte Stimme",
+    "translateDetectParticipantLanguage": "Chinesisch, Japanisch und Englisch des Gegenübers automatisch erkennen",
+    "translateDetectParticipantLanguageHelp": "Wenn die Sprache des Gegenübers Chinesisch, Japanisch oder Englisch ist, wird die Sprache jedes Untertitels anhand des Originals erkannt. Die gewählte Zielsprache bleibt unverändert."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatisch über Ihr Konto authentifiziert",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Melden Sie sich an oder fügen Sie unter „Konten und Schlüssel“ einen OpenAI-Schlüssel hinzu und wählen Sie hier OpenAI, damit Notizen geschrieben werden.",
       "speechNotUsed": "Diesmal wird nichts vorgelesen: Die Übersetzung erscheint nur als Text.",
       "speechHowToHear": "Damit sie vorgelesen wird, wähle oben im Satz „hören“.",
-      "notesCompatibleName": "OpenAI-kompatibel",
+      "notesCompatibleName": "OpenAI-kompatibel (nur für Notizen)",
       "notesCompatibleNeedsConfig": "Endpunkt und Modell festlegen"
     },
     "display": {

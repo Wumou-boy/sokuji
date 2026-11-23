@@ -349,7 +349,9 @@
     "voiceTheyHear": "Ääni, jonka toinen osapuoli kuulee",
     "voiceIHear": "Ääni, jonka kuulen",
     "voiceIHearSame": "Sama kuin ääni, jonka toinen osapuoli kuulee, joten sen sijaan lukee {{voice}}.",
-    "voiceCustom": "Mukautettu ääni"
+    "voiceCustom": "Mukautettu ääni",
+    "translateDetectParticipantLanguage": "Tunnista keskustelukumppanin kiina, japani ja englanti automaattisesti",
+    "translateDetectParticipantLanguageHelp": "Kun keskustelukumppanin kieli on kiina, japani tai englanti, tekstityksen kieli tunnistetaan alkuperäisestä puheesta. Käännöksen kohdekieli pysyy valittuna."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automaattisesti todennettu tilisi kautta",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Kirjaudu sisään tai lisää OpenAI-avain kohdassa ”Tilit ja avaimet” ja valitse tästä OpenAI, niin muistiinpanot kirjoitetaan.",
       "speechNotUsed": "Tällä kertaa mitään ei lueta ääneen: käännös näkyy vain tekstinä.",
       "speechHowToHear": "Jos haluat sen luettavan, valitse yllä olevasta lauseesta ”kuulla”.",
-      "notesCompatibleName": "OpenAI-yhteensopiva",
+      "notesCompatibleName": "OpenAI-yhteensopiva (vain muistiinpanoihin)",
       "notesCompatibleNeedsConfig": "Määritä päätepiste ja malli"
     },
     "display": {

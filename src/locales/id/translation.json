@@ -349,7 +349,9 @@
     "voiceTheyHear": "Suara yang didengar pihak lain",
     "voiceIHear": "Suara yang saya dengar",
     "voiceIHearSame": "Sama dengan suara yang didengar pihak lain, jadi {{voice}} yang membacakan.",
-    "voiceCustom": "Suara kustom"
+    "voiceCustom": "Suara kustom",
+    "translateDetectParticipantLanguage": "Deteksi otomatis bahasa Mandarin, Jepang, dan Inggris lawan bicara",
+    "translateDetectParticipantLanguageHelp": "Jika bahasa lawan bicara adalah Mandarin, Jepang, atau Inggris, bahasa setiap takarir dikenali dari teks asli. Bahasa target terjemahan tetap sesuai pilihan."
   },
   "simpleSettings": {
     "autoAuthenticated": "Otomatis terautentikasi melalui akun Anda",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Masuk, atau tambahkan kunci OpenAI di “Akun dan kunci” lalu pilih OpenAI di sini, agar catatan ditulis.",
       "speechNotUsed": "Kali ini tidak ada yang dibacakan: terjemahan hanya tampil sebagai teks.",
       "speechHowToHear": "Agar dibacakan, pilih “mendengar” di kalimat di atas.",
-      "notesCompatibleName": "Kompatibel dengan OpenAI",
+      "notesCompatibleName": "Kompatibel dengan OpenAI (khusus catatan)",
       "notesCompatibleNeedsConfig": "Atur endpoint dan model"
     },
     "display": {

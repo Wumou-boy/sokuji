@@ -349,7 +349,9 @@
     "voiceTheyHear": "صدایی که طرف مقابل می‌شنود",
     "voiceIHear": "صدایی که من می‌شنوم",
     "voiceIHearSame": "همان صدایی است که طرف مقابل می‌شنود، پس به‌جای آن {{voice}} می‌خواند.",
-    "voiceCustom": "صدای سفارشی"
+    "voiceCustom": "صدای سفارشی",
+    "translateDetectParticipantLanguage": "تشخیص خودکار چینی، ژاپنی و انگلیسی طرف مقابل",
+    "translateDetectParticipantLanguageHelp": "اگر زبان طرف مقابل چینی، ژاپنی یا انگلیسی باشد، زبان هر زیرنویس از متن اصلی تشخیص داده می‌شود. زبان مقصد ترجمه همان زبان انتخاب‌شده می‌ماند."
   },
   "simpleSettings": {
     "autoAuthenticated": "به طور خودکار از طریق حساب کاربری شما احراز هویت شده",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "برای نوشتن یادداشت‌ها، وارد شوید یا یک کلید OpenAI در «حساب‌ها و کلیدها» اضافه کنید و همین‌جا OpenAI را انتخاب کنید.",
       "speechNotUsed": "این بار چیزی بلند خوانده نمی‌شود: ترجمه فقط به صورت متن نمایش داده می‌شود.",
       "speechHowToHear": "برای خوانده شدن، در جملهٔ بالا «شنیدن» را انتخاب کنید.",
-      "notesCompatibleName": "سازگار با OpenAI",
+      "notesCompatibleName": "سازگار با OpenAI (فقط برای یادداشت‌ها)",
       "notesCompatibleNeedsConfig": "نقطه پایانی و مدل را تنظیم کنید"
     },
     "display": {

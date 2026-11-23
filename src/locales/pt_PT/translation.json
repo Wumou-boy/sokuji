@@ -349,7 +349,9 @@
     "voiceTheyHear": "Voz que o outro lado ouve",
     "voiceIHear": "Voz que eu ouço",
     "voiceIHearSame": "É a mesma voz que o outro lado ouve, por isso {{voice}} lê em vez dela.",
-    "voiceCustom": "Voz personalizada"
+    "voiceCustom": "Voz personalizada",
+    "translateDetectParticipantLanguage": "Detetar automaticamente chinês, japonês e inglês da outra pessoa",
+    "translateDetectParticipantLanguageHelp": "Se o idioma da outra pessoa for chinês, japonês ou inglês, o idioma de cada legenda é identificado a partir do original. O idioma de destino da tradução mantém-se como selecionado."
   },
   "simpleSettings": {
     "autoAuthenticated": "Autenticado automaticamente através da sua conta",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Inicie sessão, ou adicione uma chave da OpenAI em «Contas e chaves» e escolha a OpenAI aqui, para que as notas sejam escritas.",
       "speechNotUsed": "Desta vez nada é lido em voz alta: a tradução aparece apenas como texto.",
       "speechHowToHear": "Para a ouvir, escolha “ouvir” na frase acima.",
-      "notesCompatibleName": "Compatível com OpenAI",
+      "notesCompatibleName": "Compatível com OpenAI (apenas para notas)",
       "notesCompatibleNeedsConfig": "Defina o ponto de acesso e o modelo"
     },
     "display": {

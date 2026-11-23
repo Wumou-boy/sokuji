@@ -349,7 +349,9 @@
     "voiceTheyHear": "เสียงที่อีกฝ่ายได้ยิน",
     "voiceIHear": "เสียงที่ฉันได้ยิน",
     "voiceIHearSame": "เป็นเสียงเดียวกับที่อีกฝ่ายได้ยิน จึงใช้ {{voice}} อ่านแทน",
-    "voiceCustom": "เสียงที่กำหนดเอง"
+    "voiceCustom": "เสียงที่กำหนดเอง",
+    "translateDetectParticipantLanguage": "ตรวจจับภาษาจีน ญี่ปุ่น และอังกฤษของอีกฝ่ายโดยอัตโนมัติ",
+    "translateDetectParticipantLanguageHelp": "เมื่ออีกฝ่ายใช้ภาษาจีน ญี่ปุ่น หรืออังกฤษ ระบบจะระบุภาษาของคำบรรยายแต่ละช่วงจากต้นฉบับ โดยคงภาษาเป้าหมายที่เลือกไว้"
   },
   "simpleSettings": {
     "autoAuthenticated": "ตรวจสอบสิทธิ์อัตโนมัติผ่านบัญชีของคุณ",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "ลงชื่อเข้าใช้ หรือเพิ่มคีย์ OpenAI ใน “บัญชีและคีย์” แล้วเลือก OpenAI ที่นี่ เพื่อให้เขียนบันทึก",
       "speechNotUsed": "ครั้งนี้ไม่มีการอ่านออกเสียง คำแปลแสดงเป็นข้อความอย่างเดียว",
       "speechHowToHear": "ถ้าต้องการให้อ่านออกเสียง ให้เลือก “ได้ยิน” ในประโยคด้านบน",
-      "notesCompatibleName": "รองรับ OpenAI",
+      "notesCompatibleName": "รองรับ OpenAI (สำหรับบันทึกเท่านั้น)",
       "notesCompatibleNeedsConfig": "ตั้งค่าเอ็นด์พอยต์และโมเดล"
     },
     "display": {

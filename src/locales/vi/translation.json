@@ -349,7 +349,9 @@
     "voiceTheyHear": "Giọng bên kia nghe",
     "voiceIHear": "Giọng tôi nghe",
     "voiceIHearSame": "Trùng với giọng bên kia nghe, nên {{voice}} sẽ đọc thay.",
-    "voiceCustom": "Giọng tùy chỉnh"
+    "voiceCustom": "Giọng tùy chỉnh",
+    "translateDetectParticipantLanguage": "Tự động nhận diện tiếng Trung, tiếng Nhật và tiếng Anh của người đối thoại",
+    "translateDetectParticipantLanguageHelp": "Nếu người đối thoại dùng tiếng Trung, tiếng Nhật hoặc tiếng Anh, ngôn ngữ của từng phụ đề sẽ được nhận diện từ bản gốc. Ngôn ngữ đích đã chọn vẫn được giữ nguyên."
   },
   "simpleSettings": {
     "autoAuthenticated": "Tự động xác thực qua tài khoản của bạn",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Đăng nhập, hoặc thêm khóa OpenAI trong “Tài khoản và khóa” rồi chọn OpenAI ở đây, để ghi chú được viết.",
       "speechNotUsed": "Lần này không có gì được đọc to: bản dịch chỉ hiện dạng chữ.",
       "speechHowToHear": "Muốn được đọc to, hãy chọn “nghe” trong câu ở trên.",
-      "notesCompatibleName": "Tương thích OpenAI",
+      "notesCompatibleName": "Tương thích OpenAI (chỉ dành cho ghi chú)",
       "notesCompatibleNeedsConfig": "Đặt endpoint và mô hình"
     },
     "display": {

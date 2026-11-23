@@ -349,7 +349,9 @@
     "voiceTheyHear": "Voz que oye la otra parte",
     "voiceIHear": "Voz que yo oigo",
     "voiceIHearSame": "Es la misma voz que oye la otra parte, así que lee {{voice}} en su lugar.",
-    "voiceCustom": "Voz personalizada"
+    "voiceCustom": "Voz personalizada",
+    "translateDetectParticipantLanguage": "Detectar automáticamente el chino, japonés e inglés de la otra persona",
+    "translateDetectParticipantLanguageHelp": "Si la otra persona habla chino, japonés o inglés, identifica el idioma de cada subtítulo a partir del original. El idioma de destino se mantiene como se haya elegido."
   },
   "simpleSettings": {
     "autoAuthenticated": "Autenticado automáticamente a través de tu cuenta",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Inicia sesión, o añade una clave de OpenAI en «Cuentas y claves» y elige OpenAI aquí, para que se escriban las notas.",
       "speechNotUsed": "Esta vez no se lee nada en voz alta: la traducción solo aparece como texto.",
       "speechHowToHear": "Para que se lea, elige «escuchar» en la frase de arriba.",
-      "notesCompatibleName": "Compatible con OpenAI",
+      "notesCompatibleName": "Compatible con OpenAI (solo para notas)",
       "notesCompatibleNeedsConfig": "Configura el endpoint y el modelo"
     },
     "display": {

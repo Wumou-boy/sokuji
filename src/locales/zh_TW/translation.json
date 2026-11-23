@@ -349,7 +349,9 @@
     "voiceTheyHear": "對方聽到的聲音",
     "voiceIHear": "我聽到的聲音",
     "voiceIHearSame": "與對方聽到的聲音相同，朗讀時改用 {{voice}}。",
-    "voiceCustom": "自訂聲音"
+    "voiceCustom": "自訂聲音",
+    "translateDetectParticipantLanguage": "自動標示對方的中文、日文和英文",
+    "translateDetectParticipantLanguageHelp": "對方的語言設為中文、日文或英文時，會從原文判定每段字幕的語言。翻譯目標仍維持所選語言。"
   },
   "simpleSettings": {
     "autoAuthenticated": "已通過您的帳戶自動認證",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "登入，或在「帳號與金鑰」裡新增 OpenAI 的金鑰並在這裡選 OpenAI，才能寫紀要。",
       "speechNotUsed": "這次沒有譯文要讀出來，只顯示文字。",
       "speechHowToHear": "要讀出來，在上面那句話裡選「聽到」。",
-      "notesCompatibleName": "相容 OpenAI",
+      "notesCompatibleName": "OpenAI 相容（僅供筆記）",
       "notesCompatibleNeedsConfig": "設定端點和模型"
     },
     "display": {

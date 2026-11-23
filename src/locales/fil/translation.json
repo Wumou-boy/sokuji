@@ -349,7 +349,9 @@
     "voiceTheyHear": "Boses na naririnig ng kabilang panig",
     "voiceIHear": "Boses na naririnig ko",
     "voiceIHearSame": "Kapareho ng boses na naririnig ng kabilang panig, kaya {{voice}} ang babasa sa halip.",
-    "voiceCustom": "Custom na boses"
+    "voiceCustom": "Custom na boses",
+    "translateDetectParticipantLanguage": "Awtomatikong tukuyin ang Chinese, Japanese, at English ng kausap",
+    "translateDetectParticipantLanguageHelp": "Kapag Chinese, Japanese, o English ang wika ng kausap, tukuyin mula sa orihinal ang wika ng bawat caption. Mananatili ang napiling target na wika ng salin."
   },
   "simpleSettings": {
     "autoAuthenticated": "Awtomatikong na-authenticate sa pamamagitan ng iyong account",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Mag-sign in, o magdagdag ng OpenAI key sa “Mga account at key” at piliin ang OpenAI dito, para maisulat ang mga tala.",
       "speechNotUsed": "Walang babasahin nang malakas ngayon: teksto lang ang salin.",
       "speechHowToHear": "Para mabasa nang malakas, piliin ang “naririnig” sa pangungusap sa itaas.",
-      "notesCompatibleName": "Tugma sa OpenAI",
+      "notesCompatibleName": "Tugma sa OpenAI (para sa mga tala lang)",
       "notesCompatibleNeedsConfig": "Itakda ang endpoint at modelo"
     },
     "display": {

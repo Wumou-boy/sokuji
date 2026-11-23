@@ -349,7 +349,9 @@
       "theySpeak": "they speak",
       "mirror": "They speak {{their}} → I read {{mine}}",
       "mirrorHear": "They speak {{their}} → I hear {{mine}}"
-    }
+    },
+    "translateDetectParticipantLanguage": "Automatically detect your partner’s Chinese, Japanese, and English",
+    "translateDetectParticipantLanguageHelp": "When your partner’s language is Chinese, Japanese, or English, label each subtitle’s language from the original. The translation target stays as selected."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatically authenticated via your account",
@@ -1939,12 +1941,8 @@
       "notesNeedSignInOrKeyAndChoose": "Sign in, or add an OpenAI key in Accounts and keys and choose OpenAI here, to have notes written.",
       "speechNotUsed": "Nothing is read aloud this time: the translation shows as text only.",
       "speechHowToHear": "To have it read aloud, choose “hear” in the sentence above.",
-      "notesCompatibleName": "OpenAI-compatible",
-      "notesCompatibleNeedsConfig": "Set endpoint and model",
-      "notesBailianLegacyName": "Qwen / Bailian",
-      "notesBailianLegacyLine": "Writes the notes with Qwen through Bailian.",
-      "notesCompatibleLegacyName": "OpenAI-compatible (notes only)",
-      "notesCompatibleLegacyLine": "Keeps this profile’s existing endpoint, model and key for notes."
+      "notesCompatibleName": "OpenAI-compatible (notes only)",
+      "notesCompatibleNeedsConfig": "Set endpoint and model"
     },
     "display": {
       "surface": "Which display",

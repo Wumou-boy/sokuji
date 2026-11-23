@@ -349,7 +349,9 @@
     "voiceTheyHear": "Karşı tarafın duyduğu ses",
     "voiceIHear": "Duyduğum ses",
     "voiceIHearSame": "Karşı tarafın duyduğu sesle aynı, bu yüzden onun yerine {{voice}} okur.",
-    "voiceCustom": "Özel ses"
+    "voiceCustom": "Özel ses",
+    "translateDetectParticipantLanguage": "Karşı tarafın Çince, Japonca ve İngilizcesini otomatik algıla",
+    "translateDetectParticipantLanguageHelp": "Karşı tarafın dili Çince, Japonca veya İngilizce olduğunda her altyazının dili orijinal metinden belirlenir. Seçilen çeviri hedefi aynı kalır."
   },
   "simpleSettings": {
     "autoAuthenticated": "Hesabınız üzerinden otomatik olarak doğrulandı",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Notların yazılması için oturum açın veya “Hesaplar ve anahtarlar” bölümünde bir OpenAI anahtarı ekleyip burada OpenAI'ı seçin.",
       "speechNotUsed": "Bu sefer hiçbir şey sesli okunmuyor: çeviri yalnızca metin olarak görünür.",
       "speechHowToHear": "Sesli okunması için yukarıdaki cümlede “duymak”ı seç.",
-      "notesCompatibleName": "OpenAI uyumlu",
+      "notesCompatibleName": "OpenAI uyumlu (yalnızca notlar için)",
       "notesCompatibleNeedsConfig": "Uç noktayı ve modeli ayarlayın"
     },
     "display": {

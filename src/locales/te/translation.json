@@ -349,7 +349,9 @@
     "voiceTheyHear": "అవతలి వైపు వినే వాయిస్",
     "voiceIHear": "నేను వినే వాయిస్",
     "voiceIHearSame": "అవతలి వైపు వినే వాయిస్ ఇదే, కాబట్టి దీనికి బదులుగా {{voice}} చదువుతుంది.",
-    "voiceCustom": "అనుకూల వాయిస్"
+    "voiceCustom": "అనుకూల వాయిస్",
+    "translateDetectParticipantLanguage": "ఎదుటివారి చైనీస్, జపనీస్, ఇంగ్లీష్‌ను స్వయంచాలకంగా గుర్తించండి",
+    "translateDetectParticipantLanguageHelp": "ఎదుటివారి భాష చైనీస్, జపనీస్ లేదా ఇంగ్లీష్ అయితే, ప్రతి శీర్షిక భాషను అసలు మాటల నుంచి గుర్తిస్తుంది. అనువాద లక్ష్య భాష ఎంచుకున్నదే ఉంటుంది."
   },
   "simpleSettings": {
     "autoAuthenticated": "మీ ఖాతా ద్వారా స్వయంచాలకంగా ప్రామాణీకరించబడింది",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "గమనికలు రాయించడానికి సైన్ ఇన్ చేయండి, లేదా “ఖాతాలు, కీలు”లో OpenAI కీని జోడించి ఇక్కడ OpenAIని ఎంచుకోండి.",
       "speechNotUsed": "ఈసారి ఏదీ బిగ్గరగా చదవబడదు: అనువాదం టెక్స్ట్‌గా మాత్రమే కనిపిస్తుంది.",
       "speechHowToHear": "బిగ్గరగా వినాలంటే, పై వాక్యంలో “వినడం” ఎంచుకోండి.",
-      "notesCompatibleName": "OpenAI-అనుకూలం",
+      "notesCompatibleName": "OpenAI-అనుకూలం (గమనికలకు మాత్రమే)",
       "notesCompatibleNeedsConfig": "ఎండ్‌పాయింట్, మోడల్ సెట్ చేయండి"
     },
     "display": {

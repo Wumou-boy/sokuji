@@ -1941,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "メモを書くには、サインインするか、「アカウントとキー」で OpenAI のキーを追加して、ここで OpenAI を選んでください。",
       "speechNotUsed": "今回は訳を読み上げず、文字だけを表示します。",
       "speechHowToHear": "読み上げるには、上の文で「聞く」を選んでください。",
-      "notesCompatibleName": "OpenAI 互換",
+      "notesCompatibleName": "OpenAI 互換（メモのみ）",
       "notesCompatibleNeedsConfig": "エンドポイントとモデルを設定"
     },
     "display": {
@@ -2362,7 +2362,7 @@
     "mergeOne": "一人にまとめる",
     "keepApart": "別々のままにする",
     "notesCompatibleBaseUrl": "API のベース URL",
-    "notesCompatibleUrlInvalid": "HTTPS URL、または localhost／プライベートネットワークの HTTP URL を入力してください。",
+    "notesCompatibleUrlInvalid": "安全な URL、またはローカル／プライベートネットワーク内の HTTP URL を入力してください。",
     "notesCompatibleKeyLine": "任意。このエンドポイント用のキーを使用します。",
     "notesExplainCompatible": "設定したエンドポイントには、文字起こしのテキスト、文番号、話者ラベル、単語リストの表記が送信されます。ライブ更新には、その時点までのメモも含まれます。"
   },

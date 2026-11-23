@@ -349,7 +349,9 @@
     "voiceTheyHear": "Röst som motparten hör",
     "voiceIHear": "Röst som jag hör",
     "voiceIHearSame": "Samma röst som motparten hör, så {{voice}} läser i stället.",
-    "voiceCustom": "Anpassad röst"
+    "voiceCustom": "Anpassad röst",
+    "translateDetectParticipantLanguage": "Identifiera automatiskt motpartens kinesiska, japanska och engelska",
+    "translateDetectParticipantLanguageHelp": "Om motpartens språk är kinesiska, japanska eller engelska identifieras varje undertextspråk från originalet. Det valda målspråket för översättningen förblir oförändrat."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatiskt autentiserad via ditt konto",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "Logga in, eller lägg till en OpenAI-nyckel under ”Konton och nycklar” och välj OpenAI här, så skrivs anteckningar.",
       "speechNotUsed": "Den här gången läses inget upp: översättningen visas bara som text.",
       "speechHowToHear": "Välj ”höra” i meningen ovan för att få den uppläst.",
-      "notesCompatibleName": "OpenAI-kompatibel",
+      "notesCompatibleName": "OpenAI-kompatibel (endast anteckningar)",
       "notesCompatibleNeedsConfig": "Ange slutpunkt och modell"
     },
     "display": {

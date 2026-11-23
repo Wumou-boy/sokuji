@@ -273,14 +273,13 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
       ...notesNeeds(o.missing),
     })),
     ...(isElectron() ? [{
-      id: BAILIAN_NOTES, name: t('settingsPage.lineup.notesBailianLegacyName', 'Qwen / Bailian'),
+      id: BAILIAN_NOTES, name: 'Qwen / Bailian',
       icon: providers.find((p) => p.id === 'qwen_livetranslate')?.icon,
-      description: t('settingsPage.lineup.notesBailianLegacyLine', 'Writes the notes with Qwen through Bailian.'),
       ...notesNeeds(bailianReady ? null : 'key'),
     }] : []),
     ...(isElectron() ? [{
-      id: LEGACY_COMPATIBLE_NOTES, name: t('settingsPage.lineup.notesCompatibleLegacyName', 'OpenAI-compatible (notes only)'),
-      description: t('settingsPage.lineup.notesCompatibleLegacyLine', 'Keeps this profile’s existing endpoint, model and key for notes.'),
+      id: LEGACY_COMPATIBLE_NOTES, name: t('settingsPage.lineup.notesCompatibleName', 'OpenAI-compatible (notes only)'),
+      description: t('settingsPage.lineup.notesCompatibleLine', 'Writes the notes with the service at the address you enter.'),
       ...notesNeeds(legacyCompatibleReady ? null : 'address'),
     }] : []),
   ];

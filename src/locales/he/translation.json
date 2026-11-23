@@ -349,7 +349,9 @@
     "voiceTheyHear": "הקול שהצד השני שומע",
     "voiceIHear": "הקול שאני שומע",
     "voiceIHearSame": "זהה לקול שהצד השני שומע, ולכן {{voice}} יקריא במקומו.",
-    "voiceCustom": "קול מותאם אישית"
+    "voiceCustom": "קול מותאם אישית",
+    "translateDetectParticipantLanguage": "זיהוי אוטומטי של סינית, יפנית ואנגלית אצל הצד השני",
+    "translateDetectParticipantLanguageHelp": "כאשר שפת הצד השני היא סינית, יפנית או אנגלית, שפת כל כתובית מזוהה מתוך המקור. שפת היעד לתרגום נשארת כפי שנבחרה."
   },
   "simpleSettings": {
     "autoAuthenticated": "אומת אוטומטית דרך החשבון שלך",
@@ -1939,7 +1941,7 @@
       "notesNeedSignInOrKeyAndChoose": "כדי שייכתבו הערות, היכנסו לחשבון או הוסיפו מפתח OpenAI ב„חשבונות ומפתחות” ובחרו כאן ב-OpenAI.",
       "speechNotUsed": "הפעם שום דבר לא מוקרא: התרגום מוצג כטקסט בלבד.",
       "speechHowToHear": "כדי שיוקרא, בחר „לשמוע” במשפט שלמעלה.",
-      "notesCompatibleName": "תואם ל‑OpenAI",
+      "notesCompatibleName": "תואם ל‑OpenAI (להערות בלבד)",
       "notesCompatibleNeedsConfig": "הגדרת נקודת קצה ומודל"
     },
     "display": {
