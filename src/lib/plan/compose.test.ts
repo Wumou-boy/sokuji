@@ -1,6 +1,6 @@
 // src/lib/plan/compose.test.ts
 import { describe, expect, it, vi } from 'vitest';
-import { CAPS, caps } from '../lineup/catalog';
+import { allCaps, caps } from '../lineup/catalog';
 import { oldRunOf } from '../lineup/oldRules.testing';
 import { RUN_STAGES } from '../lineup/types';
 import type { LineUp, RunStage } from '../lineup/types';
@@ -10,18 +10,20 @@ import type { AnyProvider } from '../provider/types';
 import { planOf, stubHosts, stubProvider } from './testing';
 import { isRefusal } from './types';
 import type { PlanRefusal, PlanRefusalCode, RunPlan } from './types';
-import { wholeUnit } from './wholeUnit';
+import { unitsOf } from './wholeUnit';
+import { registerReleasedCatalog } from '../lineup/catalog.testing';
+
+registerReleasedCatalog();
 
 const all = (id: string): Pick<LineUp, RunStage> => ({ transcription: id, translation: id, speech: id });
 
 // palabraai is left out: the build does not offer it.
-const offered = ['openai', 'soniox', 'local_inference', 'gemini'].map((id) => stubProvider(id));
+const offered = ['openai', 'soniox', 'local_inference', 'bing', 'edge', 'gemini'].map((id) => stubProvider(id));
 const input: ComposeInput = { providers: offered, settings: () => undefined };
 
 const cases: Array<[string, Pick<LineUp, RunStage>, 'ok' | PlanRefusalCode, RunStage?]> = [
   ['one end-to-end provider', all('openai'), 'ok'],
   ['Soniox on all three', all('soniox'), 'ok'],
-  ['local with Bing and Edge', { transcription: 'local_inference', translation: 'bing', speech: 'edge' }, 'ok'],
   ['local with its own models', all('local_inference'), 'ok'],
   ['a stage unset', { ...all('soniox'), speech: null }, 'lineup_incomplete', 'speech'],
   ['an unknown id', { ...all('soniox'), speech: 'nope' }, 'lineup_incomplete', 'speech'],
@@ -80,7 +82,7 @@ describe('compose', () => {
     const whole = occupying('whole', ...RUN_STAGES);
     const on = (id: string, units: unknown[]): ComposeInput => ({ providers: [stubProvider(id, { units }), ...offered.filter((p) => p.id !== id)], settings: () => undefined });
     // A catalog in which Soniox holds transcription and translation jointly, as it did before they could be chosen apart.
-    const jointSoniox = CAPS.map((c) => (c.id === 'soniox' ? { ...c, translatesOwn: false, joint: ['transcription', 'translation'] as RunStage[] } : c));
+    const jointSoniox = allCaps().map((c) => (c.id === 'soniox' ? { ...c, translatesOwn: false, joint: ['transcription', 'translation'] as RunStage[] } : c));
     const shape = (got: RunPlan | PlanRefusal) => (isRefusal(got) ? got : got.units.map((u) => [u.provider.id, u.unit.id, u.stages]));
 
     it.each([
@@ -107,22 +109,26 @@ describe('compose', () => {
       const speech = occupying('speech', 'speech');
       const translation = occupying('translation', 'translation');
       const local = stubProvider('local_inference');
-      const localUnits = [wholeUnit(local), translation, speech];
-      const given: ComposeInput = { providers: [stubProvider('soniox', { units: [text, tr, voice] }), { ...local, units: localUnits } as AnyProvider], settings: () => undefined };
+      const transcription = occupying('transcription', 'transcription');
+      const localUnits = [unitsOf(local)[0], transcription, translation, speech];
+      // Bing and Edge are providers of their own, with one unit each.
+      const bing = stubProvider('bing', { units: [occupying('translation', 'translation')] });
+      const edge = stubProvider('edge', { units: [occupying('speech', 'speech')] });
+      const given: ComposeInput = { providers: [stubProvider('soniox', { units: [text, tr, voice] }), { ...local, units: localUnits } as AnyProvider, bing, edge], settings: () => undefined };
 
       it.each([
         ['all on this device: the whole unit', all('local_inference'), [['local_inference', 'whole', RUN_STAGES]]],
-        ['Bing and Edge are the local host: the whole unit', { transcription: 'local_inference', translation: 'bing', speech: 'edge' }, [['local_inference', 'whole', RUN_STAGES]]],
-        ['a local translation model and Edge: the whole unit', { transcription: 'local_inference', translation: 'local_inference', speech: 'edge' }, [['local_inference', 'whole', RUN_STAGES]]],
-        ['Bing and a local voice: the whole unit', { transcription: 'local_inference', translation: 'bing', speech: 'local_inference' }, [['local_inference', 'whole', RUN_STAGES]]],
-        ["Edge reads Soniox's text: the voice alone", { transcription: 'soniox', translation: 'soniox', speech: 'edge' }, [['soniox', 'stt', ['transcription', 'translation']], ['local_inference', 'speech', ['speech']]]],
+        ['this device, Bing and Edge are three providers: three units', { transcription: 'local_inference', translation: 'bing', speech: 'edge' }, [['local_inference', 'transcription', ['transcription']], ['bing', 'translation', ['translation']], ['edge', 'speech', ['speech']]]],
+        ['a local translation model and Edge: this device\'s whole unit serves its two stages, Edge speaks', { transcription: 'local_inference', translation: 'local_inference', speech: 'edge' }, [['local_inference', 'whole', ['transcription', 'translation']], ['edge', 'speech', ['speech']]]],
+        ['Bing and a local voice: this device transcribes and speaks around Bing', { transcription: 'local_inference', translation: 'bing', speech: 'local_inference' }, [['local_inference', 'transcription', ['transcription']], ['bing', 'translation', ['translation']], ['local_inference', 'speech', ['speech']]]],
+        ["Edge reads Soniox's text: the voice alone", { transcription: 'soniox', translation: 'soniox', speech: 'edge' }, [['soniox', 'stt', ['transcription', 'translation']], ['edge', 'speech', ['speech']]]],
         ["a local voice reads Soniox's text: the voice alone", { transcription: 'soniox', translation: 'soniox', speech: 'local_inference' }, [['soniox', 'stt', ['transcription', 'translation']], ['local_inference', 'speech', ['speech']]]],
-        ['Soniox transcribes, Bing translates, Edge speaks: three units, two of them this device\'s', { transcription: 'soniox', translation: 'bing', speech: 'edge' }, [['soniox', 'tr', ['transcription']], ['local_inference', 'translation', ['translation']], ['local_inference', 'speech', ['speech']]]],
+        ['Soniox transcribes, Bing translates, Edge speaks: three units, one provider each', { transcription: 'soniox', translation: 'bing', speech: 'edge' }, [['soniox', 'tr', ['transcription']], ['bing', 'translation', ['translation']], ['edge', 'speech', ['speech']]]],
         ['Soniox transcribes, a local model translates, a local voice speaks: the same three', { transcription: 'soniox', translation: 'local_inference', speech: 'local_inference' }, [['soniox', 'tr', ['transcription']], ['local_inference', 'translation', ['translation']], ['local_inference', 'speech', ['speech']]]],
-        ["Soniox transcribes and speaks, Bing translates between: Soniox's two units around this device's, in stage order", { transcription: 'soniox', translation: 'bing', speech: 'soniox' }, [['soniox', 'tr', ['transcription']], ['local_inference', 'translation', ['translation']], ['soniox', 'tts', ['speech']]]],
-        ['this device transcribes and translates: the whole unit, never its translation unit, whoever speaks', { transcription: 'local_inference', translation: 'bing', speech: 'soniox' }, [['local_inference', 'whole', ['transcription', 'translation']], ['soniox', 'tts', ['speech']]]],
+        ["Soniox transcribes and speaks, Bing translates between: Soniox's two units around Bing's, in stage order", { transcription: 'soniox', translation: 'bing', speech: 'soniox' }, [['soniox', 'tr', ['transcription']], ['bing', 'translation', ['translation']], ['soniox', 'tts', ['speech']]]],
+        ['this device transcribes, Bing translates, Soniox speaks: three units', { transcription: 'local_inference', translation: 'bing', speech: 'soniox' }, [['local_inference', 'transcription', ['transcription']], ['bing', 'translation', ['translation']], ['soniox', 'tts', ['speech']]]],
         ["Soniox's translation needs Soniox's transcription", { transcription: 'local_inference', translation: 'soniox', speech: 'edge' }, { refused: 'lineup_translation_bound', stage: 'transcription', provider: 'soniox' }],
-        ['this device has no unit that transcribes alone', { transcription: 'local_inference', translation: 'soniox', speech: 'soniox' }, { refused: 'lineup_translation_bound', stage: 'transcription', provider: 'soniox' }],
+        ['this device transcribing for Soniox\'s translation: the translation is bound to Soniox\'s transcription', { transcription: 'local_inference', translation: 'soniox', speech: 'soniox' }, { refused: 'lineup_translation_bound', stage: 'transcription', provider: 'soniox' }],
       ] as Array<[string, Pick<LineUp, RunStage>, unknown]>)('%s', (_name, lineUp, expected) => {
         expect(shape(compose(lineUp, given))).toEqual(expected);
       });
@@ -153,7 +159,7 @@ describe('compose', () => {
 
   it.each(['optional', 'always'] as const)('runs exactly the line-ups the old rule ran, on the same provider, with every provider\'s speech %s', (speech) => {
     const allPresent = stubHosts({ speech });
-    for (const t of CAPS) for (const tl of CAPS) for (const s of CAPS) {
+    for (const t of allCaps()) for (const tl of allCaps()) for (const s of allCaps()) {
       const l = { transcription: t.id, translation: tl.id, speech: s.id };
       const got = compose(l, allPresent);
       const old = oldRunOf({ ...l, summarisation: null });

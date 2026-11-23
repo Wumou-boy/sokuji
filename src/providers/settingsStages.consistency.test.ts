@@ -1,4 +1,4 @@
-// Each provider's `optionStages` (mock v19) says which stage sets its options act on, so the line-up page knows which
+// Each provider's `settingsStages` (mock v19) says which stage sets its options act on, so the line-up page knows which
 // stage cards have options without drawing them. It must name exactly the sets its `Settings` source wraps in
 // `StagePart` (and, for the local engine, its slots): a part the declaration misses would never get a card.
 import { describe, it, expect } from 'vitest';
@@ -16,6 +16,7 @@ import { volcengineAst2Provider as ast2Provider } from './volcengine_ast2/provid
 import { qwenLiveTranslateProvider } from './qwen_livetranslate/provider';
 import { kizunaQwenProvider } from './qwen_livetranslate/kizuna';
 import { localInferenceProvider } from './localInference/provider';
+import { edgeProvider } from './edge/provider';
 
 const SETS = { ALL_STAGES, TR, TL, SP, TR_TL } as const;
 const nameOf = (set: unknown) => Object.entries(SETS).find(([, v]) => v === set)?.[0] ?? '?';
@@ -24,7 +25,7 @@ const partsIn = (source: string) => [...new Set([...source.matchAll(/<StagePart 
 const qwen = src('providers/qwen_livetranslate/QwenSettings.tsx');
 const qwenShared = qwen.slice(0, qwen.indexOf('export function KizunaQwenSettingsView'));
 
-const CASES: Array<[string, { optionStages?: readonly (readonly unknown[])[] }, string]> = [
+const CASES: Array<[string, { settingsStages?: readonly (readonly unknown[])[] }, string]> = [
   ['soniox', sonioxProvider, src('providers/soniox/SonioxSettings.tsx')],
   ['kizunaai_soniox', kizunaSonioxProvider, src('providers/soniox/SonioxSettings.tsx')],
   ['gemini', geminiProvider, src('providers/gemini/GeminiSettings.tsx')],
@@ -35,12 +36,13 @@ const CASES: Array<[string, { optionStages?: readonly (readonly unknown[])[] }, 
   ['volcengine_ast2', ast2Provider, src('providers/volcengine_ast2/Ast2Settings.tsx')],
   ['qwen_livetranslate', qwenLiveTranslateProvider, qwenShared],
   ['kizunaai_qwen', kizunaQwenProvider, qwen],
+  ['edge', edgeProvider, src('providers/edge/EdgeSettings.tsx')],
   // The local engine's slots are transcription, translation and speech; its settings add to them.
   ['local_inference', localInferenceProvider, src('providers/localInference/LocalInferenceSettings.tsx') + '<StagePart stages={TR}><StagePart stages={TL}><StagePart stages={SP}>'],
 ];
 
-describe('optionStages', () => {
+describe('settingsStages', () => {
   it.each(CASES)('%s declares exactly the stage sets its settings use', (_id, provider, source) => {
-    expect((provider.optionStages ?? []).map(nameOf).sort()).toEqual(partsIn(source));
+    expect((provider.settingsStages ?? []).map(nameOf).sort()).toEqual(partsIn(source));
   });
 });

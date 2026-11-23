@@ -2,63 +2,36 @@
 //
 // What each option can serve, who runs it and which stages go together, the
 // line-up each host runs by default, the one host a line-up runs on by this
-// data alone, and the ids that served a run's stages. Pure data and pure
-// functions; the stores read it, nothing here reads a store.
+// data alone, and the ids that served a run's stages. Pure functions over the
+// registered catalog; the stores read it, nothing here reads a store.
+//
+// Where the catalog comes from: it is read off the providers' units
+// (`catalogOf`, `src/lib/plan/capsOf.ts`), and the provider registry registers it as it loads,
+// from the providers a line-up may name. This module imports neither the
+// registry nor a provider: the line-up store reads it, and the registry's own
+// imports reach that store (the local provider reads it), so importing either
+// from here would close a cycle. A test that keeps the registry out registers a
+// catalog itself (`registerReleasedCatalog`, catalog.testing.ts).
 import { RUN_STAGES, TR_TL } from './types';
 import type { LineUp, ProviderCaps, RunStage, StageIds } from './types';
 
-const ALL: readonly RunStage[] = RUN_STAGES;
-const JOINT: readonly RunStage[] = TR_TL;
+let registered: readonly ProviderCaps[] | null = null;
+
+/** Called once by the registry with the catalog its providers declare; a test registers its own. */
+export function registerCatalog(entries: readonly ProviderCaps[]): void {
+  registered = entries;
+}
 
 /**
- * One provider that does every stage over one connection (an end-to-end service), run by itself. Its voice reads
- * only its own translation, and its translation is read only by its own voice: it is not known, per vendor, to stop
- * making and charging for audio when asked for text alone.
+ * The catalog every reader asks: what each option can serve, read when asked. Throws while none is registered: an
+ * empty catalog would turn every stored line-up away.
  */
-const endToEnd = (id: string, account: ProviderCaps['account']): ProviderCaps => ({ id, stages: ALL, host: id, joint: ALL, account, voiceAlone: false, takesVoice: false });
+export function allCaps(): readonly ProviderCaps[] {
+  if (!registered) throw new Error('No line-up catalog is registered: load the provider registry (or, in a test, register one) first.');
+  return registered;
+}
 
-export const CAPS: readonly ProviderCaps[] = [
-  // Its text may be read by another voice (a text-only session of it), and its voice may read another provider's
-  // text (a session of it that holds speech keys only). It translates only what it transcribes, and may transcribe
-  // alone for another option to translate (Soniox's connection asked for no translation); so does Soniox below.
-  { id: 'kizunaai_soniox', stages: ALL, host: 'kizunaai_soniox', translatesOwn: true, account: 'kizuna', voiceAlone: true, takesVoice: true },
-  endToEnd('kizunaai_qwen', 'kizuna'),
-  { id: 'local_inference', stages: ALL, host: 'local_inference', account: 'none', voiceAlone: true, takesVoice: true },
-  { id: 'bing', stages: ['translation'], host: 'local_inference', account: 'none', voiceAlone: false, takesVoice: true },
-  { id: 'edge', stages: ['speech'], host: 'local_inference', account: 'none', voiceAlone: true, takesVoice: false },
-  { id: 'soniox', stages: ALL, host: 'soniox', translatesOwn: true, account: 'key', voiceAlone: true, takesVoice: true },
-  endToEnd('gemini', 'key'),
-  endToEnd('volcengine_ast2', 'key'),
-  endToEnd('openai', 'key'),
-  endToEnd('openai_translate', 'key'),
-  endToEnd('openai_live', 'key'),
-  endToEnd('qwen_livetranslate', 'key'),
-  endToEnd('palabraai', 'key'),
-  // A text model translates what another option transcribed (spec 2026-11-22 §5): translation alone, on the user's
-  // own key (the compatible service's address and optional key), and any voice that stands alone may read it. Its
-  // provider is offered in the desktop app only, so elsewhere the line-up page lists it nowhere and a stored line-up
-  // that names it is not offered.
-  { id: 'openai_text', stages: ['translation'], host: 'openai_text', account: 'key', voiceAlone: false, takesVoice: true },
-  { id: 'gemini_text', stages: ['translation'], host: 'gemini_text', account: 'key', voiceAlone: false, takesVoice: true },
-  { id: 'openai_compatible', stages: ['translation'], host: 'openai_compatible', account: 'key', voiceAlone: false, takesVoice: true },
-  // The E2E build (`--mode e2e`) runs its sessions on the fake providers, so there a line-up may name them.
-  // Elsewhere they stay out: a development build reaches the fake through the stored provider alone.
-  // The fake transcribes and translates together, never apart (it has no unit that transcribes alone, so its two
-  // stages stay a joint group), and may be read by another voice; the fake voice serves speech
-  // alone, beside another provider's transcription and translation. The fake transcriber and the fake translator
-  // each serve their one stage, each a host of its own, so a line-up of the three runs every stage apart.
-  ...(import.meta.env.MODE === 'e2e'
-    ? [
-        { id: 'fake', stages: ALL, host: 'fake', joint: JOINT, account: 'none', voiceAlone: false, takesVoice: true } satisfies ProviderCaps,
-        endToEnd('fake_leased', 'none'),
-        { id: 'fake_voice', stages: ['speech'], host: 'fake_voice', account: 'none', voiceAlone: true, takesVoice: false } satisfies ProviderCaps,
-        { id: 'fake_transcriber', stages: ['transcription'], host: 'fake_transcriber', account: 'none', voiceAlone: false, takesVoice: true } satisfies ProviderCaps,
-        { id: 'fake_translator', stages: ['translation'], host: 'fake_translator', account: 'none', voiceAlone: false, takesVoice: true } satisfies ProviderCaps,
-      ]
-    : []),
-];
-
-export function caps(id: string, catalog: readonly ProviderCaps[] = CAPS): ProviderCaps | undefined {
+export function caps(id: string, catalog: readonly ProviderCaps[] = allCaps()): ProviderCaps | undefined {
   return catalog.find((c) => c.id === id);
 }
 
@@ -67,7 +40,7 @@ export function caps(id: string, catalog: readonly ProviderCaps[] = CAPS): Provi
  * stage by itself, or one the catalog does not know (a development build's fake). A text model only translates
  * another provider's transcription, so a stored selection of its id (the retired OpenAI Compatible's) does not run.
  */
-export function runsByItself(id: string, catalog: readonly ProviderCaps[] = CAPS): boolean {
+export function runsByItself(id: string, catalog: readonly ProviderCaps[] = allCaps()): boolean {
   const own = caps(id, catalog);
   return own === undefined || own.stages.length === RUN_STAGES.length;
 }
@@ -76,7 +49,7 @@ export function runsByItself(id: string, catalog: readonly ProviderCaps[] = CAPS
  * The option a line-up names for a stage, when it is known and serves that stage; undefined otherwise (unset,
  * unknown, or not for that stage). `catalog`: the options read, the app's own by default.
  */
-export function optionFor(lineUp: Pick<LineUp, RunStage>, stage: RunStage, catalog: readonly ProviderCaps[] = CAPS): ProviderCaps | undefined {
+export function optionFor(lineUp: Pick<LineUp, RunStage>, stage: RunStage, catalog: readonly ProviderCaps[] = allCaps()): ProviderCaps | undefined {
   const id = lineUp[stage];
   const option = id === null ? undefined : caps(id, catalog);
   return option?.stages.includes(stage) ? option : undefined;
@@ -102,25 +75,24 @@ export function carriedTogether(option: Pick<ProviderCaps, 'joint' | 'translates
 }
 
 /**
- * The host that runs this line-up by the catalog alone, for code that has no providers at hand: every run stage
- * names an option that serves it, and all three share one host. Null otherwise.
- */
-export function soleHost(lineUp: Pick<LineUp, RunStage>): string | null {
-  let host: string | null = null;
-  for (const stage of RUN_STAGES) {
-    const option = optionFor(lineUp, stage);
-    if (!option || (host !== null && option.host !== host)) return null;
-    host = option.host;
-  }
-  return host;
-}
-
-/**
- * Whether more than one host serves these stages: a run on two services. Bing and Edge run on this device's
- * provider, so a run on it with them is on one host; an id the catalog does not know is a host of its own.
+ * Whether more than one host serves these stages: a run on two services. Every option is a host of its own, so
+ * this device with Bing and Edge is a run on three; an id the catalog does not know is a host of its own.
  */
 export function severalHosts(stages: StageIds): boolean {
   return new Set(RUN_STAGES.map((stage) => caps(stages[stage])?.host ?? stages[stage])).size > 1;
+}
+
+/**
+ * Whether these stages are a provider's own line-up: each names an option that serves it, and that option's host is
+ * the provider; for `local_inference` alone it is also Bing or Edge (its free line-up: this device with Bing and
+ * Edge). For any other provider, the provider alone.
+ */
+export function belongsTo(stages: Pick<LineUp, RunStage>, provider: string): boolean {
+  const hosts = new Set<string>(provider === 'local_inference' ? RUN_STAGES.map((stage) => caps(hostDefaults(provider)[stage]!)?.host ?? provider) : [provider]);
+  return RUN_STAGES.every((stage) => {
+    const option = optionFor(stages, stage);
+    return option !== undefined && hosts.has(option.host);
+  });
 }
 
 /** One provider's id on every run stage. */
@@ -129,9 +101,10 @@ export function allStagesBy(id: string): StageIds {
 }
 
 /**
- * The ids that serve the stages of a run: the stored line-up's, which is what runs; while none is stored, the id
- * of the provider that runs meanwhile (`providerId`) on every stage: a line-up that is only shown names nothing
- * about the run.
+ * The ids that serve the stages of a run: the line-up's when it is the one that runs (`stored`, as the line-up
+ * store's `lineUpThatRuns` says: the stored one, or, before one is stored, the one shown where this device runs);
+ * otherwise the id of the provider that runs meanwhile (`providerId`) on every stage: a line-up only shown beside
+ * another provider names nothing about the run.
  */
 export function stageIdsFor(lineUp: Pick<LineUp, RunStage> | null, stored: boolean, providerId: string): StageIds {
   if (!stored || lineUp === null) return allStagesBy(providerId);
@@ -149,7 +122,7 @@ const ON_THIS_DEVICE: Pick<LineUp, RunStage> = { transcription: 'local_inference
  * translates) has no default of its own for the others: they are this device's, which needs no key and no
  * sign-in, so choosing such a host where another provider must give up its stages leaves a line-up that runs.
  */
-export function hostDefaults(host: string, catalog: readonly ProviderCaps[] = CAPS): Pick<LineUp, RunStage> {
+export function hostDefaults(host: string, catalog: readonly ProviderCaps[] = allCaps()): Pick<LineUp, RunStage> {
   if (host === 'local_inference') return ON_THIS_DEVICE;
   const own = caps(host, catalog);
   if (!own || own.host !== host || own.stages.length === RUN_STAGES.length) return { transcription: host, translation: host, speech: host };

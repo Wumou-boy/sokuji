@@ -11,6 +11,7 @@ import type { VoiceEntry } from '../Settings/sections/VoiceLibrarySection';
 import * as voiceStorage from '../../lib/local-inference/voiceStorage';
 import { dbKeyFromImportedSid, importedSidFromDbKey } from '../../lib/local-inference/sidMapping';
 import { getManifestEntry, type ModelManifestEntry } from '../../lib/local-inference/modelManifest';
+import { capabilitiesAlone } from '../../lib/plan/wholeUnit';
 import { directionKey, splitDirection } from '../../lib/local-inference/selection/types';
 import { describeCause, reportError } from '../../lib/diagnostics/report';
 import { localInferenceProvider } from '../../providers/localInference/provider';
@@ -47,14 +48,14 @@ export function LocalVoices({ disabled }: { disabled: boolean }) {
   // this device only reads another provider's translation. Each voice is still kept in this device's settings, under
   // its direction.
   const pair = useRunPair();
-  // The directions that speak, as a session opens them (EdgeVoices' rule), each with the speech model it runs — kept
-  // only where there is a voice to choose.
+  // The directions that speak, as a session opens them (as Edge's settings list them), each with the speech model it
+  // runs — kept only where there is a voice to choose.
   const rows = useMemo(() => {
     if (!pair || !settings) return [];
     const { source, target } = pair;
     const speaking: Array<Omit<Row, 'modelId' | 'model'>> = [];
     if (legs.includes('speaker')) speaking.push({ dir: directionKey(source, target), language: target, who: t('audioPanel.otherHears', 'Translation the other side hears') });
-    if (legs.includes('participant') && participantSpeech && localInferenceProvider.participantSpeech !== false) {
+    if (legs.includes('participant') && participantSpeech && capabilitiesAlone(localInferenceProvider, 'speech').participantSpeech) {
       speaking.push({ dir: directionKey(target, source), language: source, who: t('audioPanel.iHear', 'Translation I hear') });
     }
     const out: Row[] = [];
@@ -146,7 +147,6 @@ export function LocalVoices({ disabled }: { disabled: boolean }) {
           <div className="local-voices__row" key={dir}>
             <span className="local-voices__label">{label}</span>
             <LocalInferenceVoiceSection ttsModel={modelId} isSessionActive={disabled}
-              edgeVoices={[]} edgeVoiceStatus="loaded" edgeVoice=""
               supertonicVoices={library} supertonicSelectedId={selected}
               onImportVoice={importVoice} onRenameVoice={renameVoice} onDeleteVoice={deleteVoice}
               speakerId={speakerId} numSpeakers={model.numSpeakers ?? 1} onUpdate={(patch) => write(dir, patch)} />

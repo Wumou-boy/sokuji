@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { RELEASED } from '../../providers/registry';
-import { choiceInput } from '../plan/choice';
-import { compose } from '../plan/compose';
-import { isRefusal } from '../plan/types';
-import { CAPS, caps, goesWith, hostDefaults } from './catalog';
+import { choiceInput } from './choice';
+import { compose } from './compose';
+import { isRefusal } from './types';
+import { allCaps, caps, goesWith, hostDefaults } from '../lineup/catalog';
 import { choose as chooseWith } from './choose';
-import { RUN_STAGES } from './types';
-import type { LineUp, RunStage } from './types';
+import { RUN_STAGES } from '../lineup/types';
+import type { LineUp, RunStage } from '../lineup/types';
 
 const soniox = { transcription: 'soniox', translation: 'soniox', speech: 'soniox', summarisation: null };
 const kizuna = { transcription: 'kizunaai_soniox', translation: 'kizunaai_soniox', speech: 'kizunaai_soniox', summarisation: null };
@@ -19,13 +19,13 @@ const input = choiceInput(RELEASED, {});
 const choose = (lineUp: LineUp, stage: Parameters<typeof chooseWith>[1], id: string | null) => chooseWith(lineUp, stage, id, input);
 // The same, under a catalog in which Kizuna AI's Soniox voice is not offered alone: no released option makes a
 // voice follow any more, and the rule is kept for a voice that reads only its own translation.
-const notAlone = { ...input, catalog: CAPS.map((c) => (c.id === 'kizunaai_soniox' ? { ...c, voiceAlone: false } : c)) };
+const notAlone = { ...input, catalog: allCaps().map((c) => (c.id === 'kizunaai_soniox' ? { ...c, voiceAlone: false } : c)) };
 const chooseNotAlone = (lineUp: LineUp, stage: Parameters<typeof chooseWith>[1], id: string | null) => chooseWith(lineUp, stage, id, notAlone);
 
 /** Every triple of options in the catalog, without notes. */
 function everyLineUp(): LineUp[] {
   const lineUps: LineUp[] = [];
-  for (const t of CAPS) for (const tl of CAPS) for (const s of CAPS) lineUps.push({ transcription: t.id, translation: tl.id, speech: s.id, summarisation: null });
+  for (const t of allCaps()) for (const tl of allCaps()) for (const s of allCaps()) lineUps.push({ transcription: t.id, translation: tl.id, speech: s.id, summarisation: null });
   return lineUps;
 }
 
@@ -82,8 +82,8 @@ describe('choosing a provider for a stage', () => {
       expect(chosen).toEqual({ lineUp: { transcription: 'local_inference', translation: 'openai_text', speech: 'edge', summarisation: from.summarisation }, moved: ['transcription', 'speech'] });
       const plan = compose(chosen.lineUp, input);
       expect(isRefusal(plan)).toBe(false);
-      // Recognition alone on this device, the text model, and Edge on this device: three units.
-      if (!isRefusal(plan)) expect(plan.units.map((u) => [u.provider.id, u.unit.id])).toEqual([['local_inference', 'transcription'], ['openai_text', 'translation'], ['local_inference', 'speech']]);
+      // Recognition alone on this device, the text model, and Edge, a provider of its own: three units.
+      if (!isRefusal(plan)) expect(plan.units.map((u) => [u.provider.id, u.unit.id])).toEqual([['local_inference', 'transcription'], ['openai_text', 'translation'], ['edge', 'speech']]);
     }
   });
 
@@ -206,7 +206,7 @@ describe('choosing a provider for a stage', () => {
   ] as const)('for every line-up and every choice: the chosen stage and the stages that go with it are the choice, any other stage moves only when its provider lost a stage it needs, and speech alone may follow (%s)', (_name, input, expected) => {
     const choose = (lineUp: LineUp, stage: RunStage, id: string) => chooseWith(lineUp, stage, id, input);
     const reasons = new Set<string>();
-    for (const from of everyLineUp()) for (const stage of RUN_STAGES) for (const c of CAPS) {
+    for (const from of everyLineUp()) for (const stage of RUN_STAGES) for (const c of allCaps()) {
       if (!c.stages.includes(stage)) continue;
       const label = JSON.stringify({ from, stage, id: c.id });
       const { lineUp, moved, followed } = choose(from, stage, c.id);
@@ -243,11 +243,11 @@ describe('choosing a provider for a stage', () => {
   it('every line-up a user can reach by choosing, from any host\'s defaults, runs or is refused for how it is put together', () => {
     const key = (l: LineUp) => RUN_STAGES.map((s) => l[s]).join('|');
     const seen = new Map<string, LineUp>();
-    const queue: LineUp[] = [...new Set(CAPS.map((c) => c.host))].map((host) => ({ ...hostDefaults(host), summarisation: null }));
+    const queue: LineUp[] = [...new Set(allCaps().map((c) => c.host))].map((host) => ({ ...hostDefaults(host), summarisation: null }));
     for (const start of queue) seen.set(key(start), start);
     while (queue.length > 0) {
       const from = queue.pop()!;
-      for (const stage of RUN_STAGES) for (const c of CAPS) {
+      for (const stage of RUN_STAGES) for (const c of allCaps()) {
         if (!c.stages.includes(stage)) continue;
         const { lineUp } = choose(from, stage, c.id);
         if (!seen.has(key(lineUp))) { seen.set(key(lineUp), lineUp); queue.push(lineUp); }
@@ -265,11 +265,11 @@ describe('choosing a provider for a stage', () => {
     // legs (`checkPlan`): `lineup_source_not_fixed`, `lineup_pair_not_translated`, `lineup_face_to_face_apart`
     // and `lineup_language_not_spoken`.
     expect([...refusals].sort()).toEqual(REACHABLE_REFUSALS);
-    // The line-ups whose transcription and translation are apart: Soniox, either one, under Bing or this device; and
+    // The line-ups whose transcription and translation are apart: Soniox, either one, under Bing or this device, and this device's under Bing; and
     // Soniox, either one, or this device, under a text model.
     const textModels = ['openai_text', 'gemini_text', 'openai_compatible'];
     expect([...new Set(separate)].sort()).toEqual([
-      'kizunaai_soniox>bing', 'kizunaai_soniox>local_inference', 'soniox>bing', 'soniox>local_inference',
+      'kizunaai_soniox>bing', 'kizunaai_soniox>local_inference', 'soniox>bing', 'soniox>local_inference', 'local_inference>bing',
       ...['kizunaai_soniox', 'soniox', 'local_inference'].flatMap((heard) => textModels.map((model) => `${heard}>${model}`)),
     ].sort());
   });

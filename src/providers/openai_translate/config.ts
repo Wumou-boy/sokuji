@@ -10,7 +10,7 @@
  */
 import type { SessionContext } from '../../lib/contract/adapter';
 import { isMeetingLanguage } from '../../lib/language/meetingTranscript';
-import type { ProviderRefusal, SharedSettings } from '../../lib/provider/types';
+import type { ProviderRefusal, SharedSettings } from '../../lib/run/types';
 import { clampSegmentPauseMs, segmentPauseMs } from '../../lib/segmentation/segmentationMode';
 import { TRANSCRIPT_MODEL, TRANSLATE_MODEL, TRANSLATE_TARGETS, translateLanguages, type NoiseReduction, type TranslateSettings } from './settings';
 

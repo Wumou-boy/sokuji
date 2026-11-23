@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { unservedStages } from '../../../lib/lineup/localStages';
+import { ALL_LOCAL_STAGES, unservedStages, type LocalStages } from '../../../lib/lineup/localStages';
 import { useStoredLocalStages } from '../../../stores/lineUpStore';
 import {
   useModelStore, useModelStatuses, useWebGPUAvailable, useDeviceFeatures,
@@ -10,7 +10,7 @@ import { getManifestEntry, getModelSizeMb } from '../../../lib/local-inference/m
 import { shortenModelName } from '../../../lib/local-inference/modelName';
 import { languageNameFor } from './languageName';
 import type { EngineAdapter } from './EngineTypes';
-import type { LanguagePair } from '../../../lib/provider/types';
+import type { LanguagePair } from '../../../lib/run/types';
 import type { LocalInferenceSettings } from '../../../providers/localInference/settings';
 
 /**
@@ -38,13 +38,16 @@ export function useWasmEngineAdapter(isSessionActive: boolean, override: WasmEng
   const sourceLanguage = override.pair.source;
   const targetLanguage = override.pair.target;
   const selections = override.settings.selections;
-  // A stored line-up gives Bing and Edge stages of their own: the local list and its automatic picks leave them out.
-  const stages = useStoredLocalStages();
+  // Bing and Edge are providers of their own: the local list and its automatic picks never hold them. The line-up that
+  // runs says which stages this machine serves; where none does (another provider runs alone), all of them (`null`
+  // would let the resolver answer with Bing or Edge, a value the list does not offer).
+  const storedStages = useStoredLocalStages();
+  const stages: Readonly<LocalStages> = storedStages ?? ALL_LOCAL_STAGES;
 
   return useMemo<EngineAdapter>(() => {
     const speaker = directionKey(sourceLanguage, targetLanguage);
     const participant = directionKey(targetLanguage, sourceLanguage);
-    const source = wasmCandidates({ modelStatuses, webgpuAvailable, deviceFeatures, withCloud: stages === null });
+    const source = wasmCandidates({ modelStatuses, webgpuAvailable, deviceFeatures, withCloud: false });
     const split = (dir: string): [string, string] => {
       const i = dir.indexOf('→');
       return [dir.slice(0, i), dir.slice(i + 1)];

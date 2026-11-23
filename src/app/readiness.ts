@@ -24,11 +24,13 @@
  *   plan's managed providers are re-checked once idle, after the edit delay.
  */
 import type { Clock } from '../lib/contract/clock';
-import { checkStageIdsOf, checkStagesOf, providersIn } from '../lib/plan/read';
+import { checkStagesOf, providersIn } from '../lib/plan/read';
 import type { RunPlan } from '../lib/plan/types';
-import type { AnyProvider, AuthContext } from '../lib/provider/types';
+import type { AnyProvider } from '../lib/provider/types';
+import type { AuthContext } from '../lib/run/types';
 import type { Runner } from '../lib/session/runner';
 import { useLineUpStore } from '../stores/lineUpStore';
+import { localModels } from '../stores/localModels';
 import { useProviderStore } from '../stores/providerStore';
 
 export const READINESS_DELAY_MS = 150;
@@ -97,7 +99,7 @@ export function driveReadiness({ runner, providers, plan, auth, clock, watchSign
   };
   /**
    * Keeps the store's stages on the plan's: what each provider of the plan serves there, when that is only a part
-   * of it, and the id the stored line-up gives each of those stages. True when they moved: the store forgot those providers' readiness and notified, and that evaluation
+   * of it. True when they moved: the store forgot those providers' readiness and notified, and that evaluation
    * was this one. A provider outside the plan keeps what it was last told, and without a plan nothing moves: a
    * provider that leaves and comes back to the same stages keeps its answer.
    */
@@ -106,18 +108,12 @@ export function driveReadiness({ runner, providers, plan, auth, clock, watchSign
     if (!p) return false;
     const before = useProviderStore.getState().stages;
     const next = { ...before };
-    const nextIds = { ...useProviderStore.getState().stageIds };
-    // A stored line-up is what the plan was composed from; one that is only shown names nothing about it.
-    const { lineUp, stored } = useLineUpStore.getState();
     for (const provider of providersIn(p)) {
       const stages = checkStagesOf(p, provider);
-      const ids = checkStageIdsOf(stages, stored ? lineUp : null);
       if (stages) next[provider.id] = stages;
       else delete next[provider.id];
-      if (ids) nextIds[provider.id] = ids;
-      else delete nextIds[provider.id];
     }
-    useProviderStore.getState().setStages(next, nextIds);
+    useProviderStore.getState().setStages(next);
     return useProviderStore.getState().stages !== before;
   };
   const evaluate = () => {
@@ -133,7 +129,8 @@ export function driveReadiness({ runner, providers, plan, auth, clock, watchSign
     for (const id of [...cancel.keys()]) if (!ids.has(id)) drop(id);
     for (const id of [...stale]) if (!ids.has(id)) stale.delete(id);
     for (const id of [...read.keys()]) if (!ids.has(id)) read.delete(id);
-    for (const p of ps) if (!watched.has(p.id)) watched.set(p.id, p.watchReadiness?.(() => inputsChanged(p.id)) ?? (() => {}));
+    // Each provider's watch is handed this device's models; only LocalInference reads them (its downloads).
+    for (const p of ps) if (!watched.has(p.id)) watched.set(p.id, p.watchReadiness?.(() => inputsChanged(p.id), localModels) ?? (() => {}));
     if (!ps.length) {
       // No plan has loaded: whichever provider comes next has just joined, even the last one.
       seen = new Set();

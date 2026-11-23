@@ -1,12 +1,19 @@
-import { describe, expect, it } from 'vitest';
-import { RELEASED } from '../../providers/registry';
-import { allStagesBy, CAPS, caps, carriedTogether, goesWith, hostDefaults, optionFor, runsByItself, severalHosts, soleHost, stageIdsFor } from './catalog';
-import { oldRunOf } from './oldRules.testing';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { presentProviders, RELEASED } from '../../providers/registry';
+import { allStagesBy, belongsTo, allCaps, caps, carriedTogether, goesWith, hostDefaults, optionFor, runsByItself, severalHosts, stageIdsFor } from './catalog';
 import type { LineUp, RunStage } from './types';
 
 describe('the line-up catalog', () => {
-  it('every option names a provider definition as its host', () => {
-    for (const c of CAPS) expect(c.host === c.id || (c.host === 'local_inference' && ['bing', 'edge'].includes(c.id))).toBe(true);
+  it('every option is its own host', () => {
+    for (const c of allCaps()) expect([c.id, c.host]).toEqual([c.id, c.id]);
+  });
+
+  it('the free line-up belongs to this device', () => {
+    expect(belongsTo({ transcription: 'local_inference', translation: 'bing', speech: 'edge' }, 'local_inference')).toBe(true);
+    expect(belongsTo({ transcription: 'soniox', translation: 'bing', speech: 'edge' }, 'local_inference')).toBe(false);
+    expect(belongsTo({ transcription: 'soniox', translation: 'soniox', speech: 'soniox' }, 'soniox')).toBe(true);
+    expect(belongsTo({ transcription: 'local_inference', translation: 'bing', speech: 'edge' }, 'soniox')).toBe(false);
+    expect(belongsTo({ transcription: 'local_inference', translation: 'soniox', speech: 'edge' }, 'local_inference')).toBe(false);
   });
 
   it('a host runs Bing and Edge beside the local provider by default, and itself on every stage elsewhere', () => {
@@ -15,7 +22,16 @@ describe('the line-up catalog', () => {
   });
 
   it('covers every released provider, plus Bing and Edge', () => {
-    expect(new Set(CAPS.map((c) => c.id))).toEqual(new Set([...RELEASED.map((p) => p.id), 'bing', 'edge']));
+    expect(new Set(allCaps().map((c) => c.id))).toEqual(new Set([...RELEASED.map((p) => p.id), 'bing', 'edge']));
+  });
+
+  // A stored line-up that names an option this platform does not offer (a text model, on the web) stays readable: the
+  // catalog is the compiled providers', not the present ones'.
+  it('lists every released provider, also one this platform does not offer', () => {
+    expect(allCaps().map((c) => c.id)).toEqual(RELEASED.map((p) => p.id));
+    const web = presentProviders({ platform: 'web', dev: false, enabled: new Set(), kizuna: true, switchOn: () => false });
+    expect(web.some((p) => p.id === 'openai_text')).toBe(false);
+    expect(caps('openai_text')).toBeDefined();
   });
 
   it('a text model translates alone, on a key, for any voice that stands alone: its host is itself, and nothing goes with it', () => {
@@ -30,7 +46,7 @@ describe('the line-up catalog', () => {
     for (const id of ['openai_text', 'gemini_text', 'openai_compatible']) expect(hostDefaults(id), id).toEqual({ transcription: 'local_inference', translation: id, speech: 'edge' });
     // Under a catalog of one-stage hosts, each keeps its own stage and takes this device's for the rest.
     const oneStage = [
-      ...CAPS,
+      ...allCaps(),
       { id: 'only_voice', stages: ['speech' as const], host: 'only_voice', account: 'none' as const, voiceAlone: true, takesVoice: false },
       { id: 'only_ears', stages: ['transcription' as const], host: 'only_ears', account: 'none' as const, voiceAlone: false, takesVoice: true },
     ];
@@ -41,10 +57,31 @@ describe('the line-up catalog', () => {
   });
 
   it('a stored selection may run only a provider that serves every stage by itself, or one the catalog does not know', () => {
-    for (const c of CAPS) if (c.host === c.id) expect(runsByItself(c.id), c.id).toBe(c.stages.length === 3);
+    for (const c of allCaps()) if (c.host === c.id) expect(runsByItself(c.id), c.id).toBe(c.stages.length === 3);
     expect(runsByItself('openai_compatible')).toBe(false);
     expect(runsByItself('soniox')).toBe(true);
     expect(runsByItself('fake')).toBe(true);
+  });
+});
+
+// A fresh module per case: what one case registers is not seen by the next.
+describe('the registered catalog', () => {
+  let catalog: typeof import('./catalog');
+  beforeEach(async () => {
+    vi.resetModules();
+    catalog = await import('./catalog');
+  });
+
+  it('throws while no catalog is registered', () => {
+    expect(() => catalog.allCaps()).toThrow(/No line-up catalog is registered/);
+    expect(() => catalog.caps('soniox')).toThrow();
+  });
+
+  it('reads the registered catalog when none is given', () => {
+    const only = [{ id: 'x', stages: ['speech'], host: 'x', account: 'none', voiceAlone: true, takesVoice: false }] as const;
+    catalog.registerCatalog(only);
+    expect(catalog.caps('x')).toBe(only[0]);
+    expect(catalog.caps('soniox')).toBeUndefined();
   });
 });
 
@@ -52,12 +89,12 @@ describe('the stages that go together', () => {
   const endToEnd = ['kizunaai_qwen', 'gemini', 'volcengine_ast2', 'openai', 'openai_translate', 'openai_live', 'qwen_livetranslate', 'palabraai'];
 
   it('an end-to-end provider holds all three jointly; nothing else is joint', () => {
-    expect(CAPS.filter((c) => c.joint).map((c) => c.id).sort()).toEqual([...endToEnd].sort());
+    expect(allCaps().filter((c) => c.joint).map((c) => c.id).sort()).toEqual([...endToEnd].sort());
     for (const id of endToEnd) expect(caps(id)!.joint).toEqual(['transcription', 'translation', 'speech']);
   });
 
   it('Soniox, with an own key or Kizuna AI\'s, translates only what it transcribes; no other option says so', () => {
-    expect(CAPS.filter((c) => c.translatesOwn).map((c) => c.id).sort()).toEqual(['kizunaai_soniox', 'soniox']);
+    expect(allCaps().filter((c) => c.translatesOwn).map((c) => c.id).sort()).toEqual(['kizunaai_soniox', 'soniox']);
   });
 
   it('an end-to-end provider chosen for any stage goes with all three', () => {
@@ -98,42 +135,10 @@ describe('the option a stage names', () => {
   });
 });
 
-describe('the sole host of a line-up', () => {
-  it('runs a line-up whose options share one host on that host', () => {
-    expect(soleHost(L('soniox', 'soniox', 'soniox'))).toBe('soniox');
-    expect(soleHost(L('local_inference', 'bing', 'edge'))).toBe('local_inference');
-  });
-
-  it('refuses a line-up of several hosts, one with a stage unset, and one that splits a joint group', () => {
-    expect(soleHost(L('soniox', 'soniox', 'edge'))).toBeNull();
-    // Soniox transcribing for another translator is a run on two hosts.
-    expect(soleHost(L('soniox', 'bing', 'soniox'))).toBeNull();
-    expect(soleHost(L('local_inference', null, 'edge'))).toBeNull();
-    expect(soleHost(L('openai_live', 'openai_live', 'local_inference'))).toBeNull();
-  });
-
-  it("runs every host's defaults on that host, where the host serves every stage; a host of one stage runs its stage beside this device", () => {
-    for (const host of new Set(CAPS.map((c) => c.host))) {
-      const whole = CAPS.filter((c) => c.host === host).some((c) => c.stages.length === 3);
-      expect(soleHost(hostDefaults(host)), host).toBe(whole ? host : null);
-      if (!whole) expect(severalHosts(hostDefaults(host) as Record<RunStage, string>), host).toBe(true);
-    }
-  });
-
-  it('equals the old run rule for every triple of ids in the catalog, and an unset stage', () => {
-    const ids = [...CAPS.map((c) => c.id), null];
-    for (const transcription of ids) for (const translation of ids) for (const speech of ids) {
-      const old = oldRunOf({ transcription, translation, speech, summarisation: null });
-      const l = JSON.stringify({ transcription, translation, speech });
-      expect(soleHost({ transcription, translation, speech }), l).toBe(old.ok ? old.provider : null);
-    }
-  });
-});
-
 describe('the ids that served a run', () => {
-  it('are on several hosts only when two services ran: Bing and Edge run on this device, an unknown id is its own host', () => {
+  it('are on several hosts only when two services ran: Bing and Edge are services of their own, an unknown id is its own host', () => {
     expect(severalHosts(allStagesBy('soniox'))).toBe(false);
-    expect(severalHosts({ transcription: 'local_inference', translation: 'bing', speech: 'edge' })).toBe(false);
+    expect(severalHosts({ transcription: 'local_inference', translation: 'bing', speech: 'edge' })).toBe(true);
     expect(severalHosts(allStagesBy('gone'))).toBe(false);
     expect(severalHosts({ transcription: 'soniox', translation: 'soniox', speech: 'edge' })).toBe(true);
     expect(severalHosts({ transcription: 'local_inference', translation: 'bing', speech: 'soniox' })).toBe(true);
