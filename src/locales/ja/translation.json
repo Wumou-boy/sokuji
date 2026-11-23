@@ -349,7 +349,9 @@
     "voiceTheyHear": "相手に聞こえる音声",
     "voiceIHear": "自分に聞こえる音声",
     "voiceIHearSame": "相手に聞こえる音声と同じため、代わりに {{voice}} が読み上げます。",
-    "voiceCustom": "カスタム音声"
+    "voiceCustom": "カスタム音声",
+    "translateDetectParticipantLanguage": "相手の中国語・日本語・英語を自動判定",
+    "translateDetectParticipantLanguageHelp": "相手の言語が中国語、日本語、英語の場合、原文から字幕ごとの言語を判定します。翻訳先は選択した言語のままです。"
   },
   "simpleSettings": {
     "autoAuthenticated": "アカウントで自動的に認証されました",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "メモを書くには、サインインするか、ここで OpenAI を選んでください。",
       "notesNeedSignInOrKeyAndChoose": "メモを書くには、サインインするか、「アカウントとキー」で OpenAI のキーを追加して、ここで OpenAI を選んでください。",
       "speechNotUsed": "今回は訳を読み上げず、文字だけを表示します。",
-      "speechHowToHear": "読み上げるには、上の文で「聞く」を選んでください。"
+      "speechHowToHear": "読み上げるには、上の文で「聞く」を選んでください。",
+      "notesCompatibleName": "OpenAI 互換（メモのみ）",
+      "notesCompatibleNeedsConfig": "エンドポイントとモデルを設定"
     },
     "display": {
       "surface": "どの表示",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "統合先",
     "mergeAsk": "{{name}} はすでにこちら側の話者です。",
     "mergeOne": "一人にまとめる",
-    "keepApart": "別々のままにする"
+    "keepApart": "別々のままにする",
+    "notesCompatibleBaseUrl": "API のベース URL",
+    "notesCompatibleUrlInvalid": "安全な URL、またはローカル／プライベートネットワーク内の HTTP URL を入力してください。",
+    "notesCompatibleKeyLine": "任意。このエンドポイント用のキーを使用します。",
+    "notesExplainCompatible": "設定したエンドポイントには、文字起こしのテキスト、文番号、話者ラベル、単語リストの表記が送信されます。ライブ更新には、その時点までのメモも含まれます。"
   },
   "notesQuit": {
     "named": "「{{title}}」のメモを書いています。それでも終了しますか？メモは中止として記録されます。",

@@ -349,7 +349,9 @@
       "theySpeak": "they speak",
       "mirror": "They speak {{their}} → I read {{mine}}",
       "mirrorHear": "They speak {{their}} → I hear {{mine}}"
-    }
+    },
+    "translateDetectParticipantLanguage": "Automatically detect your partner’s Chinese, Japanese, and English",
+    "translateDetectParticipantLanguageHelp": "When your partner’s language is Chinese, Japanese, or English, label each subtitle’s language from the original. The translation target stays as selected."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatically authenticated via your account",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Sign in, or choose OpenAI here, to have notes written.",
       "notesNeedSignInOrKeyAndChoose": "Sign in, or add an OpenAI key in Accounts and keys and choose OpenAI here, to have notes written.",
       "speechNotUsed": "Nothing is read aloud this time: the translation shows as text only.",
-      "speechHowToHear": "To have it read aloud, choose “hear” in the sentence above."
+      "speechHowToHear": "To have it read aloud, choose “hear” in the sentence above.",
+      "notesCompatibleName": "OpenAI-compatible (notes only)",
+      "notesCompatibleNeedsConfig": "Set endpoint and model"
     },
     "display": {
       "surface": "Which display",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Merge into",
     "mergeAsk": "{{name}} is already a speaker on this side.",
     "mergeOne": "Merge into one",
-    "keepApart": "Keep apart"
+    "keepApart": "Keep apart",
+    "notesCompatibleBaseUrl": "API base URL",
+    "notesCompatibleUrlInvalid": "Enter an HTTPS URL, or a localhost/private HTTP URL.",
+    "notesCompatibleKeyLine": "Optional. Use a key for this endpoint.",
+    "notesExplainCompatible": "The configured endpoint receives transcript text, sentence numbers, speaker labels and word-list spellings. Live updates also include the notes so far."
   },
   "notesQuit": {
     "named": "Notes are being written for “{{title}}”. Quit anyway? They will be marked cancelled.",

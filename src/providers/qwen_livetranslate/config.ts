@@ -9,7 +9,7 @@
 import { wordsFor } from '../../lib/words/forService';
 import type { SessionContext } from '../../lib/contract/adapter';
 import type { ProviderRefusal, SharedSettings } from '../../lib/provider/types';
-import { isEndpointId, type EndpointId } from './endpoints';
+import { BAILIAN_ENDPOINT_ID, isEndpointId, type EndpointId } from './endpoints';
 import {
   QWEN_LANGUAGES, QWEN_MODEL, QWEN_PAUSE, QWEN_SPOKEN, qwenParticipantVoice, qwenSpeakerVoice, SPEAKER_CLONE, SPEAKER_CLONE_ONCE, type QwenSettings,
 } from './settings';
@@ -30,6 +30,10 @@ export interface QwenConfig {
   manual: boolean;
   /** The participant leg, speaker labels on: each turn carries its speaker as `person`. */
   person: boolean;
+  /** Locally labels incoming EN/JA/ZH source transcript text where unambiguous. */
+  detectIncomingLanguage: boolean;
+  /** Suppresses a same-language Chinese translation in incoming text-only captions. */
+  skipSameLanguageText: boolean;
   /** Preferred translations, source term → its translation (`translation.corpus.phrases`); empty sends none. */
   phrases: Readonly<Record<string, string>>;
   /** The pause that ends a turn, in ms; null leaves the server's own (2500), as push-to-talk always does. */
@@ -46,7 +50,8 @@ export function buildQwen(context: SessionContext, s: QwenSettings, shared: Shar
   if (context.speech && !QWEN_SPOKEN.some((o) => o.value === target)) return { refused: `Qwen LiveTranslate writes ${target} but does not speak it: turn speech off for this leg.` };
   const participant = shared.reversed(context.direction);
   const chosen = participant ? qwenParticipantVoice(s) : qwenSpeakerVoice(s);
-  const endpoint = shared.models[0]?.id;
+  const endpoint = s.connection === BAILIAN_ENDPOINT_ID ? BAILIAN_ENDPOINT_ID : shared.models[0]?.id;
+  const incomingTextOnlyZh = participant && !context.speech && target === 'zh';
   const manual = context.turns === 'manual';
   // The pause field is not in 3.8's documented update: it goes on the wire only when it changes something.
   const pause = Number.isFinite(s.pauseMs) ? Math.min(QWEN_PAUSE.max, Math.max(QWEN_PAUSE.min, Math.round(s.pauseMs))) : QWEN_PAUSE.default;
@@ -60,6 +65,8 @@ export function buildQwen(context: SessionContext, s: QwenSettings, shared: Shar
         : { kind: 'preset', name: chosen },
     manual,
     person: participant && s.speakerLabels,
+    detectIncomingLanguage: incomingTextOnlyZh,
+    skipSameLanguageText: incomingTextOnlyZh,
     // The word list's translations (spec §9): the provider's own old hotwords are no longer read.
     phrases: Object.fromEntries(wordsFor('qwen_livetranslate', shared.words?.entries ?? [], '').translations ?? []),
     silenceMs: manual || pause === QWEN_PAUSE.default ? null : pause,

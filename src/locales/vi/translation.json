@@ -349,7 +349,9 @@
     "voiceTheyHear": "Giọng bên kia nghe",
     "voiceIHear": "Giọng tôi nghe",
     "voiceIHearSame": "Trùng với giọng bên kia nghe, nên {{voice}} sẽ đọc thay.",
-    "voiceCustom": "Giọng tùy chỉnh"
+    "voiceCustom": "Giọng tùy chỉnh",
+    "translateDetectParticipantLanguage": "Tự động nhận diện tiếng Trung, tiếng Nhật và tiếng Anh của người đối thoại",
+    "translateDetectParticipantLanguageHelp": "Nếu người đối thoại dùng tiếng Trung, tiếng Nhật hoặc tiếng Anh, ngôn ngữ của từng phụ đề sẽ được nhận diện từ bản gốc. Ngôn ngữ đích đã chọn vẫn được giữ nguyên."
   },
   "simpleSettings": {
     "autoAuthenticated": "Tự động xác thực qua tài khoản của bạn",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Đăng nhập, hoặc chọn OpenAI ở đây, để ghi chú được viết.",
       "notesNeedSignInOrKeyAndChoose": "Đăng nhập, hoặc thêm khóa OpenAI trong “Tài khoản và khóa” rồi chọn OpenAI ở đây, để ghi chú được viết.",
       "speechNotUsed": "Lần này không có gì được đọc to: bản dịch chỉ hiện dạng chữ.",
-      "speechHowToHear": "Muốn được đọc to, hãy chọn “nghe” trong câu ở trên."
+      "speechHowToHear": "Muốn được đọc to, hãy chọn “nghe” trong câu ở trên.",
+      "notesCompatibleName": "Tương thích OpenAI (chỉ dành cho ghi chú)",
+      "notesCompatibleNeedsConfig": "Đặt endpoint và mô hình"
     },
     "display": {
       "surface": "Hiển thị nào",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Gộp vào",
     "mergeAsk": "{{name}} đã là một người nói ở phía này.",
     "mergeOne": "Gộp làm một",
-    "keepApart": "Để riêng"
+    "keepApart": "Để riêng",
+    "notesCompatibleBaseUrl": "URL cơ sở API",
+    "notesCompatibleUrlInvalid": "Nhập URL HTTPS hoặc URL HTTP của localhost/mạng riêng.",
+    "notesCompatibleKeyLine": "Không bắt buộc. Dùng khóa cho endpoint này.",
+    "notesExplainCompatible": "Endpoint đã cấu hình nhận văn bản bản chép lời, số câu, nhãn người nói và cách viết trong danh sách từ. Bản cập nhật trực tiếp cũng gồm các ghi chú hiện có."
   },
   "notesQuit": {
     "named": "Đang viết ghi chú cho “{{title}}”. Vẫn thoát? Ghi chú sẽ được đánh dấu là đã hủy.",

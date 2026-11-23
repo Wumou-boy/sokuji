@@ -349,7 +349,9 @@
     "voiceTheyHear": "অপর পক্ষ যে কণ্ঠ শোনে",
     "voiceIHear": "আমি যে কণ্ঠ শুনি",
     "voiceIHearSame": "অপর পক্ষ যে কণ্ঠ শোনে সেটির মতোই, তাই এর বদলে {{voice}} পড়বে।",
-    "voiceCustom": "কাস্টম কণ্ঠ"
+    "voiceCustom": "কাস্টম কণ্ঠ",
+    "translateDetectParticipantLanguage": "অপর পক্ষের চীনা, জাপানি ও ইংরেজি স্বয়ংক্রিয়ভাবে শনাক্ত করুন",
+    "translateDetectParticipantLanguageHelp": "অপর পক্ষের ভাষা চীনা, জাপানি বা ইংরেজি হলে মূল বক্তব্য থেকে প্রতিটি ক্যাপশনের ভাষা শনাক্ত করুন। অনুবাদের লক্ষ্য ভাষা নির্বাচিত ভাষাই থাকবে।"
   },
   "simpleSettings": {
     "autoAuthenticated": "আপনার অ্যাকাউন্টের মাধ্যমে স্বয়ংক্রিয়ভাবে প্রমাণীকৃত",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "নোট লেখাতে সাইন ইন করুন, অথবা এখানে OpenAI বেছে নিন।",
       "notesNeedSignInOrKeyAndChoose": "নোট লেখাতে সাইন ইন করুন, অথবা “অ্যাকাউন্ট ও কী”-তে একটি OpenAI কী যোগ করে এখানে OpenAI বেছে নিন।",
       "speechNotUsed": "এবার কিছুই জোরে পড়ে শোনানো হবে না: অনুবাদ শুধু লেখা হিসেবে দেখাবে।",
-      "speechHowToHear": "পড়ে শোনাতে চাইলে ওপরের বাক্যে “শোনা” বেছে নিন।"
+      "speechHowToHear": "পড়ে শোনাতে চাইলে ওপরের বাক্যে “শোনা” বেছে নিন।",
+      "notesCompatibleName": "OpenAI-সামঞ্জস্যপূর্ণ (শুধু নোটের জন্য)",
+      "notesCompatibleNeedsConfig": "এন্ডপয়েন্ট ও মডেল সেট করুন"
     },
     "display": {
       "surface": "কোন প্রদর্শন",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "যার সঙ্গে মেলাবেন",
     "mergeAsk": "{{name}} এই দিকে আগে থেকেই একজন বক্তা।",
     "mergeOne": "এক জনে মেলান",
-    "keepApart": "আলাদা রাখুন"
+    "keepApart": "আলাদা রাখুন",
+    "notesCompatibleBaseUrl": "API বেস URL",
+    "notesCompatibleUrlInvalid": "একটি HTTPS URL, অথবা localhost/ব্যক্তিগত HTTP URL লিখুন।",
+    "notesCompatibleKeyLine": "ঐচ্ছিক। এই এন্ডপয়েন্টের জন্য একটি কী ব্যবহার করুন।",
+    "notesExplainCompatible": "কনফিগার করা এন্ডপয়েন্টে ট্রান্সক্রিপ্টের লেখা, বাক্যের নম্বর, বক্তার লেবেল এবং শব্দতালিকার বানান পাঠানো হয়। লাইভ আপডেটে এ পর্যন্ত লেখা নোটও থাকে।"
   },
   "notesQuit": {
     "named": "“{{title}}”-এর নোট লেখা হচ্ছে। তবুও বন্ধ করবেন? এগুলো বাতিল হিসেবে চিহ্নিত হবে।",

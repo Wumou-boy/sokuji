@@ -349,7 +349,9 @@
     "voiceTheyHear": "الصوت الذي يسمعه الطرف الآخر",
     "voiceIHear": "الصوت الذي أسمعه",
     "voiceIHearSame": "هو نفس الصوت الذي يسمعه الطرف الآخر، لذا يقرأ {{voice}} بدلًا منه.",
-    "voiceCustom": "صوت مخصص"
+    "voiceCustom": "صوت مخصص",
+    "translateDetectParticipantLanguage": "اكتشاف الصينية واليابانية والإنجليزية لدى الطرف الآخر تلقائيًا",
+    "translateDetectParticipantLanguageHelp": "عندما تكون لغة الطرف الآخر الصينية أو اليابانية أو الإنجليزية، حدّد لغة كل تسمية توضيحية من النص الأصلي. تظل لغة الترجمة هي اللغة المختارة."
   },
   "simpleSettings": {
     "autoAuthenticated": "تمت المصادقة تلقائيًا عبر حسابك",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "سجّل الدخول، أو اختر OpenAI هنا، لتُكتب الملاحظات.",
       "notesNeedSignInOrKeyAndChoose": "سجّل الدخول، أو أضف مفتاح OpenAI في «الحسابات والمفاتيح» ثم اختر OpenAI هنا، لتُكتب الملاحظات.",
       "speechNotUsed": "لا يُقرأ شيء بصوت عالٍ هذه المرة: تظهر الترجمة نصًّا فقط.",
-      "speechHowToHear": "لتُقرأ بصوت عالٍ، اختر «السماع» في الجملة أعلاه."
+      "speechHowToHear": "لتُقرأ بصوت عالٍ، اختر «السماع» في الجملة أعلاه.",
+      "notesCompatibleName": "متوافق مع OpenAI (للملاحظات فقط)",
+      "notesCompatibleNeedsConfig": "اضبط نقطة النهاية والطراز"
     },
     "display": {
       "surface": "أي عرض",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "دمج في",
     "mergeAsk": "{{name}} متحدث موجود بالفعل في هذا الجانب.",
     "mergeOne": "دمجهما في واحد",
-    "keepApart": "إبقاؤهما منفصلين"
+    "keepApart": "إبقاؤهما منفصلين",
+    "notesCompatibleBaseUrl": "عنوان URL الأساسي لواجهة API",
+    "notesCompatibleUrlInvalid": "أدخل عنوان HTTPS، أو عنوان HTTP محليًا أو خاصًا.",
+    "notesCompatibleKeyLine": "اختياري. استخدم مفتاحًا لنقطة النهاية هذه.",
+    "notesExplainCompatible": "تستقبل نقطة النهاية المضبوطة نص المحادثة وأرقام الجمل وتسميات المتحدثين وتهجئات قائمة الكلمات. وتتضمن التحديثات المباشرة أيضًا الملاحظات حتى الآن."
   },
   "notesQuit": {
     "named": "تُكتب الآن ملاحظات «{{title}}». هل تريد الخروج على أي حال؟ ستُعلَّم بأنها أُلغيت.",

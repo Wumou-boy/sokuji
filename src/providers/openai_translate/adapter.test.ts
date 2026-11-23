@@ -17,6 +17,7 @@ import { createTranslateAdapter, ERROR_WORDS_MS, NEVER_OPENED, START_TIMEOUT_MS 
 import type { TranslateConfig } from './config';
 import type { TranslateCredentials } from './settings';
 import { FRAME_SAMPLES } from './tail';
+import type { TranslateCaption } from './textTranslation';
 import { AUTO_CTX, configFor, KEY, liveTranslate, RefusingWebSocket, SERVER, startTranslate } from './testing';
 import { translateProtocols, translateUrl } from './wire';
 
@@ -481,6 +482,41 @@ describe('the OpenAI Translate adapter: what comes down', () => {
     const exchanges = entries.filter((e) => e.kind === 'exchange');
     expect(exchanges).toHaveLength(1);
     for (const ex of exchanges) { if (ex.kind === 'exchange') expect(ex.pairing).toBe('stated'); }
+  });
+
+  it('labels incoming EN, JA and ZH and translates sealed text against that exact source in one connection', async () => {
+    const context = { ...AUTO_CTX, speech: false, direction: { source: 'en', target: 'zh' } };
+    const samples = [
+      { source: 'The test meeting starts at three p.m. Use thirty frames per second.', language: 'en', translation: '测试会议下午三点开始。请使用每秒三十帧。' },
+      { source: 'フランス人シェフと日本人シェフは全然違う。', language: 'ja', translation: '法国厨师和日本厨师完全不同。' },
+      { source: '第二版不支持高动态范围。', language: 'zh' },
+      { source: '今日', language: 'und', translation: '今天' },
+      { source: 'よろしくお願いします。Please check the file.', language: 'und', translation: '请多关照。请检查文件。' },
+      { source: 'HDR V2', language: 'und', translation: 'HDR V2' },
+    ];
+    const translateCaption = vi.fn<TranslateCaption>(async ({ text }) => samples.find((sample) => sample.source === text)?.translation ?? '');
+    const h = await liveTranslate({ context, translateCaption });
+    for (const sample of samples) {
+      h.socket().receive(SERVER.input(sample.source));
+      h.socket().receive(SERVER.output('The old audio translation must not appear.'));
+      h.clock.advance(3_001);
+      await flush();
+    }
+
+    const conv = new Conversation({ leg: 'participant', session: 'mixed', languages: context.direction, clock: h.clock });
+    for (const event of h.content()) conv.apply(event);
+    const source = conv.snapshot().segments.filter((segment) => segment.side === 'source');
+    expect(source.map((segment) => ({ text: segment.text, language: segment.language }))).toEqual(
+      samples.map(({ source: text, language }) => ({ text, language })),
+    );
+    expect(conv.snapshot().segments.filter((segment) => segment.side === 'translation').map((segment) => ({
+      source: source.find((original) => original.origin === segment.origin)?.text, translation: segment.text,
+    }))).toEqual(samples
+      .filter(({ source, translation }) => translation && translation !== source)
+      .map(({ source, translation }) => ({ source, translation })));
+    expect(translateCaption.mock.calls.map(([request]) => request.sourceLanguage)).toEqual(['en', 'ja', 'auto', 'auto', 'auto']);
+    expect(h.sent().filter((frame) => frame.type === 'session.update')).toHaveLength(1);
+    expect(h.sent()[0]).toMatchObject({ session: { audio: { output: { language: 'zh' } } } });
   });
 });
 

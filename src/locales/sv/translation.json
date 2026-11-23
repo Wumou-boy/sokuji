@@ -349,7 +349,9 @@
     "voiceTheyHear": "Röst som motparten hör",
     "voiceIHear": "Röst som jag hör",
     "voiceIHearSame": "Samma röst som motparten hör, så {{voice}} läser i stället.",
-    "voiceCustom": "Anpassad röst"
+    "voiceCustom": "Anpassad röst",
+    "translateDetectParticipantLanguage": "Identifiera automatiskt motpartens kinesiska, japanska och engelska",
+    "translateDetectParticipantLanguageHelp": "Om motpartens språk är kinesiska, japanska eller engelska identifieras varje undertextspråk från originalet. Det valda målspråket för översättningen förblir oförändrat."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatiskt autentiserad via ditt konto",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Logga in, eller välj OpenAI här, så skrivs anteckningar.",
       "notesNeedSignInOrKeyAndChoose": "Logga in, eller lägg till en OpenAI-nyckel under ”Konton och nycklar” och välj OpenAI här, så skrivs anteckningar.",
       "speechNotUsed": "Den här gången läses inget upp: översättningen visas bara som text.",
-      "speechHowToHear": "Välj ”höra” i meningen ovan för att få den uppläst."
+      "speechHowToHear": "Välj ”höra” i meningen ovan för att få den uppläst.",
+      "notesCompatibleName": "OpenAI-kompatibel (endast anteckningar)",
+      "notesCompatibleNeedsConfig": "Ange slutpunkt och modell"
     },
     "display": {
       "surface": "Vilken visning",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Slå ihop med",
     "mergeAsk": "{{name}} är redan en talare på den här sidan.",
     "mergeOne": "Slå ihop till en",
-    "keepApart": "Håll isär"
+    "keepApart": "Håll isär",
+    "notesCompatibleBaseUrl": "API-bas-URL",
+    "notesCompatibleUrlInvalid": "Ange en HTTPS-URL eller en HTTP-URL för localhost/privat nätverk.",
+    "notesCompatibleKeyLine": "Valfritt. Använd en nyckel för den här slutpunkten.",
+    "notesExplainCompatible": "Den konfigurerade slutpunkten tar emot transkriptionstext, meningsnummer, talaretiketter och stavningar från ordlistan. Liveuppdateringar innehåller även anteckningarna hittills."
   },
   "notesQuit": {
     "named": "Anteckningar skrivs för ”{{title}}”. Avsluta ändå? De markeras som avbrutna.",

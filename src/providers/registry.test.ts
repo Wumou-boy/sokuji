@@ -161,7 +161,7 @@ describe('the invariants every provider meets (F17)', () => {
     expect(Object.fromEntries(ownKey.map((p) => [p.id, p.checkReads]))).toEqual({
       gemini: [],
       volcengine_ast2: ['authMode'],
-      qwen_livetranslate: [],
+      qwen_livetranslate: ['connection'],
       openai: [],
       openai_translate: [],
       openai_live: [],

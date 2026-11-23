@@ -349,7 +349,9 @@
     "voiceTheyHear": "Stem die de ander hoort",
     "voiceIHear": "Stem die ik hoor",
     "voiceIHearSame": "Dezelfde stem als die de ander hoort, dus leest {{voice}} in plaats daarvan.",
-    "voiceCustom": "Aangepaste stem"
+    "voiceCustom": "Aangepaste stem",
+    "translateDetectParticipantLanguage": "Detecteer automatisch Chinees, Japans en Engels van de gesprekspartner",
+    "translateDetectParticipantLanguageHelp": "Als de taal van de gesprekspartner Chinees, Japans of Engels is, wordt de taal van elke ondertitel bepaald aan de hand van het origineel. De gekozen doeltaal blijft behouden."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatisch geauthenticeerd via uw account",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Log in, of kies hier OpenAI, om notities te laten schrijven.",
       "notesNeedSignInOrKeyAndChoose": "Log in, of voeg een OpenAI-sleutel toe bij ‘Accounts en sleutels’ en kies hier OpenAI, om notities te laten schrijven.",
       "speechNotUsed": "Deze keer wordt niets voorgelezen: de vertaling verschijnt alleen als tekst.",
-      "speechHowToHear": "Wil je dat ze wordt voorgelezen, kies dan ‘horen’ in de zin hierboven."
+      "speechHowToHear": "Wil je dat ze wordt voorgelezen, kies dan ‘horen’ in de zin hierboven.",
+      "notesCompatibleName": "OpenAI-compatibel (alleen voor notities)",
+      "notesCompatibleNeedsConfig": "Stel eindpunt en model in"
     },
     "display": {
       "surface": "Welke weergave",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Samenvoegen met",
     "mergeAsk": "{{name}} is al een spreker aan deze kant.",
     "mergeOne": "Samenvoegen tot één",
-    "keepApart": "Apart houden"
+    "keepApart": "Apart houden",
+    "notesCompatibleBaseUrl": "API-basis-URL",
+    "notesCompatibleUrlInvalid": "Voer een HTTPS-URL in, of een HTTP-URL voor localhost/een privénetwerk.",
+    "notesCompatibleKeyLine": "Optioneel. Gebruik een sleutel voor dit eindpunt.",
+    "notesExplainCompatible": "Het ingestelde eindpunt ontvangt transcripttekst, zinsnummers, sprekerlabels en schrijfwijzen uit de woordenlijst. Live updates bevatten ook de notities tot dan toe."
   },
   "notesQuit": {
     "named": "Er worden notities geschreven voor ‘{{title}}’. Toch afsluiten? Ze worden als geannuleerd gemarkeerd.",

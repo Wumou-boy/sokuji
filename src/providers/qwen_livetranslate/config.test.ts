@@ -16,7 +16,7 @@ const ctx = (source: string, target: string, patch: Partial<SessionContext> = {}
 describe("Qwen LiveTranslate's builder (spec §5)", () => {
   it('builds my leg: the endpoint the check found, the target, my preset, automatic turns, no person labels', () => {
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, SHARED)).toEqual({
-      model: QWEN_MODEL, endpoint: 'intl', target: 'en', speech: true, voice: { kind: 'preset', name: 'Tina' }, manual: false, person: false,
+      model: QWEN_MODEL, endpoint: 'intl', target: 'en', speech: true, voice: { kind: 'preset', name: 'Tina' }, manual: false, person: false, detectIncomingLanguage: false, skipSameLanguageText: false,
       phrases: {}, silenceMs: null, transport: 'websocket',
     });
   });
@@ -54,6 +54,16 @@ describe("Qwen LiveTranslate's builder (spec §5)", () => {
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, { ...SHARED, models: [{ id: 'cn' }] })).toMatchObject({ endpoint: 'cn' });
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, { ...SHARED, models: [] })).toMatchObject({ endpoint: null });
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, { ...SHARED, models: [{ id: 'gpt-live-1' }] })).toMatchObject({ endpoint: null });
+  });
+
+  it('forces the explicit Bailian shared Beijing route and enables incoming Chinese caption labels/same-language suppression only there', () => {
+    const bailian = { ...QWEN_DEFAULTS, connection: 'bailian-cn' as const };
+    expect(buildQwen(ctx('en', 'zh', { speech: false }), bailian, SHARED)).toMatchObject({
+      endpoint: 'bailian-cn', detectIncomingLanguage: true, skipSameLanguageText: true,
+    });
+    expect(buildQwen(ctx('zh', 'en', { speech: false }), bailian, SHARED)).toMatchObject({
+      endpoint: 'bailian-cn', detectIncomingLanguage: false, skipSameLanguageText: false,
+    });
   });
 
   it('turns are manual under push-to-talk', () => {

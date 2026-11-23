@@ -112,7 +112,7 @@ describe('the OpenAI Translate definition', () => {
     stored.set('settings.openaiTranslate.transcriptModel', 'gpt-realtime-whisper');
     await useProviderStore.getState().load(openaiTranslateProvider);
     const entry = useProviderStore.getState().entries.openai_translate;
-    expect(entry.settings as TranslateSettings).toEqual({ noiseReduction: 'Far field' });
+    expect(entry.settings as TranslateSettings).toEqual({ noiseReduction: 'Far field', detectParticipantLanguage: true });
     expect(readCredentials(openaiTranslateProvider, entry.settings, entry.credentials, { signedIn: false, getToken: async () => null })).toEqual({ apiKey: 'sk-proj-oldProfileKey0123' });
     expect(entry.pair).toEqual({ source: 'ko', target: 'ja' });
     const config = openaiTranslateProvider.build({ direction: entry.pair, speech: true, turns: 'auto' }, entry.settings as TranslateSettings, SHARED) as TranslateConfig;

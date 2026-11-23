@@ -349,7 +349,9 @@
     "voiceTheyHear": "Suara yang didengar pihak lain",
     "voiceIHear": "Suara yang saya dengar",
     "voiceIHearSame": "Sama dengan suara yang didengar pihak lain, jadi {{voice}} yang membacakan.",
-    "voiceCustom": "Suara kustom"
+    "voiceCustom": "Suara kustom",
+    "translateDetectParticipantLanguage": "Deteksi otomatis bahasa Mandarin, Jepang, dan Inggris lawan bicara",
+    "translateDetectParticipantLanguageHelp": "Jika bahasa lawan bicara adalah Mandarin, Jepang, atau Inggris, bahasa setiap takarir dikenali dari teks asli. Bahasa target terjemahan tetap sesuai pilihan."
   },
   "simpleSettings": {
     "autoAuthenticated": "Otomatis terautentikasi melalui akun Anda",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Masuk, atau pilih OpenAI di sini, agar catatan ditulis.",
       "notesNeedSignInOrKeyAndChoose": "Masuk, atau tambahkan kunci OpenAI di “Akun dan kunci” lalu pilih OpenAI di sini, agar catatan ditulis.",
       "speechNotUsed": "Kali ini tidak ada yang dibacakan: terjemahan hanya tampil sebagai teks.",
-      "speechHowToHear": "Agar dibacakan, pilih “mendengar” di kalimat di atas."
+      "speechHowToHear": "Agar dibacakan, pilih “mendengar” di kalimat di atas.",
+      "notesCompatibleName": "Kompatibel dengan OpenAI (khusus catatan)",
+      "notesCompatibleNeedsConfig": "Atur endpoint dan model"
     },
     "display": {
       "surface": "Tampilan mana",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Gabungkan ke",
     "mergeAsk": "{{name}} sudah menjadi pembicara di sisi ini.",
     "mergeOne": "Gabungkan jadi satu",
-    "keepApart": "Biarkan terpisah"
+    "keepApart": "Biarkan terpisah",
+    "notesCompatibleBaseUrl": "URL dasar API",
+    "notesCompatibleUrlInvalid": "Masukkan URL HTTPS atau URL HTTP localhost/pribadi.",
+    "notesCompatibleKeyLine": "Opsional. Gunakan kunci untuk endpoint ini.",
+    "notesExplainCompatible": "Endpoint yang dikonfigurasi menerima teks transkrip, nomor kalimat, label pembicara, dan ejaan dari daftar kata. Pembaruan langsung juga menyertakan catatan sejauh ini."
   },
   "notesQuit": {
     "named": "Catatan untuk “{{title}}” sedang ditulis. Tetap keluar? Catatan akan ditandai dibatalkan.",

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { recordEvents } from '../../lib/contract/events';
-import { QwenSegments } from './segments';
+import { QwenSegments, type QwenSegmentsOptions } from './segments';
 
-function segments(person = false, firstRef?: number) {
+function segments(person = false, firstRef?: number, options: Partial<Omit<QwenSegmentsOptions, 'sink' | 'person'>> = {}) {
   const { events, log } = recordEvents();
-  const s = new QwenSegments({ sink: events, person, ...(firstRef === undefined ? {} : { firstRef }) });
+  const s = new QwenSegments({ sink: events, person, ...options, ...(firstRef === undefined ? {} : { firstRef }) });
   /** The log as `[kind, payload]`, audio by its ref and sample count. */
   const seen = () => log.map((e) => (e.kind === 'audio' ? ['audio', { ref: e.payload.ref, samples: e.payload.pcm.length }] : [e.kind, e.payload]));
   return { s, log, seen };
@@ -71,6 +71,53 @@ describe("Qwen LiveTranslate's segments (spec §6)", () => {
       ['segmentText', { ref: 1, text: 'hi' }],
       ['segmentClosed', { ref: 1 }],
     ]);
+  });
+
+  it('adds an unambiguous final EN/JA/ZH source label without revising its caption text', () => {
+    const english = segments(false, undefined, { detectIncomingLanguage: true });
+    english.s.heard('h-en');
+    english.s.text('h-en', 'source', 'The meeting begins at 2:30.');
+    english.s.done('h-en', 'source', 'The meeting begins at 2:30.');
+    expect(english.seen()).toEqual([
+      ['segmentOpened', { ref: 1, side: 'source', origin: 'h-en' }],
+      ['segmentText', { ref: 1, text: 'The meeting begins at 2:30.' }],
+      ['segmentText', { ref: 1, text: 'The meeting begins at 2:30.', language: 'en' }],
+      ['segmentClosed', { ref: 1 }],
+    ]);
+
+    const japanese = segments(false, undefined, { detectIncomingLanguage: true });
+    japanese.s.heard('h-ja');
+    japanese.s.text('h-ja', 'source', '今日は会議の資料を確認します。');
+    japanese.s.done('h-ja', 'source', '今日は会議の資料を確認します。');
+    expect(japanese.log.find((e) => e.kind === 'segmentText' && 'language' in e.payload)?.payload).toMatchObject({ language: 'ja' });
+  });
+
+  it('keeps a linked text translation paired and suppresses only a confidently same-language zh→zh duplicate', () => {
+    const translated = segments(false, undefined, { detectIncomingLanguage: true, skipSameLanguageText: true, targetLanguage: 'zh' });
+    translated.s.heard('h-ja');
+    translated.s.answer('t-ja', 'h-ja');
+    translated.s.text('h-ja', 'source', '今日は会議の資料を確認します。');
+    translated.s.text('t-ja', 'translation', '今天我会检查会议资料。');
+    translated.s.done('t-ja', 'translation', '今天我会检查会议资料。');
+    expect(translated.log.filter((e) => e.kind === 'segmentOpened')).toHaveLength(1);
+    translated.s.done('h-ja', 'source', '今日は会議の資料を確認します。');
+    expect(translated.seen().slice(-5)).toEqual([
+      ['segmentText', { ref: 1, text: '今日は会議の資料を確認します。', language: 'ja' }],
+      ['segmentClosed', { ref: 1 }],
+      ['segmentOpened', { ref: 2, side: 'translation', origin: 'h-ja' }],
+      ['segmentText', { ref: 2, text: '今天我会检查会议资料。' }],
+      ['segmentClosed', { ref: 2 }],
+    ]);
+
+    const same = segments(false, undefined, { detectIncomingLanguage: true, skipSameLanguageText: true, targetLanguage: 'zh' });
+    same.s.heard('h-zh');
+    same.s.answer('t-zh', 'h-zh');
+    same.s.text('h-zh', 'source', '今天我们讨论会议安排和测试结果。');
+    same.s.text('t-zh', 'translation', '今天我们讨论会议安排和测试结果。');
+    same.s.done('t-zh', 'translation', '今天我们讨论会议安排和测试结果。');
+    same.s.done('h-zh', 'source', '今天我们讨论会议安排和测试结果。');
+    expect(same.log.filter((e) => e.kind === 'segmentOpened')).toEqual([{ kind: 'segmentOpened', payload: { ref: 1, side: 'source', origin: 'h-zh' } }]);
+    expect(same.log.some((e) => e.kind === 'segmentText' && 'language' in e.payload && e.payload.language === 'zh')).toBe(true);
   });
 
   it('states the origin when the translation closes, when its link came after it opened', () => {

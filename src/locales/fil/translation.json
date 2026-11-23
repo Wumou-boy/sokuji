@@ -349,7 +349,9 @@
     "voiceTheyHear": "Boses na naririnig ng kabilang panig",
     "voiceIHear": "Boses na naririnig ko",
     "voiceIHearSame": "Kapareho ng boses na naririnig ng kabilang panig, kaya {{voice}} ang babasa sa halip.",
-    "voiceCustom": "Custom na boses"
+    "voiceCustom": "Custom na boses",
+    "translateDetectParticipantLanguage": "Awtomatikong tukuyin ang Chinese, Japanese, at English ng kausap",
+    "translateDetectParticipantLanguageHelp": "Kapag Chinese, Japanese, o English ang wika ng kausap, tukuyin mula sa orihinal ang wika ng bawat caption. Mananatili ang napiling target na wika ng salin."
   },
   "simpleSettings": {
     "autoAuthenticated": "Awtomatikong na-authenticate sa pamamagitan ng iyong account",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Mag-sign in, o piliin ang OpenAI dito, para maisulat ang mga tala.",
       "notesNeedSignInOrKeyAndChoose": "Mag-sign in, o magdagdag ng OpenAI key sa “Mga account at key” at piliin ang OpenAI dito, para maisulat ang mga tala.",
       "speechNotUsed": "Walang babasahin nang malakas ngayon: teksto lang ang salin.",
-      "speechHowToHear": "Para mabasa nang malakas, piliin ang “naririnig” sa pangungusap sa itaas."
+      "speechHowToHear": "Para mabasa nang malakas, piliin ang “naririnig” sa pangungusap sa itaas.",
+      "notesCompatibleName": "Tugma sa OpenAI (para sa mga tala lang)",
+      "notesCompatibleNeedsConfig": "Itakda ang endpoint at modelo"
     },
     "display": {
       "surface": "Aling display",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Pagsamahin kay",
     "mergeAsk": "Nagsasalita na sa panig na ito si {{name}}.",
     "mergeOne": "Gawing isa",
-    "keepApart": "Panatilihing hiwalay"
+    "keepApart": "Panatilihing hiwalay",
+    "notesCompatibleBaseUrl": "Base URL ng API",
+    "notesCompatibleUrlInvalid": "Maglagay ng HTTPS URL o localhost/pribadong HTTP URL.",
+    "notesCompatibleKeyLine": "Opsyonal. Gumamit ng key para sa endpoint na ito.",
+    "notesExplainCompatible": "Matatanggap ng naka-configure na endpoint ang teksto ng transcript, mga numero ng pangungusap, label ng mga tagapagsalita, at baybay mula sa listahan ng mga salita. Kasama rin sa mga live na update ang mga tala hanggang sa kasalukuyan."
   },
   "notesQuit": {
     "named": "Isinusulat ang mga tala para sa “{{title}}”. Isara pa rin? Mamarkahan itong kinansela.",

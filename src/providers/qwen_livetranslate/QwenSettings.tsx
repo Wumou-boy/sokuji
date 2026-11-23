@@ -24,7 +24,7 @@ import type { SettingsProps, VoiceSummaryProps } from '../../lib/provider/types'
 import type { CaptureSourceInfo } from '../../lib/screen/desktopFrames';
 import { useScreenContextStore, type PickedSource } from '../../stores/screenContextStore';
 import { isElectron } from '../../utils/environment';
-import { ENDPOINTS, isEndpointId } from './endpoints';
+import { BAILIAN_ENDPOINT_ID, ENDPOINTS, isEndpointId } from './endpoints';
 import { regionOptionLabel, useRegionLatencies } from '../../components/Region/regionLatency';
 import { requestRegionChange } from '../../lib/region/regionChange';
 import { QWEN_REGION_LABELS, QWEN_REGIONS } from './regions';
@@ -64,13 +64,16 @@ export function QwenSettingsView({ settings, update, disabled = false, participa
     ...QWEN_VOICES.map((v) => presetVoice(v)),
   ];
   const endpoint = models[0]?.id;
+  const bailianSelected = settings.connection === BAILIAN_ENDPOINT_ID || endpoint === BAILIAN_ENDPOINT_ID;
   return (
     <>
       <StagePart stages={TR}>
-      {isEndpointId(endpoint) && (
+      {(bailianSelected || isEndpointId(endpoint)) && (
         <div className="settings-section">
           <div className="models-info">
-            {t('providers.qwen_livetranslate.keyRegion', 'Key region: {{region}}', { region: QWEN_REGION_LABELS[ENDPOINTS[endpoint].region] })}
+            {bailianSelected
+              ? t('providers.qwen_livetranslate.bailianEndpoint', 'Endpoint: Alibaba Bailian (Beijing shared)')
+              : t('providers.qwen_livetranslate.keyRegion', 'Key region: {{region}}', { region: QWEN_REGION_LABELS[ENDPOINTS[endpoint as keyof typeof ENDPOINTS].region] })}
           </div>
         </div>
       )}

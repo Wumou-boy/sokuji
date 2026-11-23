@@ -178,6 +178,8 @@ export interface ContinuousSegmentsOptions {
   sink: SegmentSink;
   /** The source's text as shown, and as its pauses and sentences are read: Gemini 3.x's CJK spaces removed. The identity when absent. */
   showSource?: (text: string) => string;
+  /** Optional caption metadata computed from the current source segment. */
+  detectSourceLanguage?: (text: string) => string;
   /**
    * A translation that stops mid-sentence is held (choice 6) — `false` for a
    * target whose script writes no sentence-final mark (Thai, Lao), where a
@@ -261,7 +263,9 @@ export class ContinuousSegments {
     }
     s.text += delta;
     s.lastAt = this.o.clock.now();
-    this.o.sink.segmentText({ ref: s.ref, text: this.show(s.text) });
+    const text = this.show(s.text);
+    const language = this.o.detectSourceLanguage?.(text);
+    this.o.sink.segmentText({ ref: s.ref, text, ...(language === undefined ? {} : { language }) });
     this.armSource();
   }
 

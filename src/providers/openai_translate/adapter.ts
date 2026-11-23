@@ -30,11 +30,13 @@ import {
 } from '../../lib/contract/adapter';
 import { framePayload } from '../../lib/contract/framePayload';
 import { describeCause } from '../../lib/diagnostics/describeCause';
+import { CaptionSegments } from './captionSegments';
 import type { TranslateConfig } from './config';
 import { TranslateSegments } from './segments';
 import type { TranslateCredentials } from './settings';
 import { nativeSocket, WS_OPEN, type OpenSocket } from './socket';
 import { ReleaseTail, type TailSummary } from './tail';
+import { CAPTION_TRANSLATION_MODEL, CAPTION_TRANSLATION_TIMEOUT_MS, captionTranslationFailure, translateCaption, type TranslateCaption } from './textTranslation';
 import {
   appendFrame,
   base64ToPcm,
@@ -66,6 +68,7 @@ export const ERROR_WORDS_MS = 10_000;
 export interface TranslateAdapterDeps {
   /** `new WebSocket(url, protocols)` in the app; a `FakeSocket` factory in tests. */
   openSocket: OpenSocket;
+  translateCaption: TranslateCaption;
 }
 
 type Side = 'source' | 'translation';
@@ -85,8 +88,10 @@ class TranslateLeg implements AdapterSession {
   private phase: 'opening' | 'configuring' | 'live' | 'ended' = 'opening';
   private opened = false;
   private readonly socket: WebSocket;
-  private readonly segments: TranslateSegments;
+  private readonly segments: Pick<TranslateSegments, 'input' | 'done' | 'stop'>;
+  private readonly realtimeSegments?: TranslateSegments;
   private readonly tail: ReleaseTail;
+  private captionRequests = 0;
   /** Samples sent this session: the server frames them on a 200 ms grid (the tail's pad). */
   private sent = 0;
   /** The last frame parsed: `session.unreadable` on the ok → failing transition only (choice 17). */
@@ -102,18 +107,33 @@ class TranslateLeg implements AdapterSession {
   constructor(
     private readonly request: StartRequest<TranslateConfig, TranslateCredentials>,
     private readonly events: AdapterEvents,
-    openSocket: OpenSocket,
+    { openSocket, translateCaption }: TranslateAdapterDeps,
   ) {
-    const { config, clock, signal } = request;
+    const { config, context, clock, signal } = request;
     // WebSocket only (2026-09-29): every config says `websocket`.
     this.info = { transport: config.transport };
-    this.segments = new TranslateSegments({
+    const segmentOptions = {
       clock,
       silence: config.silence,
       sink: events,
-      // Each translation cut and why, for the live test (Stage 2 translation cuts, choice 14).
-      cut: (summary) => this.frame('out', 'translation.cut', summary),
-    });
+      detectParticipantLanguage: config.detectParticipantLanguage,
+    };
+    if (config.translateParticipantCaptions && !context.speech) {
+      this.segments = new CaptionSegments({
+        ...segmentOptions,
+        targetLanguage: config.target,
+        translate: (text, sourceLanguage, signal) =>
+          this.translateSourceCaption(translateCaption, text, sourceLanguage, signal),
+        onFailure: () => events.degraded({ code: 'translation_failed', message: 'A subtitle could not be translated. Its original text is still available.' }),
+      });
+    } else {
+      this.realtimeSegments = new TranslateSegments({
+        ...segmentOptions,
+        // Each translation cut and why, for the live test (Stage 2 translation cuts, choice 14).
+        cut: (summary) => this.frame('out', 'translation.cut', summary),
+      });
+      this.segments = this.realtimeSegments;
+    }
     this.tail = new ReleaseTail({ clock, send: (pcm) => this.send(pcm), ended: (summary) => this.tailEnded(summary) });
     this.socket = openSocket(translateUrl(config), translateProtocols(request.credentials));
     this.socket.binaryType = 'arraybuffer';
@@ -280,16 +300,44 @@ class TranslateLeg implements AdapterSession {
     if (typeof e.delta === 'string') this.segments.input(e.delta);
   }
 
+  private async translateSourceCaption(
+    translate: TranslateCaption,
+    text: string,
+    sourceLanguage: string,
+    signal: AbortSignal,
+  ): Promise<string> {
+    const { config, credentials, clock } = this.request;
+    const request = ++this.captionRequests;
+    const started = clock.now();
+    const elapsedMs = () => Math.round(clock.now() - started);
+    this.frame('out', 'caption.translation.request', {
+      request, model: CAPTION_TRANSLATION_MODEL, sourceLanguage, deadlineMs: CAPTION_TRANSLATION_TIMEOUT_MS,
+    });
+    try {
+      const result = await translate({
+        text, sourceLanguage, targetLanguage: config.target, apiKey: credentials.apiKey, signal,
+        onResponse: (timing) => this.frame('in', 'caption.translation.response', { request, elapsedMs: elapsedMs(), ...timing }),
+      });
+      if (!signal.aborted) this.frame('in', 'caption.translation.completed', { request, elapsedMs: elapsedMs() });
+      return result;
+    } catch (error) {
+      if (!signal.aborted) this.frame('in', 'caption.translation.failed', { request, elapsedMs: elapsedMs(), ...captionTranslationFailure(error) });
+      throw error;
+    }
+  }
+
   private outputDelta(e: RealtimeTranslationOutputTranscriptDeltaEvent): void {
     if (this.phase !== 'live') return;
+    if (!this.realtimeSegments) return;
     this.frame('in', e.type, { delta: e.delta, elapsedMs: elapsedMsOf(e) });
     if (typeof e.delta !== 'string' || !e.delta) return;
-    this.segments.output(e.delta);
+    this.realtimeSegments.output(e.delta);
     this.tail.output();
   }
 
   private audioDelta(e: RealtimeTranslationOutputAudioDeltaEvent): void {
     if (this.phase !== 'live') return;
+    if (!this.realtimeSegments) return;
     // No base64 string where the audio should be: the same episode as audio that will not decode (choice 17), in fixed words that quote nothing of the frame.
     if (typeof e.delta !== 'string') {
       this.unreadable('audio', new Error('an audio delta with no base64 string'));
@@ -309,7 +357,7 @@ class TranslateLeg implements AdapterSession {
     this.frame('in', e.type, { samples: pcm.length, rms: Math.round(computeRms(pcm) * 10_000) / 10_000, elapsedMs: elapsedMsOf(e), sampleRate: rate });
     if (rate !== OUTPUT_RATE) this.foreignRate(rate);
     // Played only on a leg that speaks, at the contract's rate; above the noise floor it holds the translation either way (choices 5, 16; translation cuts, choice 11).
-    this.segments.audio(pcm, this.request.context.speech && rate === OUTPUT_RATE);
+    this.realtimeSegments.audio(pcm, this.request.context.speech && rate === OUTPUT_RATE);
     this.tail.output();
   }
 
@@ -422,13 +470,13 @@ class TranslateLeg implements AdapterSession {
 }
 
 export function createTranslateAdapter(deps: Partial<TranslateAdapterDeps> = {}): Adapter<TranslateConfig, TranslateCredentials> {
-  const openSocket = deps.openSocket ?? nativeSocket;
+  const resolved = { openSocket: deps.openSocket ?? nativeSocket, translateCaption: deps.translateCaption ?? translateCaption };
   return {
     start(request, events) {
       // An aborted start opens nothing.
       if (request.signal.aborted) return Promise.reject(request.signal.reason ?? new Error('aborted'));
       try {
-        return new TranslateLeg(request, events, openSocket).opening;
+        return new TranslateLeg(request, events, resolved).opening;
       } catch (error) {
         // A start rejects, never throws. In fixed words and with no cause: a browser that refuses the socket quotes the subprotocols, the key among them.
         return Promise.reject(new AdapterStartError(`The browser would not open the socket (${errorName(error)}).`, 'network'));

@@ -3,9 +3,13 @@
 // they send the same members through the shared text-model client (text models, part C).
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { createVirtualClock } from '../contract/clock';
-import { answerOf, ChatError, chatBody, wait } from './chat';
+import { answerOf, ChatError, chatBody, compatibleChat, openAiChat, wait } from './chat';
 
 const R = { system: 'S', user: { sentences: [{ sid: 1, speaker: 'Me', text: '你好' }] }, effort: 'none' as const, maxTokens: 32000 };
+const base = { baseUrl: 'https://api.openai.com/v1', apiKey: 'sk-test', model: 'gpt-6-luna' };
+const ask = (chat: ReturnType<typeof compatibleChat>) => chat({ ...R, prompt: 'whole-meeting', promptVersion: 2, signal: new AbortController().signal });
+const answer = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const content = (value: unknown) => ({ choices: [{ message: { content: JSON.stringify(value) } }] });
 
 describe('the body the notes are asked with', () => {
   it('is one chat request for a JSON object: the prompt, the part as compact JSON, the budget, the reasoning', () => {
@@ -16,6 +20,33 @@ describe('the body the notes are asked with', () => {
       max_completion_tokens: 32000,
       reasoning_effort: 'none',
     });
+  });
+
+  it('uses the generic compatible body without OpenAI-only fields and accepts a JSON code fence', async () => {
+    const fetch = vi.fn(async () => answer(200, { choices: [{ message: { content: '```json\n{"title":"T"}\n```' } }] }));
+    await expect(ask(compatibleChat({ baseUrl: 'http://127.0.0.1:8000/v1/', model: 'qwen-local', fetch }))).resolves.toEqual({ title: 'T' });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('http://127.0.0.1:8000/v1/chat/completions');
+    expect(init.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(JSON.parse(init.body as string)).toEqual({
+      model: 'qwen-local', messages: [{ role: 'system', content: 'S' }, { role: 'user', content: '{"sentences":[{"sid":1,"speaker":"Me","text":"你好"}]}' }], max_tokens: 32000,
+    });
+  });
+
+  it('adds Bailian thinking control and bearer auth only on the Bailian route', async () => {
+    const fetch = vi.fn(async () => answer(200, content({ title: 'T' })));
+    await ask(compatibleChat({ baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-flash', apiKey: 'qwen-key', bailian: true, fetch }));
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions');
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer qwen-key' });
+    expect(JSON.parse(init.body as string)).toMatchObject({ model: 'qwen-flash', max_tokens: 32000, enable_thinking: false });
+    expect(JSON.parse(init.body as string)).not.toHaveProperty('response_format');
+    expect(JSON.parse(init.body as string)).not.toHaveProperty('reasoning_effort');
+  });
+
+  it('keeps code fences invalid for the strict OpenAI route', async () => {
+    const fetch = vi.fn(async () => answer(200, { choices: [{ message: { content: '```json\n{"title":"T"}\n```' } }] }));
+    await expect(ask(openAiChat({ ...base, fetch }))).rejects.toMatchObject({ code: 'not-json' });
   });
 
   // Review: a model that does not take `reasoning_effort: 'none'` refuses every request with it (400, not retried).
@@ -36,16 +67,14 @@ describe('the body the notes are asked with', () => {
 });
 
 describe('an answer, read', () => {
-  const answer = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
-
   it("is the model's JSON object", async () => {
-    await expect(answerOf(answer({ choices: [{ message: { content: '{"title":"T"}' } }] }))).resolves.toEqual({ title: 'T' });
+    await expect(answerOf(answer(200, { choices: [{ message: { content: '{"title":"T"}' } }] }))).resolves.toEqual({ title: 'T' });
   });
 
   it('refuses an answer that is not a JSON object, or none at all, with a reason of its own', async () => {
-    await expect(answerOf(answer({ choices: [{ message: { content: 'not json' } }] }))).rejects.toMatchObject({ code: 'not-json' });
-    await expect(answerOf(answer({ choices: [{ message: { content: '[1]' } }] }))).rejects.toMatchObject({ code: 'not-json' });
-    await expect(answerOf(answer({ choices: [] }))).rejects.toMatchObject({ code: 'no-answer' });
+    await expect(answerOf(answer(200, { choices: [{ message: { content: 'not json' } }] }))).rejects.toMatchObject({ code: 'not-json' });
+    await expect(answerOf(answer(200, { choices: [{ message: { content: '[1]' } }] }))).rejects.toMatchObject({ code: 'not-json' });
+    await expect(answerOf(answer(200, { choices: [] }))).rejects.toMatchObject({ code: 'no-answer' });
   });
 });
 

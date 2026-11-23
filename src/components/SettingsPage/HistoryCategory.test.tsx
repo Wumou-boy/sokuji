@@ -21,7 +21,7 @@ vi.mock('../../lib/history/port', async (importOriginal) => ({
 }));
 
 import '../../locales';
-import { HistoryCategory } from './HistoryCategory';
+import { HistoryCategory, notesBaseUrlAllowed } from './HistoryCategory';
 import useSettingsStore from '../../stores/settingsStore';
 import { useLineUpStore } from '../../stores/lineUpStore';
 
@@ -38,6 +38,14 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('history and notes', () => {
+  it('allows HTTPS and private HTTP endpoints, but refuses public plain HTTP', () => {
+    expect(notesBaseUrlAllowed('https://api.example.com/v1')).toBe(true);
+    expect(notesBaseUrlAllowed('http://localhost:1234/v1')).toBe(true);
+    expect(notesBaseUrlAllowed('http://192.168.1.2:8000/v1')).toBe(true);
+    expect(notesBaseUrlAllowed('http://172.20.0.3/v1')).toBe(true);
+    expect(notesBaseUrlAllowed('http://api.example.com/v1')).toBe(false);
+    expect(notesBaseUrlAllowed('file:///tmp/model')).toBe(false);
+  });
   it('shows the space History takes and its folder, and opens the folder', async () => {
     const invoke = vi.fn(async () => undefined);
     (window as unknown as { electron: unknown }).electron = { invoke };
@@ -171,6 +179,27 @@ describe('notes after the session', () => {
     render(<HistoryCategory locked={false} />);
     await settle();
     expect(screen.getByText('When a session ends, OpenAI-Compatible Service writes its notes from the transcript.')).toBeInTheDocument();
+  });
+
+  it('shows Bailian model configuration independently of OpenAI settings', async () => {
+    useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'bailian_notes' }, stored: true });
+    useSettingsStore.setState({ notesBailianModel: 'qwen-plus' } as never);
+    render(<HistoryCategory locked={false} />);
+    await settle();
+    expect(screen.getByRole('textbox', { name: 'Notes model' })).toHaveValue('qwen-plus');
+    expect(within(row('Notes model')).queryByRole('combobox')).toBeNull();
+  });
+
+  it('shows a separate compatible endpoint, model and secret key configuration', async () => {
+    useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'compatible_notes' }, stored: true });
+    useSettingsStore.setState({ notesCompatible: { baseUrl: 'https://example.test/v1', model: 'my-model', apiKey: 'private-key' } } as never);
+    render(<HistoryCategory locked={false} />);
+    await settle();
+    expect(screen.getByRole('textbox', { name: 'API base URL' })).toHaveValue('https://example.test/v1');
+    expect(screen.getByRole('textbox', { name: 'Notes model' })).toHaveValue('my-model');
+    const key = document.querySelector<HTMLInputElement>('input[aria-label="API key"]');
+    expect(key).toHaveAttribute('type', 'password');
+    expect(key).toHaveValue('private-key');
   });
 });
 

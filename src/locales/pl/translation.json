@@ -349,7 +349,9 @@
     "voiceTheyHear": "Głos, który słyszy druga strona",
     "voiceIHear": "Głos, który słyszę",
     "voiceIHearSame": "To ten sam głos, który słyszy druga strona, więc zamiast niego czyta {{voice}}.",
-    "voiceCustom": "Niestandardowy głos"
+    "voiceCustom": "Niestandardowy głos",
+    "translateDetectParticipantLanguage": "Automatycznie wykrywaj chiński, japoński i angielski rozmówcy",
+    "translateDetectParticipantLanguageHelp": "Gdy rozmówca mówi po chińsku, japońsku lub angielsku, język każdego napisu jest rozpoznawany na podstawie oryginału. Wybrany język tłumaczenia pozostaje bez zmian."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatycznie uwierzytelniono za pomocą konta",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Zaloguj się albo wybierz tutaj OpenAI, aby notatki były pisane.",
       "notesNeedSignInOrKeyAndChoose": "Zaloguj się albo dodaj klucz OpenAI w „Konta i klucze” i wybierz tutaj OpenAI, aby notatki były pisane.",
       "speechNotUsed": "Tym razem nic nie jest czytane na głos: tłumaczenie widać tylko jako tekst.",
-      "speechHowToHear": "Aby było czytane, wybierz „słyszeć” w zdaniu powyżej."
+      "speechHowToHear": "Aby było czytane, wybierz „słyszeć” w zdaniu powyżej.",
+      "notesCompatibleName": "Zgodne z OpenAI (tylko do notatek)",
+      "notesCompatibleNeedsConfig": "Ustaw punkt końcowy i model"
     },
     "display": {
       "surface": "Który widok",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Połącz z",
     "mergeAsk": "{{name}} jest już mówcą po tej stronie.",
     "mergeOne": "Połącz w jednego",
-    "keepApart": "Zostaw osobno"
+    "keepApart": "Zostaw osobno",
+    "notesCompatibleBaseUrl": "Podstawowy adres URL API",
+    "notesCompatibleUrlInvalid": "Wpisz adres HTTPS lub adres HTTP localhost/sieci prywatnej.",
+    "notesCompatibleKeyLine": "Opcjonalnie. Użyj klucza dla tego punktu końcowego.",
+    "notesExplainCompatible": "Skonfigurowany punkt końcowy otrzymuje tekst transkrypcji, numery zdań, etykiety rozmówców i zapisy z listy słów. Aktualizacje na żywo zawierają też dotychczasowe notatki."
   },
   "notesQuit": {
     "named": "Trwa pisanie notatek do „{{title}}”. Zamknąć mimo to? Zostaną oznaczone jako anulowane.",

@@ -349,7 +349,9 @@
     "voiceTheyHear": "Voix entendue par l'autre",
     "voiceIHear": "Voix que j'entends",
     "voiceIHearSame": "C'est la voix entendue par l'autre, donc {{voice}} lit à sa place.",
-    "voiceCustom": "Voix personnalisée"
+    "voiceCustom": "Voix personnalisée",
+    "translateDetectParticipantLanguage": "Détecter automatiquement le chinois, le japonais et l’anglais de l’interlocuteur",
+    "translateDetectParticipantLanguageHelp": "Si la langue de l’interlocuteur est le chinois, le japonais ou l’anglais, la langue de chaque sous-titre est détectée à partir de l’original. La langue cible de la traduction reste celle sélectionnée."
   },
   "simpleSettings": {
     "autoAuthenticated": "Authentifié automatiquement via votre compte",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Connectez-vous, ou choisissez OpenAI ici, pour que les notes soient rédigées.",
       "notesNeedSignInOrKeyAndChoose": "Connectez-vous, ou ajoutez une clé OpenAI dans « Comptes et clés » et choisissez OpenAI ici, pour que les notes soient rédigées.",
       "speechNotUsed": "Cette fois, rien n'est lu à voix haute : la traduction s'affiche seulement en texte.",
-      "speechHowToHear": "Pour la faire lire, choisissez « entendre » dans la phrase ci-dessus."
+      "speechHowToHear": "Pour la faire lire, choisissez « entendre » dans la phrase ci-dessus.",
+      "notesCompatibleName": "Compatible avec OpenAI (notes uniquement)",
+      "notesCompatibleNeedsConfig": "Définir le point de terminaison et le modèle"
     },
     "display": {
       "surface": "Quel affichage",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Fusionner avec",
     "mergeAsk": "{{name}} est déjà un intervenant de ce côté.",
     "mergeOne": "Fusionner en un seul",
-    "keepApart": "Garder séparés"
+    "keepApart": "Garder séparés",
+    "notesCompatibleBaseUrl": "URL de base de l’API",
+    "notesCompatibleUrlInvalid": "Saisissez une URL HTTPS ou une URL HTTP locale/privée.",
+    "notesCompatibleKeyLine": "Facultatif. Utilisez une clé pour ce point de terminaison.",
+    "notesExplainCompatible": "Le point de terminaison configuré reçoit le texte de la transcription, les numéros des phrases, les noms des locuteurs et les graphies de la liste de mots. Les mises à jour en direct incluent aussi les notes déjà rédigées."
   },
   "notesQuit": {
     "named": "Les notes de « {{title}} » sont en cours de rédaction. Quitter quand même ? Elles seront marquées comme annulées.",

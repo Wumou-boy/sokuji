@@ -349,7 +349,9 @@
     "voiceTheyHear": "Stimme, die das Gegenüber hört",
     "voiceIHear": "Stimme, die ich höre",
     "voiceIHearSame": "Dieselbe Stimme, die das Gegenüber hört, daher liest stattdessen {{voice}}.",
-    "voiceCustom": "Benutzerdefinierte Stimme"
+    "voiceCustom": "Benutzerdefinierte Stimme",
+    "translateDetectParticipantLanguage": "Chinesisch, Japanisch und Englisch des Gegenübers automatisch erkennen",
+    "translateDetectParticipantLanguageHelp": "Wenn die Sprache des Gegenübers Chinesisch, Japanisch oder Englisch ist, wird die Sprache jedes Untertitels anhand des Originals erkannt. Die gewählte Zielsprache bleibt unverändert."
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatisch über Ihr Konto authentifiziert",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Melden Sie sich an oder wählen Sie hier OpenAI, damit Notizen geschrieben werden.",
       "notesNeedSignInOrKeyAndChoose": "Melden Sie sich an oder fügen Sie unter „Konten und Schlüssel“ einen OpenAI-Schlüssel hinzu und wählen Sie hier OpenAI, damit Notizen geschrieben werden.",
       "speechNotUsed": "Diesmal wird nichts vorgelesen: Die Übersetzung erscheint nur als Text.",
-      "speechHowToHear": "Damit sie vorgelesen wird, wähle oben im Satz „hören“."
+      "speechHowToHear": "Damit sie vorgelesen wird, wähle oben im Satz „hören“.",
+      "notesCompatibleName": "OpenAI-kompatibel (nur für Notizen)",
+      "notesCompatibleNeedsConfig": "Endpunkt und Modell festlegen"
     },
     "display": {
       "surface": "Welche Anzeige",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Zusammenführen mit",
     "mergeAsk": "{{name}} ist schon ein Sprecher auf dieser Seite.",
     "mergeOne": "Zu einem zusammenführen",
-    "keepApart": "Getrennt lassen"
+    "keepApart": "Getrennt lassen",
+    "notesCompatibleBaseUrl": "API-Basis-URL",
+    "notesCompatibleUrlInvalid": "Geben Sie eine HTTPS-URL oder eine lokale/private HTTP-URL ein.",
+    "notesCompatibleKeyLine": "Optional. Verwenden Sie einen Schlüssel für diesen Endpunkt.",
+    "notesExplainCompatible": "Der konfigurierte Endpunkt erhält den Transkripttext, Satznummern, Sprecherbezeichnungen und Schreibweisen aus der Wortliste. Live-Aktualisierungen enthalten außerdem die bisherigen Notizen."
   },
   "notesQuit": {
     "named": "Für „{{title}}“ werden gerade Notizen geschrieben. Trotzdem beenden? Sie werden als abgebrochen markiert.",

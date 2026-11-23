@@ -1,6 +1,7 @@
 // The line-up's notes service: always one (owner, 2026-11-17: no "None"); whether notes are written is the switches' call.
-import { describe, it, expect } from 'vitest';
-import { COMPATIBLE_NOTES, GEMINI_NOTES, notesProviderOf, notesServiceOf, KIZUNA_NOTES, NOTES_SERVICES, OPENAI_NOTES } from './notesService';
+import { describe, it, expect, vi } from 'vitest';
+vi.mock('../../utils/environment', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../utils/environment')>()), isElectron: () => true }));
+import { BAILIAN_NOTES, COMPATIBLE_NOTES, GEMINI_NOTES, LEGACY_COMPATIBLE_NOTES, notesProviderOf, notesServiceOf, KIZUNA_NOTES, NOTES_SERVICES, OPENAI_NOTES } from './notesService';
 
 const d = (hostedOffered: boolean, signedIn: boolean, openAiKeyed: boolean, geminiKeyed = false, textModelsOffered = true) => ({
   hostedOffered, signedIn, openAiKeyed, geminiKeyed, textModelsOffered,
@@ -22,6 +23,8 @@ describe('the notes service', () => {
   it('is the one the line-up chose', () => {
     expect(notesServiceOf({ summarisation: 'openai' }, d(true, true, false))).toBe('openai');
     expect(notesServiceOf({ summarisation: KIZUNA_NOTES }, d(false, false, true))).toBe(KIZUNA_NOTES);
+    expect(notesServiceOf({ summarisation: BAILIAN_NOTES }, d(false, false, false))).toBe(BAILIAN_NOTES);
+    expect(notesServiceOf({ summarisation: LEGACY_COMPATIBLE_NOTES }, d(false, false, false))).toBe(LEGACY_COMPATIBLE_NOTES);
   });
 
   // The owner's call (2026-11-17): Kizuna AI by default where it can write the notes, otherwise OpenAI.
@@ -45,9 +48,11 @@ describe('the notes service', () => {
   // Text models, part C: the notes can be written by OpenAI's, Gemini's or a compatible service's text model. The
   // stored id 'openai' is kept, served by OpenAI's text model.
   it('knows Kizuna AI, OpenAI, Gemini and a compatible service, each served by its provider', () => {
-    expect(NOTES_SERVICES).toEqual(['kizunaai_openai', 'openai', 'gemini_text', 'openai_compatible']);
+    expect(NOTES_SERVICES).toEqual(['kizunaai_openai', 'openai', 'gemini_text', 'openai_compatible', 'bailian_notes', 'compatible_notes']);
     expect([OPENAI_NOTES, GEMINI_NOTES, COMPATIBLE_NOTES].map(notesProviderOf)).toEqual(['openai_text', 'gemini_text', 'openai_compatible']);
     expect(notesProviderOf(KIZUNA_NOTES)).toBeNull();
+    expect(notesProviderOf(BAILIAN_NOTES)).toBeNull();
+    expect(notesProviderOf(LEGACY_COMPATIBLE_NOTES)).toBeNull();
     expect(notesProviderOf('gone')).toBeNull();
   });
 

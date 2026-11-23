@@ -349,7 +349,9 @@
     "voiceTheyHear": "对方听到的声音",
     "voiceIHear": "我听到的声音",
     "voiceIHearSame": "和对方听到的声音相同，朗读时改用 {{voice}}。",
-    "voiceCustom": "自定义声音"
+    "voiceCustom": "自定义声音",
+    "translateDetectParticipantLanguage": "自动标注对方的中文、日语和英语",
+    "translateDetectParticipantLanguageHelp": "对方语言设为中文、日语或英语时，从原文为每段字幕标注语种。译文仍使用所选的目标语言。"
   },
   "simpleSettings": {
     "autoAuthenticated": "已通过您的账户自动认证",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "登录，或在这里选 OpenAI，才能写纪要。",
       "notesNeedSignInOrKeyAndChoose": "登录，或在“账号与密钥”里添加 OpenAI 的 key 并在这里选 OpenAI，才能写纪要。",
       "speechNotUsed": "这次没有译文要读出来，只显示文字。",
-      "speechHowToHear": "要读出来，在上面那句话里选「听到」。"
+      "speechHowToHear": "要读出来，在上面那句话里选「听到」。",
+      "notesCompatibleName": "OpenAI 兼容（仅用于笔记）",
+      "notesCompatibleNeedsConfig": "设置接口地址和模型"
     },
     "display": {
       "surface": "哪个界面",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "并入",
     "mergeAsk": "{{name}} 已经是这一侧的说话人了。",
     "mergeOne": "并成一个",
-    "keepApart": "分开保留"
+    "keepApart": "分开保留",
+    "notesCompatibleBaseUrl": "API 基础地址",
+    "notesCompatibleUrlInvalid": "请输入安全的网址，或本机/私有网络中的 HTTP 地址。",
+    "notesCompatibleKeyLine": "可留空。需鉴权时填写这个接口自己的密钥。",
+    "notesExplainCompatible": "配置的接口会收到转写文本、句子编号、发言人标签和词表拼写。实时更新时也会发送已有的纪要。"
   },
   "notesQuit": {
     "named": "正在为“{{title}}”写纪要。仍然退出吗？这份纪要会记为已取消。",

@@ -1,6 +1,7 @@
 import { Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { NoiseReductionField } from '../../components/providers/fields/NoiseReductionField';
+import ToggleSwitch from '../../components/Settings/shared/ToggleSwitch';
 import type { SettingsProps } from '../../lib/provider/types';
 import { NOISE_REDUCTIONS, type TranslateSettings } from './settings';
 import { TR } from '../../lib/lineup/types';
@@ -27,6 +28,15 @@ export function TranslateSettingsView({ settings, update, disabled = false }: Se
       </div>
       </StagePart>
       <StagePart stages={TR}>
+      <div className="settings-section">
+        <ToggleSwitch
+          label={t('settings.translateDetectParticipantLanguage', 'Detect incoming Chinese, Japanese and English')}
+          checked={settings.detectParticipantLanguage}
+          onChange={() => update({ detectParticipantLanguage: !settings.detectParticipantLanguage })}
+          disabled={disabled}
+          tooltip={t('settings.translateDetectParticipantLanguageHelp', 'Labels incoming captions from the transcript when the other side’s language is set to Chinese, Japanese or English. The translation target stays selected.')}
+        />
+      </div>
       <NoiseReductionField value={settings.noiseReduction} options={NOISE_REDUCTIONS} onChange={(noiseReduction) => update({ noiseReduction })} disabled={disabled} />
       </StagePart>
     </>

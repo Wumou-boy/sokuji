@@ -4,10 +4,15 @@
 // user's own key the text goes to that service; with Kizuna AI it goes through our server to OpenAI, and the balance
 // that pays for the sessions pays for it. And the notes services by name, wherever a sentence names who writes them.
 import type { TFunction } from 'i18next';
-import { COMPATIBLE_NOTES, GEMINI_NOTES, KIZUNA_NOTES, OPENAI_NOTES } from '../../lib/notes/notesService';
+import {
+  BAILIAN_NOTES, COMPATIBLE_NOTES, GEMINI_NOTES, KIZUNA_NOTES, LEGACY_COMPATIBLE_NOTES, OPENAI_NOTES,
+} from '../../lib/notes/notesService';
 
 /** The notes services the line-up offers whose name is a brand, the same in every language. */
-export const NOTES_SERVICE_NAMES: Readonly<Record<string, string>> = { [KIZUNA_NOTES]: 'Kizuna AI', [OPENAI_NOTES]: 'OpenAI', [GEMINI_NOTES]: 'Gemini' };
+export const NOTES_SERVICE_NAMES: Readonly<Record<string, string>> = {
+  [KIZUNA_NOTES]: 'Kizuna AI', [OPENAI_NOTES]: 'OpenAI', [GEMINI_NOTES]: 'Gemini',
+  [BAILIAN_NOTES]: 'Qwen / Bailian', [LEGACY_COMPATIBLE_NOTES]: 'OpenAI-compatible endpoint',
+};
 
 /** A notes service by name: a brand as it is; a compatible service by its provider's name, in the interface's words. */
 export function notesServiceName(t: TFunction, service: string): string {
@@ -21,6 +26,9 @@ export function notesExplanation(t: TFunction, service: string, which: 'after' |
     return which === 'live'
       ? t('history.liveExplainKizuna', 'During a session, every 20 seconds the new sentences (their text, numbers, and which side and speaker said them), the notes so far and the spellings in your word list go through Kizuna AI’s server to OpenAI, which writes the notes. Kizuna AI keeps none of it. It is paid from the balance that pays for your sessions. Never the audio or the translation.')
       : t('history.notesExplainKizuna', 'For each session, the text of its sentences, their numbers, which side and speaker said them, and the spellings in your word list go through Kizuna AI’s server to OpenAI, which writes the notes. Kizuna AI keeps none of it. It is paid from the balance that pays for your sessions. Never the audio or the translation.');
+  }
+  if (service === LEGACY_COMPATIBLE_NOTES) {
+    return t('history.notesExplainCompatible', 'The configured endpoint receives transcript text, sentence numbers, speaker labels and word-list spellings. Live updates also include the notes so far.');
   }
   const name = notesServiceName(t, service);
   return which === 'live'

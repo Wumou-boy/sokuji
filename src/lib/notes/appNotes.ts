@@ -6,7 +6,8 @@
 // user's own key (text models, part C): OpenAI's, Gemini's or a compatible service's, called with the notes model and
 // reasoning chosen on the line-up's Notes card (the provider's `notesModel` and `notesReasoning`).
 import {
-  COMPATIBLE_NOTES, GEMINI_KEY_HOLDERS, GEMINI_NOTES, KIZUNA_NOTES, notesDefaultsNow, notesProviderOf, notesServiceOf, OPENAI_KEY_HOLDERS, OPENAI_NOTES,
+  BAILIAN_NOTES, COMPATIBLE_NOTES, GEMINI_KEY_HOLDERS, GEMINI_NOTES, KIZUNA_NOTES, LEGACY_COMPATIBLE_NOTES,
+  notesDefaultsNow, notesProviderOf, notesServiceOf, OPENAI_KEY_HOLDERS, OPENAI_NOTES,
 } from './notesService';
 import { useWordList } from '../words/list';
 import i18n from '../../locales';
@@ -27,14 +28,20 @@ import { openaiCompatibleProvider } from '../../providers/openai_compatible/prov
 import { openaiTextProvider } from '../../providers/openai_text/provider';
 import { useLineUpStore } from '../../stores/lineUpStore';
 import { useProviderStore } from '../../stores/providerStore';
+import useSettingsStore, { DEFAULT_NOTES_BAILIAN_MODEL } from '../../stores/settingsStore';
 import { currentAuth } from '../../app/currentAuth';
 import { useAccountStore } from '../../stores/accountStore';
 import { getBackendUrl } from '../../utils/environment';
 import { accountPayer } from '../session/payerChoice';
-import { ChatError, type ChatPort } from './chat';
+import { ChatError, compatibleChat, type ChatPort } from './chat';
 import { relayChat, RELAY_NOTES_MODEL } from './relayChat';
 import { createNotesRunner, type NotesLanguage, type NotesRunner } from './runner';
+import { makeNotesFetch, notesEndpointOf } from './desktopFetch';
+import { BAILIAN_ENDPOINT_ID } from '../../providers/qwen_livetranslate/endpoints';
+
 import { textModelNotesChat } from './textModelChat';
+
+export const BAILIAN_NOTES_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
 export { KIZUNA_NOTES } from './notesService';
 
@@ -42,7 +49,7 @@ export { KIZUNA_NOTES } from './notesService';
 export interface NotesChat {
   chat: ChatPort;
   model: string;
-  /** The line-up's notes service (`kizunaai_openai`, `openai`, `gemini_text`, `openai_compatible`): who wrote them. */
+  /** The line-up's notes service: who wrote them. */
   service: string;
 }
 
@@ -100,6 +107,15 @@ export async function notesChatFromStores(
     if (defaults.textModelsOffered && !GEMINI_KEY_HOLDERS.some((id) => useProviderStore.getState().entries[id])) await loaded(geminiTextProvider as AnyProvider);
   }
   const service = notesServiceOf(lineUp);
+  return notesChatForService(service, sessionRef, o);
+}
+
+/** Resolve a named route directly (also used by the settings connection check). */
+export async function notesChatForService(
+  service: string,
+  sessionRef?: string,
+  o: { onBalance?(microUsd: number): void; fetch?: typeof fetch } = {},
+): Promise<NotesChat | null> {
   if (service === KIZUNA_NOTES) {
     if (currentAuth()?.signedIn !== true) return null;
     const chat = relayChat({
@@ -111,6 +127,31 @@ export async function notesChatFromStores(
       ...(o.onBalance ? { onBalance: o.onBalance } : {}),
     });
     return { chat, model: RELAY_NOTES_MODEL, service };
+  }
+  if (service === BAILIAN_NOTES) {
+    if (!useProviderStore.getState().entries.qwen_livetranslate) {
+      const { qwenLiveTranslateProvider } = await import('../../providers/qwen_livetranslate/provider');
+      await useProviderStore.getState().load(qwenLiveTranslateProvider);
+    }
+    const entry = useProviderStore.getState().entries.qwen_livetranslate;
+    const settings = entry?.settings as { connection?: unknown } | undefined;
+    // The Qwen key is never sent to a custom endpoint and only belongs to Bailian when the connection says so.
+    if (settings?.connection !== BAILIAN_ENDPOINT_ID) return null;
+    const apiKey = String(entry?.credentials.apiKey ?? '').trim();
+    if (!apiKey) return null;
+    const storedModel = useSettingsStore.getState().notesBailianModel;
+    const model = typeof storedModel === 'string' && storedModel.trim() ? storedModel.trim() : DEFAULT_NOTES_BAILIAN_MODEL;
+    return { chat: compatibleChat({ baseUrl: BAILIAN_NOTES_BASE_URL, apiKey, model, bailian: true, fetch: o.fetch ?? makeNotesFetch() }), model, service };
+  }
+  if (service === LEGACY_COMPATIBLE_NOTES) {
+    const config = useSettingsStore.getState().notesCompatible;
+    if (!config || !config.model.trim()) return null;
+    const endpoint = notesEndpointOf(config.baseUrl);
+    if (!endpoint) return null;
+    const baseUrl = endpoint.slice(0, -'/chat/completions'.length);
+    const model = config.model.trim();
+    const apiKey = config.apiKey.trim();
+    return { chat: compatibleChat({ baseUrl, ...(apiKey ? { apiKey } : {}), model, fetch: o.fetch ?? makeNotesFetch() }), model, service };
   }
   const own = notesProviderOf(service) ? OWN_KEY[service] : undefined;
   if (!own) return null;

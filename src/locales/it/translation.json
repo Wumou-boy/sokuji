@@ -349,7 +349,9 @@
     "voiceTheyHear": "Voce che sente l'altra parte",
     "voiceIHear": "Voce che sento io",
     "voiceIHearSame": "È la stessa voce che sente l'altra parte, quindi legge {{voice}} al suo posto.",
-    "voiceCustom": "Voce personalizzata"
+    "voiceCustom": "Voce personalizzata",
+    "translateDetectParticipantLanguage": "Rileva automaticamente il cinese, il giapponese e l’inglese dell’interlocutore",
+    "translateDetectParticipantLanguageHelp": "Se la lingua dell’interlocutore è cinese, giapponese o inglese, la lingua di ogni sottotitolo viene rilevata dal testo originale. La lingua di destinazione resta quella selezionata."
   },
   "simpleSettings": {
     "autoAuthenticated": "Autenticato automaticamente tramite il tuo account",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Accedi, oppure scegli OpenAI qui, perché vengano scritte le note.",
       "notesNeedSignInOrKeyAndChoose": "Accedi, oppure aggiungi una chiave OpenAI in «Account e chiavi» e scegli OpenAI qui, perché vengano scritte le note.",
       "speechNotUsed": "Questa volta non viene letto nulla ad alta voce: la traduzione appare solo come testo.",
-      "speechHowToHear": "Per farla leggere, scegli «sentire» nella frase qui sopra."
+      "speechHowToHear": "Per farla leggere, scegli «sentire» nella frase qui sopra.",
+      "notesCompatibleName": "Compatibile con OpenAI (solo per le note)",
+      "notesCompatibleNeedsConfig": "Imposta endpoint e modello"
     },
     "display": {
       "surface": "Quale visualizzazione",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Unisci a",
     "mergeAsk": "{{name}} è già un interlocutore di questo lato.",
     "mergeOne": "Unisci in uno",
-    "keepApart": "Tieni separati"
+    "keepApart": "Tieni separati",
+    "notesCompatibleBaseUrl": "URL di base dell’API",
+    "notesCompatibleUrlInvalid": "Inserisci un URL HTTPS o un URL HTTP locale/privato.",
+    "notesCompatibleKeyLine": "Facoltativo. Usa una chiave per questo endpoint.",
+    "notesExplainCompatible": "L’endpoint configurato riceve il testo della trascrizione, i numeri delle frasi, le etichette dei parlanti e le grafie dell’elenco di parole. Gli aggiornamenti in tempo reale includono anche le note scritte fino a quel momento."
   },
   "notesQuit": {
     "named": "Le note di «{{title}}» sono in scrittura. Uscire comunque? Verranno segnate come annullate.",

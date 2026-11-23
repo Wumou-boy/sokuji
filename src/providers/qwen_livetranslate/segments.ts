@@ -24,6 +24,7 @@
  */
 import type { AdapterEvents, Ref, Side, TextRange } from '../../lib/contract/adapter';
 import { SpeechPace, tileSpan } from '../../lib/contract/ranges';
+import { meetingTranscriptLanguage } from '../../lib/language/meetingTranscript';
 
 export interface QwenSegmentsOptions {
   sink: Pick<AdapterEvents, 'segmentOpened' | 'segmentText' | 'segmentClosed' | 'audio' | 'speechRanges'>;
@@ -36,6 +37,11 @@ export interface QwenSegmentsOptions {
    * is `${connection}.${speaker_id}` and two connections' speaker 3 stay apart. Absent: the bare `speaker_id`.
    */
   connection?: number;
+  /** Infer a lightweight EN/JA/ZH badge from the final source transcript. */
+  detectIncomingLanguage?: boolean;
+  /** For text-only Chinese captions, wait for source finalization and omit zh→zh translation text. */
+  skipSameLanguageText?: boolean;
+  targetLanguage?: string;
 }
 
 interface Item {
@@ -47,6 +53,7 @@ interface Item {
   /** Everything heard so far, and the trimmed snapshot last sent. */
   text: string;
   shown: string;
+  shownLanguage?: string;
   /** The translation opened stating its origin. */
   stated: boolean;
   closed: boolean;
@@ -59,6 +66,10 @@ interface Item {
   ranges: Map<number, TextRange>;
   /** `response.audio.done` came: no more speech is expected. */
   spoken: boolean;
+  finished: boolean;
+  language?: string;
+  suppressed: boolean;
+  released: boolean;
   /** The current phrase's samples so far, and where its provisional ranges reached, from the phrase's start. */
   cum: number;
   reached: number;
@@ -108,26 +119,40 @@ export class QwenSegments {
     const heard = this.items.get(previous);
     if (heard?.side !== 'source') return;
     it.source = previous;
+    if (this.suppressedBySource(heard)) {
+      it.suppressed = true;
+      it.closed = true;
+      return;
+    }
+    if (heard.finished) it.released = true;
   }
 
   text(itemId: string, side: Side, delta: string): void {
     const it = this.item(itemId, side);
-    if (!it || it.closed) return;
+    if (!it || it.closed || it.suppressed) return;
     // Words after the phrase's audio begin the next phrase: the one before is whole. A blank delta adds no word.
     if (side === 'translation' && delta.trim() !== '' && it.samples.length > it.phraseAudio && it.shown.length > it.phraseText) this.fill(it);
     it.text += delta;
+    if (side === 'translation' && this.waitingForSource(it)) return;
     this.show(itemId, it);
   }
 
   /** The final text replaces what the deltas built, unless it is empty; then the segment closes. */
   done(itemId: string, side: Side, final: string | null): void {
     const it = this.item(itemId, side);
-    if (!it || it.closed) return;
+    if (!it || it.closed || it.suppressed) return;
     if (final !== null && final.trim() !== '') it.text = final;
+    it.finished = true;
+    if (side === 'source' && this.o.detectIncomingLanguage) {
+      const language = meetingTranscriptLanguage(it.text);
+      if (language !== 'und') it.language = language;
+    }
+    if (side === 'translation' && this.waitingForSource(it)) return;
     this.show(itemId, it);
     this.restate(it);
     this.close(it);
     this.finish(it);
+    if (side === 'source' && this.o.skipSameLanguageText) this.releaseTranslations(itemId, it);
   }
 
   /** Translated speech, in its translation's segment — after that segment's text closed too. */
@@ -175,7 +200,7 @@ export class QwenSegments {
     if (this.stopped) return null;
     let it = this.items.get(itemId);
     if (!it) {
-      it = { side, text: '', shown: '', stated: false, closed: false, samples: [], phraseText: 0, phraseAudio: 0, ranges: new Map(), spoken: false, cum: 0, reached: 0 };
+      it = { side, text: '', shown: '', stated: false, closed: false, samples: [], phraseText: 0, phraseAudio: 0, ranges: new Map(), spoken: false, finished: false, suppressed: false, released: false, cum: 0, reached: 0 };
       this.items.set(itemId, it);
     }
     return it.side === side ? it : null;
@@ -184,12 +209,49 @@ export class QwenSegments {
   /** The snapshot, when it changed: a segment opens with its first words, so blank text opens nothing. */
   private show(itemId: string, it: Item): void {
     const text = it.text.trim();
-    if (text === it.shown) return;
+    const language = it.side === 'source' ? it.language : undefined;
+    if (text === it.shown && language === it.shownLanguage) return;
     if (it.ref === undefined) this.open(itemId, it);
     it.shown = text;
+    it.shownLanguage = language;
     const ref = it.ref as Ref;
     const person = this.person(itemId, it);
-    this.o.sink.segmentText(person === undefined ? { ref, text } : { ref, text, person });
+    this.o.sink.segmentText({ ref, text, ...(language ? { language } : {}), ...(person === undefined ? {} : { person }) });
+  }
+
+  private waitingForSource(it: Item): boolean {
+    if (it.released || !this.o.skipSameLanguageText || this.o.targetLanguage !== 'zh' || it.source === undefined) return false;
+    const source = this.items.get(it.source);
+    if (!source?.finished) return true;
+    if (this.suppressedBySource(source)) {
+      it.suppressed = true;
+      it.closed = true;
+      return true;
+    }
+    it.released = true;
+    return false;
+  }
+
+  private suppressedBySource(source: Item): boolean {
+    return this.o.skipSameLanguageText === true && this.o.targetLanguage === 'zh' && source.language === 'zh';
+  }
+
+  private releaseTranslations(sourceId: string, source: Item): void {
+    for (const [itemId, item] of this.items) {
+      if (item.side !== 'translation' || item.source !== sourceId || item.closed) continue;
+      if (this.suppressedBySource(source)) {
+        item.suppressed = true;
+        item.closed = true;
+      } else {
+        item.released = true;
+        this.show(itemId, item);
+        if (item.finished) {
+          this.restate(item);
+          this.close(item);
+          this.finish(item);
+        }
+      }
+    }
   }
 
   private open(itemId: string, it: Item): void {

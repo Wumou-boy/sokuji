@@ -349,7 +349,9 @@
     "voiceTheyHear": "Voz que o outro lado ouve",
     "voiceIHear": "Voz que eu ouço",
     "voiceIHearSame": "É a mesma voz que o outro lado ouve, por isso {{voice}} lê em vez dela.",
-    "voiceCustom": "Voz personalizada"
+    "voiceCustom": "Voz personalizada",
+    "translateDetectParticipantLanguage": "Detetar automaticamente chinês, japonês e inglês da outra pessoa",
+    "translateDetectParticipantLanguageHelp": "Se o idioma da outra pessoa for chinês, japonês ou inglês, o idioma de cada legenda é identificado a partir do original. O idioma de destino da tradução mantém-se como selecionado."
   },
   "simpleSettings": {
     "autoAuthenticated": "Autenticado automaticamente através da sua conta",
@@ -1938,7 +1940,9 @@
       "notesNeedSignInOrChoose": "Inicie sessão, ou escolha a OpenAI aqui, para que as notas sejam escritas.",
       "notesNeedSignInOrKeyAndChoose": "Inicie sessão, ou adicione uma chave da OpenAI em «Contas e chaves» e escolha a OpenAI aqui, para que as notas sejam escritas.",
       "speechNotUsed": "Desta vez nada é lido em voz alta: a tradução aparece apenas como texto.",
-      "speechHowToHear": "Para a ouvir, escolha “ouvir” na frase acima."
+      "speechHowToHear": "Para a ouvir, escolha “ouvir” na frase acima.",
+      "notesCompatibleName": "Compatível com OpenAI (apenas para notas)",
+      "notesCompatibleNeedsConfig": "Defina o ponto de acesso e o modelo"
     },
     "display": {
       "surface": "Qual apresentação",
@@ -2356,7 +2360,11 @@
     "mergeMenu": "Juntar a",
     "mergeAsk": "{{name}} já é um orador deste lado.",
     "mergeOne": "Juntar num só",
-    "keepApart": "Manter separados"
+    "keepApart": "Manter separados",
+    "notesCompatibleBaseUrl": "URL base da API",
+    "notesCompatibleUrlInvalid": "Introduza um URL HTTPS ou um URL HTTP de localhost/rede privada.",
+    "notesCompatibleKeyLine": "Opcional. Use uma chave para este ponto de acesso.",
+    "notesExplainCompatible": "O ponto de acesso configurado recebe o texto da transcrição, os números das frases, os rótulos dos interlocutores e as grafias da lista de palavras. As atualizações em direto também incluem as notas até ao momento."
   },
   "notesQuit": {
     "named": "As notas de «{{title}}» estão a ser escritas. Sair mesmo assim? Serão marcadas como canceladas.",

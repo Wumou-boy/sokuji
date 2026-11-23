@@ -13,12 +13,16 @@ import { useProviderStore } from '../../stores/providerStore';
 export const KIZUNA_NOTES = 'kizunaai_openai';
 /** The line-up's notes service with the user's own OpenAI key: stored as it always was, served by OpenAI's text model. */
 export const OPENAI_NOTES = 'openai';
+/** Alibaba Bailian's OpenAI-compatible endpoint, using the Qwen provider's Bailian connection and key. */
+export const BAILIAN_NOTES = 'bailian_notes';
 /** With the user's own Gemini key: Gemini's text model (text models, part C). */
 export const GEMINI_NOTES = 'gemini_text';
 /** A compatible service at the address the user entered (text models, part C). */
 export const COMPATIBLE_NOTES = 'openai_compatible';
+/** Older notes-only endpoint settings, retained for existing local configurations. */
+export const LEGACY_COMPATIBLE_NOTES = 'compatible_notes';
 /** The notes services the app knows. */
-export const NOTES_SERVICES: readonly string[] = [KIZUNA_NOTES, OPENAI_NOTES, GEMINI_NOTES, COMPATIBLE_NOTES];
+export const NOTES_SERVICES: readonly string[] = [KIZUNA_NOTES, OPENAI_NOTES, GEMINI_NOTES, COMPATIBLE_NOTES, BAILIAN_NOTES, LEGACY_COMPATIBLE_NOTES];
 /** The services the desktop app alone offers, as their providers are (text models, part B). */
 const DESKTOP_TEXT_MODELS: readonly string[] = [GEMINI_NOTES, COMPATIBLE_NOTES];
 
@@ -85,7 +89,9 @@ export function notesDefaultsNow(): NotesDefaults {
  */
 export function notesServiceOf(lineUp: Pick<LineUp, 'summarisation'> | null | undefined, d: NotesDefaults = notesDefaultsNow()): string {
   const chosen = lineUp?.summarisation;
-  if (chosen && NOTES_SERVICES.includes(chosen) && (d.textModelsOffered || !DESKTOP_TEXT_MODELS.includes(chosen))) return chosen;
+  const desktopOnly = chosen === BAILIAN_NOTES || chosen === LEGACY_COMPATIBLE_NOTES;
+  if (chosen && NOTES_SERVICES.includes(chosen) && (!desktopOnly || isElectron())
+    && (!DESKTOP_TEXT_MODELS.includes(chosen) || d.textModelsOffered)) return chosen;
   if (d.hostedOffered && d.signedIn) return KIZUNA_NOTES;
   if (d.openAiKeyed) return OPENAI_NOTES;
   if (d.geminiKeyed && d.textModelsOffered) return GEMINI_NOTES;

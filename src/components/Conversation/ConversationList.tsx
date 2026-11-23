@@ -238,7 +238,9 @@ const RowBubble = memo(function RowBubble({ item, upTo, replaySlot, canReplay, r
           <span className={`row-role-dot source-${leg}`} role="img" aria-label={scopeName} />
         )}
         {!compact && (
-          <span className={`lang-badge ${isTranslation ? 'tr' : 'src'} source-${leg}`}>{lang.toUpperCase()}</span>
+          <span className={`lang-badge ${isTranslation ? 'tr' : 'src'} source-${leg}`}>
+            {lang === 'und' && !isTranslation ? t('viewer.original', 'Original') : lang.toUpperCase()}
+          </span>
         )}
         <span className={`row-text ${isTranslation ? 'tr' : 'src'}`}>
           {/* One inline flow, so a surface can lay the row out as a box and pin its tail (the subtitle list, #652). */}

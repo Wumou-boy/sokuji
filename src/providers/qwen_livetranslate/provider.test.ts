@@ -26,7 +26,7 @@ describe('the Qwen LiveTranslate definition (spec §1)', () => {
       TurnDetection: { Summary: QwenTurnDetectionSummary, Controls: QwenTurnDetectionControls },
       credentials: qwenCredentials,
       check: checkQwen,
-      checkReads: [],
+      checkReads: ['connection'],
       languages: qwenLanguages,
       build: buildQwen,
       describe: describeQwen,

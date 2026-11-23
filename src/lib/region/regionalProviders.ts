@@ -5,7 +5,7 @@
  */
 import { SONIOX_REGIONS, SONIOX_REGION_LABELS, sonioxHosts, asSonioxRegion, type SonioxRegion } from '../soniox/regions';
 import { QWEN_REGIONS, QWEN_REGION_LABELS, asQwenRegion, type QwenRegion } from '../../providers/qwen_livetranslate/regions';
-import { ENDPOINTS } from '../../providers/qwen_livetranslate/endpoints';
+import { ENDPOINT_ORDER, ENDPOINTS } from '../../providers/qwen_livetranslate/endpoints';
 
 export type RegionFamily = 'soniox' | 'qwen';
 
@@ -18,9 +18,9 @@ export interface RegionFamilySpec {
 }
 
 function qwenProbeUrl(region: string): string {
-  const entry = Object.values(ENDPOINTS).find((e) => e.region === region);
-  if (!entry) throw new Error(`No Qwen endpoint for region "${region}"`);
-  return `${new URL(entry.tokens).origin}/`;
+  const id = ENDPOINT_ORDER.find((candidate) => ENDPOINTS[candidate].region === region);
+  if (!id) throw new Error(`No Qwen endpoint for region "${region}"`);
+  return `${new URL(ENDPOINTS[id].tokens).origin}/`;
 }
 
 export const REGION_FAMILIES: Readonly<Record<RegionFamily, RegionFamilySpec>> = {
