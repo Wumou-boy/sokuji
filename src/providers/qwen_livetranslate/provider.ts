@@ -38,8 +38,8 @@ export const qwenLiveTranslateProvider: Provider<QwenSettings, QwenCredentials, 
 
   credentials: qwenCredentials,
   check: checkQwen,
-  // The endpoint depends on the key alone: a voice edit keeps Start on.
-  checkReads: [],
+  // Endpoint choice changes the host and readiness check; voice edits do not.
+  checkReads: ['connection'],
 
   languages: qwenLanguages,
 

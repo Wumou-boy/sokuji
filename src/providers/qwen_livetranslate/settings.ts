@@ -10,6 +10,7 @@ import { AUTO } from '../../lib/provider/languages';
 import type { CredentialsMissing, LanguageContext, LanguageOption, Provider } from '../../lib/provider/types';
 import { distinctVoice } from '../../lib/provider/voices';
 import type { EndpointId } from './endpoints';
+import { BAILIAN_ENDPOINT_ID } from './endpoints';
 import { asQwenRegion, DEFAULT_QWEN_REGION, type QwenRegion } from './regions';
 
 /** The one model (D1): the check finds the endpoint, nothing chooses a model. */
@@ -88,6 +89,8 @@ export const QWEN_VOICES: readonly QwenVoice[] = [
 ];
 
 export interface QwenSettings {
+  /** Which own-key endpoint to check/use. `auto` preserves QwenCloud region detection. */
+  connection: 'auto' | typeof BAILIAN_ENDPOINT_ID;
   /** My leg's voice: one of `QWEN_VOICES`, `SPEAKER_CLONE` or `SPEAKER_CLONE_ONCE`. */
   voice: string;
   /** The voice that reads the other person's words to me: the same choices. */
@@ -106,16 +109,17 @@ export const QWEN_DEFAULT_VOICE = 'Tina';
 /** A male preset beside Tina, so the two people never sound alike by default. */
 export const QWEN_PARTICIPANT_DEFAULT_VOICE = 'Ethan';
 export const QWEN_DEFAULTS: QwenSettings = {
-  voice: QWEN_DEFAULT_VOICE, participantVoice: QWEN_PARTICIPANT_DEFAULT_VOICE, pauseMs: QWEN_PAUSE.default, region: DEFAULT_QWEN_REGION, screenContext: false, speakerLabels: true,
+  connection: 'auto', voice: QWEN_DEFAULT_VOICE, participantVoice: QWEN_PARTICIPANT_DEFAULT_VOICE, pauseMs: QWEN_PAUSE.default, region: DEFAULT_QWEN_REGION, screenContext: false, speakerLabels: true,
 };
 
 /** What was stored, made valid field by field: the region narrowed, the rest as typed or defaulted. Nothing is written back. */
 export function migrateQwenSettings(stored: Readonly<Record<string, unknown>>): QwenSettings {
+  const connection = stored.connection === BAILIAN_ENDPOINT_ID ? BAILIAN_ENDPOINT_ID : 'auto';
   const str = (k: 'voice' | 'participantVoice') => (typeof stored[k] === 'string' ? (stored[k] as string) : QWEN_DEFAULTS[k]);
   const pauseMs = typeof stored.pauseMs === 'number' && Number.isFinite(stored.pauseMs) ? stored.pauseMs : QWEN_DEFAULTS.pauseMs;
   const screenContext = typeof stored.screenContext === 'boolean' ? stored.screenContext : false;
   const speakerLabels = typeof stored.speakerLabels === 'boolean' ? stored.speakerLabels : QWEN_DEFAULTS.speakerLabels;
-  return { voice: str('voice'), participantVoice: str('participantVoice'), pauseMs, region: asQwenRegion(stored.region), screenContext, speakerLabels };
+  return { connection, voice: str('voice'), participantVoice: str('participantVoice'), pauseMs, region: asQwenRegion(stored.region), screenContext, speakerLabels };
 }
 
 /** Either clone: each leg clones its own speaker, so neither is ever "my" voice to keep off the other leg. */

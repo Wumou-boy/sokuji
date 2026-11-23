@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createVirtualClock } from '../../lib/contract/clock';
 import type { CheckContext } from '../../lib/provider/types';
-import { createQwenCheck, DETECT_TIMEOUT_MS, detectEndpoint } from './check';
-import { ENDPOINTS, isEndpointId } from './endpoints';
+import { createQwenCheck, checkBailianEndpoint, DETECT_TIMEOUT_MS, detectEndpoint } from './check';
+import { BAILIAN_ENDPOINT_ID, ENDPOINTS, isEndpointId } from './endpoints';
 import { QWEN_DEFAULTS } from './settings';
+import { FakeSocket } from '../../lib/contract/testing/fakeSocket';
 
 const K = { apiKey: 'sk-ws-T.ABCDEFGH.ijklmnop.QRSTUVWX0123456789' };
 const ctx: CheckContext = { pair: { source: 'zh', target: 'en' }, legs: ['speaker'] };
@@ -17,10 +18,47 @@ describe("Qwen LiveTranslate's endpoints", () => {
     expect(ENDPOINTS).toEqual({
       intl: { region: 'sg', socket: 'wss://maas.qwencloudapi.com/api-ws/v1/realtime', tokens: 'https://maas.qwencloudapi.com/api/v1/tokens' },
       cn: { region: 'cn', socket: 'wss://maas.qianwenaiapi.com/api-ws/v1/realtime', tokens: 'https://maas.qianwenaiapi.com/api/v1/tokens' },
+      'bailian-cn': { region: 'cn', socket: 'wss://dashscope.aliyuncs.com/api-ws/v1/realtime' },
     });
     expect(isEndpointId('intl')).toBe(true);
     expect(isEndpointId('cn')).toBe(true);
+    expect(isEndpointId('bailian-cn')).toBe(true);
     expect(isEndpointId('gpt-live-1')).toBe(false);
+  });
+
+  it('checks an explicit Bailian key against the shared WSS host, authenticates in the header, validates a text-only zh session, and closes', async () => {
+    const socket = new FakeSocket('wss://dashscope.aliyuncs.com/api-ws/v1/realtime?model=qwen3.8-livetranslate-flash-realtime', undefined);
+    socket.open();
+    const openHeaderSocket = vi.fn(async () => socket as unknown as WebSocket);
+    const fetch = vi.fn(async () => { throw new Error('must not use QwenCloud token endpoint'); });
+    const pending = createQwenCheck({ fetch, openHeaderSocket })(K, { ...QWEN_DEFAULTS, connection: BAILIAN_ENDPOINT_ID }, ctx);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(openHeaderSocket).toHaveBeenCalledWith(
+      'wss://dashscope.aliyuncs.com/api-ws/v1/realtime?model=qwen3.8-livetranslate-flash-realtime',
+      { set: { Authorization: `Bearer ${K.apiKey}` } },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    socket.receive(JSON.stringify({ type: 'session.created' }));
+    expect(socket.sent.map((frame) => JSON.parse(String(frame)))).toEqual([{
+      type: 'session.update', session: {
+        output_modalities: ['text'], translation: { language: 'zh' },
+        audio: { input: { format: { type: 'pcm', sample_rate: 16000 } } },
+      },
+    }]);
+    socket.receive(JSON.stringify({ type: 'session.updated' }));
+    await expect(pending).resolves.toEqual({ ok: true, models: [{ id: 'bailian-cn' }] });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(socket.closedByClient).toEqual({ code: 1000, reason: undefined });
+  });
+
+  it('keeps auto connection checks on the legacy QwenCloud token endpoints', async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(refused()).mockResolvedValueOnce(answer(200));
+    const openHeaderSocket = vi.fn();
+    await expect(createQwenCheck({ fetch, openHeaderSocket })(K, QWEN_DEFAULTS, ctx)).resolves.toMatchObject({
+      ok: true, models: [{ id: 'cn' }],
+    });
+    expect(openHeaderSocket).not.toHaveBeenCalled();
   });
 });
 

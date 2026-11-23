@@ -279,7 +279,14 @@ class QwenLeg implements AdapterSession {
     private readonly events: AdapterEvents,
     private readonly deps: QwenAdapterDeps,
   ) {
-    this.segments = new QwenSegments({ sink: events, person: request.config.person, connection: this.connection });
+    this.segments = new QwenSegments({
+      sink: events,
+      person: request.config.person,
+      connection: this.connection,
+      detectIncomingLanguage: request.config.detectIncomingLanguage,
+      skipSameLanguageText: request.config.skipSameLanguageText,
+      targetLanguage: request.config.target,
+    });
     this.apiKey = request.credentials.apiKey;
     // A dead connection that stays open is found by the probe or the commit's wait (`watchLiveness`, spec 2026-11-05 reconnect §4.2).
     this.reconnector = createReconnector({
@@ -994,7 +1001,15 @@ class QwenLeg implements AdapterSession {
     this.segments.stop();
     // A new connection numbers people from 1 again: its labels carry its own number.
     this.connection += 1;
-    this.segments = new QwenSegments({ sink: this.events, person: this.request.config.person, firstRef: this.segments.nextRef, connection: this.connection });
+    this.segments = new QwenSegments({
+      sink: this.events,
+      person: this.request.config.person,
+      firstRef: this.segments.nextRef,
+      connection: this.connection,
+      detectIncomingLanguage: this.request.config.detectIncomingLanguage,
+      skipSameLanguageText: this.request.config.skipSameLanguageText,
+      targetLanguage: this.request.config.target,
+    });
   }
 
   /**

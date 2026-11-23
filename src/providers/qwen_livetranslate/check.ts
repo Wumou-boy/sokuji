@@ -11,11 +11,13 @@
  * the request's clock and signal.
  */
 import { realClock, type Clock } from '../../lib/contract/clock';
+import { platformHeaderSocket, type OpenHeaderSocket } from '../../lib/contract/headerSocket';
 import { boundedFetch } from '../../lib/provider/boundedFetch';
 import type { CheckContext, CheckResult } from '../../lib/provider/types';
-import { ENDPOINT_ORDER, ENDPOINTS, type EndpointId } from './endpoints';
+import { BAILIAN_ENDPOINT_ID, ENDPOINT_ORDER, ENDPOINTS, type EndpointId } from './endpoints';
 import { QWEN_REGION_LABELS } from './regions';
-import type { QwenCredentials, QwenSettings } from './settings';
+import { qwenHeaders } from './wire';
+import { QWEN_MODEL, type QwenCredentials, type QwenSettings } from './settings';
 
 /** As long as the other checks wait, per endpoint. */
 export const DETECT_TIMEOUT_MS = 15_000;
@@ -24,10 +26,84 @@ export interface DetectDeps {
   fetch?: typeof fetch;
   clock?: Pick<Clock, 'setTimeout'>;
   signal?: AbortSignal;
+  openHeaderSocket?: OpenHeaderSocket;
 }
 
-export type Detection = { endpoint: EndpointId } | { refused: string; code: 'auth' | 'rate_limit' };
+export type Detection = { endpoint: EndpointId } | { refused: string; code: string };
 export type DetectEndpoint = (apiKey: string, o: DetectDeps) => Promise<Detection>;
+
+/** Readiness probe for a Bailian key: authenticate the real Realtime host and validate a zero-audio, text-only session update. */
+export async function checkBailianEndpoint(apiKey: string, o: DetectDeps): Promise<Detection> {
+  if (!o.openHeaderSocket) return { refused: 'Bailian Realtime checks require the desktop app or browser extension.', code: 'client' };
+  const clock = o.clock ?? realClock;
+  const controller = new AbortController();
+  const signal = o.signal ? AbortSignal.any([o.signal, controller.signal]) : controller.signal;
+  const endpoint = ENDPOINTS[BAILIAN_ENDPOINT_ID];
+  let socket: WebSocket | null = null;
+  let cancelTimeout = () => {};
+  let settled = false;
+  let onAbort = () => {};
+
+  return new Promise<Detection>((resolve) => {
+    const finish = (result: Detection) => {
+      if (settled) return;
+      settled = true;
+      cancelTimeout();
+      signal.removeEventListener('abort', onAbort);
+      if (socket) {
+        socket.onmessage = null;
+        socket.onerror = null;
+        socket.onclose = null;
+        if (socket.readyState <= WebSocket.OPEN) socket.close(1000);
+      }
+      resolve(result);
+    };
+    cancelTimeout = clock.setTimeout(() => {
+      controller.abort(new Error('Bailian Realtime readiness check timed out.'));
+      finish({ refused: 'Bailian Realtime did not confirm a session in time.', code: 'network' });
+    }, DETECT_TIMEOUT_MS);
+    if (signal.aborted) {
+      finish({ refused: 'Bailian Realtime readiness check was cancelled.', code: 'network' });
+      return;
+    }
+    onAbort = () => finish({ refused: 'Bailian Realtime readiness check was cancelled.', code: 'network' });
+    signal.addEventListener('abort', onAbort, { once: true });
+    void o.openHeaderSocket(`${endpoint.socket}?model=${encodeURIComponent(QWEN_MODEL)}`, qwenHeaders({ apiKey }), { signal, clock })
+      .then((opened) => {
+        socket = opened;
+        if (settled) {
+          opened.close(1000);
+          return;
+        }
+        opened.onmessage = (message) => {
+          try {
+            const event = JSON.parse(String(message.data)) as { type?: unknown; error?: { code?: unknown } };
+            if (event.type === 'session.created') {
+              opened.send(JSON.stringify({
+                type: 'session.update',
+                session: {
+                  output_modalities: ['text'],
+                  translation: { language: 'zh' },
+                  audio: { input: { format: { type: 'pcm', sample_rate: 16000 } } },
+                },
+              }));
+            } else if (event.type === 'session.updated') {
+              finish({ endpoint: BAILIAN_ENDPOINT_ID });
+            } else if (event.type === 'error') {
+              const code = typeof event.error?.code === 'string' ? event.error.code : '';
+              const category = /quota|throttl|rate.?limit/i.test(code) ? 'rate_limit' : /InvalidApiKey|InvalidApiToken|expired|AccessDenied/i.test(code) ? 'auth' : 'model_access_denied';
+              finish({ refused: 'Bailian did not accept this API key or Qwen LiveTranslate session configuration.', code: category });
+            }
+          } catch {
+            finish({ refused: 'Bailian returned an unreadable readiness response.', code: 'network' });
+          }
+        };
+        opened.onerror = () => finish({ refused: 'Could not reach the Bailian Realtime endpoint.', code: 'network' });
+        opened.onclose = () => finish({ refused: 'Bailian closed the Realtime readiness connection.', code: 'network' });
+      })
+      .catch(() => finish({ refused: 'Bailian did not accept the WebSocket authentication or could not be reached.', code: 'auth' }));
+  });
+}
 
 export const detectEndpoint: DetectEndpoint = async (apiKey, o) => {
   // Read at call time, so a test's stubbed global is seen.
@@ -48,11 +124,15 @@ export const detectEndpoint: DetectEndpoint = async (apiKey, o) => {
 };
 
 export function createQwenCheck(deps: Omit<DetectDeps, 'signal'> = {}) {
-  return async (k: QwenCredentials, _s: QwenSettings, ctx: CheckContext): Promise<CheckResult> => {
+  return async (k: QwenCredentials, s: QwenSettings, ctx: CheckContext): Promise<CheckResult> => {
+    if (s.connection === BAILIAN_ENDPOINT_ID) {
+      const found = await checkBailianEndpoint(k.apiKey, { ...deps, signal: ctx.signal });
+      return 'endpoint' in found ? { ok: true, models: [{ id: found.endpoint }] } : { ok: false, reason: found.refused, code: found.code };
+    }
     const found = await detectEndpoint(k.apiKey, { ...deps, signal: ctx.signal });
     // The one model entry names the endpoint: `build` reads it from `shared.models`, the settings view from `models`.
     return 'endpoint' in found ? { ok: true, models: [{ id: found.endpoint }] } : { ok: false, reason: found.refused, code: found.code };
   };
 }
 
-export const checkQwen = createQwenCheck();
+export const checkQwen = createQwenCheck({ openHeaderSocket: platformHeaderSocket });
