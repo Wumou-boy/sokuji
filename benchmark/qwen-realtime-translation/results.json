@@ -1,0 +1,986 @@
+{
+  "date": "2026-11-23",
+  "region": "Beijing",
+  "platform": "Windows",
+  "transport": "WebSocket",
+  "models": {
+    "live": "qwen3.8-livetranslate-flash-realtime",
+    "plan": "qwen-audio-3.0-realtime-plus"
+  },
+  "input": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "bits_per_sample": 16,
+    "chunk_ms": 100
+  },
+  "automatic_vad": {
+    "type": "server_vad",
+    "threshold": 0.5,
+    "silence_duration_ms": 600
+  },
+  "fixtures": {
+    "mixed": {
+      "duration_ms": 36941,
+      "pcm_sha256": "6b46be553ff5d5c52290ebe16a2255dd558f619e8575c67c21b34014fff7cb48",
+      "speech_ranges_ms": [
+        [
+          2105,
+          8890
+        ],
+        [
+          12087,
+          14923
+        ],
+        [
+          17542,
+          24574
+        ],
+        [
+          27422,
+          34207
+        ]
+      ]
+    },
+    "mandarin": {
+      "duration_ms": 7882,
+      "pcm_sha256": "68355f5a05731da1bada65b2767963a65f3402504601e5df3edd72f829efe94e",
+      "speech_ranges_ms": [
+        [
+          106,
+          7139
+        ]
+      ]
+    }
+  },
+  "runs": [
+    {
+      "scenario": "caption",
+      "round": 1,
+      "fixture": "mixed",
+      "results": {
+        "live": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              1997,
+              2214,
+              2214,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              2994,
+              3122,
+              3122,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              2818,
+              2912,
+              2912,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              2970,
+              3248,
+              3248,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 2214,
+          "all_responses_done_from_last_speech_end_ms": 367
+        },
+        "plan": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              4587,
+              4262,
+              4587,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3815,
+              3478,
+              3815,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              3606,
+              3432,
+              3606,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4654,
+              4341,
+              4654,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 4262,
+          "all_responses_done_from_last_speech_end_ms": 754
+        }
+      }
+    },
+    {
+      "scenario": "caption",
+      "round": 2,
+      "fixture": "mixed",
+      "results": {
+        "plan": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              4586,
+              4253,
+              4586,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3725,
+              3468,
+              3725,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              3618,
+              3428,
+              3618,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4743,
+              4342,
+              4743,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 4253,
+          "all_responses_done_from_last_speech_end_ms": 749
+        },
+        "live": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              2051,
+              2149,
+              2149,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3000,
+              3088,
+              3088,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              2843,
+              2903,
+              2903,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4019,
+              4218,
+              4218,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 2149,
+          "all_responses_done_from_last_speech_end_ms": 552
+        }
+      }
+    },
+    {
+      "scenario": "caption",
+      "round": 3,
+      "fixture": "mixed",
+      "results": {
+        "live": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              1931,
+              2112,
+              2112,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3925,
+              4037,
+              4037,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              2771,
+              2907,
+              2907,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4046,
+              4181,
+              4181,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 2112,
+          "all_responses_done_from_last_speech_end_ms": 596
+        },
+        "plan": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              4514,
+              4165,
+              4514,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3597,
+              3380,
+              3597,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              3744,
+              3342,
+              3744,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4653,
+              4254,
+              4653,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 4165,
+          "all_responses_done_from_last_speech_end_ms": 668
+        }
+      }
+    },
+    {
+      "scenario": "talk",
+      "round": 1,
+      "fixture": "mandarin",
+      "results": {
+        "live": {
+          "original_finals": 1,
+          "translation_finals": 1,
+          "blocks": [
+            [
+              1,
+              "Chinese",
+              970,
+              1036,
+              1036,
+              4,
+              4
+            ]
+          ],
+          "first_audio_from_commit_ms": -6585,
+          "response_done_from_commit_ms": 259,
+          "audio_responses": [
+            [
+              "completed",
+              322560
+            ]
+          ]
+        },
+        "plan": {
+          "original_finals": 1,
+          "translation_finals": 1,
+          "blocks": [
+            [
+              1,
+              "Chinese",
+              6675,
+              8063,
+              8063,
+              4,
+              4
+            ]
+          ],
+          "first_audio_from_commit_ms": 1215,
+          "response_done_from_commit_ms": 2499,
+          "audio_responses": [
+            [
+              "completed",
+              326400
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "talk",
+      "round": 2,
+      "fixture": "mandarin",
+      "results": {
+        "plan": {
+          "original_finals": 1,
+          "translation_finals": 1,
+          "blocks": [
+            [
+              1,
+              "Chinese",
+              6831,
+              8054,
+              8054,
+              4,
+              4
+            ]
+          ],
+          "first_audio_from_commit_ms": 1197,
+          "response_done_from_commit_ms": 2378,
+          "audio_responses": [
+            [
+              "completed",
+              284160
+            ]
+          ]
+        },
+        "live": {
+          "original_finals": 1,
+          "translation_finals": 1,
+          "blocks": [
+            [
+              1,
+              "Chinese",
+              928,
+              950,
+              950,
+              4,
+              4
+            ]
+          ],
+          "first_audio_from_commit_ms": -6651,
+          "response_done_from_commit_ms": 119,
+          "audio_responses": [
+            [
+              "completed",
+              318720
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "talk",
+      "round": 3,
+      "fixture": "mandarin",
+      "results": {
+        "live": {
+          "original_finals": 1,
+          "translation_finals": 1,
+          "blocks": [
+            [
+              1,
+              "Chinese",
+              1026,
+              1084,
+              1084,
+              4,
+              4
+            ]
+          ],
+          "first_audio_from_commit_ms": -6472,
+          "response_done_from_commit_ms": 126,
+          "audio_responses": [
+            [
+              "completed",
+              311040
+            ]
+          ]
+        },
+        "plan": {
+          "original_finals": 1,
+          "translation_finals": 1,
+          "blocks": [
+            [
+              1,
+              "Chinese",
+              6608,
+              8019,
+              8019,
+              4,
+              4
+            ]
+          ],
+          "first_audio_from_commit_ms": 1077,
+          "response_done_from_commit_ms": 2370,
+          "audio_responses": [
+            [
+              "completed",
+              314880
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "auto-audio",
+      "round": 1,
+      "fixture": "mixed",
+      "results": {
+        "live": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              1974,
+              2206,
+              2206,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              2966,
+              3054,
+              3054,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              2749,
+              2885,
+              2885,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4105,
+              4327,
+              4327,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 2206,
+          "all_responses_done_from_last_speech_end_ms": 869,
+          "first_audio_from_first_speech_ms": 2402,
+          "audio_responses": [
+            [
+              "completed",
+              195840
+            ],
+            [
+              "completed",
+              96000
+            ],
+            [
+              "completed",
+              130560
+            ],
+            [
+              "completed",
+              122880
+            ],
+            [
+              "completed",
+              184320
+            ],
+            [
+              "completed",
+              207360
+            ],
+            [
+              "completed",
+              103680
+            ]
+          ]
+        },
+        "plan": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              4565,
+              4265,
+              4565,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3772,
+              3467,
+              3772,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              3590,
+              3429,
+              3590,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4616,
+              4345,
+              4616,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 4265,
+          "all_responses_done_from_last_speech_end_ms": 2019,
+          "first_audio_from_first_speech_ms": 8133,
+          "audio_responses": [
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              99840
+            ],
+            [
+              "completed",
+              161280
+            ],
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              153600
+            ],
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              99840
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "auto-audio",
+      "round": 2,
+      "fixture": "mixed",
+      "results": {
+        "plan": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              4592,
+              4262,
+              4592,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3819,
+              3491,
+              3819,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              3620,
+              3426,
+              3620,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4759,
+              4372,
+              4759,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 4262,
+          "all_responses_done_from_last_speech_end_ms": 2177,
+          "first_audio_from_first_speech_ms": 8076,
+          "audio_responses": [
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              99840
+            ],
+            [
+              "completed",
+              161280
+            ],
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              153600
+            ],
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              99840
+            ]
+          ]
+        },
+        "live": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              1935,
+              2010,
+              2010,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3065,
+              3284,
+              3284,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              2702,
+              2774,
+              2774,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4200,
+              4423,
+              4423,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 2010,
+          "all_responses_done_from_last_speech_end_ms": 940,
+          "first_audio_from_first_speech_ms": 2332,
+          "audio_responses": [
+            [
+              "completed",
+              207360
+            ],
+            [
+              "completed",
+              111360
+            ],
+            [
+              "completed",
+              142080
+            ],
+            [
+              "completed",
+              130560
+            ],
+            [
+              "completed",
+              176640
+            ],
+            [
+              "completed",
+              211200
+            ],
+            [
+              "completed",
+              107520
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "auto-audio",
+      "round": 3,
+      "fixture": "mixed",
+      "results": {
+        "live": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              2061,
+              2235,
+              2235,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              2955,
+              3093,
+              3093,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              2806,
+              3024,
+              3024,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4185,
+              4387,
+              4387,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 2235,
+          "all_responses_done_from_last_speech_end_ms": 1046,
+          "first_audio_from_first_speech_ms": 2571,
+          "audio_responses": [
+            [
+              "completed",
+              195840
+            ],
+            [
+              "completed",
+              103680
+            ],
+            [
+              "completed",
+              145920
+            ],
+            [
+              "completed",
+              130560
+            ],
+            [
+              "completed",
+              176640
+            ],
+            [
+              "completed",
+              207360
+            ],
+            [
+              "completed",
+              99840
+            ]
+          ]
+        },
+        "plan": {
+          "original_finals": 7,
+          "translation_finals": 7,
+          "blocks": [
+            [
+              1,
+              "English",
+              4523,
+              4237,
+              4523,
+              3,
+              3
+            ],
+            [
+              2,
+              "Japanese",
+              3760,
+              3391,
+              3760,
+              3,
+              3
+            ],
+            [
+              3,
+              "Chinese",
+              3514,
+              3338,
+              3514,
+              4,
+              4
+            ],
+            [
+              4,
+              "English",
+              4513,
+              4261,
+              4513,
+              3,
+              3
+            ]
+          ],
+          "first_translation_from_first_speech_ms": 4237,
+          "all_responses_done_from_last_speech_end_ms": 1269,
+          "first_audio_from_first_speech_ms": 4680,
+          "audio_responses": [
+            [
+              "cancelled",
+              38400
+            ],
+            [
+              "completed",
+              103680
+            ],
+            [
+              "completed",
+              161280
+            ],
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              153600
+            ],
+            [
+              "cancelled",
+              0
+            ],
+            [
+              "completed",
+              99840
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "block_fields": [
+    "block_number",
+    "reference_language",
+    "first_original_from_speech_onset_ms",
+    "first_translation_from_speech_onset_ms",
+    "first_bilingual_from_speech_onset_ms",
+    "facts_preserved",
+    "facts_checked"
+  ],
+  "audio_response_fields": [
+    "final_status",
+    "pcm_bytes"
+  ],
+  "clock_notes": "All times are relative client-side measurements. Negative commit offsets indicate packets received before commit."
+}
