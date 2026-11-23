@@ -25,6 +25,8 @@ export interface TranslateConfig {
   noiseReduction: 'near_field' | 'far_field' | null;
   /** A source-caption hint for incoming EN/JA/ZH speech, local to the adapter. */
   detectParticipantLanguage: boolean;
+  /** Translate sealed incoming captions as text and attach the result to their source. */
+  translateParticipantCaptions?: true;
   /** Each side's silence timer and the mid-sentence deferral, as Gemini's Live Translate (choice 4). */
   silence: { sourceMs: number; translationMs: number; deferMidSentence: boolean };
   /** WebSocket only (ruling 1; choice 15): the owner abandoned WebRTC for this provider (2026-09-29). It reaches `info.transport`, which analytics reports. */
@@ -41,12 +43,14 @@ export function buildTranslate(context: SessionContext, s: TranslateSettings, sh
   const { source, target } = context.direction;
   // A guard: the languages offer the thirteen targets only, so the runner never builds another (survey §2.7).
   if (!TRANSLATE_TARGETS.some((o) => o.value === target)) return { refused: `OpenAI Translate does not translate into ${target}.` };
+  const incoming = shared.reversed(context.direction) && isMeetingLanguage(source);
   return {
     model: TRANSLATE_MODEL,
     target: translateLanguages.wire.toWire(target),
     transcriptModel: TRANSCRIPT_MODEL,
     noiseReduction: NOISE[s.noiseReduction],
-    detectParticipantLanguage: s.detectParticipantLanguage && shared.reversed(context.direction) && isMeetingLanguage(source),
+    detectParticipantLanguage: s.detectParticipantLanguage && incoming,
+    ...(!context.speech && incoming && source !== target && target === 'zh' ? { translateParticipantCaptions: true as const } : {}),
     silence: {
       sourceMs: clampSegmentPauseMs(segmentPauseMs(shared.pauses.sourceSeconds)),
       translationMs: clampSegmentPauseMs(segmentPauseMs(shared.pauses.translationSeconds)),

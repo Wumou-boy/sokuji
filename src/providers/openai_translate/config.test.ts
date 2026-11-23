@@ -46,6 +46,15 @@ describe("OpenAI Translate's builder", () => {
     expect(build({}, french, shared({ reversed: () => true })).detectParticipantLanguage).toBe(false);
   });
 
+  it('uses source-bound caption translation only for incoming text-only Chinese captions', () => {
+    const incoming = { ...PARTICIPANT, speech: false, direction: { source: 'en', target: 'zh' } };
+    const reversed = shared({ reversed: () => true });
+    expect(build({}, incoming, reversed).translateParticipantCaptions).toBe(true);
+    expect(build({}, { ...incoming, speech: true }, reversed).translateParticipantCaptions).toBeUndefined();
+    expect(build({}, { ...PARTICIPANT, speech: false }, reversed).translateParticipantCaptions).toBeUndefined();
+    expect(build({}, incoming, shared({ reversed: () => false })).translateParticipantCaptions).toBeUndefined();
+  });
+
   it('runs a stored WebRTC choice over WebSocket: it is not read (ruling 1)', () => {
     const stored = migrateTranslateSettings({ transportType: 'webrtc' });
     expect(stored).not.toHaveProperty('transportType');

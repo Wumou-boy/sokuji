@@ -14,6 +14,7 @@ import type { SharedSettings } from '../../lib/provider/types';
 import { createTranslateAdapter } from './adapter';
 import { buildTranslate, type TranslateConfig } from './config';
 import { TRANSLATE_DEFAULTS, type TranslateCredentials, type TranslateSettings } from './settings';
+import type { TranslateCaption } from './textTranslation';
 import { base64ToPcm } from './wire';
 
 /** Shaped as a real key (`sk-…`), which `redact()` masks: a frame that carried it fails the kit's `frame-secret` rule. */
@@ -72,14 +73,14 @@ export const SERVER = {
 };
 
 /** An OpenAI Translate leg started over `FakeSocket`s on a tracked virtual clock; its socket not yet opened. */
-export function startTranslate(o: { context?: SessionContext; patch?: Partial<TranslateSettings>; credentials?: TranslateCredentials } = {}) {
+export function startTranslate(o: { context?: SessionContext; patch?: Partial<TranslateSettings>; credentials?: TranslateCredentials; translateCaption?: TranslateCaption } = {}) {
   const sockets = fakeSockets();
   const { clock, timers } = trackedClock();
   const { events, log } = recordEvents();
   const controller = new AbortController();
   const context = o.context ?? AUTO_CTX;
   const config = configFor(context, o.patch);
-  const starting = createTranslateAdapter({ openSocket: sockets.create }).start({ context, config, credentials: o.credentials ?? KEY, clock, signal: controller.signal }, events);
+  const starting = createTranslateAdapter({ openSocket: sockets.create, translateCaption: o.translateCaption }).start({ context, config, credentials: o.credentials ?? KEY, clock, signal: controller.signal }, events);
   const socket = () => sockets.last();
   const of = <K extends AdapterEvent['kind']>(kind: K) => log.filter((e): e is Extract<AdapterEvent, { kind: K }> => e.kind === kind);
   /** The payloads of the frames of one type, in order. */
