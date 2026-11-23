@@ -8,6 +8,7 @@ import type { ProviderType } from '../../types/Provider';
 import type { AnyProvider } from '../../lib/provider/types';
 import { providerIdFromStored } from '../../lib/session/storedSettings';
 import { presentProviders } from '../../providers/registry';
+import { runsAlone } from '../../lib/plan/wholeUnit';
 import type { ProviderPath, ScenarioId } from '../../lib/setup/types';
 import { getScenario, providerFitForScenario } from '../../lib/setup/scenarios';
 import type { ProviderFit } from '../../lib/setup/scenarios';
@@ -29,10 +30,13 @@ export function textOnlyCapabilityOf(p: Pick<AnyProvider, 'speech'>): 'always' |
   return p.speech === 'always' ? 'never' : p.speech === 'never' ? 'always' : 'optional';
 }
 
-/** The registered provider a draft names, or undefined. */
+/**
+ * The registered provider a draft names, or undefined: one that runs a session by itself. A provider that only
+ * translates is no answer to the wizard, whatever a record of the retired OpenAI Compatible, whose id it has, says.
+ */
 export function wizardProvider(id: string | null | undefined): AnyProvider | undefined {
   const registryId = providerIdFromStored(id);
-  return registryId === null ? undefined : presentProviders().find((p) => p.id === registryId);
+  return registryId === null ? undefined : presentProviders().find((p) => p.id === registryId && runsAlone(p));
 }
 
 /** The paths the wizard offers: managed first when one is present (Kizuna Soniox), own key once an own-key provider is (Soniox), and offline. */
@@ -50,11 +54,12 @@ export function providerFits(provider: ProviderType, scenario: ScenarioId): bool
   return p !== undefined && providerFitForScenario(textOnlyCapabilityOf(p), getScenario(scenario), p.faceToFace === true).ok;
 }
 
-/** The registry's own-key providers, in its order, each with its fit for the scenario — unfit ones greyed with the reason, never hidden. */
+
+/** The registry's own-key providers that can run a session alone, in its order, each with its fit for the scenario — unfit ones greyed with the reason, never hidden. */
 export function ownKeyOptions(scenario: ScenarioId): ProviderOption[] {
   const preset = getScenario(scenario);
   return presentProviders()
-    .filter((p) => p.kind === 'own-key')
+    .filter((p) => p.kind === 'own-key' && runsAlone(p))
     .map((p) => ({ id: p.id as ProviderType, fit: providerFitForScenario(textOnlyCapabilityOf(p), preset, p.faceToFace === true) }));
 }
 

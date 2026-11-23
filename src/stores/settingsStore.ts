@@ -275,7 +275,10 @@ export interface SettingsStore {
   // Export menu's scope boxes say (those govern only the manual export). Off
   // by default — exporting is an explicit, opt-in action.
   autoSaveOnStop: boolean;
-  /** Notes after the session, their model, and whether turning them on was explained (see CommonSettings). */
+  /**
+   * Notes after the session, and whether turning them on was explained (see CommonSettings). Their model is the notes
+   * service's own (text models, part C): the line-up's Notes card, `src/lib/notes/oldNotesModel.ts`.
+   */
   notesAfterSession: boolean;
   notesModel: string;
   notesBailianModel: string;
@@ -1000,10 +1003,8 @@ export const useSetTextOnly = () => useSettingsStore((state) => state.setTextOnl
 export const useSetKeepReplayAudio = () => useSettingsStore((state) => state.setKeepReplayAudio);
 export const useSetAutoSaveOnStop = () => useSettingsStore((state) => state.setAutoSaveOnStop);
 export const useNotesAfterSession = () => useSettingsStore((state) => state.notesAfterSession);
-export const useNotesModel = () => useSettingsStore((state) => state.notesModel);
 export const useNotesExplained = () => useSettingsStore((state) => state.notesExplained);
 export const useSetNotesAfterSession = () => useSettingsStore((state) => state.setNotesAfterSession);
-export const useSetNotesModel = () => useSettingsStore((state) => state.setNotesModel);
 export const useSetNotesExplained = () => useSettingsStore((state) => state.setNotesExplained);
 export const useLiveNotesSetting = () => useSettingsStore((state) => state.liveNotes);
 export const useLiveNotesExplained = () => useSettingsStore((state) => state.liveNotesExplained);

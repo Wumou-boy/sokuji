@@ -7,8 +7,12 @@ import { createFakeSource, type FakeSource } from '../../providers/fake/source';
 import { FAKE_DEFAULTS } from '../../providers/fake/settings';
 import type { FakeConfig, FakeCredentials } from '../../providers/fake/adapter';
 import { createRunner } from './runner';
+import { shapeWith } from '../plan/testing';
 import type { RunShape, TurnMode } from './types';
 import type { PlaybackPort } from './ports';
+
+// Who serves each stage: every event that names the run's provider carries it; here one provider serves all three.
+const STAGES = { transcription: 'fake', translation: 'fake', speech: 'fake' };
 
 /** The fake, with every call its sessions receive written to `log` as `<leg>:<call>`. */
 function spyingProvider(log: string[], patch: Partial<AnyProvider> = {}): AnyProvider {
@@ -38,8 +42,7 @@ function setup(o: { turnMode?: TurnMode; legs?: RunShape['legs']; provider?: Any
   const playback = { audio: vi.fn(), held: vi.fn(), clear: vi.fn(), live: vi.fn() };
   Object.assign(playback, o.playback);
   const tracked: Array<[string, unknown]> = [];
-  const shape: RunShape = {
-    provider: o.provider ?? spyingProvider(log),
+  const shape: RunShape = shapeWith(o.provider ?? spyingProvider(log), {
     settings: FAKE_DEFAULTS,
     credentials: { apiKey: '' },
     pair: { source: 'en', target: 'ja' },
@@ -54,7 +57,7 @@ function setup(o: { turnMode?: TurnMode; legs?: RunShape['legs']; provider?: Any
       segmentation: { mode: 'off', sentencesPerRow: 0 },
     },
     auth: { signedIn: false, getToken: async () => null },
-  };
+  });
   const runner = createRunner({
     clock,
     platform: 'electron',
@@ -240,7 +243,7 @@ describe('runner — typed text and clearing', () => {
     expect(log).toContain('speaker:text');
     const texts = runner.conversation.snapshot()[0].segments.map((s) => s.text);
     expect(texts).toEqual(['hi', '«hi»']);
-    expect(events('text_input_sent')).toEqual([{ session_id: 'run1', provider: 'fake', text_length: 2 }]);
+    expect(events('text_input_sent')).toEqual([{ session_id: 'run1', provider: 'fake', stages: STAGES, text_length: 2 }]);
   });
 
   it('drops typed text that is blank once trimmed before any adapter sees it, and records nothing', async () => {

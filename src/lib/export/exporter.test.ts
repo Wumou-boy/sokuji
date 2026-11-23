@@ -19,7 +19,7 @@ const entries: Entry[] = [
 ];
 const words = exportWords((_key, defaultValue) => defaultValue);
 const exporter = (over: Partial<Parameters<typeof conversationExporter>[0]> = {}) => conversationExporter({
-  entries, legs, info: { provider: 'fake', models: { asrModel: 'a', ttsModel: 't' }, startedAt: started }, words, appVersion: '9.9.9', now: () => exported, ...over,
+  entries, legs, info: { provider: 'fake', stages: { transcription: 'fake', translation: 'fake', speech: 'fake' }, models: { asrModel: 'a', ttsModel: 't' }, startedAt: started }, words, appVersion: '9.9.9', now: () => exported, ...over,
 });
 
 describe('conversationExporter', () => {
@@ -38,6 +38,41 @@ describe('conversationExporter', () => {
       '  → 今天天气很好。',
       '',
     ].join('\n'));
+  });
+
+  // A run on two services says who served each stage where a run on one says its provider; the JSON keeps
+  // `provider` (the one that transcribed) and adds `stages`.
+  it('a run on two services names who served each stage, in the header and in the JSON', () => {
+    const stages = { transcription: 'kizunaai_soniox', translation: 'kizunaai_soniox', speech: 'edge' };
+    const mixed = exporter({ info: { provider: 'kizunaai_soniox', stages, models: { asrModel: 'a', ttsModel: 't' }, startedAt: started } });
+    const header = mixed.text(FULL_SCOPE, true).split('\n');
+    expect(header.slice(0, 6)).toEqual([
+      'Sokuji conversation export',
+      'Session started: 2026-09-24 10:00:00',
+      'Exported: 2026-09-24 10:01:00',
+      'Provider: transcription=kizunaai_soniox, translation=kizunaai_soniox, speech=edge',
+      'Models: asr=a, tts=t',
+      "My Language: ja → Other's Language: zh",
+    ]);
+    const parsed = JSON.parse(mixed.json(FULL_SCOPE));
+    expect(parsed).toMatchObject({ provider: 'kizunaai_soniox', stages });
+    expect(Object.keys(parsed).slice(0, 7)).toEqual(['format', 'sessionStartedAt', 'exportedAt', 'appVersion', 'provider', 'stages', 'models']);
+    // Copied without a header, nothing of it.
+    expect(mixed.text(FULL_SCOPE, false)).toBe(exporter().text(FULL_SCOPE, false));
+  });
+
+  it('a run on one service is written as before: one provider on every stage, and this device with Bing and Edge', () => {
+    const local = (stages: { transcription: string; translation: string; speech: string }) =>
+      exporter({ info: { provider: 'local_inference', stages, models: { asrModel: 'a', ttsModel: 't' }, startedAt: started } });
+    const plain = local({ transcription: 'local_inference', translation: 'local_inference', speech: 'local_inference' });
+    const online = local({ transcription: 'local_inference', translation: 'bing', speech: 'edge' });
+    expect(plain.text(FULL_SCOPE, true)).toContain('Provider: local_inference\n');
+    expect(online.text(FULL_SCOPE, true)).toBe(plain.text(FULL_SCOPE, true));
+    expect(online.json(FULL_SCOPE)).toBe(plain.json(FULL_SCOPE));
+    expect(JSON.parse(exporter().json(FULL_SCOPE))).not.toHaveProperty('stages');
+    // An id the catalog does not know, on every stage, is one service too.
+    const unknown = exporter({ info: { provider: 'gone', stages: { transcription: 'gone', translation: 'gone', speech: 'gone' }, models: {}, startedAt: started } });
+    expect(unknown.text(FULL_SCOPE, true)).toContain('Provider: gone\n');
   });
 
   it('answers the menu: is there a conversation, and does the scope select any of it', () => {
@@ -107,7 +142,7 @@ describe('rowsExporter', () => {
     { leg: 'participant' as const, startMs: 65_000, speakerLabel: 'Speaker 2', sentences: [{ n: 3, text: '好的。' }, { n: 4, text: '开始吧。' }], translation: null },
   ];
   const rowsOut = (over: Partial<Parameters<typeof rowsExporter>[0]> = {}) => rowsExporter({
-    rows, startedAt: start, legs: [], info: { provider: 'soniox', models: {}, startedAt: start }, words, appVersion: '9.9.9', now: () => exported, ...over,
+    rows, startedAt: start, legs: [], info: { provider: 'soniox', stages: { transcription: 'soniox', translation: 'soniox', speech: 'soniox' }, models: {}, startedAt: start }, words, appVersion: '9.9.9', now: () => exported, ...over,
   });
 
   it('writes each row at its clock time with its speaker, and its sentences as one line', () => {

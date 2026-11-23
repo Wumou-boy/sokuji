@@ -45,7 +45,7 @@
     "systemInstructions": "Instruções do sistema",
     "speechMode": "Modo de fala",
     "speechModeAppliesTo": "Aplica-se à sua voz. O áudio do outro sempre usa VAD semântico.",
-    "speechModeTooltip": "Auto: o provedor detecta quando você termina de falar. \nPressionar para falar: mantenha pressionada a barra de espaço ou o botão do microfone para enviar áudio manualmente. \nPressionar para traduzir: como Pressionar para falar, mas roteia seu microfone original para o microfone virtual quando ocioso, para que você possa falar diretamente sem tradução.",
+    "speechModeTooltip": "Auto: o provedor detecta quando você termina de falar. \nPressionar para falar: mantenha pressionada a tecla {{key}} ou o botão do microfone para enviar áudio manualmente. \nPressionar para traduzir: como Pressionar para falar, mas roteia seu microfone original para o microfone virtual quando ocioso, para que você possa falar diretamente sem tradução.",
     "speechModeAppliesToAuto": "Aplica-se à sua voz. O áudio do outro sempre usa a detecção automática do provedor.",
     "userTranscriptModel": "Modelo de transcrição do usuário",
     "noiseReduction": "Redução de ruído",
@@ -508,6 +508,7 @@
     "microphone": "Microfone",
     "microphoneDesc": "Selecione o microfone para capturar sua fala. Fale seu idioma neste microfone, e o Sokuji traduzirá tudo que ouvir em tempo real.",
     "swapLanguages": "Trocar idiomas",
+    "swapNotSpoken": "O serviço de fala não lê estes idiomas no sentido inverso.",
     "textOnly": "Somente texto",
     "textOnlyDesc": "Traduzir apenas para texto — sem saída de voz",
     "textOnlyForcedByMode": "O modo \"{{mode}}\" transforma o que os participantes dizem em texto para você e nunca gera áudio, por isso \"Somente texto\" permanece ativado. Mude o modo de tradução para traduzir sua própria voz com fala.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "Grátis · online, um serviço da Microsoft"
+    },
+    "openai_text": {
+      "name": "Modelo de texto da OpenAI",
+      "description": "Traduz qualquer par de idiomas com sua chave da OpenAI"
+    },
+    "gemini_text": {
+      "name": "Modelo de texto do Gemini",
+      "description": "Traduz qualquer par de idiomas com sua chave do Gemini"
+    },
+    "openai_compatible": {
+      "name": "Serviço compatível com OpenAI",
+      "description": "OpenRouter, DeepSeek, Ollama e outros, no endereço que você informar"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "Função",
     "noChannelConfigured": "Ative o microfone ou o áudio do outro antes de começar.",
     "release": "soltar",
-    "pushToTalk": "pressionar para falar (Espaço)",
+    "pushToTalk": "pressionar para falar ({{key}})",
     "inputDeviceOff": "dispositivo de entrada desligado",
     "endSession": "Encerrar sessão",
     "startSession": "Iniciar sessão",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "As leituras em japonês não estão funcionando.",
       "defaultColour": "Padrão"
     },
-    "pttHint": "Pressione Espaço para falar"
+    "pttHint": "Pressione {{key}} para falar"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "Você está logado. Abra o link que enviamos por e-mail para verificar seu endereço — o crédito de teste chega assim que você confirmar.",
       "onFile": "Uma chave já está salva — deixe em branco para mantê-la.",
       "offlineHardware": "O Sokuji roda bem com GPU e VRAM suficiente; só com CPU fica bem mais lento.",
-      "openaiOneKey": "Esta única chave serve para OpenAI Realtime, Translate e Live."
+      "openaiOneKey": "Esta única chave serve para OpenAI Realtime, Translate e Live.",
+      "baseUrl": "Endereço",
+      "baseUrlPlaceholder": "Endereço, como https://openrouter.ai/api/v1",
+      "apiKeyOptional": "Chave de API (opcional)"
     },
     "summary": {
       "scenario": "Cenário",
@@ -1534,6 +1550,18 @@
     "source_ended": "A fonte de áudio desapareceu (desconectada, fechada ou interrompida).",
     "still_stopping": "A última sessão ainda está sendo encerrada; tente novamente em instantes.",
     "connection_restored": "A conexão foi interrompida e restabelecida",
+    "lineup_incomplete": "Escolha primeiro um serviço para a etapa “{{stage}}”.",
+    "lineup_not_offered": "{{provider}} não está disponível nesta versão. Escolha outro serviço para a etapa “{{stage}}”.",
+    "lineup_stage_split": "{{provider}} também precisa fazer a etapa “{{stage}}”. Escolha {{provider}} para a etapa “{{stage}}” ou use outro serviço no lugar de {{provider}}.",
+    "lineup_translation_bound": "A tradução de {{provider}} exige a transcrição de {{provider}}. Escolha {{provider}} para a transcrição ou escolha outro serviço de tradução.",
+    "lineup_no_unit": "{{provider}} não consegue fazer a etapa “{{stage}}” sozinho aqui. Escolha-o para as etapas que ele faz juntas ou escolha outro serviço.",
+    "lineup_voice_not_alone": "Use {{provider}} para a transcrição e a tradução ou escolha outro serviço de fala.",
+    "lineup_voice_not_taken": "Escolha {{provider}} também para a fala ou escolha outro serviço para a transcrição e a tradução.",
+    "lineup_two_managed": "Dois serviços da Kizuna AI ainda não podem funcionar na mesma sessão. Escolha um deles.",
+    "lineup_language_not_spoken": "{{provider}} não tem voz para {{language}}. Escolha outro serviço de fala ou desative a fala nesta sessão.",
+    "lineup_source_not_fixed": "{{provider}} precisa saber qual idioma é falado. Escolha-o no lugar de “Detecção Automática” ou escolha outro serviço de tradução.",
+    "lineup_pair_not_translated": "{{provider}} não traduz {{source}} → {{target}}. Escolha outros idiomas ou outro serviço de tradução.",
+    "lineup_face_to_face_apart": "“Cara a cara” precisa de um único serviço para transcrever e traduzir. Escolha {{provider}} também para a tradução ou defina “Onde está o outro” como “Em uma reunião”.",
     "session_in_use": "Outra janela ou outro dispositivo está usando esta conta. Encerre a sessão lá ou, se o Sokuji acabou de fechar inesperadamente, tente novamente em um minuto.",
     "previous_session_ending": "Sua sessão anterior ainda está sendo encerrada. Tente novamente em um minuto.",
     "app_capture_lost_using_system_audio": "A captura do aplicativo parou, então todo o áudio do sistema está sendo traduzido no lugar.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "A conta de {{organization}} está pausada. Entre em contato com o proprietário ou use seu próprio saldo.",
     "org_wallet_frozen_unnamed": "A conta da organização está pausada. Entre em contato com o proprietário ou use seu próprio saldo.",
     "org_wallet_frozen_owner": "A conta de {{organization}} está pausada. Entre em contato com o suporte do Sokuji ou use seu próprio saldo.",
-    "org_wallet_frozen_owner_unnamed": "A conta da organização está pausada. Entre em contato com o suporte do Sokuji ou use seu próprio saldo."
+    "org_wallet_frozen_owner_unnamed": "A conta da organização está pausada. Entre em contato com o suporte do Sokuji ou use seu próprio saldo.",
+    "model_missing": "O serviço não oferece este modelo: {{detail}}",
+    "quota": "A conta do serviço está sem créditos: {{detail}}",
+    "text_model_unset": "Escolha um modelo para a tradução, ou digite o nome dele, em “Idiomas e composição”.",
+    "address_missing": "Insira o endereço do serviço compatível em “Contas e chaves” antes de iniciar.",
+    "address_invalid": "O endereço do serviço compatível não pode ser usado: {{detail}}"
   },
   "viewer": {
     "title": "Legendas do Sokuji",
@@ -1824,7 +1857,10 @@
         "stateSaved": "Chave salva",
         "belongsTo": "Pertence a {{region}}",
         "switched": "Alterado para {{region}}: esta chave só funciona lá."
-      }
+      },
+      "findModels": "Procurar modelos",
+      "configure": "Configurar",
+      "manageModels": "Gerenciar modelos"
     },
     "lineup": {
       "title": "Composição",
@@ -1837,9 +1873,13 @@
       "and": " e ",
       "joint": "Funciona com {{stages}} em uma única conexão; mudam juntas.",
       "granite": "Com a tradução: o Granite Speech transforma a fala direto na tradução.",
-      "moved": "{{stages}} também passou para {{providers}}: ainda não dá para combinar com esta escolha. A mistura será suportada mais adiante.",
       "needsKey": "precisa de chave",
       "needsSignIn": "precisa entrar",
+      "needsAddress": "precisa de um endereço",
+      "voiceNotAlone": "só lê a própria tradução",
+      "voiceNotTaken": "só usa a própria voz",
+      "twoManaged": "um serviço da Kizuna AI por vez",
+      "voiceFollowed": "A fala mudou para {{provider}}. O serviço de fala anterior só aceita as próprias traduções.",
       "options": "Opções de {{provider}}",
       "state": {
         "needsKey": "Precisa de uma chave",
@@ -1850,18 +1890,29 @@
         "keyRefused": "Chave recusada",
         "keyNotVerified": "Chave não verificada",
         "checkingKey": "Verificando a chave…",
-        "notUsed": "Não usado desta vez"
+        "notUsed": "Não usado desta vez",
+        "languageNotSpoken": "Idioma não compatível",
+        "cannotCombine": "Não podem ser combinados",
+        "notAvailable": "Indisponível aqui",
+        "needsAddress": "Precisa de um endereço",
+        "notReady": "Não está pronto"
       },
       "speechModeHint": "Quando um trecho de fala vai para a tradução; fixo durante a sessão",
       "hint": "Qual serviço faz cada etapa",
       "uses": {
         "turn": "Fim da fala",
         "key": "Tecla",
-        "space": "Espaço",
-        "released": "Ao soltar",
-        "releasedValue": "esse trecho vai para a tradução",
+        "held": "Enquanto está pressionada",
         "notHeld": "Enquanto não está pressionada",
-        "notHeldValue": "sua própria voz vai direto para o outro lado, sem tradução"
+        "talkHeld": "O Sokuji escuta; quando você solta a tecla, esse trecho é traduzido e o outro lado ouve a tradução. Com a Passagem direta ligada, o outro lado também ouve sua própria voz, em volume baixo.",
+        "talkNotHeld": "O Sokuji não escuta; nada do que você diz é traduzido nem chega ao outro lado.",
+        "translateHeld": "O que você diz é traduzido; o outro lado ouve só a tradução, não sua própria voz.",
+        "translateNotHeld": "Sua própria voz vai direto para o outro lado, sem tradução.",
+        "change": "Trocar",
+        "cancel": "Cancelar",
+        "reset": "Redefinir para {{key}}",
+        "press": "Pressione uma tecla… (Esc para cancelar)",
+        "refused": "Não é possível usar {{key}}. Pressione outra tecla."
       },
       "actsOn": "Vale para {{stages}}",
       "pointer": "As opções que valem para {{stages}} estão no cartão “{{card}}”.",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "Adicione uma chave da OpenAI em “Contas e chaves” para que as notas sejam escritas.",
+      "notesNeedGeminiKey": "Adicione uma chave do Gemini em “Contas e chaves” para que as notas sejam escritas.",
+      "notesNeedAddress": "Adicione o endereço do serviço compatível em “Contas e chaves” para que as notas sejam escritas.",
       "alsoFiles": "Também transcreve arquivos importados e registros de novo.",
       "wordsLeftOut": "Lista de palavras: {{count}} entradas acima do limite deste serviço ficam de fora.",
       "wordsUnused": "Lista de palavras: este modelo não consegue usá-la.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Estimativa da Kizuna AI: notas ao vivo cerca de {{live}} por hora, notas depois de uma sessão cerca de {{after}} por hora, pagas com o saldo que paga as suas sessões.",
       "notesNeedSignInOrKey": "Entre na sua conta, ou adicione uma chave da OpenAI em “Contas e chaves”, para que as notas sejam escritas.",
       "jointCard": "{{stages}} funcionam em uma única conexão; mudam juntas.",
+      "partableCard": "{{stages}} funcionam em uma única conexão. Outro serviço pode fazer a tradução: escolha-o abaixo.",
       "notesKizunaLine": "A OpenAI escreve as notas pela Kizuna AI, pagas com o seu saldo.",
       "notesOpenAiLine": "Escreve as notas com a sua própria chave da OpenAI.",
-        "notesCompatibleName": "Compatível com OpenAI",
-        "notesCompatibleNeedsConfig": "Defina o endpoint e o modelo",
+      "notesGeminiLine": "Escreve as notas com a sua própria chave do Gemini.",
+      "notesCompatibleLine": "Escreve as notas com o serviço no endereço que você informar.",
       "notesNeedSignInOrChoose": "Entre na sua conta, ou escolha a OpenAI aqui, para que as notas sejam escritas.",
       "notesNeedSignInOrKeyAndChoose": "Entre na sua conta, ou adicione uma chave da OpenAI em “Contas e chaves” e escolha a OpenAI aqui, para que as notas sejam escritas.",
       "speechNotUsed": "Desta vez nada é lido em voz alta: a tradução aparece só como texto.",
-      "speechHowToHear": "Para ouvi-la, escolha “ouvir” na frase acima."
+      "speechHowToHear": "Para ouvi-la, escolha “ouvir” na frase acima.",
+      "notesCompatibleName": "Compatível com OpenAI",
+      "notesCompatibleNeedsConfig": "Defina o endpoint e o modelo"
     },
     "display": {
       "surface": "Qual exibição",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translate, OpenAI Live e Palabra não têm campo para uma lista de palavras; não recebem nenhuma.",
       "byModel": "Depende do modelo",
       "byModelNote": "Depende do modelo: o OpenAI usa o contexto só com seus modelos de transcrição mais antigos; o Gemini Live usa os termos só com gemini-3.8-live; este dispositivo lê a lista só com seus tradutores de modelos de linguagem grandes."
+    },
+    "textModel": {
+      "automatic": "Automático",
+      "automaticModel": "Automático ({{model}})",
+      "chooseModel": "Escolha um modelo",
+      "modelName": "Ou digite o nome de um modelo",
+      "off": "Desligado",
+      "lowest": "Mínimo",
+      "reasoningTooltip": "“Mínimo” pede o menor raciocínio que o modelo aceita, o que é mais rápido. Qualquer outra escolha é enviada exatamente como está: se o modelo a recusar, a composição avisa antes de você iniciar.",
+      "notesReasoningTooltip": "“Médio”, o padrão, pede a cada etapa das notas o raciocínio com que ela foi testada: Baixo para cada parte e para as notas durante a sessão, Médio para concluí-las, e menos onde o modelo aceita menos. Qualquer outra escolha, ou um valor digitado, é enviada exatamente como está em cada pedido: se o modelo a recusar, o cartão “Notas” avisa.",
+      "reasoningValue": "Ou digite um valor, enviado como está",
+      "listing": "Procurando modelos…",
+      "listEmpty": "Este serviço não lista modelos: digite o nome do modelo.",
+      "typedOverrides": "Substitui a seleção acima. Apague para voltar a usar a lista."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "De cada sessão, o texto das frases, os números delas, qual lado e qual falante as disse e as grafias da sua lista de palavras são enviados para {{service}} com a sua própria chave. Nunca o áudio, a tradução nem a sua conta.",
     "notesTurnOn": "Ativar",
     "notesModel": "Modelo das notas",
-    "notesModelLine": "O modelo de texto que escreve as notas, pelo nome dele no serviço.",
-      "notesCompatibleBaseUrl": "URL base da API",
-      "notesCompatibleUrlInvalid": "Informe uma URL HTTPS ou uma URL HTTP de localhost/rede privada.",
-      "notesCompatibleKeyLine": "Opcional. Use uma chave para este endpoint.",
-      "notesExplainCompatible": "O endpoint configurado recebe o texto da transcrição, os números das frases, os rótulos dos participantes e as grafias da lista de palavras. As atualizações ao vivo também incluem as notas até então.",
     "notes": "Notas",
     "transcript": "Transcrição",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "O modelo de notas não respondeu no formato esperado.",
       "no-answer": "O modelo de notas não deu resposta.",
       "network": "Não foi possível acessar o serviço de notas.",
+      "timeout": "O serviço de notas não respondeu a tempo.",
+      "no-model": "Nenhum modelo de notas escolhido. Escolha um no cartão “Notas” de “Idiomas e composição”.",
       "refused": "O serviço recusou a solicitação ({{status}}).",
       "sign-in": "Entre no Kizuna AI para escrever notas com ele.",
       "unavailable": "As notas do Kizuna AI ainda não estão disponíveis.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "Clique em um tema ou ponto para ir até a frase dele e tocar a partir dali.",
     "notesJump": "Clique em um tema ou ponto para ir até a frase dele.",
     "keptHereNotes": "Enquanto as notas estão ativadas, o texto da transcrição de cada sessão também é enviado para {{service}} para escrevê-las.",
-    "notesModelOther": "Outro",
-    "notesModelName": "Nome do modelo",
     "notesExplainKizuna": "De cada sessão, o texto das frases, os números delas, qual lado e qual falante as disse e as grafias da sua lista de palavras passam pelo servidor da Kizuna AI até a OpenAI, que escreve as notas. A Kizuna AI não guarda nada disso. É pago com o saldo que paga as suas sessões. Nunca o áudio nem a tradução.",
     "liveExplainKizuna": "Durante uma sessão, a cada 20 segundos as frases novas (texto, números e qual lado e qual falante as disse), as notas até agora e as grafias da sua lista de palavras passam pelo servidor da Kizuna AI até a OpenAI, que escreve as notas. A Kizuna AI não guarda nada disso. É pago com o saldo que paga as suas sessões. Nunca o áudio nem a tradução.",
     "notesModelKizuna": "A Kizuna AI escreve as notas com {{model}}.",
+    "notesModelLineUp": "É escolhido com o serviço de notas, no cartão “Notas” de “Idiomas e composição”.",
     "copyConversation": "Copiar a conversa",
     "saveConversationTxt": "Salvar a conversa (.txt)",
     "saveConversationJson": "Salvar a conversa (.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "Responsável",
     "notesDue": "Prazo",
     "notesEdited": "Editado à mão",
+    "notesWrittenBy": "Escritas por {{service}} com {{model}}",
     "mergeSpeaker": "Juntar {{name}} a…",
     "mergeInto": "Juntar a…",
     "mergeMenu": "Juntar a",
     "mergeAsk": "{{name}} já é um falante deste lado.",
     "mergeOne": "Juntar em um",
-    "keepApart": "Manter separados"
+    "keepApart": "Manter separados",
+    "notesCompatibleBaseUrl": "URL base da API",
+    "notesCompatibleUrlInvalid": "Informe uma URL HTTPS ou uma URL HTTP de localhost/rede privada.",
+    "notesCompatibleKeyLine": "Opcional. Use uma chave para este endpoint.",
+    "notesExplainCompatible": "O endpoint configurado recebe o texto da transcrição, os números das frases, os rótulos dos participantes e as grafias da lista de palavras. As atualizações ao vivo também incluem as notas até então."
   },
   "notesQuit": {
     "named": "As notas de “{{title}}” estão sendo escritas. Sair mesmo assim? Elas serão marcadas como canceladas.",

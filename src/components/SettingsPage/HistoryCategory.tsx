@@ -3,26 +3,28 @@
 // "History and notes" (desktop only), as the settings mock draws it: the History folder with the space it takes and
 // a button that opens it, and a line saying records stay on this computer. The desktop has no session-end auto-save:
 // History keeps every session (owner 2026-11-16). Then the notes after the session: the switch, which needs a notes
-// service chosen in the line-up and explains once, the first time, what is sent where (ruling 37), and the model.
+// service chosen in the line-up and explains once, the first time, what is sent where (ruling 37), and the model:
+// Kizuna AI's one, or, with the user's own key, the one chosen on the line-up's Notes card (text models, part C).
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FolderOpen } from 'lucide-react';
 import { historyPort } from '../../lib/history/port';
-import { NOTES_MODELS } from '../../lib/notes/chat';
 import { notesEndpointOf } from '../../lib/notes/notesEndpoint';
+import type { CompatibleNotesSettings } from '../../stores/settingsStore';
 import type { HistoryStatus, HistoryUsage } from '../../lib/history/types';
 import { useLineUpStore } from '../../stores/lineUpStore';
-import useSettingsStore, {
-  useLiveNotesExplained, useLiveNotesSetting, useNotesAfterSession, useNotesExplained, useNotesModel, useSetLiveNotes,
-  useSetLiveNotesExplained, useSetNotesAfterSession, useSetNotesExplained, useSetNotesModel,
+import {
+  useLiveNotesExplained, useLiveNotesSetting, useNavigateToSettings, useNotesAfterSession, useNotesExplained, useSetLiveNotes,
+  useSetLiveNotesExplained, useSetNotesAfterSession, useSetNotesExplained,
 } from '../../stores/settingsStore';
+import useSettingsStore from '../../stores/settingsStore';
 import { isElectron } from '../../utils/environment';
-import FormInput from '../Settings/shared/FormInput';
 import ToggleSwitch from '../Settings/shared/ToggleSwitch';
+import FormInput from '../Settings/shared/FormInput';
 import { formatBytes } from '../History/format';
 import type { CategoryBodyProps } from './SettingsPage';
-import { NOTES_SERVICE_NAMES, notesExplanation } from '../History/notesExplain';
-import { BAILIAN_NOTES, COMPATIBLE_NOTES, KIZUNA_NOTES, notesServiceOf } from '../../lib/notes/notesService';
+import { NOTES_SERVICE_NAMES, notesExplanation, notesServiceName } from '../History/notesExplain';
+import { BAILIAN_NOTES, KIZUNA_NOTES, LEGACY_COMPATIBLE_NOTES, notesServiceOf } from '../../lib/notes/notesService';
 import { RELAY_NOTES_MODEL } from '../../lib/notes/relayChat';
 
 function Row({ name, line, children }: { name: string; line?: ReactNode; children: ReactNode }) {
@@ -39,9 +41,6 @@ function Row({ name, line, children }: { name: string; line?: ReactNode; childre
 
 export { NOTES_SERVICE_NAMES };
 
-/** The value of the list's last entry, for a model name typed by hand. */
-const OTHER_MODEL = 'other model';
-
 /** Public endpoints must use TLS; plain HTTP is limited to loopback or private networks. */
 export function notesBaseUrlAllowed(value: string): boolean {
   return notesEndpointOf(value) !== null;
@@ -52,17 +51,15 @@ export function HistoryCategory(_props: CategoryBodyProps) {
   const { t } = useTranslation();
   // Always a service (owner, 2026-11-17: no "None" in the line-up): the switches alone decide whether notes are written.
   const service = useLineUpStore((s) => notesServiceOf(s.lineUp));
-  const serviceName = service === COMPATIBLE_NOTES
-    ? t('settingsPage.lineup.notesCompatibleName', 'OpenAI-compatible')
-    : NOTES_SERVICE_NAMES[service] ?? service;
+  const serviceName = notesServiceName(t, service);
   const notesOn = useNotesAfterSession();
   const explained = useNotesExplained();
-  const model = useNotesModel();
-  const bailianModel = useSettingsStore((s) => s.notesBailianModel);
-  const compatible = useSettingsStore((s) => s.notesCompatible);
   const setNotesOn = useSetNotesAfterSession();
   const setExplained = useSetNotesExplained();
-  const setModel = useSetNotesModel();
+  const navigateToSettings = useNavigateToSettings();
+  // These settings belong only to legacy notes choices still stored by existing profiles.
+  const bailianModel = useSettingsStore((s) => s.notesBailianModel);
+  const compatible = useSettingsStore((s) => s.notesCompatible);
   const setBailianModel = useSettingsStore((s) => s.setNotesBailianModel);
   const setCompatible = useSettingsStore((s) => s.setNotesCompatible);
   const liveOn = useLiveNotesSetting();
@@ -71,16 +68,11 @@ export function HistoryCategory(_props: CategoryBodyProps) {
   const setLiveExplained = useSetLiveNotesExplained();
   /** Which switch's once-only explanation is shown. */
   const [explaining, setExplaining] = useState<'after' | 'live' | null>(null);
-  // The list, or "Other" with the name typed by hand (a stored model not on the list shows there).
-  const listed = (m: string) => (NOTES_MODELS as readonly string[]).includes(m);
-  const [typing, setTyping] = useState(!listed(model));
-  const [modelDraft, setModelDraft] = useState(listed(model) ? '' : model);
   const [bailianDraft, setBailianDraft] = useState(bailianModel);
-  const [compatibleDraft, setCompatibleDraft] = useState(compatible ?? { baseUrl: '', model: '', apiKey: '' });
+  const [compatibleDraft, setCompatibleDraft] = useState<CompatibleNotesSettings>(compatible);
   const [baseUrlError, setBaseUrlError] = useState(false);
-  useEffect(() => { if (!listed(model)) { setTyping(true); setModelDraft(model); } }, [model]);
   useEffect(() => { setBailianDraft(bailianModel); }, [bailianModel]);
-  useEffect(() => { setCompatibleDraft(compatible ?? { baseUrl: '', model: '', apiKey: '' }); }, [compatible]);
+  useEffect(() => { setCompatibleDraft(compatible); }, [compatible]);
   const notesName = t('history.notesAfterSession', 'Write notes after each session');
   const modelName = t('history.notesModel', 'Notes model');
   const modelLine = t('history.notesModelLine', 'The text model that writes the notes, by its name at the service.');
@@ -112,19 +104,7 @@ export function HistoryCategory(_props: CategoryBodyProps) {
       await setNotesOn(true);
     }
   };
-  const chooseModel = (value: string) => {
-    if (value === OTHER_MODEL) { setTyping(true); setModelDraft(listed(model) ? '' : model); return; }
-    setTyping(false);
-    void setModel(value);
-  };
-  const saveModel = async () => {
-    await setModel(modelDraft);
-    // An emptied field goes back to the default, which is on the list.
-    if (listed(useSettingsStore.getState().notesModel)) { setTyping(false); setModelDraft(''); return; }
-    // A typed name shows as it was stored (trimmed).
-    setModelDraft(useSettingsStore.getState().notesModel);
-  };
-  const updateCompatible = (field: 'baseUrl' | 'model' | 'apiKey', value: string) => {
+  const updateCompatible = (field: keyof CompatibleNotesSettings, value: string) => {
     const next = { ...compatibleDraft, [field]: value };
     setCompatibleDraft(next);
     if (field === 'baseUrl') setBaseUrlError(Boolean(value.trim()) && !notesBaseUrlAllowed(value));
@@ -219,7 +199,7 @@ export function HistoryCategory(_props: CategoryBodyProps) {
                 void setBailianModel(bailianDraft ?? '').then(() => setBailianDraft(useSettingsStore.getState().notesBailianModel));
               }} spellCheck={false} />
           </Row>
-        ) : service === COMPATIBLE_NOTES ? (
+        ) : service === LEGACY_COMPATIBLE_NOTES ? (
           <>
             <Row name={t('history.notesCompatibleBaseUrl', 'API base URL')}>
               <FormInput aria-label={t('history.notesCompatibleBaseUrl', 'API base URL')} value={compatibleDraft.baseUrl}
@@ -237,19 +217,12 @@ export function HistoryCategory(_props: CategoryBodyProps) {
             </Row>
           </>
         ) : (
-        <Row name={modelName} line={modelLine}>
-          <span className="history-category__model-pick">
-            <select className="select-dropdown general-row__select" aria-label={modelName} value={typing ? OTHER_MODEL : model}
-              onChange={(e) => chooseModel(e.target.value)}>
-              {NOTES_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
-              <option value={OTHER_MODEL}>{t('history.notesModelOther', 'Other')}</option>
-            </select>
-            {typing && (
-              <FormInput className="history-category__model" aria-label={t('history.notesModelName', 'Model name')} value={modelDraft}
-                onChange={(e) => setModelDraft(e.target.value)} onBlur={() => void saveModel()} spellCheck={false} />
-            )}
-          </span>
-        </Row>
+          // With the user's own key the model, and its reasoning, are chosen per service on the line-up's Notes card.
+          <Row name={modelName} line={t('history.notesModelLineUp', 'Chosen with the notes service, on the Notes card of Languages and line-up.')}>
+            <button type="button" className="model-row__btn" onClick={() => navigateToSettings('lineup')}>
+              {t('history.file.openSettings', 'Open {{place}}', { place: t('settingsPage.categories.lineup', 'Languages and line-up') })}
+            </button>
+          </Row>
         )}
       </div>
     </div>

@@ -8,6 +8,9 @@ export type StageName = 'transcription' | 'translation' | 'speech' | 'summarisat
 export type RunStage = Exclude<StageName, 'summarisation'>;
 export const RUN_STAGES: readonly RunStage[] = ['transcription', 'translation', 'speech'];
 
+/** The line-up id that served each run stage, e.g. { transcription: 'local_inference', translation: 'bing', speech: 'edge' }. */
+export type StageIds = Readonly<Record<RunStage, string>>;
+
 /**
  * The stage sets a provider's options act on (mock v19): each `StagePart` in its `Settings` names one of these, and
  * the provider's `optionStages` lists the ones it uses, so the line-up page knows which cards have options without
@@ -26,14 +29,25 @@ export interface LineUp {
   summarisation: string | null;
 }
 
-/** What one provider can serve, which of those stages it binds into one connection, and who it bills through. */
+/** What one option can serve, who runs it, which of those stages go together, and who it bills through. */
 export interface ProviderCaps {
   id: string;
   stages: readonly RunStage[];
-  binds: readonly (readonly RunStage[])[];
-  /** Providers of one family can be combined in one session today; across families, not yet. */
-  family: string;
+  /** The provider definition that runs this option: itself, or `local_inference` for `bing` and `edge`. */
+  host: string;
+  /**
+   * The stages one connection of it carries together and never apart; choosing it for one of them chooses it for
+   * all (the vendor's interface): an end-to-end service. Absent: each stage alone, but for `translatesOwn`.
+   */
+  joint?: readonly RunStage[];
+  /**
+   * True: it translates only what it transcribes itself, on the one connection that does both. Choosing it for
+   * translation chooses it for transcription; its transcription may stand alone, translated by another option.
+   */
+  translatesOwn?: boolean;
   account: 'kizuna' | 'key' | 'none';
+  /** True: this option may serve `speech` while another host transcribes and translates. */
+  voiceAlone: boolean;
+  /** True: this host's transcription and translation may be read aloud by another host's voice. */
+  takesVoice: boolean;
 }
-
-export type RunTarget = { ok: true; provider: string } | { ok: false; reason: 'incomplete' | 'mixed' | 'unbound' };

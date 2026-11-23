@@ -1,9 +1,16 @@
 // src/lib/notes/chat.ts
 //
 // The notes model is asked through a chat port: a system prompt, the user's part as compact JSON, and a JSON object
-// back. `openAiChat` is that port over an OpenAI-compatible chat interface, called with the user's own key. A rate
+// back. Two ports: the user's own key with a text model (`textModelChat.ts`: OpenAI, Gemini, a compatible service,
+// over the shared text-model client), and Kizuna AI's relay (`relayChat.ts`, which sends the body made here). A rate
 // limit is waited out the way the measuring scripts did (15 s, then 30, 45, 60); anything else the service refuses
 // comes back as a ChatError carrying the service's own message, for the user to read.
+
+import { realClock, type Clock } from '../contract/clock';
+import { refusesNone, takesReasoningEffort } from '../textModel/reasoning';
+
+/** Which models take a `reasoning_effort`: GPT-5.1 and later; any other model is sent none, and a refusal is not retried. */
+export { takesReasoningEffort };
 
 export type ChatEffort = 'none' | 'low' | 'medium';
 
@@ -53,23 +60,24 @@ export class ChatError extends Error {
   }
 }
 
-/** A rate limit is waited out this long times the attempt, at most this many times. */
-const RATE_LIMIT_WAIT_MS = 15_000;
+/** A rate limit is waited out at most this many times (15 s longer each time with the user's own key). */
 export const RATE_LIMIT_WAITS = 4;
+const RATE_LIMIT_WAIT_MS = 15_000;
 
 export const abortError = () => new DOMException('The notes request was cancelled', 'AbortError');
 
-export const wait = (ms: number, signal: AbortSignal) =>
+/** Waits `ms` on `clock` (the real one unless told), or rejects as cancelled when `signal` aborts first. */
+export const wait = (ms: number, signal: AbortSignal, clock: Pick<Clock, 'setTimeout'> = realClock) =>
   new Promise<void>((resolve, reject) => {
     if (signal.aborted) {
       reject(abortError());
       return;
     }
     const onAbort = () => {
-      clearTimeout(timer);
+      cancel();
       reject(abortError());
     };
-    const timer = setTimeout(() => {
+    const cancel = clock.setTimeout(() => {
       signal.removeEventListener('abort', onAbort);
       resolve();
     }, ms);
@@ -87,28 +95,13 @@ export const refusalOf = async (response: Response): Promise<{ message?: string;
   }
 };
 
-/** The notes models the settings offer: the newest OpenAI series, Luna (the one the passes were measured with) first. */
-export const NOTES_MODELS = ['gpt-6-luna', 'gpt-6-astra', 'gpt-6-sol', 'gpt-6.1-sol', 'gpt-6.1-terra'] as const;
-/** Listed models that refuse `reasoning_effort: 'none'` (as tried on the service): they get their lowest, 'low'. */
-const REFUSE_NONE: readonly string[] = ['gpt-6-astra', 'gpt-6.1-sol'];
-
-/**
- * Models that take a `reasoning_effort`: GPT-5.1 and later. Any other model is sent none, and uses its own default: an
- * older reasoning model refuses 'none', a model without reasoning refuses the field at all, and a refused request is
- * not retried.
- */
-export function takesReasoningEffort(model: string): boolean {
-  return /^gpt-(?:5\.[1-9]\d*|[6-9]|\d{2,})(?:[.-]|$)/.test(model);
-}
-
-/** The `reasoning_effort` sent to `model` for `effort`, or null for none. */
+/** The `reasoning_effort` sent to `model` for `effort`, or null for none (the rule is the text-model client's). */
 function effortFor(model: string, effort: ChatEffort): ChatEffort | null {
   if (!takesReasoningEffort(model)) return null;
-  const refusesNone = REFUSE_NONE.some((m) => model === m || model.startsWith(`${m}-`));
-  return effort === 'none' && refusesNone ? 'low' : effort;
+  return effort === 'none' && refusesNone(model) ? 'low' : effort;
 }
 
-/** The request body for `model`: the same bytes with an own key and through Kizuna AI. */
+/** The request body for `model` through Kizuna AI's relay (an own key's notes send the same members, `textModel/notes.ts`). */
 export function chatBody(model: string, r: Pick<ChatRequest, 'system' | 'user' | 'effort' | 'maxTokens'>): string {
   const reasoning = effortFor(model, r.effort);
   return JSON.stringify({
@@ -143,7 +136,6 @@ async function parseAnswer(response: Response, allowFence: boolean): Promise<obj
   }
   return parsed;
 }
-
 /** The model's answer from a chat completion response: always a JSON object, or a ChatError. */
 export function answerOf(response: Response): Promise<object> {
   return parseAnswer(response, false);

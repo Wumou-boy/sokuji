@@ -45,7 +45,7 @@
     "systemInstructions": "Järjestelmäohjeet",
     "speechMode": "Puhetila",
     "speechModeAppliesTo": "Koskee omaa ääntäsi. Toisen ääni käyttää aina semanttista VAD:ia.",
-    "speechModeTooltip": "Auto: tarjoaja tunnistaa, milloin olet lopettanut puhumisen. \nPaina ja puhu: pidä välilyöntiä tai mikrofonipainiketta painettuna lähettääksesi ääntä manuaalisesti. \nPaina ja käännä: kuten Paina ja puhu, mutta ohjaa raakamikrofonisi virtuaalimikrofoniin tyhjäkäynnillä, jotta voit puhua suoraan ilman käännöstä.",
+    "speechModeTooltip": "Auto: tarjoaja tunnistaa, milloin olet lopettanut puhumisen. \nPaina ja puhu: pidä näppäintä {{key}} tai mikrofonipainiketta painettuna lähettääksesi ääntä manuaalisesti. \nPaina ja käännä: kuten Paina ja puhu, mutta ohjaa raakamikrofonisi virtuaalimikrofoniin tyhjäkäynnillä, jotta voit puhua suoraan ilman käännöstä.",
     "speechModeAppliesToAuto": "Koskee omaa ääntäsi. Toisen ääni käyttää aina tarjoajan automaattista tunnistusta.",
     "userTranscriptModel": "Käyttäjän litterointimalli",
     "noiseReduction": "Kohinanvaimennus",
@@ -508,6 +508,7 @@
     "microphone": "Mikrofoni",
     "microphoneDesc": "Valitse mikrofoni puheesi kaappaamiseen. Puhu kielelläsi tähän mikrofoniin, niin Sokuji kääntää kaiken mitä se kuulee reaaliajassa.",
     "swapLanguages": "Vaihda kielet",
+    "swapNotSpoken": "Puhepalvelu ei lue näitä kieliä toisin päin.",
     "textOnly": "Vain teksti",
     "textOnlyDesc": "Käännä vain tekstiksi — ei puhuttua ääntä",
     "textOnlyForcedByMode": "Tila \"{{mode}}\" muuttaa osallistujien puheen vain tekstiksi sinulle eikä koskaan tuota ääntä, joten \"Vain teksti\" pysyy päällä. Vaihda käännöstilaa kääntääksesi oman äänesi puheena.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "Ilmainen · verkossa, Microsoftin palvelu"
+    },
+    "openai_text": {
+      "name": "OpenAI-tekstimalli",
+      "description": "Kääntää minkä tahansa kieliparin OpenAI-avaimellasi"
+    },
+    "gemini_text": {
+      "name": "Gemini-tekstimalli",
+      "description": "Kääntää minkä tahansa kieliparin Gemini-avaimellasi"
+    },
+    "openai_compatible": {
+      "name": "OpenAI-yhteensopiva palvelu",
+      "description": "OpenRouter, DeepSeek, Ollama ja muut, antamassasi osoitteessa"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "Funktio",
     "noChannelConfigured": "Ota mikrofoni tai toisen ääni käyttöön ennen aloittamista.",
     "release": "vapauta",
-    "pushToTalk": "paina puhuaksesi (Välilyönti)",
+    "pushToTalk": "paina puhuaksesi ({{key}})",
     "inputDeviceOff": "syöttölaite pois päältä",
     "endSession": "Lopeta istunto",
     "startSession": "Aloita istunto",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "Japanin lukutavat eivät toimi.",
       "defaultColour": "Oletus"
     },
-    "pttHint": "Paina välilyöntiä puhuaksesi"
+    "pttHint": "Paina näppäintä {{key}} puhuaksesi"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "Kirjauduttu sisään. Avaa sähköpostitse lähettämämme linkki vahvistaaksesi osoitteesi — kokeilusaldo tulee voimaan, kun teet niin.",
       "onFile": "Avain on jo tallennettu — jätä tämä tyhjäksi säilyttääksesi sen.",
       "offlineHardware": "Sokuji toimii hyvin näytönohjaimella, jossa on riittävästi muistia; pelkällä suorittimella se on selvästi hitaampi.",
-      "openaiOneKey": "Tämä yksi avain käy OpenAI Realtimelle, Translatelle ja Livelle."
+      "openaiOneKey": "Tämä yksi avain käy OpenAI Realtimelle, Translatelle ja Livelle.",
+      "baseUrl": "Osoite",
+      "baseUrlPlaceholder": "Osoite, esimerkiksi https://openrouter.ai/api/v1",
+      "apiKeyOptional": "API-avain (valinnainen)"
     },
     "summary": {
       "scenario": "Skenaario",
@@ -1534,6 +1550,18 @@
     "source_ended": "Äänilähde katosi (irrotettu, suljettu tai pysäytetty).",
     "still_stopping": "Edellistä istuntoa lopetetaan vielä; yritä hetken päästä uudelleen.",
     "connection_restored": "Yhteys katkesi ja palautui",
+    "lineup_incomplete": "Valitse ensin palvelu vaiheelle ”{{stage}}”.",
+    "lineup_not_offered": "{{provider}} ei ole käytettävissä tässä versiossa. Valitse toinen palvelu vaiheelle ”{{stage}}”.",
+    "lineup_stage_split": "Palvelun {{provider}} on hoidettava myös vaihe ”{{stage}}”. Valitse {{provider}} vaiheelle ”{{stage}}” tai käytä toista palvelua palvelun {{provider}} sijaan.",
+    "lineup_translation_bound": "Palvelun {{provider}} käännös edellyttää palvelun {{provider}} litterointia. Valitse {{provider}} litterointiin tai valitse toinen käännöspalvelu.",
+    "lineup_no_unit": "{{provider}} ei voi hoitaa vaihetta ”{{stage}}” täällä yksinään. Valitse se vaiheisiin, jotka se hoitaa yhdessä, tai valitse toinen palvelu.",
+    "lineup_voice_not_alone": "Käytä palvelua {{provider}} litterointiin ja käännökseen tai valitse toinen puhepalvelu.",
+    "lineup_voice_not_taken": "Valitse {{provider}} myös puheeseen tai valitse toinen palvelu litterointiin ja käännökseen.",
+    "lineup_two_managed": "Kahta Kizuna AI:n palvelua ei voi vielä käyttää samassa istunnossa. Valitse niistä yksi.",
+    "lineup_language_not_spoken": "Palvelulla {{provider}} ei ole ääntä kielelle {{language}}. Valitse toinen puhepalvelu tai kytke puhe pois tästä istunnosta.",
+    "lineup_source_not_fixed": "Palvelun {{provider}} on tiedettävä puhuttu kieli. Valitse se asetuksen ”Automaattinen tunnistus” sijaan tai valitse toinen käännöspalvelu.",
+    "lineup_pair_not_translated": "{{provider}} ei käännä suuntaa {{source}} → {{target}}. Valitse muut kielet tai toinen käännöspalvelu.",
+    "lineup_face_to_face_apart": "”Kasvokkain” tarvitsee yhden palvelun, joka sekä litteroi että kääntää. Valitse {{provider}} myös käännökseen tai aseta ”Missä toinen on” arvoon ”Kokouksessa”.",
     "session_in_use": "Toinen ikkuna tai laite käyttää tätä tiliä. Lopeta istunto siellä, tai jos Sokuji sulkeutui juuri odottamatta, yritä uudelleen minuutin kuluttua.",
     "previous_session_ending": "Edellinen istuntosi on vielä päättymässä. Yritä uudelleen minuutin kuluttua.",
     "app_capture_lost_using_system_audio": "Sovelluksen kaappaus pysähtyi, joten nyt käännetään kaikki järjestelmän ääni.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "Organisaation {{organization}} tili on keskeytetty. Ota yhteyttä sen omistajaan tai käytä omaa saldoasi.",
     "org_wallet_frozen_unnamed": "Organisaation tili on keskeytetty. Ota yhteyttä sen omistajaan tai käytä omaa saldoasi.",
     "org_wallet_frozen_owner": "Organisaation {{organization}} tili on keskeytetty. Ota yhteyttä Sokujin tukeen tai käytä omaa saldoasi.",
-    "org_wallet_frozen_owner_unnamed": "Organisaation tili on keskeytetty. Ota yhteyttä Sokujin tukeen tai käytä omaa saldoasi."
+    "org_wallet_frozen_owner_unnamed": "Organisaation tili on keskeytetty. Ota yhteyttä Sokujin tukeen tai käytä omaa saldoasi.",
+    "model_missing": "Palvelu ei tarjoa tätä mallia: {{detail}}",
+    "quota": "Palvelun tilillä ei ole enää saldoa: {{detail}}",
+    "text_model_unset": "Valitse käännökselle malli tai kirjoita sen nimi kohdassa ”Kielet ja kokoonpano”.",
+    "address_missing": "Syötä yhteensopivan palvelun osoite kohdassa ”Tilit ja avaimet” ennen aloittamista.",
+    "address_invalid": "Yhteensopivan palvelun osoitetta ei voi käyttää: {{detail}}"
   },
   "viewer": {
     "title": "Sokuji-tekstitys",
@@ -1824,7 +1857,10 @@
         "stateSaved": "Avain tallennettu",
         "belongsTo": "Kuuluu alueeseen {{region}}",
         "switched": "Vaihdettiin alueeseen {{region}}: avain toimii vain siellä."
-      }
+      },
+      "findModels": "Hae malleja",
+      "configure": "Määritä",
+      "manageModels": "Hallitse malleja"
     },
     "lineup": {
       "title": "Kokoonpano",
@@ -1837,9 +1873,13 @@
       "and": " ja ",
       "joint": "Kulkee yhdessä vaiheen {{stages}} kanssa yhden yhteyden kautta; ne vaihtuvat yhdessä.",
       "granite": "Käännöksen kanssa: Granite Speech muuttaa puheen suoraan käännökseksi.",
-      "moved": "{{stages}} siirtyi myös palveluun {{providers}}: tätä valintaa ei voi vielä yhdistellä muiden kanssa. Yhdistelyä tuetaan myöhemmin.",
       "needsKey": "tarvitsee avaimen",
       "needsSignIn": "vaatii kirjautumisen",
+      "needsAddress": "tarvitsee osoitteen",
+      "voiceNotAlone": "lukee vain omaa käännöstään",
+      "voiceNotTaken": "käyttää vain omaa ääntään",
+      "twoManaged": "yksi Kizuna AI:n palvelu kerrallaan",
+      "voiceFollowed": "Puhe vaihtui palveluun {{provider}}. Aiempi puhepalvelu tukee vain omia käännöksiään.",
       "options": "{{provider}}: asetukset",
       "state": {
         "needsKey": "Tarvitsee avaimen",
@@ -1850,18 +1890,29 @@
         "keyRefused": "Avainta ei hyväksytty",
         "keyNotVerified": "Avainta ei tarkistettu",
         "checkingKey": "Tarkistetaan avainta…",
-        "notUsed": "Ei käytössä tällä kertaa"
+        "notUsed": "Ei käytössä tällä kertaa",
+        "languageNotSpoken": "Kieltä ei tueta",
+        "cannotCombine": "Ei voi yhdistää",
+        "notAvailable": "Ei käytettävissä täällä",
+        "needsAddress": "Tarvitsee osoitteen",
+        "notReady": "Ei valmis"
       },
       "speechModeHint": "Milloin puheen pätkä lähtee käännettäväksi; kiinteä istunnon aikana",
       "hint": "Mikä palvelu hoitaa kunkin vaiheen",
       "uses": {
         "turn": "Puheen loppu",
         "key": "Näppäin",
-        "space": "Välilyönti",
-        "released": "Kun päästät irti",
-        "releasedValue": "se pätkä lähtee käännettäväksi",
+        "held": "Kun pidät pohjassa",
         "notHeld": "Kun et pidä pohjassa",
-        "notHeldValue": "oma äänesi menee kääntämättä suoraan toiselle osapuolelle"
+        "talkHeld": "Sokuji kuuntelee; kun päästät irti, se pätkä käännetään ja toinen osapuoli kuulee käännöksen. Kun Läpivienti on päällä, toinen osapuoli kuulee hiljaa myös oman äänesi.",
+        "talkNotHeld": "Sokuji ei kuuntele; mitään, mitä sanot, ei käännetä eikä välitetä toiselle osapuolelle.",
+        "translateHeld": "Se, mitä sanot, käännetään; toinen osapuoli kuulee vain käännöksen, ei omaa ääntäsi.",
+        "translateNotHeld": "Oma äänesi menee kääntämättä suoraan toiselle osapuolelle.",
+        "change": "Vaihda",
+        "cancel": "Peruuta",
+        "reset": "Palauta {{key}}",
+        "press": "Paina näppäintä… (Esc peruuttaa)",
+        "refused": "Näppäintä {{key}} ei voi käyttää. Paina toista näppäintä."
       },
       "actsOn": "Koskee: {{stages}}",
       "pointer": "Asetukset, jotka koskevat näitä: {{stages}}, ovat kortilla ”{{card}}”.",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "Lisää OpenAI-avain kohdassa ”Tilit ja avaimet”, niin muistiinpanot kirjoitetaan.",
+      "notesNeedGeminiKey": "Lisää Gemini-avain kohdassa ”Tilit ja avaimet”, niin muistiinpanot kirjoitetaan.",
+      "notesNeedAddress": "Lisää yhteensopivan palvelun osoite kohdassa ”Tilit ja avaimet”, niin muistiinpanot kirjoitetaan.",
       "alsoFiles": "Litteroi myös tuodut tiedostot ja tallenteet uudelleen.",
       "wordsLeftOut": "Sanalista: {{count}} merkintää tämän palvelun rajan yli jätetään pois.",
       "wordsUnused": "Sanalista: tämä malli ei voi käyttää sitä.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Kizuna AI:n arvio: reaaliaikaiset muistiinpanot noin {{live}} tunnissa, istunnon jälkeiset muistiinpanot noin {{after}} tunnissa, maksetaan saldosta, josta istuntosi maksetaan.",
       "notesNeedSignInOrKey": "Kirjaudu sisään tai lisää OpenAI-avain kohdassa ”Tilit ja avaimet”, niin muistiinpanot kirjoitetaan.",
       "jointCard": "{{stages}} kulkevat yhden yhteyden kautta; ne vaihtuvat yhdessä.",
+      "partableCard": "{{stages}} kulkevat yhden yhteyden kautta. Käännöksen voi hoitaa toinen palvelu: valitse se alta.",
       "notesKizunaLine": "OpenAI kirjoittaa muistiinpanot Kizuna AI:n kautta, maksetaan saldostasi.",
       "notesOpenAiLine": "Kirjoittaa muistiinpanot omalla OpenAI-avaimellasi.",
-      "notesCompatibleName": "OpenAI-yhteensopiva",
-      "notesCompatibleNeedsConfig": "Määritä päätepiste ja malli",
+      "notesGeminiLine": "Kirjoittaa muistiinpanot omalla Gemini-avaimellasi.",
+      "notesCompatibleLine": "Kirjoittaa muistiinpanot antamasi osoitteen palvelulla.",
       "notesNeedSignInOrChoose": "Kirjaudu sisään tai valitse tästä OpenAI, niin muistiinpanot kirjoitetaan.",
       "notesNeedSignInOrKeyAndChoose": "Kirjaudu sisään tai lisää OpenAI-avain kohdassa ”Tilit ja avaimet” ja valitse tästä OpenAI, niin muistiinpanot kirjoitetaan.",
       "speechNotUsed": "Tällä kertaa mitään ei lueta ääneen: käännös näkyy vain tekstinä.",
-      "speechHowToHear": "Jos haluat sen luettavan, valitse yllä olevasta lauseesta ”kuulla”."
+      "speechHowToHear": "Jos haluat sen luettavan, valitse yllä olevasta lauseesta ”kuulla”.",
+      "notesCompatibleName": "OpenAI-yhteensopiva",
+      "notesCompatibleNeedsConfig": "Määritä päätepiste ja malli"
     },
     "display": {
       "surface": "Mikä näkymä",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translatessa, OpenAI Livessa ja Palabrassa ei ole kenttää sanalistalle; ne eivät saa mitään.",
       "byModel": "Mallin mukaan",
       "byModelNote": "Mallin mukaan: OpenAI ottaa taustan vain vanhemmilla litterointimalleillaan; Gemini Live ottaa termit vain mallilla gemini-3.8-live; tämä laite lukee luettelon vain suurten kielimallien kääntäjillään."
+    },
+    "textModel": {
+      "automatic": "Automaattinen",
+      "automaticModel": "Automaattinen ({{model}})",
+      "chooseModel": "Valitse malli",
+      "modelName": "Tai kirjoita mallin nimi",
+      "off": "Pois",
+      "lowest": "Pienin",
+      "reasoningTooltip": "”Pienin” pyytää vähimmän päättelyn, jonka malli hyväksyy, mikä on nopeinta. Muu valinta lähetetään täsmälleen sellaisenaan: jos malli hylkää sen, kokoonpano kertoo sen ennen aloittamista.",
+      "notesReasoningTooltip": "”Keskitaso”, oletus, pyytää muistiinpanojen jokaiselta vaiheelta sen päättelyn, jolla vaihe on testattu: Matala jokaiselle osalle ja istunnon aikaisille muistiinpanoille, Keskitaso viimeistelyyn, ja vähemmän, jos malli hyväksyy vähemmän. Muu valinta tai kirjoitettu arvo lähetetään jokaisessa pyynnössä täsmälleen sellaisenaan: jos malli hylkää sen, ”Muistiinpanot”-kortti kertoo sen.",
+      "reasoningValue": "Tai kirjoita arvo, joka lähetetään sellaisenaan",
+      "listing": "Haetaan malleja…",
+      "listEmpty": "Tämä palvelu ei luettele malleja: kirjoita mallin nimi.",
+      "typedOverrides": "Korvaa yllä olevan valinnan. Tyhjennä kenttä käyttääksesi luetteloa uudelleen."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "Jokaisesta istunnosta lähetetään {{service}}-palveluun omalla avaimellasi sen lauseiden teksti, niiden numerot, kumpi osapuoli ja kuka puhuja ne sanoi sekä sanalistasi kirjoitusasut. Ei koskaan ääntä, käännöstä eikä tiliäsi.",
     "notesTurnOn": "Ota käyttöön",
     "notesModel": "Muistiinpanojen malli",
-    "notesModelLine": "Muistiinpanot kirjoittava tekstimalli palvelun käyttämällä nimellä.",
-    "notesCompatibleBaseUrl": "API:n perus-URL",
-    "notesCompatibleUrlInvalid": "Anna HTTPS-URL tai localhostin/yksityisen verkon HTTP-URL.",
-    "notesCompatibleKeyLine": "Valinnainen. Käytä tämän päätepisteen avainta.",
-    "notesExplainCompatible": "Määritetty päätepiste saa litteroinnin tekstin, lauseiden numerot, puhujien tunnisteet ja sanaluettelon kirjoitusasut. Live-päivitykset sisältävät myös siihenastiset muistiinpanot.",
     "notes": "Muistiinpanot",
     "transcript": "Litterointi",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "Muistiinpanomalli ei vastannut odotetussa muodossa.",
       "no-answer": "Muistiinpanomalli ei antanut vastausta.",
       "network": "Muistiinpanojen palveluun ei saatu yhteyttä.",
+      "timeout": "Muistiinpanojen palvelu ei vastannut ajoissa.",
+      "no-model": "Muistiinpanojen mallia ei ole valittu. Valitse se ”Muistiinpanot”-kortilta kohdassa ”Kielet ja kokoonpano”.",
       "refused": "Palvelu hylkäsi pyynnön ({{status}}).",
       "sign-in": "Kirjaudu Kizuna AI:hin, jotta voit kirjoittaa muistiinpanoja sillä.",
       "unavailable": "Kizuna AI:n muistiinpanot eivät ole vielä käytettävissä.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "Napsauta aihetta tai kohtaa siirtyäksesi sen virkkeeseen ja toistaaksesi siitä.",
     "notesJump": "Napsauta aihetta tai kohtaa siirtyäksesi sen virkkeeseen.",
     "keptHereNotes": "Kun muistiinpanot ovat päällä, kunkin istunnon litteroinnin teksti lähetetään myös palveluun {{service}} niiden kirjoittamista varten.",
-    "notesModelOther": "Muu",
-    "notesModelName": "Mallin nimi",
     "notesExplainKizuna": "Jokaisesta istunnosta sen lauseiden teksti, niiden numerot, kumpi osapuoli ja kuka puhuja ne sanoi sekä sanalistasi kirjoitusasut kulkevat Kizuna AI:n palvelimen kautta OpenAI:lle, joka kirjoittaa muistiinpanot. Kizuna AI ei säilytä niistä mitään. Se maksetaan saldosta, josta istuntosi maksetaan. Ei koskaan ääntä tai käännöstä.",
     "liveExplainKizuna": "Istunnon aikana 20 sekunnin välein uudet lauseet (niiden teksti, numerot ja kumpi osapuoli ja kuka puhuja ne sanoi), tähänastiset muistiinpanot ja sanalistasi kirjoitusasut kulkevat Kizuna AI:n palvelimen kautta OpenAI:lle, joka kirjoittaa muistiinpanot. Kizuna AI ei säilytä niistä mitään. Se maksetaan saldosta, josta istuntosi maksetaan. Ei koskaan ääntä tai käännöstä.",
     "notesModelKizuna": "Kizuna AI kirjoittaa muistiinpanot mallilla {{model}}.",
+    "notesModelLineUp": "Valitaan muistiinpanojen palvelun kanssa ”Muistiinpanot”-kortilla kohdassa ”Kielet ja kokoonpano”.",
     "copyConversation": "Kopioi keskustelu",
     "saveConversationTxt": "Tallenna keskustelu (.txt)",
     "saveConversationJson": "Tallenna keskustelu (.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "Vastuuhenkilö",
     "notesDue": "Määräaika",
     "notesEdited": "Muokattu käsin",
+    "notesWrittenBy": "Kirjoittanut {{service}} mallilla {{model}}",
     "mergeSpeaker": "Yhdistä {{name}} puhujaan…",
     "mergeInto": "Yhdistä puhujaan…",
     "mergeMenu": "Yhdistä puhujaan",
     "mergeAsk": "{{name}} on jo puhuja tällä puolella.",
     "mergeOne": "Yhdistä yhdeksi",
-    "keepApart": "Pidä erillään"
+    "keepApart": "Pidä erillään",
+    "notesCompatibleBaseUrl": "API:n perus-URL",
+    "notesCompatibleUrlInvalid": "Anna HTTPS-URL tai localhostin/yksityisen verkon HTTP-URL.",
+    "notesCompatibleKeyLine": "Valinnainen. Käytä tämän päätepisteen avainta.",
+    "notesExplainCompatible": "Määritetty päätepiste saa litteroinnin tekstin, lauseiden numerot, puhujien tunnisteet ja sanaluettelon kirjoitusasut. Live-päivitykset sisältävät myös siihenastiset muistiinpanot."
   },
   "notesQuit": {
     "named": "Kohteen ”{{title}}” muistiinpanoja kirjoitetaan. Lopetetaanko silti? Ne merkitään peruutetuiksi.",

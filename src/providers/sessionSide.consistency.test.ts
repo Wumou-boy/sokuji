@@ -1,6 +1,7 @@
 /**
- * A provider's session side — its `adapter.ts` and every file of its own
- * folder the adapter reaches by a value import — follows the rules
+ * A provider's session side — its `adapter.ts`, the file that runs its
+ * voice where the voice is a unit of its own, and every file of its own
+ * folder they reach by a value import — follows the rules
  * CLAUDE.md sets for adapters (F17): it never imports a store or the
  * reporter (an adapter cannot know which leg it serves; it says what
  * happened through its events — `degraded`, `failed`, `closed`, `frame`),
@@ -91,9 +92,49 @@ function resolveFile(root: string, from: string, spec: string): string | null {
   return null;
 }
 
-/** `dir/adapter.ts` and every file of `dir` it reaches by value imports. */
+/**
+ * A provider's voice, where it is a unit of its own, runs a session beside the adapter's and is held to the same
+ * rules: the file that runs it, by provider folder. Soniox's is `speech.ts` (`LegSpeech`); its speech unit
+ * (`ttsUnit.ts`) wraps it and also builds the voice's config, which is the settings side. The local provider's is
+ * `speechSession.ts`; its speech unit (`speechUnit.ts`) resolves the voice from the model store, the settings side.
+ */
+const VOICE_SESSIONS: Readonly<Record<string, readonly string[]>> = {
+  'src/providers/soniox': ['speech.ts'],
+  'src/providers/localInference': ['speechSession.ts'],
+};
+
+/**
+ * A provider's translation, where it is a unit of its own (a unit that only translates another unit's source), runs
+ * a session beside the adapter's too, and is held to the same rules: the file that runs it, by provider folder. The
+ * local provider's is `translationSession.ts`; its translation unit (`translationUnit.ts`) resolves the engine from
+ * the stored line-up and the model store, the settings side. The fake translator's is `translatorSession.ts`; its
+ * unit and provider (`translator.ts`) reach the fake's definition and its scripts, the settings side.
+ */
+const TRANSLATION_SESSIONS: Readonly<Record<string, readonly string[]>> = {
+  'src/providers/localInference': ['translationSession.ts'],
+  'src/providers/fake': ['translatorSession.ts'],
+  // The text models' sessions are their adapters (text models, part B): each starts the shared session of
+  // `src/lib/textModel/translation.ts`, which `TEXT_MODEL_SESSION` below holds to the same rules.
+  'src/providers/openai_text': ['adapter.ts'],
+  'src/providers/gemini_text': ['adapter.ts'],
+  'src/providers/openai_compatible': ['adapter.ts'],
+};
+
+/**
+ * The text models' one session, outside any provider's folder (a provider never imports another's), and the client
+ * it asks with: held to the session side's rules by name, since the walk does not follow `src/lib`.
+ */
+const TEXT_MODEL_SESSION = ['src/lib/textModel/translation.ts', 'src/lib/textModel/client.ts', 'src/lib/textModel/prompt.ts', 'src/lib/textModel/desktopTransport.ts'];
+
+/**
+ * `dir/adapter.ts`, the files that run the provider's voice and its translation, and every file of `dir` they reach
+ * by value imports.
+ */
 function sessionSide(root: string, dir: string): string[] {
-  const seen = new Set([`${dir}/adapter.ts`]);
+  const seen = new Set([
+    `${dir}/adapter.ts`,
+    ...[...(VOICE_SESSIONS[dir] ?? []), ...(TRANSLATION_SESSIONS[dir] ?? [])].map((file) => `${dir}/${file}`),
+  ]);
   const queue = [...seen];
   while (queue.length > 0) {
     const file = queue.shift()!;
@@ -181,12 +222,20 @@ describe('a provider session side', () => {
         'src/providers/localInference/engines.ts',
         'src/providers/localInference/sentenceCut.ts',
         'src/providers/localInference/speech.ts',
+        'src/providers/localInference/speechSession.ts',
       ]),
     );
+    // The local voice's unit reads the model store to build its config: the settings side, not the session's.
+    expect(sessionSide(REPO_ROOT, 'src/providers/localInference')).not.toContain('src/providers/localInference/speechUnit.ts');
+    // The local translation's session is walked; its unit, which resolves the engine from the stores, is the settings side.
+    expect(sessionSide(REPO_ROOT, 'src/providers/localInference')).toContain('src/providers/localInference/translationSession.ts');
+    expect(sessionSide(REPO_ROOT, 'src/providers/localInference')).not.toContain('src/providers/localInference/translationUnit.ts');
     const fake = sessionSide(REPO_ROOT, 'src/providers/fake');
-    expect(fake).toEqual(expect.arrayContaining(['src/providers/fake/adapter.ts', 'src/providers/fake/synth.ts']));
+    expect(fake).toEqual(expect.arrayContaining(['src/providers/fake/adapter.ts', 'src/providers/fake/synth.ts', 'src/providers/fake/translatorSession.ts']));
     expect(fake).not.toContain('src/providers/fake/script.ts');
+    expect(fake).not.toContain('src/providers/fake/translator.ts');
 
+    // Soniox's adapter transcribes and translates; its voice is a session of its own (`speech.ts`, and the TTS stream it runs).
     const soniox = sessionSide(REPO_ROOT, 'src/providers/soniox');
     expect(soniox).toEqual(expect.arrayContaining([
       'src/providers/soniox/adapter.ts',
@@ -198,8 +247,8 @@ describe('a provider session side', () => {
       'src/providers/soniox/ttsStream.ts',
       'src/providers/soniox/utterances.ts',
     ]));
-    // The builder, the check and the settings side are not the session's: the adapter imports them as types only.
-    for (const file of ['check.ts', 'config.ts', 'settings.ts', 'ttsRest.ts', 'voicesClient.ts']) {
+    // The builder, the check, the settings side and the units' definitions are not the session's: the adapter imports them as types only.
+    for (const file of ['check.ts', 'config.ts', 'settings.ts', 'ttsRest.ts', 'voicesClient.ts', 'units.ts', 'ttsUnit.ts']) {
       expect(soniox).not.toContain(`src/providers/soniox/${file}`);
     }
 
@@ -245,6 +294,11 @@ describe('a provider session side', () => {
     // The builder, the check, the settings, the view, the definition and the fixtures are not the session's.
     for (const file of ['TranslateSettings.tsx', 'check.ts', 'config.ts', 'provider.ts', 'settings.ts', 'testing.ts']) {
       expect(translate).not.toContain(`src/providers/openai_translate/${file}`);
+    }
+
+    // The text models: the session is the adapter alone; the definition, its check and its options are the settings side.
+    for (const dir of ['src/providers/openai_text', 'src/providers/gemini_text', 'src/providers/openai_compatible']) {
+      expect(sessionSide(REPO_ROOT, dir), dir).toEqual([`${dir}/adapter.ts`]);
     }
 
     const realtime = sessionSide(REPO_ROOT, 'src/providers/openai');
@@ -315,6 +369,14 @@ describe('a provider session side', () => {
     expect(providerDirs().flatMap((dir) => timerOffenders(REPO_ROOT, dir))).toEqual([]);
     // The walk does not follow `src/lib/**`: the one shared module two session sides cut their segments with, by name (Stage 2 translation cuts, choice 1).
     expect(globalTimerCalls(readFileSync(join(REPO_ROOT, 'src/lib/segmentation/continuousSegments.ts'), 'utf-8'))).toEqual([]);
+    // Nor the text models' shared session and its client: every deadline is the job translator's, on the request's clock.
+    for (const file of TEXT_MODEL_SESSION) expect(globalTimerCalls(readFileSync(join(REPO_ROOT, file), 'utf-8'), file), file).toEqual([]);
+  });
+
+  it("the text models' shared session imports no store and no reporter as a value", () => {
+    for (const file of TEXT_MODEL_SESSION) {
+      expect(valueImports(readFileSync(join(REPO_ROOT, file), 'utf-8'), file).filter((spec) => FORBIDDEN.some((re) => re.test(spec))), file).toEqual([]);
+    }
   });
 
   it('the shared reconnect policy is platform-neutral: no global timer, no wall clock, no platform import', () => {

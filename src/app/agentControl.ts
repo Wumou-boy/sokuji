@@ -5,7 +5,10 @@
  */
 import type { AppSession } from './session';
 import type { Leg, Segment } from '../lib/conversation/types';
+import { planFromStores, subscribePlan } from '../lib/plan/fromStores';
+import { providersIn, transcriptionProvider } from '../lib/plan/read';
 import useAudioStore from '../stores/audioStore';
+import { useLineUpStore } from '../stores/lineUpStore';
 import { useProviderStore } from '../stores/providerStore';
 import { useRoutingStore } from '../stores/routingStore';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -113,28 +116,28 @@ export function attachAgentControl(
   if (!electron?.receive || !electron.removeListener || !electron.invoke) return () => {};
 
   const status = () => {
-    const providers = useProviderStore.getState();
-    const selected = providers.selected;
-    const readiness = selected ? providers.readiness[selected] : undefined;
+    const plan = planFromStores();
+    const provider = plan.state === 'ready' ? transcriptionProvider(plan.plan).id : null;
+    const readiness = provider ? useProviderStore.getState().readiness[provider] : undefined;
     const audioMode = useAudioStore.getState().mode;
     const subtitle = session.subtitle.get();
     const settingsLoaded = useSettingsStore.getState().settingsLoaded;
-    const providerLoaded = !!(selected && providers.entries[selected]);
+    const appReady = settingsLoaded && plan.state !== 'loading';
     const incomingOnly = audioMode === 'participant';
     const speechOutputOff = useRoutingStore.getState().participantSpeech !== true;
-    const canStart = subtitle.canStart && incomingOnly && speechOutputOff;
+    const canStart = appReady && plan.state === 'ready' && subtitle.canStart && incomingOnly && speechOutputOff;
     let reasonCode: string | undefined;
-    if (!settingsLoaded || !providerLoaded) reasonCode = 'app_not_ready';
+    if (!appReady) reasonCode = 'app_not_ready';
     else if (!incomingOnly) reasonCode = 'participant_audio_mode_required';
     else if (!speechOutputOff) reasonCode = 'translated_speech_output_enabled';
     else if (!subtitle.canStart) reasonCode = subtitle.idle.kind === 'unready'
       ? (subtitle.idle.code ?? 'provider_unready')
       : subtitle.idle.kind === 'failed' ? subtitle.idle.notice.code : 'session_not_startable';
     return {
-      appReady: settingsLoaded && providerLoaded,
+      appReady,
       phase: subtitle.phase,
       canStart,
-      provider: selected,
+      provider,
       audioMode,
       incomingOnly,
       translatedSpeechOutputEnabled: !speechOutputOff,
@@ -290,7 +293,7 @@ export function attachAgentControl(
             return;
           }
           case 'provider.configure-qwen-beijing': {
-            if (session.runner.state.getState().phase !== 'idle' || useProviderStore.getState().selectionLocked) {
+            if (session.runner.state.getState().phase !== 'idle' || useLineUpStore.getState().locked) {
               reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before changing providers.' } });
               return;
             }
@@ -311,7 +314,7 @@ export function attachAgentControl(
             }
             const store = useProviderStore.getState();
             await store.load(provider);
-            if (session.runner.state.getState().phase !== 'idle' || useProviderStore.getState().selectionLocked) {
+            if (session.runner.state.getState().phase !== 'idle' || useLineUpStore.getState().locked) {
               reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before changing providers.' } });
               return;
             }
@@ -343,11 +346,12 @@ export function attachAgentControl(
   return () => electron.removeListener('agent-control:request', receive);
 }
 
-/** Wait for the current provider's readiness refresh after the settings above change. */
+/** Wait for the line-up's providers to refresh readiness after the audio mode changes. */
 function waitForProviderCheck(timeoutMs = 15_000): Promise<void> {
   const checking = () => {
-    const { selected, readiness } = useProviderStore.getState();
-    return !!selected && readiness[selected]?.state === 'checking';
+    const plan = planFromStores();
+    const { readiness } = useProviderStore.getState();
+    return plan.state === 'ready' && providersIn(plan.plan).some(({ id }) => readiness[id]?.state === 'checking');
   };
   if (!checking()) return Promise.resolve();
   return new Promise((resolve) => {
@@ -361,7 +365,7 @@ function waitForProviderCheck(timeoutMs = 15_000): Promise<void> {
       unsubscribe();
       resolve();
     }
-    unsubscribe = useProviderStore.subscribe(() => {
+    unsubscribe = subscribePlan(() => {
       if (!checking()) finish();
     });
   });

@@ -13,12 +13,13 @@ import { isDevelopment } from '../../config/analytics';
 import { useAnalytics } from '../../lib/analytics';
 import type { LegName } from '../../lib/conversation/types';
 import { describeCause, reportError, reportWarning } from '../../lib/diagnostics/report';
+import { useStageUnit } from '../../lib/plan/fromStores';
 import { NO_MICROPHONE } from '../../lib/session/shape';
 import type { RunEnd, RunState } from '../../lib/session/types';
 import { displayItems, type DisplayItem, type NoticeEntry } from '../../lib/view/filter';
-import { actionLabel, type NoticeActionSpec } from '../../lib/view/noticeActions';
+import { actionLabel, signedInTarget, type NoticeActionSpec } from '../../lib/view/noticeActions';
+import { currentAuth } from '../../app/currentAuth';
 import { isPanelNoteId, noticeActionSpec, panelNoteEntries } from '../../lib/view/panelNotes';
-import { getProvider } from '../../providers/registry';
 import {
   useIsMicMuted,
   useMode,
@@ -32,7 +33,6 @@ import {
 import { useCleanupAudioSystemListeners, useInitAudioSystemListeners } from '../../stores/audioSystemStore';
 import { useConversationDisplayShowReadings, useConversationDisplayStore, useConversationColours } from '../../stores/conversationDisplayStore';
 import { usePanelNotes, usePanelNotesStore } from '../../stores/panelNotesStore';
-import { useProviderStore } from '../../stores/providerStore';
 import {
   useKeepReplayAudio,
   useNavigateToSettings,
@@ -181,11 +181,11 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   const micMuted = useIsMicMuted();
   const participantSources = useParticipantSources();
   const participantSource = useSelectedParticipantSource();
-  const provider = useProviderStore((s) => (s.selected ? getProvider(s.selected) : undefined));
+  // The unit that transcribes, once the plan is ready: whether typed text reaches it.
+  const transcription = useStageUnit('transcription');
   // Face-to-face and whether each leg is voiced, from one source: the replay gate, the strip and the tags.
   const f2f = useFaceToFace();
   const ears = earsLegend(f2f);
-  const providerSettings = useProviderStore((s) => (s.selected ? s.entries[s.selected]?.settings : undefined));
   const display = useConversationDisplayStore();
   // The user's colours where set, the scheme's otherwise (spec 2026-10-22 §3).
   const colours = useConversationColours();
@@ -234,7 +234,13 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
     switch (spec.kind) {
       case 'settings': navigateToSettings(spec.target); return;
       case 'top-up': setAccountPopoverRequested(true); return;
-      case 'sign-in': setAuthOverlay('sign-in'); return;
+      case 'sign-in': {
+        // Signed out: the sign-in itself. Signed in and still refused: the account row of the provider it is about.
+        const row = signedInTarget(spec, currentAuth()?.signedIn === true);
+        if (row) navigateToSettings(row);
+        else setAuthOverlay('sign-in');
+        return;
+      }
       case 'system-settings': openWarning(spec.pane === 'screen-recording' ? 'screen-recording-denied' : 'audio-capture-denied'); return;
       case 'show-in-folder': if (isElectron()) void window.electron.invoke('open-directory', spec.dir); return;
       case 'engine-slot': openTtsSlot(spec.leg); return;
@@ -264,7 +270,7 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   const ptt = usePushToTalk({ enabled: speakerLive && subtitle.holdToTalk, press: runner.press, release: runner.release });
   const duration = useSessionClock(run);
   // The stored settings are the run's: they are locked while it is live.
-  const canSendText = speakerLive && !!provider && providerSettings !== undefined && provider.textInput(providerSettings);
+  const canSendText = speakerLive && transcription !== null && transcription.capabilities.textInput;
 
   // Mode picker: the active segment toggles its device popover; another segment switches the mode while idle.
   const [popover, setPopover] = useState<HTMLElement | null>(null);

@@ -2,12 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { attachAgentControl } from './agentControl';
 import type { AppSession } from './session';
 import useAudioStore from '../stores/audioStore';
+import { useLineUpStore } from '../stores/lineUpStore';
 import { useProviderStore } from '../stores/providerStore';
 import { useRoutingStore } from '../stores/routingStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import useLogStore from '../stores/logStore';
 
-const mockProviders = vi.hoisted(() => [{ id: 'openai' }, { id: 'qwen_livetranslate' }]);
+const mockProviders = vi.hoisted(() => [{ id: 'openai' }, { id: 'qwen_livetranslate' }, { id: 'openai_translate' }]);
 vi.mock('../providers/registry', () => ({ presentProviders: () => mockProviders }));
 
 type ControlReply = {
@@ -29,6 +30,7 @@ function dataOf(reply: ControlReply): any {
 const initial = {
   audio: useAudioStore.getState(),
   provider: useProviderStore.getState(),
+  lineUp: useLineUpStore.getState(),
   routing: useRoutingStore.getState(),
   settings: useSettingsStore.getState(),
   logs: useLogStore.getState(),
@@ -38,6 +40,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   useAudioStore.setState(initial.audio, true);
   useProviderStore.setState(initial.provider, true);
+  useLineUpStore.setState(initial.lineUp, true);
   useRoutingStore.setState(initial.routing, true);
   useSettingsStore.setState(initial.settings, true);
   useLogStore.setState(initial.logs, true);
@@ -71,7 +74,8 @@ function setup() {
   });
   const electron = { receive: (_channel: string, fn: (value: unknown) => void) => handler.mockImplementation(fn), removeListener: vi.fn(), invoke };
   useAudioStore.setState({ mode: 'participant' });
-  useProviderStore.setState({ selected: 'openai_translate', entries: { openai_translate: {} as never }, readiness: { openai_translate: { state: 'ready' } as never } });
+  useLineUpStore.setState({ lineUp: null, stored: false, unstoredProvider: 'openai_translate', locked: false });
+  useProviderStore.setState({ entries: { openai_translate: {} as never }, readiness: { openai_translate: { state: 'ready' } as never } });
   useRoutingStore.setState({ participantSpeech: false });
   useSettingsStore.setState({ settingsLoaded: true });
   useLogStore.setState({ enabled: true, allLogs: [{ id: 1, timestamp: 't', message: 'do not return this', eventType: 'caption.translation.failed', clientId: 'participant', events: [{ type: 'caption.translation.failed', data: { request: 4, elapsedMs: 80, kind: 'http', status: 429, text: 'private transcript' } }] }] as never });
@@ -86,7 +90,7 @@ describe('agent control bridge', () => {
 
     handler({ id: '1', command: 'status' });
     await vi.waitFor(() => expect(replies).toHaveLength(1));
-    expect(dataOf(replyFor(replies, '1'))).toMatchObject({ appReady: true, phase: 'idle', canStart: true, incomingOnly: true });
+    expect(dataOf(replyFor(replies, '1'))).toMatchObject({ appReady: true, phase: 'idle', canStart: true, incomingOnly: true, provider: 'openai_translate' });
 
     handler({ id: '2', command: 'captions.list', args: { limit: 10 } });
     await vi.waitFor(() => expect(replies).toHaveLength(2));
@@ -141,9 +145,8 @@ describe('agent control bridge', () => {
     const setCredential = vi.spyOn(store, 'setCredential').mockImplementation(() => {});
     const updateSettings = vi.spyOn(store, 'updateSettings').mockImplementation(() => {});
     const setPair = vi.spyOn(store, 'setPair').mockImplementation(() => {});
-    const select = vi.spyOn(store, 'select').mockImplementation(() => {});
     const flush = vi.spyOn(store, 'flush').mockResolvedValue(true);
-    const originalSelected = useProviderStore.getState().selected;
+    const originalLineUp = useLineUpStore.getState();
     const marker = 'synthetic-qwen-key-for-test-only';
 
     handler({ id: '7', command: 'provider.configure-qwen-beijing', args: { apiKey: ` ${marker} ` } });
@@ -158,8 +161,7 @@ describe('agent control bridge', () => {
     expect(setCredential).toHaveBeenCalledWith(mockProviders[1], 'apiKey', marker);
     expect(updateSettings).toHaveBeenCalledWith(mockProviders[1], { connection: 'bailian-cn' });
     expect(setPair).not.toHaveBeenCalled();
-    expect(select).not.toHaveBeenCalled();
-    expect(useProviderStore.getState().selected).toBe(originalSelected);
+    expect(useLineUpStore.getState()).toBe(originalLineUp);
     expect(flush).toHaveBeenCalledWith(mockProviders[1], ['apiKey', 'connection']);
     expect(JSON.stringify(response)).not.toContain(marker);
     detach();

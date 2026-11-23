@@ -1,12 +1,17 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ownProps, useSelectedProvider } from '../../providers/useSelectedProvider';
+import { ownProps, useProviderEntry, useStageProvider } from '../../providers/useProviderEntry';
 import { useAnalytics } from '../../../lib/analytics';
+import { useStageUnit } from '../../../lib/plan/fromStores';
 import type { TurnMode } from '../../../lib/session/types';
 import { presentProviders } from '../../../providers/registry';
-import { useProviderStore } from '../../../stores/providerStore';
+import { stageIdsFor } from '../../../lib/lineup/catalog';
+import { useLineUpStore, useStageProviderId } from '../../../stores/lineUpStore';
 import { useNavigateToSettings } from '../../../stores/settingsStore';
 import { useTurnModeStore } from '../../../stores/turnModeStore';
+import { DEFAULT_PUSH_KEY, isModifierKey, pushKeyAllowed, pushKeyLabel } from '../../../lib/turn/pushKey';
+import { usePushKeyLabel } from '../../../lib/turn/usePushKeyLabel';
+import { isMacOS } from '../../../utils/environment';
 
 const MODES: ReadonlyArray<[TurnMode, string, string]> = [
   ['auto', 'settings.auto', 'Auto'],
@@ -21,7 +26,8 @@ export function TurnModeControl({ locked, title }: { locked: boolean; title?: st
   const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
   const turnMode = useTurnModeStore((s) => s.turnMode);
-  const selected = useProviderStore((s) => s.selected);
+  // The event names the provider that transcribes: turns are its unit's.
+  const selected = useStageProviderId('transcription');
   return (
     <div className="setting-item">
       <div className="turn-detection-options settings-seg" role="group" aria-label={t('settings.speechMode')} title={title}>
@@ -34,7 +40,9 @@ export function TurnModeControl({ locked, title }: { locked: boolean; title?: st
             disabled={locked}
             onClick={() => {
               if (mode === turnMode) return;
-              trackEvent('speech_mode_changed', { provider: selected ?? '', from_mode: LEGACY_NAME[turnMode], to_mode: LEGACY_NAME[mode] });
+              // With who serves each stage, as every event that names the provider: the stored line-up's ids.
+              const { lineUp, stored } = useLineUpStore.getState();
+              trackEvent('speech_mode_changed', { provider: selected ?? '', ...(selected ? { stages: stageIdsFor(lineUp, stored, selected) } : {}), from_mode: LEGACY_NAME[turnMode], to_mode: LEGACY_NAME[mode] });
               useTurnModeStore.getState().setTurnMode(mode);
             }}
           >
@@ -47,9 +55,10 @@ export function TurnModeControl({ locked, title }: { locked: boolean; title?: st
 }
 
 /**
- * The selected provider's own tuning of automatic turn detection (its
- * `TurnDetection`, D18: settings belong to the provider), under Auto only —
- * push-to-talk and push-to-translate detect nothing. The Summary is one line,
+ * The tuning of automatic turn detection of the provider whose unit
+ * transcribes (its own `TurnDetection`, D18: settings belong to the
+ * provider), under Auto only — push-to-talk and push-to-translate detect
+ * nothing. The Summary is one line,
  * a link; the Controls are a block of their own among the provider's options
  * (`ProviderTurnDetectionControls`), never drawn here. The link is the
  * settings deep link (`navigateToSettings`, target `'turn-detection-tuning'`),
@@ -70,10 +79,14 @@ function ProviderTurnDetection({ locked }: { locked: boolean }) {
   const { t } = useTranslation();
   const turnMode = useTurnModeStore((s) => s.turnMode);
   const providers = useMemo(() => presentProviders(), []);
-  const selection = useSelectedProvider(providers);
+  // The transcription unit's provider, with its entry; until the plan is ready, the provider the line-up names for
+  // transcription, so that its entry loads.
+  const transcription = useStageUnit('transcription');
+  const transcribing = useStageProvider(providers, 'transcription');
+  const selection = useProviderEntry(transcription?.provider ?? transcribing);
   const navigateToSettings = useNavigateToSettings();
 
-  if (turnMode !== 'auto' || !selection?.entry) return null;
+  if (turnMode !== 'auto' || !transcription || !selection?.entry) return null;
   const tuning = selection.provider.TurnDetection;
   if (!tuning) return null;
   const { Summary, Help } = tuning;
@@ -97,20 +110,145 @@ function ProviderTurnDetection({ locked }: { locked: boolean }) {
   );
 }
 
-/** Push-to-Talk and Push-to-Translate in the mock's box: the key, and what it does. */
-function HeldKeyBox() {
+/**
+ * Push-to-Talk and Push-to-Translate in the mock's box: the key, with Change to pick another (owner 2026-11-21), then
+ * what happens while it is held and while it is not, both, for each mode.
+ */
+function HeldKeyBox({ locked }: { locked: boolean }) {
   const { t } = useTranslation();
   const turnMode = useTurnModeStore((s) => s.turnMode);
+  const pushKey = useTurnModeStore((s) => s.pushKey);
+  const keyName = usePushKeyLabel();
+  const [picking, setPicking] = useState(false);
+  const [refused, setRefused] = useState<string | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLSpanElement>(null);
+  const changeRef = useRef<HTMLButtonElement>(null);
+
+  // Focus leaves Change when picking starts, so that Space is picked as a key instead of pressing the button again, and
+  // comes back to Change when picking ends, unless the user has put it somewhere else meanwhile.
+  useEffect(() => {
+    if (picking) statusRef.current?.focus();
+    else if (document.activeElement === statusRef.current) changeRef.current?.focus();
+  }, [picking]);
+  // While picking, the next key press is the box's alone: taken on the way down, before the page's own handlers (the
+  // hold itself among them) see it. Esc cancels; a key a hold cannot take is named, and the box keeps waiting. A click
+  // or Tab out of the box, or the window losing focus, ends the picking, so the key pressed next reaches what the user
+  // went to.
+  useEffect(() => {
+    if (!picking) return;
+    const stop = () => {
+      setPicking(false);
+      setRefused(null);
+    };
+    const choose = (e: KeyboardEvent) => {
+      if (!pushKeyAllowed(e.code)) {
+        // A key with no code (an input method's, say) is named by what it types.
+        setRefused(pushKeyLabel(e.code, isMacOS()) || e.key || '?');
+        return;
+      }
+      useTurnModeStore.getState().setPushKey(e.code);
+      stop();
+    };
+    // A modifier is chosen only when it is let go with no other key pressed meanwhile: Shift+Tab and a Ctrl shortcut
+    // begin with the modifier's own press, and must not pick it.
+    let pendingModifier: string | null = null;
+    const take = (e: KeyboardEvent) => {
+      if (isModifierKey(e.code)) {
+        if (e.repeat) return;
+        const alone = [e.ctrlKey, e.altKey, e.shiftKey, e.metaKey].filter(Boolean).length <= 1;
+        pendingModifier = pendingModifier === null && alone ? e.code : null;
+        return;
+      }
+      pendingModifier = null;
+      // A key pressed with Ctrl, Alt, Shift or Cmd held is a shortcut (the app's or the browser's), not a choice.
+      if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+      // Tab still moves focus, and Enter or Space still presses Cancel, so the keyboard can leave the picking too.
+      if (e.code === 'Tab') return;
+      const onButton = e.target instanceof Element && e.target.closest('.turn-mode-box__action') !== null;
+      if (onButton && (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space')) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (e.code === 'Escape') {
+        stop();
+        return;
+      }
+      choose(e);
+    };
+    const letGo = (e: KeyboardEvent) => {
+      if (pendingModifier === null || e.code !== pendingModifier) return;
+      pendingModifier = null;
+      e.stopImmediatePropagation();
+      choose(e);
+    };
+    const away = (e: PointerEvent) => {
+      if (e.target instanceof Node && boxRef.current?.contains(e.target)) return;
+      // The focus goes where the user clicked, not back to Change.
+      statusRef.current?.blur();
+      stop();
+    };
+    const leave = (e: FocusEvent) => {
+      if (!(e.target instanceof Node && boxRef.current?.contains(e.target))) stop();
+    };
+    window.addEventListener('keydown', take, { capture: true });
+    window.addEventListener('keyup', letGo, { capture: true });
+    window.addEventListener('pointerdown', away, { capture: true });
+    window.addEventListener('focusin', leave);
+    window.addEventListener('blur', stop);
+    return () => {
+      window.removeEventListener('keydown', take, { capture: true });
+      window.removeEventListener('keyup', letGo, { capture: true });
+      window.removeEventListener('pointerdown', away, { capture: true });
+      window.removeEventListener('focusin', leave);
+      window.removeEventListener('blur', stop);
+    };
+  }, [picking]);
+  // A session starting, or the mode leaving the keys behind (the box then draws nothing), ends the picking: its
+  // listener would otherwise keep taking every key press with nothing on screen to say so.
+  useEffect(() => {
+    setPicking(false);
+    setRefused(null);
+  }, [locked, turnMode]);
+
+  const reset = () => {
+    useTurnModeStore.getState().setPushKey(DEFAULT_PUSH_KEY);
+    // Reset goes away with the key it reset; the focus moves to Change instead of falling off the page.
+    changeRef.current?.focus();
+  };
   if (turnMode === 'auto') return null;
-  const rows: Array<[string, string]> = turnMode === 'push-to-talk'
-    ? [[t('settingsPage.lineup.uses.key', 'Key'), t('settingsPage.lineup.uses.space', 'Space')],
-      [t('settingsPage.lineup.uses.released', 'Once released'), t('settingsPage.lineup.uses.releasedValue', 'that stretch goes off to be translated')]]
-    : [[t('settingsPage.lineup.uses.key', 'Key'), t('settingsPage.lineup.uses.space', 'Space')],
-      [t('settingsPage.lineup.uses.notHeld', 'While not held'), t('settingsPage.lineup.uses.notHeldValue', 'your own voice goes straight to the other side, untranslated')]];
+  const said: Array<[string, string]> = turnMode === 'push-to-talk'
+    ? [[t('settingsPage.lineup.uses.held', 'While held'), t('settingsPage.lineup.uses.talkHeld', 'Sokuji listens; when you let go, that stretch is translated and the other side hears the translation. With Passthrough on, the other side also hears your own voice, quietly.')],
+      [t('settingsPage.lineup.uses.notHeld', 'While not held'), t('settingsPage.lineup.uses.talkNotHeld', 'Sokuji does not listen; nothing you say is translated or reaches the other side.')]]
+    : [[t('settingsPage.lineup.uses.held', 'While held'), t('settingsPage.lineup.uses.translateHeld', 'What you say is translated; the other side hears only the translation, not your own voice.')],
+      [t('settingsPage.lineup.uses.notHeld', 'While not held'), t('settingsPage.lineup.uses.translateNotHeld', 'Your own voice goes straight to the other side, untranslated.')]];
+  const space = pushKeyLabel(DEFAULT_PUSH_KEY, isMacOS());
+  let status: ReactNode = <kbd>{keyName}</kbd>;
+  if (picking && refused !== null) {
+    status = t('settingsPage.lineup.uses.refused', '{{key}} cannot be used. Press another key.', { key: refused });
+  } else if (picking) {
+    status = t('settingsPage.lineup.uses.press', 'Press a key… (Esc to cancel)');
+  }
   return (
-    <div className="turn-mode-box">
-      {rows.map(([label, value]) => (
-        <div className="turn-mode-box__row" key={label}><span className="turn-mode-box__label">{label}</span><span className="turn-mode-box__value">{value}</span></div>
+    <div ref={boxRef} className="turn-mode-box turn-mode-box--keys">
+      <div className="turn-mode-box__row turn-mode-box__row--key">
+        <span className="turn-mode-box__label">{t('settingsPage.lineup.uses.key', 'Key')}</span>
+        <span className="turn-mode-box__value turn-mode-box__key">
+          {/* Always there, so a screen reader hears the prompt, a refusal and the new key alike. */}
+          <span ref={statusRef} tabIndex={-1} className={picking ? 'turn-mode-box__picking' : 'turn-mode-box__status'} aria-live="polite">
+            {status}
+          </span>
+          <button ref={changeRef} type="button" className="turn-mode-box__action" disabled={locked} onClick={() => { setRefused(null); setPicking((p) => !p); }}>
+            {picking ? t('settingsPage.lineup.uses.cancel', 'Cancel') : t('settingsPage.lineup.uses.change', 'Change')}
+          </button>
+          {!picking && pushKey !== DEFAULT_PUSH_KEY && (
+            <button type="button" className="turn-mode-box__action" disabled={locked} onClick={reset}>
+              {t('settingsPage.lineup.uses.reset', 'Reset to {{key}}', { key: space })}
+            </button>
+          )}
+        </span>
+      </div>
+      {said.map(([label, value]) => (
+        <div className="turn-mode-box__row turn-mode-box__row--said" key={label}><span className="turn-mode-box__label">{label}</span><span className="turn-mode-box__value">{value}</span></div>
       ))}
     </div>
   );
@@ -124,7 +262,8 @@ function HeldKeyBox() {
  */
 export function SpeechSection({ locked }: { locked: boolean }) {
   const { t } = useTranslation();
-  const tooltip = `${t('settings.speechModeTooltip', 'Auto: the provider detects when you have finished speaking. \nPush-to-Talk: hold Space or the mic button to send audio manually. \nPush-to-Translate: like Push-to-Talk, but routes your raw mic to the virtual mic when idle so you can speak directly without translation.')}\n\n${t('settings.speechModeAppliesToAuto', "Applies to your voice. Other's audio always uses the provider's automatic detection.")}`;
+  const pushKeyName = usePushKeyLabel();
+  const tooltip = `${t('settings.speechModeTooltip', 'Auto: the provider detects when you have finished speaking. \nPush-to-Talk: hold {{key}} or the mic button to send audio manually. \nPush-to-Translate: like Push-to-Talk, but routes your raw mic to the virtual mic when idle so you can speak directly without translation.', { key: pushKeyName })}\n\n${t('settings.speechModeAppliesToAuto', "Applies to your voice. Other's audio always uses the provider's automatic detection.")}`;
   return (
     <div className="config-section turn-detection-section" id="turn-detection-section">
       {/* The mock's line-up page (v18): a plain heading with its hint; the modes explained on hover over the choice. */}
@@ -137,7 +276,7 @@ export function SpeechSection({ locked }: { locked: boolean }) {
         <TurnModeControl locked={locked} title={tooltip} />
       </div>
       <ProviderTurnDetection locked={locked} />
-      <HeldKeyBox />
+      <HeldKeyBox locked={locked} />
     </div>
   );
 }

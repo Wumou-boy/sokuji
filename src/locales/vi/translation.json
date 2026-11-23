@@ -45,7 +45,7 @@
     "systemInstructions": "Hướng dẫn hệ thống",
     "speechMode": "Chế độ giọng nói",
     "speechModeAppliesTo": "Áp dụng cho giọng nói của bạn. Âm thanh đối phương luôn sử dụng VAD ngữ nghĩa.",
-    "speechModeTooltip": "Tự động: nhà cung cấp phát hiện khi bạn đã nói xong. \nNhấn để nói: giữ phím Space hoặc nút micro để gửi âm thanh thủ công. \nNhấn để dịch: giống như Nhấn để nói, nhưng định tuyến micro gốc của bạn đến micro ảo khi không hoạt động để bạn có thể nói trực tiếp mà không cần dịch.",
+    "speechModeTooltip": "Tự động: nhà cung cấp phát hiện khi bạn đã nói xong. \nNhấn để nói: giữ {{key}} hoặc nút micro để gửi âm thanh thủ công. \nNhấn để dịch: giống như Nhấn để nói, nhưng định tuyến micro gốc của bạn đến micro ảo khi không hoạt động để bạn có thể nói trực tiếp mà không cần dịch.",
     "speechModeAppliesToAuto": "Áp dụng cho giọng nói của bạn. Âm thanh đối phương luôn sử dụng tính năng phát hiện tự động của nhà cung cấp.",
     "userTranscriptModel": "Mô hình phiên âm người dùng",
     "noiseReduction": "Giảm tiếng ồn",
@@ -508,6 +508,7 @@
     "microphone": "Microphone",
     "microphoneDesc": "Chọn microphone để ghi lại giọng nói của bạn. Nói bằng ngôn ngữ của bạn vào microphone này, và Sokuji sẽ dịch mọi thứ nó nghe thấy theo thời gian thực.",
     "swapLanguages": "Đổi ngôn ngữ",
+    "swapNotSpoken": "Dịch vụ giọng nói không đọc các ngôn ngữ này theo chiều ngược lại.",
     "textOnly": "Chỉ văn bản",
     "textOnlyDesc": "Chỉ dịch sang văn bản — không phát âm thanh",
     "textOnlyForcedByMode": "Chế độ \"{{mode}}\" chỉ chuyển lời người tham gia thành văn bản cho bạn và không bao giờ tạo âm thanh, nên \"Chỉ văn bản\" luôn bật. Hãy chuyển chế độ dịch để dịch giọng nói của bạn kèm âm thanh.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "Miễn phí · trực tuyến, dịch vụ của Microsoft"
+    },
+    "openai_text": {
+      "name": "Mô hình văn bản OpenAI",
+      "description": "Dịch mọi cặp ngôn ngữ bằng khóa OpenAI của bạn"
+    },
+    "gemini_text": {
+      "name": "Mô hình văn bản Gemini",
+      "description": "Dịch mọi cặp ngôn ngữ bằng khóa Gemini của bạn"
+    },
+    "openai_compatible": {
+      "name": "Dịch vụ tương thích OpenAI",
+      "description": "OpenRouter, DeepSeek, Ollama và các dịch vụ khác, tại địa chỉ bạn nhập"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "Hàm",
     "noChannelConfigured": "Hãy bật micro hoặc âm thanh đối phương trước khi bắt đầu.",
     "release": "thả ra",
-    "pushToTalk": "nhấn để nói (Space)",
+    "pushToTalk": "nhấn để nói ({{key}})",
     "inputDeviceOff": "thiết bị đầu vào đã tắt",
     "endSession": "Kết thúc phiên",
     "startSession": "Bắt đầu phiên",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "Cách đọc tiếng Nhật không hoạt động.",
       "defaultColour": "Mặc định"
     },
-    "pttHint": "Nhấn Phím cách để nói"
+    "pttHint": "Nhấn {{key}} để nói"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "Đã đăng nhập. Hãy mở liên kết chúng tôi gửi qua email để xác minh — tín dụng dùng thử sẽ được cộng ngay sau đó.",
       "onFile": "Đã lưu một khóa — để trống nếu muốn giữ khóa cũ.",
       "offlineHardware": "Sokuji chạy tốt nếu có GPU và đủ VRAM; chỉ có CPU thì chậm hơn nhiều.",
-      "openaiOneKey": "Một khóa này dùng chung cho OpenAI Realtime, Translate và Live."
+      "openaiOneKey": "Một khóa này dùng chung cho OpenAI Realtime, Translate và Live.",
+      "baseUrl": "Địa chỉ",
+      "baseUrlPlaceholder": "Địa chỉ, ví dụ https://openrouter.ai/api/v1",
+      "apiKeyOptional": "Khóa API (tùy chọn)"
     },
     "summary": {
       "scenario": "Kịch bản",
@@ -1534,6 +1550,18 @@
     "source_ended": "Nguồn âm thanh đã biến mất (bị ngắt kết nối, đóng hoặc dừng).",
     "still_stopping": "Phiên trước vẫn đang dừng; hãy thử lại sau giây lát.",
     "connection_restored": "Kết nối đã bị gián đoạn và đã được khôi phục",
+    "lineup_incomplete": "Trước tiên hãy chọn một dịch vụ cho khâu “{{stage}}”.",
+    "lineup_not_offered": "{{provider}} không có trong phiên bản này. Hãy chọn một dịch vụ khác cho khâu “{{stage}}”.",
+    "lineup_stage_split": "{{provider}} phải làm cả khâu “{{stage}}”. Hãy chọn {{provider}} cho khâu “{{stage}}”, hoặc dùng một dịch vụ khác thay cho {{provider}}.",
+    "lineup_translation_bound": "Bản dịch của {{provider}} cần phần chép lời của {{provider}}. Hãy chọn {{provider}} cho chép lời, hoặc chọn một dịch vụ dịch khác.",
+    "lineup_no_unit": "{{provider}} không thể làm riêng khâu “{{stage}}” ở đây. Hãy chọn nó cho các khâu mà nó làm cùng nhau, hoặc chọn một dịch vụ khác.",
+    "lineup_voice_not_alone": "Hãy dùng {{provider}} cho chép lời và dịch, hoặc chọn một dịch vụ giọng nói khác.",
+    "lineup_voice_not_taken": "Hãy chọn {{provider}} cho cả giọng nói, hoặc chọn một dịch vụ khác cho chép lời và dịch.",
+    "lineup_two_managed": "Chưa thể chạy hai dịch vụ của Kizuna AI trong cùng một phiên. Hãy chọn một trong hai.",
+    "lineup_language_not_spoken": "{{provider}} không có giọng nói cho {{language}}. Hãy chọn một dịch vụ giọng nói khác, hoặc tắt giọng nói cho phiên này.",
+    "lineup_source_not_fixed": "{{provider}} cần biết ngôn ngữ được nói. Hãy chọn ngôn ngữ đó thay cho “Tự động phát hiện”, hoặc chọn một dịch vụ dịch khác.",
+    "lineup_pair_not_translated": "{{provider}} không dịch {{source}} → {{target}}. Hãy chọn ngôn ngữ khác, hoặc một dịch vụ dịch khác.",
+    "lineup_face_to_face_apart": "“Mặt đối mặt” cần một dịch vụ vừa chép lời vừa dịch. Hãy chọn {{provider}} cho cả khâu dịch, hoặc đặt “Phía bên kia” thành “Trong cuộc họp”.",
     "session_in_use": "Một cửa sổ hoặc thiết bị khác đang dùng tài khoản này. Hãy dừng phiên ở đó, hoặc nếu Sokuji vừa đóng đột ngột, hãy thử lại sau một phút.",
     "previous_session_ending": "Phiên trước của bạn vẫn đang kết thúc. Vui lòng thử lại sau một phút.",
     "app_capture_lost_using_system_audio": "Việc thu ứng dụng đã dừng, nên toàn bộ âm thanh hệ thống đang được dịch thay thế.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "Tài khoản của {{organization}} đã bị tạm dừng. Hãy liên hệ chủ sở hữu, hoặc dùng số dư cá nhân của bạn.",
     "org_wallet_frozen_unnamed": "Tài khoản của tổ chức đã bị tạm dừng. Hãy liên hệ chủ sở hữu, hoặc dùng số dư cá nhân của bạn.",
     "org_wallet_frozen_owner": "Tài khoản của {{organization}} đã bị tạm dừng. Hãy liên hệ bộ phận hỗ trợ Sokuji, hoặc dùng số dư cá nhân của bạn.",
-    "org_wallet_frozen_owner_unnamed": "Tài khoản của tổ chức đã bị tạm dừng. Hãy liên hệ bộ phận hỗ trợ Sokuji, hoặc dùng số dư cá nhân của bạn."
+    "org_wallet_frozen_owner_unnamed": "Tài khoản của tổ chức đã bị tạm dừng. Hãy liên hệ bộ phận hỗ trợ Sokuji, hoặc dùng số dư cá nhân của bạn.",
+    "model_missing": "Dịch vụ không cung cấp mô hình này: {{detail}}",
+    "quota": "Tài khoản dịch vụ đã hết tín dụng: {{detail}}",
+    "text_model_unset": "Chọn mô hình cho bản dịch, hoặc nhập tên mô hình, trong “Ngôn ngữ và cách phối hợp”.",
+    "address_missing": "Nhập địa chỉ của dịch vụ tương thích trong “Tài khoản và khóa” trước khi bắt đầu.",
+    "address_invalid": "Không thể dùng địa chỉ của dịch vụ tương thích: {{detail}}"
   },
   "viewer": {
     "title": "Phụ đề Sokuji",
@@ -1824,7 +1857,10 @@
         "stateSaved": "Đã lưu khóa",
         "belongsTo": "Thuộc {{region}}",
         "switched": "Đã chuyển sang {{region}}: khóa này chỉ dùng được ở đó."
-      }
+      },
+      "findModels": "Tìm mô hình",
+      "configure": "Thiết lập",
+      "manageModels": "Quản lý mô hình"
     },
     "lineup": {
       "title": "Cách phối hợp",
@@ -1837,9 +1873,13 @@
       "and": " và ",
       "joint": "Đi cùng {{stages}} qua một kết nối; chúng đổi cùng nhau.",
       "granite": "Cùng với dịch: Granite Speech chuyển thẳng lời nói thành bản dịch.",
-      "moved": "{{stages}} cũng chuyển sang {{providers}}: hiện chưa thể kết hợp với lựa chọn này. Việc phối trộn sẽ được hỗ trợ sau.",
       "needsKey": "cần khóa",
       "needsSignIn": "cần đăng nhập",
+      "needsAddress": "cần địa chỉ",
+      "voiceNotAlone": "chỉ đọc bản dịch của chính nó",
+      "voiceNotTaken": "chỉ dùng giọng nói của chính nó",
+      "twoManaged": "mỗi lần chỉ một dịch vụ của Kizuna AI",
+      "voiceFollowed": "Giọng nói đã chuyển sang {{provider}}. Dịch vụ giọng nói trước đó chỉ hỗ trợ bản dịch của chính nó.",
       "options": "Tùy chọn của {{provider}}",
       "state": {
         "needsKey": "Cần khóa",
@@ -1850,18 +1890,29 @@
         "keyRefused": "Khóa không được chấp nhận",
         "keyNotVerified": "Chưa xác minh khóa",
         "checkingKey": "Đang kiểm tra khóa…",
-        "notUsed": "Lần này không dùng"
+        "notUsed": "Lần này không dùng",
+        "languageNotSpoken": "Ngôn ngữ không được hỗ trợ",
+        "cannotCombine": "Không thể kết hợp",
+        "notAvailable": "Không có ở đây",
+        "needsAddress": "Cần địa chỉ",
+        "notReady": "Chưa sẵn sàng"
       },
       "speechModeHint": "Khi nào một đoạn lời nói được gửi đi dịch; cố định trong phiên",
       "hint": "Dịch vụ nào làm từng khâu",
       "uses": {
         "turn": "Kết thúc câu",
         "key": "Phím",
-        "space": "Phím cách",
-        "released": "Khi thả ra",
-        "releasedValue": "đoạn đó được gửi đi dịch",
+        "held": "Khi giữ",
         "notHeld": "Khi không giữ",
-        "notHeldValue": "giọng của bạn đến thẳng phía bên kia, không dịch"
+        "talkHeld": "Sokuji lắng nghe; khi bạn thả phím, đoạn đó được dịch và bên kia nghe bản dịch. Khi bật “Chuyển tiếp”, bên kia cũng nghe thấy giọng của chính bạn ở âm lượng nhỏ.",
+        "talkNotHeld": "Sokuji không lắng nghe; những gì bạn nói không được dịch và không đến được bên kia.",
+        "translateHeld": "Những gì bạn nói được dịch; bên kia chỉ nghe bản dịch, không nghe giọng của chính bạn.",
+        "translateNotHeld": "Giọng của chính bạn đến thẳng bên kia, không dịch.",
+        "change": "Đổi",
+        "cancel": "Hủy",
+        "reset": "Đặt lại về {{key}}",
+        "press": "Nhấn một phím… (Esc để hủy)",
+        "refused": "Không thể dùng {{key}}. Hãy nhấn phím khác."
       },
       "actsOn": "Áp dụng cho {{stages}}",
       "pointer": "Các tùy chọn áp dụng cho {{stages}} nằm trong thẻ \"{{card}}\".",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "Thêm khóa OpenAI trong “Tài khoản và khóa” để ghi chú được viết.",
+      "notesNeedGeminiKey": "Thêm khóa Gemini trong “Tài khoản và khóa” để ghi chú được viết.",
+      "notesNeedAddress": "Thêm địa chỉ của dịch vụ tương thích trong “Tài khoản và khóa” để ghi chú được viết.",
       "alsoFiles": "Cũng chép lời tệp đã nhập và chép lời lại bản ghi.",
       "wordsLeftOut": "Danh sách từ: {{count}} mục vượt giới hạn của dịch vụ này bị bỏ qua.",
       "wordsUnused": "Danh sách từ: mô hình này không dùng được.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Ước tính của Kizuna AI: ghi chú trực tiếp khoảng {{live}} mỗi giờ, ghi chú sau phiên khoảng {{after}} mỗi giờ, trả từ số dư dùng để trả cho các phiên của bạn.",
       "notesNeedSignInOrKey": "Đăng nhập, hoặc thêm khóa OpenAI trong “Tài khoản và khóa”, để ghi chú được viết.",
       "jointCard": "{{stages}} đi qua một kết nối; chúng đổi cùng nhau.",
+      "partableCard": "{{stages}} đi qua một kết nối. Dịch vụ khác có thể đảm nhận việc dịch: hãy chọn bên dưới.",
       "notesKizunaLine": "OpenAI viết ghi chú qua Kizuna AI, trả từ số dư của bạn.",
       "notesOpenAiLine": "Viết ghi chú bằng khóa OpenAI của chính bạn.",
-        "notesCompatibleName": "Tương thích OpenAI",
-        "notesCompatibleNeedsConfig": "Đặt endpoint và mô hình",
+      "notesGeminiLine": "Viết ghi chú bằng khóa Gemini của chính bạn.",
+      "notesCompatibleLine": "Viết ghi chú bằng dịch vụ ở địa chỉ bạn nhập.",
       "notesNeedSignInOrChoose": "Đăng nhập, hoặc chọn OpenAI ở đây, để ghi chú được viết.",
       "notesNeedSignInOrKeyAndChoose": "Đăng nhập, hoặc thêm khóa OpenAI trong “Tài khoản và khóa” rồi chọn OpenAI ở đây, để ghi chú được viết.",
       "speechNotUsed": "Lần này không có gì được đọc to: bản dịch chỉ hiện dạng chữ.",
-      "speechHowToHear": "Muốn được đọc to, hãy chọn “nghe” trong câu ở trên."
+      "speechHowToHear": "Muốn được đọc to, hãy chọn “nghe” trong câu ở trên.",
+      "notesCompatibleName": "Tương thích OpenAI",
+      "notesCompatibleNeedsConfig": "Đặt endpoint và mô hình"
     },
     "display": {
       "surface": "Hiển thị nào",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translate, OpenAI Live và Palabra không có chỗ cho danh sách từ; chúng không nhận được gì.",
       "byModel": "Tùy mô hình",
       "byModelNote": "Tùy mô hình: OpenAI chỉ nhận phần bối cảnh với các mô hình chép lời cũ hơn; Gemini Live chỉ nhận thuật ngữ với gemini-3.8-live; thiết bị này chỉ đọc danh sách với các trình dịch dùng mô hình ngôn ngữ lớn."
+    },
+    "textModel": {
+      "automatic": "Tự động",
+      "automaticModel": "Tự động ({{model}})",
+      "chooseModel": "Chọn mô hình",
+      "modelName": "Hoặc nhập tên mô hình",
+      "off": "Tắt",
+      "lowest": "Thấp nhất",
+      "reasoningTooltip": "“Thấp nhất” yêu cầu mức suy luận ít nhất mà mô hình chấp nhận, nhanh nhất. Mọi lựa chọn khác được gửi đúng như vậy: nếu mô hình từ chối, phần phối hợp sẽ báo trước khi bạn bắt đầu.",
+      "notesReasoningTooltip": "“Trung bình”, mặc định, yêu cầu mỗi bước của ghi chú dùng mức suy luận đã được thử: Thấp cho từng phần và ghi chú trong phiên, Trung bình để hoàn tất, và ít hơn nếu mô hình chỉ chấp nhận ít hơn. Mọi lựa chọn khác, hoặc giá trị bạn gõ, được gửi đúng như vậy trong mỗi yêu cầu: nếu mô hình từ chối, thẻ “Ghi chú” sẽ báo.",
+      "reasoningValue": "Hoặc nhập một giá trị, gửi đúng như vậy",
+      "listing": "Đang tìm mô hình…",
+      "listEmpty": "Dịch vụ này không liệt kê mô hình nào: hãy nhập tên mô hình.",
+      "typedOverrides": "Thay cho lựa chọn ở trên. Xóa trống để dùng lại danh sách."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "Với mỗi phiên, văn bản các câu, số thứ tự của chúng, phía nào và người nói nào đã nói, cùng cách viết trong danh sách từ của bạn được gửi đến {{service}} bằng khóa của chính bạn. Không bao giờ gửi âm thanh, bản dịch hay tài khoản của bạn.",
     "notesTurnOn": "Bật",
     "notesModel": "Mô hình ghi chú",
-    "notesModelLine": "Mô hình văn bản viết ghi chú, theo tên của nó ở dịch vụ.",
-      "notesCompatibleBaseUrl": "URL cơ sở API",
-      "notesCompatibleUrlInvalid": "Nhập URL HTTPS hoặc URL HTTP của localhost/mạng riêng.",
-      "notesCompatibleKeyLine": "Không bắt buộc. Dùng khóa cho endpoint này.",
-      "notesExplainCompatible": "Endpoint đã cấu hình nhận văn bản bản chép lời, số câu, nhãn người nói và cách viết trong danh sách từ. Bản cập nhật trực tiếp cũng gồm các ghi chú hiện có.",
     "notes": "Ghi chú",
     "transcript": "Bản ghi lời",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "Mô hình ghi chú không trả lời theo dạng mong đợi.",
       "no-answer": "Mô hình ghi chú không trả lời.",
       "network": "Không kết nối được tới dịch vụ ghi chú.",
+      "timeout": "Dịch vụ ghi chú không trả lời kịp thời.",
+      "no-model": "Chưa chọn mô hình ghi chú. Hãy chọn một mô hình ở thẻ “Ghi chú” trong “Ngôn ngữ và cách phối hợp”.",
       "refused": "Dịch vụ đã từ chối yêu cầu ({{status}}).",
       "sign-in": "Hãy đăng nhập Kizuna AI để viết ghi chú bằng Kizuna AI.",
       "unavailable": "Ghi chú của Kizuna AI chưa khả dụng.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "Nhấp vào một chủ đề hoặc ý để đến câu của nó và phát từ đó.",
     "notesJump": "Nhấp vào một chủ đề hoặc ý để đến câu của nó.",
     "keptHereNotes": "Khi bật ghi chú, văn bản bản ghi của mỗi phiên cũng được gửi tới {{service}} để viết ghi chú.",
-    "notesModelOther": "Khác",
-    "notesModelName": "Tên mô hình",
     "notesExplainKizuna": "Với mỗi phiên, văn bản các câu, số thứ tự của chúng, phía nào và người nói nào đã nói, cùng cách viết trong danh sách từ của bạn đi qua máy chủ của Kizuna AI đến OpenAI, nơi viết ghi chú. Kizuna AI không lưu lại gì trong số đó. Chi phí được trả từ số dư dùng để trả cho các phiên của bạn. Không bao giờ gửi âm thanh hay bản dịch.",
     "liveExplainKizuna": "Trong phiên, cứ mỗi 20 giây các câu mới (văn bản, số thứ tự, và phía nào, người nói nào đã nói), ghi chú đến lúc đó và cách viết trong danh sách từ của bạn đi qua máy chủ của Kizuna AI đến OpenAI, nơi viết ghi chú. Kizuna AI không lưu lại gì trong số đó. Chi phí được trả từ số dư dùng để trả cho các phiên của bạn. Không bao giờ gửi âm thanh hay bản dịch.",
     "notesModelKizuna": "Kizuna AI viết ghi chú bằng {{model}}.",
+    "notesModelLineUp": "Được chọn cùng dịch vụ ghi chú, ở thẻ “Ghi chú” trong “Ngôn ngữ và cách phối hợp”.",
     "copyConversation": "Sao chép cuộc trò chuyện",
     "saveConversationTxt": "Lưu cuộc trò chuyện (.txt)",
     "saveConversationJson": "Lưu cuộc trò chuyện (.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "Người phụ trách",
     "notesDue": "Hạn",
     "notesEdited": "Đã sửa thủ công",
+    "notesWrittenBy": "Do {{service}} viết bằng {{model}}",
     "mergeSpeaker": "Gộp {{name}} vào…",
     "mergeInto": "Gộp vào…",
     "mergeMenu": "Gộp vào",
     "mergeAsk": "{{name}} đã là một người nói ở phía này.",
     "mergeOne": "Gộp làm một",
-    "keepApart": "Để riêng"
+    "keepApart": "Để riêng",
+    "notesCompatibleBaseUrl": "URL cơ sở API",
+    "notesCompatibleUrlInvalid": "Nhập URL HTTPS hoặc URL HTTP của localhost/mạng riêng.",
+    "notesCompatibleKeyLine": "Không bắt buộc. Dùng khóa cho endpoint này.",
+    "notesExplainCompatible": "Endpoint đã cấu hình nhận văn bản bản chép lời, số câu, nhãn người nói và cách viết trong danh sách từ. Bản cập nhật trực tiếp cũng gồm các ghi chú hiện có."
   },
   "notesQuit": {
     "named": "Đang viết ghi chú cho “{{title}}”. Vẫn thoát? Ghi chú sẽ được đánh dấu là đã hủy.",

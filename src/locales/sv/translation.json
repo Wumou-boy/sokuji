@@ -45,7 +45,7 @@
     "systemInstructions": "Systeminstruktioner",
     "speechMode": "Talläge",
     "speechModeAppliesTo": "Gäller din röst. Den andras ljud använder alltid semantisk VAD.",
-    "speechModeTooltip": "Auto: leverantören känner av när du har talat klart. \nPush-to-Talk: håll ned mellanslag eller mikrofonknappen för att skicka ljud manuellt. \nPush-to-Translate: som Push-to-Talk, men dirigerar din råa mikrofon till den virtuella mikrofonen när inaktiv så att du kan tala direkt utan översättning.",
+    "speechModeTooltip": "Auto: leverantören känner av när du har talat klart. \nPush-to-Talk: håll ned {{key}} eller mikrofonknappen för att skicka ljud manuellt. \nPush-to-Translate: som Push-to-Talk, men dirigerar din råa mikrofon till den virtuella mikrofonen när inaktiv så att du kan tala direkt utan översättning.",
     "speechModeAppliesToAuto": "Gäller din röst. Den andras ljud använder alltid leverantörens automatiska detektering.",
     "userTranscriptModel": "Användartranskriptionsmodell",
     "noiseReduction": "Brusreducering",
@@ -508,6 +508,7 @@
     "microphone": "Mikrofon",
     "microphoneDesc": "Välj mikrofon för att fånga ditt tal. Tala ditt språk i denna mikrofon, och Sokuji kommer att översätta allt den hör i realtid.",
     "swapLanguages": "Byt språk",
+    "swapNotSpoken": "Taltjänsten läser inte upp de här språken åt andra hållet.",
     "textOnly": "Endast text",
     "textOnlyDesc": "Översätt till text — inget talat ljud",
     "textOnlyForcedByMode": "Läget \"{{mode}}\" gör bara om det deltagarna säger till text åt dig och genererar aldrig ljud, så \"Endast text\" förblir på. Byt översättningsläge för att översätta din egen röst med tal.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "Gratis · online, en tjänst från Microsoft"
+    },
+    "openai_text": {
+      "name": "OpenAI-textmodell",
+      "description": "Översätter alla språkpar med din OpenAI-nyckel"
+    },
+    "gemini_text": {
+      "name": "Gemini-textmodell",
+      "description": "Översätter alla språkpar med din Gemini-nyckel"
+    },
+    "openai_compatible": {
+      "name": "OpenAI-kompatibel tjänst",
+      "description": "OpenRouter, DeepSeek, Ollama med flera, på adressen du anger"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "Funktion",
     "noChannelConfigured": "Aktivera mikrofon eller den andras ljud innan du börjar.",
     "release": "släpp",
-    "pushToTalk": "tryck för att tala (Mellanslag)",
+    "pushToTalk": "tryck för att tala ({{key}})",
     "inputDeviceOff": "inmatningsenhet av",
     "endSession": "Avsluta session",
     "startSession": "Starta session",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "Det japanska uttalet fungerar inte.",
       "defaultColour": "Standard"
     },
-    "pttHint": "Tryck på mellanslag för att tala"
+    "pttHint": "Tryck på {{key}} för att tala"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "Inloggad. Öppna länken vi skickade via e-post för att verifiera din adress — provkrediten läggs till så snart du gör det.",
       "onFile": "En nyckel är redan sparad — lämna detta tomt för att behålla den.",
       "offlineHardware": "Sokuji fungerar bra med en GPU och tillräckligt med VRAM; med bara CPU är det märkbart långsammare.",
-      "openaiOneKey": "Den här enda nyckeln gäller för OpenAI Realtime, Translate och Live."
+      "openaiOneKey": "Den här enda nyckeln gäller för OpenAI Realtime, Translate och Live.",
+      "baseUrl": "Adress",
+      "baseUrlPlaceholder": "Adress, till exempel https://openrouter.ai/api/v1",
+      "apiKeyOptional": "API-nyckel (valfri)"
     },
     "summary": {
       "scenario": "Scenario",
@@ -1534,6 +1550,18 @@
     "source_ended": "Ljudkällan försvann (bortkopplad, stängd eller stoppad).",
     "still_stopping": "Den senaste sessionen håller fortfarande på att stoppas; försök igen om en stund.",
     "connection_restored": "Anslutningen avbröts och återställdes",
+    "lineup_incomplete": "Välj först en tjänst för steget ”{{stage}}”.",
+    "lineup_not_offered": "{{provider}} är inte tillgänglig i den här versionen. Välj en annan tjänst för steget ”{{stage}}”.",
+    "lineup_stage_split": "{{provider}} måste också göra steget ”{{stage}}”. Välj {{provider}} för steget ”{{stage}}”, eller använd en annan tjänst i stället för {{provider}}.",
+    "lineup_translation_bound": "Översättning med {{provider}} kräver transkribering med {{provider}}. Välj {{provider}} för transkribering, eller välj en annan översättningstjänst.",
+    "lineup_no_unit": "{{provider}} kan inte göra steget ”{{stage}}” på egen hand här. Välj den för de steg den gör tillsammans, eller välj en annan tjänst.",
+    "lineup_voice_not_alone": "Använd {{provider}} för transkribering och översättning, eller välj en annan taltjänst.",
+    "lineup_voice_not_taken": "Välj {{provider}} även för tal, eller välj en annan tjänst för transkribering och översättning.",
+    "lineup_two_managed": "Två tjänster från Kizuna AI kan ännu inte köras i samma session. Välj en av dem.",
+    "lineup_language_not_spoken": "{{provider}} har ingen röst för {{language}}. Välj en annan taltjänst, eller stäng av tal för den här sessionen.",
+    "lineup_source_not_fixed": "{{provider}} behöver veta vilket språk som talas. Välj det i stället för ”Automatisk Detektion”, eller välj en annan översättningstjänst.",
+    "lineup_pair_not_translated": "{{provider}} översätter inte {{source}} → {{target}}. Välj andra språk, eller en annan översättningstjänst.",
+    "lineup_face_to_face_apart": "”På plats” behöver en tjänst som både transkriberar och översätter. Välj {{provider}} även för översättningen, eller ställ in ”Var finns den andra” på ”På ett möte”.",
     "session_in_use": "Ett annat fönster eller en annan enhet använder det här kontot. Stoppa sessionen där, eller försök igen om en minut om Sokuji just stängdes oväntat.",
     "previous_session_ending": "Din föregående session håller fortfarande på att avslutas. Försök igen om en minut.",
     "app_capture_lost_using_system_audio": "Appinsamlingen stoppades, så nu översätts allt systemljud i stället.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "Kontot för {{organization}} är pausat. Kontakta ägaren eller använd ditt eget saldo.",
     "org_wallet_frozen_unnamed": "Organisationens konto är pausat. Kontakta ägaren eller använd ditt eget saldo.",
     "org_wallet_frozen_owner": "Kontot för {{organization}} är pausat. Kontakta Sokujis support eller använd ditt eget saldo.",
-    "org_wallet_frozen_owner_unnamed": "Organisationens konto är pausat. Kontakta Sokujis support eller använd ditt eget saldo."
+    "org_wallet_frozen_owner_unnamed": "Organisationens konto är pausat. Kontakta Sokujis support eller använd ditt eget saldo.",
+    "model_missing": "Tjänsten erbjuder inte den här modellen: {{detail}}",
+    "quota": "Kontot hos tjänsten har inget saldo kvar: {{detail}}",
+    "text_model_unset": "Välj en modell för översättningen, eller skriv dess namn, under ”Språk och uppsättning”.",
+    "address_missing": "Ange den kompatibla tjänstens adress under ”Konton och nycklar” innan du startar.",
+    "address_invalid": "Den kompatibla tjänstens adress kan inte användas: {{detail}}"
   },
   "viewer": {
     "title": "Sokuji-undertexter",
@@ -1824,7 +1857,10 @@
         "stateSaved": "Nyckeln sparad",
         "belongsTo": "Hör till {{region}}",
         "switched": "Bytte till {{region}}: nyckeln fungerar bara där."
-      }
+      },
+      "findModels": "Hitta modeller",
+      "configure": "Konfigurera",
+      "manageModels": "Hantera modeller"
     },
     "lineup": {
       "title": "Uppsättning",
@@ -1837,9 +1873,13 @@
       "and": " och ",
       "joint": "Går ihop med {{stages}} över en anslutning; de byts tillsammans.",
       "granite": "Med översättning: Granite Speech gör tal direkt till översättningen.",
-      "moved": "{{stages}} flyttades också till {{providers}}: det går ännu inte att kombinera med det här valet. Blandning kommer att stödjas senare.",
       "needsKey": "behöver nyckel",
       "needsSignIn": "kräver inloggning",
+      "needsAddress": "behöver en adress",
+      "voiceNotAlone": "läser bara upp sin egen översättning",
+      "voiceNotTaken": "använder bara sin egen röst",
+      "twoManaged": "en tjänst från Kizuna AI åt gången",
+      "voiceFollowed": "Tal ändrades till {{provider}}. Den tidigare taltjänsten stöder bara sina egna översättningar.",
       "options": "Alternativ för {{provider}}",
       "state": {
         "needsKey": "Behöver en nyckel",
@@ -1850,18 +1890,29 @@
         "keyRefused": "Nyckeln godtogs inte",
         "keyNotVerified": "Nyckeln inte kontrollerad",
         "checkingKey": "Kontrollerar nyckeln…",
-        "notUsed": "Används inte den här gången"
+        "notUsed": "Används inte den här gången",
+        "languageNotSpoken": "Språket stöds inte",
+        "cannotCombine": "Kan inte kombineras",
+        "notAvailable": "Inte tillgänglig här",
+        "needsAddress": "Behöver en adress",
+        "notReady": "Inte klar"
       },
       "speechModeHint": "När ett stycke tal skickas för översättning; fast under en session",
       "hint": "Vilken tjänst som gör varje steg",
       "uses": {
         "turn": "Turslut",
         "key": "Tangent",
-        "space": "Mellanslag",
-        "released": "När den släpps",
-        "releasedValue": "skickas stycket för översättning",
+        "held": "När den hålls ned",
         "notHeld": "När den inte hålls ned",
-        "notHeldValue": "går din egen röst direkt till den andra sidan, oöversatt"
+        "talkHeld": "Sokuji lyssnar; när du släpper tangenten översätts det stycket och motparten hör översättningen. När ”Genomslussning” är på hör motparten även din egen röst, på låg volym.",
+        "talkNotHeld": "Sokuji lyssnar inte; inget du säger översätts eller når motparten.",
+        "translateHeld": "Det du säger översätts; motparten hör bara översättningen, inte din egen röst.",
+        "translateNotHeld": "Din egen röst går direkt till motparten, oöversatt.",
+        "change": "Ändra",
+        "cancel": "Avbryt",
+        "reset": "Återställ till {{key}}",
+        "press": "Tryck på en tangent… (Esc för att avbryta)",
+        "refused": "{{key}} kan inte användas. Tryck på en annan tangent."
       },
       "actsOn": "Gäller {{stages}}",
       "pointer": "Alternativen som gäller {{stages}} finns i kortet ”{{card}}”.",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "Lägg till en OpenAI-nyckel under ”Konton och nycklar” så skrivs anteckningar.",
+      "notesNeedGeminiKey": "Lägg till en Gemini-nyckel under ”Konton och nycklar” så skrivs anteckningar.",
+      "notesNeedAddress": "Lägg till adressen till den kompatibla tjänsten under ”Konton och nycklar” så skrivs anteckningar.",
       "alsoFiles": "Transkriberar även importerade filer och poster igen.",
       "wordsLeftOut": "Ordlista: {{count}} poster över tjänstens gräns utelämnas.",
       "wordsUnused": "Ordlista: den här modellen kan inte använda den.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Kizuna AI:s uppskattning: liveanteckningar cirka {{live}} i timmen, anteckningar efter en session cirka {{after}} i timmen, betalas från saldot som betalar dina sessioner.",
       "notesNeedSignInOrKey": "Logga in, eller lägg till en OpenAI-nyckel under ”Konton och nycklar”, så skrivs anteckningar.",
       "jointCard": "{{stages}} går över en anslutning; de byts tillsammans.",
+      "partableCard": "{{stages}} går över en anslutning. En annan tjänst kan göra översättningen: välj den nedan.",
       "notesKizunaLine": "OpenAI skriver anteckningarna via Kizuna AI, betalas från ditt saldo.",
       "notesOpenAiLine": "Skriver anteckningarna med din egen OpenAI-nyckel.",
-        "notesCompatibleName": "OpenAI-kompatibel",
-        "notesCompatibleNeedsConfig": "Ange slutpunkt och modell",
+      "notesGeminiLine": "Skriver anteckningarna med din egen Gemini-nyckel.",
+      "notesCompatibleLine": "Skriver anteckningarna med tjänsten på adressen du anger.",
       "notesNeedSignInOrChoose": "Logga in, eller välj OpenAI här, så skrivs anteckningar.",
       "notesNeedSignInOrKeyAndChoose": "Logga in, eller lägg till en OpenAI-nyckel under ”Konton och nycklar” och välj OpenAI här, så skrivs anteckningar.",
       "speechNotUsed": "Den här gången läses inget upp: översättningen visas bara som text.",
-      "speechHowToHear": "Välj ”höra” i meningen ovan för att få den uppläst."
+      "speechHowToHear": "Välj ”höra” i meningen ovan för att få den uppläst.",
+      "notesCompatibleName": "OpenAI-kompatibel",
+      "notesCompatibleNeedsConfig": "Ange slutpunkt och modell"
     },
     "display": {
       "surface": "Vilken visning",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translate, OpenAI Live och Palabra har inget fält för en ordlista; de får ingen.",
       "byModel": "Beror på modell",
       "byModelNote": "Beror på modell: OpenAI tar bakgrunden bara med sina äldre transkriberingsmodeller; Gemini Live tar termerna bara med gemini-3.8-live; den här enheten läser listan bara med sina översättare baserade på stora språkmodeller."
+    },
+    "textModel": {
+      "automatic": "Automatisk",
+      "automaticModel": "Automatisk ({{model}})",
+      "chooseModel": "Välj en modell",
+      "modelName": "Eller skriv ett modellnamn",
+      "off": "Av",
+      "lowest": "Lägsta",
+      "reasoningTooltip": "”Lägsta” ber om så lite resonerande som modellen godtar, vilket är snabbast. Alla andra val skickas exakt som de är: om modellen avvisar valet säger uppsättningen det innan du startar.",
+      "notesReasoningTooltip": "”Medel”, standardvalet, ber varje steg i anteckningarna om det resonerande det testades med: Låg för varje del och för anteckningarna under sessionen, Medel för att avsluta dem, och mindre där modellen godtar mindre. Alla andra val, eller ett inskrivet värde, skickas exakt som de är med varje begäran: om modellen avvisar valet säger kortet ”Anteckningar” det.",
+      "reasoningValue": "Eller skriv ett värde som skickas som det är",
+      "listing": "Söker modeller…",
+      "listEmpty": "Den här tjänsten listar inga modeller: skriv modellens namn.",
+      "typedOverrides": "Ersätter valet ovan. Töm fältet för att använda listan igen."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "För varje session skickas meningarnas text, deras nummer, vilken sida och talare som sa dem samt stavningarna i din ordlista till {{service}} med din egen nyckel. Aldrig ljudet, översättningen eller ditt konto.",
     "notesTurnOn": "Slå på",
     "notesModel": "Modell för anteckningar",
-    "notesModelLine": "Textmodellen som skriver anteckningarna, med det namn tjänsten använder.",
-      "notesCompatibleBaseUrl": "API-bas-URL",
-      "notesCompatibleUrlInvalid": "Ange en HTTPS-URL eller en HTTP-URL för localhost/privat nätverk.",
-      "notesCompatibleKeyLine": "Valfritt. Använd en nyckel för den här slutpunkten.",
-      "notesExplainCompatible": "Den konfigurerade slutpunkten tar emot transkriptionstext, meningsnummer, talaretiketter och stavningar från ordlistan. Liveuppdateringar innehåller även anteckningarna hittills.",
     "notes": "Anteckningar",
     "transcript": "Transkription",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "Modellen svarade inte i den väntade formen.",
       "no-answer": "Modellen gav inget svar.",
       "network": "Det gick inte att nå tjänsten för anteckningar.",
+      "timeout": "Tjänsten för anteckningar svarade inte i tid.",
+      "no-model": "Ingen modell för anteckningar är vald. Välj en på kortet ”Anteckningar” under ”Språk och uppsättning”.",
       "refused": "Tjänsten avvisade begäran ({{status}}).",
       "sign-in": "Logga in på Kizuna AI för att skriva anteckningar med det.",
       "unavailable": "Anteckningar från Kizuna AI är inte tillgängliga än.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "Klicka på ett ämne eller en punkt för att gå till dess mening och spela upp därifrån.",
     "notesJump": "Klicka på ett ämne eller en punkt för att gå till dess mening.",
     "keptHereNotes": "Medan anteckningar är på skickas även texten i varje sessions transkription till {{service}} för att skriva dem.",
-    "notesModelOther": "Annan",
-    "notesModelName": "Modellnamn",
     "notesExplainKizuna": "För varje session går meningarnas text, deras nummer, vilken sida och talare som sa dem samt stavningarna i din ordlista via Kizuna AI:s server till OpenAI, som skriver anteckningarna. Kizuna AI sparar inget av det. Det betalas från saldot som betalar dina sessioner. Aldrig ljudet eller översättningen.",
     "liveExplainKizuna": "Under en session går var 20:e sekund de nya meningarna (deras text, nummer och vilken sida och talare som sa dem), anteckningarna hittills och stavningarna i din ordlista via Kizuna AI:s server till OpenAI, som skriver anteckningarna. Kizuna AI sparar inget av det. Det betalas från saldot som betalar dina sessioner. Aldrig ljudet eller översättningen.",
     "notesModelKizuna": "Kizuna AI skriver anteckningarna med {{model}}.",
+    "notesModelLineUp": "Väljs med tjänsten för anteckningar, på kortet ”Anteckningar” under ”Språk och uppsättning”.",
     "copyConversation": "Kopiera samtalet",
     "saveConversationTxt": "Spara samtalet (.txt)",
     "saveConversationJson": "Spara samtalet (.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "Ansvarig",
     "notesDue": "Senast",
     "notesEdited": "Redigerad för hand",
+    "notesWrittenBy": "Skrivna av {{service}} med {{model}}",
     "mergeSpeaker": "Slå ihop {{name}} med…",
     "mergeInto": "Slå ihop med…",
     "mergeMenu": "Slå ihop med",
     "mergeAsk": "{{name}} är redan en talare på den här sidan.",
     "mergeOne": "Slå ihop till en",
-    "keepApart": "Håll isär"
+    "keepApart": "Håll isär",
+    "notesCompatibleBaseUrl": "API-bas-URL",
+    "notesCompatibleUrlInvalid": "Ange en HTTPS-URL eller en HTTP-URL för localhost/privat nätverk.",
+    "notesCompatibleKeyLine": "Valfritt. Använd en nyckel för den här slutpunkten.",
+    "notesExplainCompatible": "Den konfigurerade slutpunkten tar emot transkriptionstext, meningsnummer, talaretiketter och stavningar från ordlistan. Liveuppdateringar innehåller även anteckningarna hittills."
   },
   "notesQuit": {
     "named": "Anteckningar skrivs för ”{{title}}”. Avsluta ändå? De markeras som avbrutna.",

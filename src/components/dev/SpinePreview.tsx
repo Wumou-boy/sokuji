@@ -3,6 +3,8 @@ import type { Playback } from '../../lib/audio/playback';
 import { realClock } from '../../lib/contract/clock';
 import type { LegName } from '../../lib/conversation/types';
 import { describeCause, reportError } from '../../lib/diagnostics/report';
+import { usePlan } from '../../lib/plan/fromStores';
+import { transcriptionProvider } from '../../lib/plan/read';
 import { getManifestEntry } from '../../lib/local-inference/modelManifest';
 import { directionKey, emptyDirection, type DirectionSelection } from '../../lib/local-inference/selection/types';
 import type { FramePort } from '../../lib/session/ports';
@@ -21,6 +23,7 @@ import { setManagedVoiceStandIn } from '../../providers/soniox/managedVoiceSourc
 import useAudioStore from '../../stores/audioStore';
 import { useConversationDisplayStore, useConversationColours } from '../../stores/conversationDisplayStore';
 import { toneOf } from '../../lib/view/tone';
+import { runUnstored, stageProviderId } from '../../stores/lineUpStore';
 import { useModelStore } from '../../stores/modelStore';
 import { useProviderStore } from '../../stores/providerStore';
 import { useRoutingStore } from '../../stores/routingStore';
@@ -294,7 +297,7 @@ function PreviewOverlayFrame({ view, karaoke, session, controls, compact, measur
  * a signed-in stand-in with no network, so a managed provider (the leased
  * fake) can start here — and to the `&settings=` blocks; Kizuna Soniox's
  * voice library runs on a stand-in that calls nothing; `&script=` applies to
- * whichever fake is selected — `fake_leased` when it is picked
+ * whichever fake runs — `fake_leased` when it is picked
  * (`&provider=fake_leased`), `fake` otherwise.
  */
 export function SpinePreview() {
@@ -302,28 +305,29 @@ export function SpinePreview() {
   const providers = useMemo(() => presentProviders(), []);
   // This page's probes run on the fake unless a parameter asks for another
   // provider (plan 1e-2 ruling 10, `&provider=<id>`). ProviderPanel is a
-  // child, so its own mount effect selects nothing (1e-3b-2 Task 1, P3) — this
-  // effect, together with `loadSessionStores` below, owns the page's
-  // selection; covering the `local_inference` case too (not just "nothing
-  // selected yet") undoes LocalInference's stored default, and `&provider=`
-  // overrides it the other way.
+  // child, and runs nothing at its own mount (1e-3b-2 Task 1, P3): this
+  // effect owns what the page runs, and `loadSessionStores` below leaves a
+  // provider already running in memory as it is. Covering the
+  // `local_inference` case too (not just "nothing runs yet") undoes
+  // LocalInference's stored default, and `&provider=` overrides it the other
+  // way.
   useEffect(() => {
     const wanted = new URLSearchParams(window.location.search).get('provider');
-    // Both calls below are loads: the preview never writes the app's stored provider.
+    // Both calls below are in memory: the preview never writes the app's stored provider or its line-up.
     if (wanted && providers.some((p) => p.id === wanted)) {
-      useProviderStore.getState().select(wanted);
+      runUnstored(wanted);
       return;
     }
-    const selected = useProviderStore.getState().selected;
-    if (selected === null || selected === 'local_inference') {
-      useProviderStore.getState().select('fake');
-    }
+    const running = stageProviderId('transcription');
+    if (running === null || running === 'local_inference') runUnstored('fake');
   }, [providers]);
   const session = getAppSession();
   const { runner } = session;
   const phase = useRunPhase();
   const turnMode = useTurnModeStore((s) => s.turnMode);
-  const entry = useProviderStore((s) => (s.selected ? s.entries[s.selected] : undefined));
+  // The plan a start would run, ready once the line-up and its providers' entries have loaded: the gate of the URL's
+  // settings and of autostart.
+  const plan = usePlan();
   const [audio, setAudio] = useState<LoadedAudio | null>(null);
   const autostarted = useRef(false);
   // `&subtitle=1`, `&overlay=1`, `&compact=1`: which subtitle surfaces this page draws (plan 1d-2);
@@ -376,15 +380,15 @@ export function SpinePreview() {
   // The page's stored settings from the URL, applied once — with or without
   // `&autostart=1`, since the panel's probe starts by clicking (plan 1e-3b-1
   // Task 13). After the stores' load, so the load cannot overwrite them (the
-  // turn mode's migration writes too), and once the selected provider's entry
+  // turn mode's migration writes too), and once the plan's provider's entry
   // is there (`&script=` is the fake's own setting).
   useEffect(() => {
-    if (urlApplied || !storesLoaded || !entry) return;
+    if (urlApplied || !storesLoaded || plan.state !== 'ready') return;
     const params = new URLSearchParams(window.location.search);
-    // `&script=<name>`: which script the selected fake plays (`fake` or `fake_leased`; `fake` otherwise).
+    // `&script=<name>`: which script the plan's fake plays (`fake` or `fake_leased`; `fake` otherwise).
     const script = params.get('script');
-    const selected = useProviderStore.getState().selected;
-    const fake = providers.find((p) => p.id === (selected === 'fake_leased' ? 'fake_leased' : 'fake'));
+    const running = transcriptionProvider(plan.plan).id;
+    const fake = providers.find((p) => p.id === (running === 'fake_leased' ? 'fake_leased' : 'fake'));
     if (fake && script && (FAKE_SCRIPT_NAMES as readonly string[]).includes(script)) {
       useProviderStore.getState().updateSettings(fake, { script });
     }
@@ -408,10 +412,10 @@ export function SpinePreview() {
     // &monitor=1: the speaker's translation reaches the real bus (the monitor is off by default), for the probe's tap on a bus.
     if (params.get('monitor') === '1') useAudioStore.getState().setMonitorMuted(false);
     setUrlApplied(true);
-  }, [urlApplied, storesLoaded, entry, providers]);
+  }, [urlApplied, storesLoaded, plan, providers]);
 
   useEffect(() => {
-    if (autostarted.current || !entry || !audio || !urlApplied || new URLSearchParams(window.location.search).get('autostart') !== '1') return;
+    if (autostarted.current || plan.state !== 'ready' || !audio || !urlApplied || new URLSearchParams(window.location.search).get('autostart') !== '1') return;
     autostarted.current = true;
     const params = new URLSearchParams(window.location.search);
     // `&models=<id>,<id>…` (LocalInference's live probe, task 9): download
@@ -493,7 +497,7 @@ export function SpinePreview() {
       }
       void runner.start();
     })();
-  }, [entry, audio, runner, providers, urlApplied]);
+  }, [plan, audio, runner, providers, urlApplied]);
 
   const sealProbe = useSealProbe();
   const settingsMode = param('settings');

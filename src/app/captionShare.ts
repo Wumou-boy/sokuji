@@ -10,10 +10,11 @@ import type { ConversationResetReason } from '../lib/session/conversationSet';
 import type { RunState } from '../lib/session/types';
 import type { Readable } from '../lib/view/conversationView';
 import { describeCause, reportError } from '../lib/diagnostics/report';
+import { planFromStores, subscribePlan } from '../lib/plan/fromStores';
+import { transcriptionAccount } from '../lib/plan/read';
 import { startSharePublisher, type SharePort } from '../lib/share/publisher';
 import type { ShareState, ShareStatus } from '../lib/share/types';
 import { useCaptionShareStore, type ShareError, type WifiHintState } from '../stores/captionShareStore';
-import { useProviderStore } from '../stores/providerStore';
 import useSettingsStore from '../stores/settingsStore';
 import { getAppSession } from './session';
 
@@ -166,18 +167,17 @@ export function createCaptionShareController(deps: CaptionShareDeps): CaptionSha
 }
 
 /**
- * The pair viewers are told about: the selected provider's, which the
- * surfaces show and a run starts with (as `appSubtitleSession` reads it), not
- * the raw pick (`intent`), which is null until the host picks and may name a
- * language the provider does not offer.
+ * The pair viewers are told about: the plan's, its transcription provider's,
+ * which the surfaces show and a run starts with (as `appSubtitleSession`
+ * reads it), not the raw pick (`intent`), which is null until the host picks
+ * and may name a language the provider does not offer.
  */
 export const sharedPair: CaptionShareDeps['pair'] = {
   get: () => {
-    const providers = useProviderStore.getState();
-    const id = providers.selected;
-    return id ? providers.entries[id]?.pair ?? null : null;
+    const found = planFromStores();
+    return found.state === 'ready' ? transcriptionAccount(found).pair : null;
   },
-  subscribe: (listener) => useProviderStore.subscribe(() => listener()),
+  subscribe: (listener) => subscribePlan(listener),
 };
 
 let controller: CaptionShareController | null = null;

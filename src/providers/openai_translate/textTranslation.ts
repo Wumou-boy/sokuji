@@ -1,4 +1,4 @@
-import { ChatError, chatBody, NOTES_MODELS } from '../../lib/notes/chat';
+import { ChatError, chatBody } from '../../lib/notes/chat';
 
 interface CaptionResponseTiming {
   status: number;
@@ -17,7 +17,7 @@ export type TranslateCaption = (request: {
 export type CaptionFetch = typeof fetch;
 
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
-export const CAPTION_TRANSLATION_MODEL = NOTES_MODELS[0];
+export const CAPTION_TRANSLATION_MODEL = 'gpt-6-luna';
 const MAX_TRANSLATION_TOKENS = 512;
 export const CAPTION_TRANSLATION_TIMEOUT_MS = 8_000;
 

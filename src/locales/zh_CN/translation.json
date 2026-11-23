@@ -45,7 +45,7 @@
     "systemInstructions": "系统指令",
     "speechMode": "语音模式",
     "speechModeAppliesTo": "适用于您的语音。对方音频始终使用语义 VAD。",
-    "speechModeTooltip": "自动：由提供商自动检测您何时说完。\n按住说话：按住空格键或麦克风按钮手动发送音频。\n按住翻译：与按住说话类似，但空闲时将原始麦克风音频直通到虚拟麦克风，您可以直接讲话而不进行翻译。",
+    "speechModeTooltip": "自动：由提供商自动检测您何时说完。\n按住说话：按住 {{key}} 或麦克风按钮手动发送音频。\n按住翻译：与按住说话类似，但空闲时将原始麦克风音频直通到虚拟麦克风，您可以直接讲话而不进行翻译。",
     "speechModeAppliesToAuto": "适用于您的语音。对方音频始终使用提供商的自动检测。",
     "userTranscriptModel": "用户转录模型",
     "noiseReduction": "降噪",
@@ -218,8 +218,6 @@
       "xhigh": "极高"
     },
     "translateInfoBanner": "当说话人使用与目标相同的语言时，该模型会保持沉默。混合语言场景可能会有片段缺失。",
-    "translateDetectParticipantLanguage": "自动标注对方的中文、日语和英语",
-    "translateDetectParticipantLanguageHelp": "对方语言设为中文、日语或英语时，从原文为每段字幕标注语种。译文仍使用所选的目标语言。",
     "translateModelNotAvailable": "API key 有效，但当前 key 没有 gpt-realtime-translate 访问权限。",
     "participantSectionHeader": "对方音频",
     "participantSectionDescriptionElectron": "翻译此系统上任何正在播放的应用程序的音频。",
@@ -351,7 +349,9 @@
     "voiceTheyHear": "对方听到的声音",
     "voiceIHear": "我听到的声音",
     "voiceIHearSame": "和对方听到的声音相同，朗读时改用 {{voice}}。",
-    "voiceCustom": "自定义声音"
+    "voiceCustom": "自定义声音",
+    "translateDetectParticipantLanguage": "自动标注对方的中文、日语和英语",
+    "translateDetectParticipantLanguageHelp": "对方语言设为中文、日语或英语时，从原文为每段字幕标注语种。译文仍使用所选的目标语言。"
   },
   "simpleSettings": {
     "autoAuthenticated": "已通过您的账户自动认证",
@@ -510,6 +510,7 @@
     "microphone": "麦克风",
     "microphoneDesc": "选择用于捕获您语音的麦克风。对着此麦克风说您的语言，Sokuji会实时翻译麦克风接收到的所有内容。",
     "swapLanguages": "交换语言",
+    "swapNotSpoken": "该语音服务无法反向朗读这两种语言。",
     "textOnly": "仅文本",
     "textOnlyDesc": "仅翻译为文本 — 不生成语音",
     "textOnlyForcedByMode": "「{{mode}}」模式只把参会者说的话转成文字给你看，不会生成语音，因此「仅文本」始终开启。切换翻译模式即可让自己的语音带声音输出。",
@@ -613,6 +614,18 @@
     "edge": {
       "name": "Edge",
       "note": "免费 · 联网，微软的服务"
+    },
+    "openai_text": {
+      "name": "OpenAI 文本模型",
+      "description": "用你的 OpenAI 密钥翻译任意语言对"
+    },
+    "gemini_text": {
+      "name": "Gemini 文本模型",
+      "description": "用你的 Gemini 密钥翻译任意语言对"
+    },
+    "openai_compatible": {
+      "name": "OpenAI 兼容服务",
+      "description": "OpenRouter、DeepSeek、Ollama 等，使用你填写的地址"
     }
   },
   "logsPanel": {
@@ -642,7 +655,7 @@
     "function": "功能",
     "noChannelConfigured": "开始前请启用麦克风或对方音频。",
     "release": "释放",
-    "pushToTalk": "按住说话 (空格)",
+    "pushToTalk": "按住说话 ({{key}})",
     "inputDeviceOff": "输入设备关闭",
     "endSession": "结束会话",
     "startSession": "开始会话",
@@ -1135,7 +1148,7 @@
       "readingsFailed": "日语读音无法显示。",
       "defaultColour": "默认"
     },
-    "pttHint": "按住空格说话"
+    "pttHint": "按住 {{key}} 说话"
   },
   "titleBar": {
     "account": {
@@ -1432,7 +1445,10 @@
       "guide": "如何获取这个密钥",
       "onFile": "已保存密钥——留空即沿用。",
       "offlineHardware": "有 GPU 和足够显存时运行流畅；仅用 CPU 会明显变慢。",
-      "openaiOneKey": "这一把密钥给 OpenAI Realtime、Translate、Live 三种服务共用。"
+      "openaiOneKey": "这一把密钥给 OpenAI Realtime、Translate、Live 三种服务共用。",
+      "baseUrl": "地址",
+      "baseUrlPlaceholder": "地址，例如 https://openrouter.ai/api/v1",
+      "apiKeyOptional": "API 密钥（可选）"
     },
     "summary": {
       "scenario": "场景",
@@ -1536,6 +1552,18 @@
     "source_ended": "音频来源已消失（已拔出、关闭或停止）。",
     "still_stopping": "上一个会话仍在停止中，请稍后再试。",
     "connection_restored": "连接已中断并已恢复",
+    "lineup_incomplete": "请先为“{{stage}}”阶段选择一个服务。",
+    "lineup_not_offered": "此版本不提供 {{provider}}。请为“{{stage}}”阶段选择其他服务。",
+    "lineup_stage_split": "{{provider}} 必须同时负责“{{stage}}”阶段。请为“{{stage}}”阶段选择 {{provider}}，或改用其他服务代替 {{provider}}。",
+    "lineup_translation_bound": "{{provider}} 翻译需要搭配 {{provider}} 转写。请选择 {{provider}} 转写，或更换翻译服务。",
+    "lineup_no_unit": "{{provider}} 在这里不能单独负责“{{stage}}”阶段。请把它一起负责的阶段都选为它，或选择其他服务。",
+    "lineup_voice_not_alone": "请让转写和翻译使用 {{provider}}，或选择其他语音服务。",
+    "lineup_voice_not_taken": "请为语音也选择 {{provider}}，或为转写和翻译选择其他服务。",
+    "lineup_two_managed": "一个会话中暂时不能同时使用两个 Kizuna AI 服务。请选择其中一个。",
+    "lineup_language_not_spoken": "{{provider}} 没有{{language}}的语音。请选择其他语音服务，或在本次会话中关闭语音。",
+    "lineup_source_not_fixed": "{{provider}} 需要知道所说的语言。请选择具体语言来代替“自动检测”，或选择其他翻译服务。",
+    "lineup_pair_not_translated": "{{provider}} 不支持 {{source}} → {{target}} 的翻译。请选择其他语言，或选择其他翻译服务。",
+    "lineup_face_to_face_apart": "“面对面”需要由同一个服务完成转写和翻译。请为翻译也选择 {{provider}}，或把“对方在哪里”设为“在线会议”。",
     "session_in_use": "另一个窗口或设备正在使用此账户。请在那里停止会话；如果 Sokuji 刚刚意外关闭，请 1 分钟后重试。",
     "previous_session_ending": "您的上一个会话仍在结束中。请 1 分钟后重试。",
     "app_capture_lost_using_system_audio": "应用采集已停止，现在改为翻译整个系统的声音。",
@@ -1579,7 +1607,12 @@
     "org_wallet_frozen": "{{organization}} 的账户已暂停。请联系其所有者，或使用您自己的余额。",
     "org_wallet_frozen_unnamed": "该组织的账户已暂停。请联系其所有者，或使用您自己的余额。",
     "org_wallet_frozen_owner": "{{organization}} 的账户已暂停。请联系 Sokuji 支持团队，或使用您自己的余额。",
-    "org_wallet_frozen_owner_unnamed": "该组织的账户已暂停。请联系 Sokuji 支持团队，或使用您自己的余额。"
+    "org_wallet_frozen_owner_unnamed": "该组织的账户已暂停。请联系 Sokuji 支持团队，或使用您自己的余额。",
+    "model_missing": "该服务不提供此模型：{{detail}}",
+    "quota": "该服务的账号已没有余额：{{detail}}",
+    "text_model_unset": "请在“语言与会话组成”中为翻译选择模型，或输入模型名称。",
+    "address_missing": "开始前请在“账号与密钥”中填写兼容服务的地址。",
+    "address_invalid": "兼容服务的地址无法使用：{{detail}}"
   },
   "viewer": {
     "title": "Sokuji 字幕",
@@ -1826,7 +1859,10 @@
         "stateSaved": "已保存密钥",
         "belongsTo": "属于 {{region}}",
         "switched": "已切到 {{region}}：这个密钥只在那里能用。"
-      }
+      },
+      "findModels": "查找模型",
+      "configure": "设置",
+      "manageModels": "管理模型"
     },
     "lineup": {
       "title": "会话组成",
@@ -1839,9 +1875,13 @@
       "and": "和",
       "joint": "和{{stages}}共用一条连接，会一起换。",
       "granite": "与翻译一起：Granite Speech 直接把语音变成译文。",
-      "moved": "{{stages}}也换成了{{providers}}：目前还不能和这个选择混用，以后会支持。",
       "needsKey": "需要密钥",
       "needsSignIn": "需要登录",
+      "needsAddress": "需要地址",
+      "voiceNotAlone": "只朗读自己的译文",
+      "voiceNotTaken": "只使用自己的语音",
+      "twoManaged": "一次一个 Kizuna AI 服务",
+      "voiceFollowed": "语音已切换为 {{provider}}。之前的语音服务只支持它自己的译文。",
       "options": "{{provider}} 的选项",
       "state": {
         "needsKey": "需要密钥",
@@ -1852,18 +1892,29 @@
         "keyRefused": "密钥不可用",
         "keyNotVerified": "密钥未验证",
         "checkingKey": "正在验证密钥…",
-        "notUsed": "本次不使用"
+        "notUsed": "本次不使用",
+        "languageNotSpoken": "不支持该语言",
+        "cannotCombine": "无法组合",
+        "notAvailable": "此处不可用",
+        "needsAddress": "需要地址",
+        "notReady": "未就绪"
       },
       "speechModeHint": "一段话什么时候送去翻译，会话中不能换",
       "hint": "每个阶段由哪个服务来做",
       "uses": {
         "turn": "断句",
         "key": "按键",
-        "space": "空格",
-        "released": "松开以后",
-        "releasedValue": "这一段送去翻译",
-        "notHeld": "没有按住的时候",
-        "notHeldValue": "原声直接给对方，不翻译"
+        "held": "按住时",
+        "notHeld": "没按住时",
+        "talkHeld": "Sokuji 听你说话；松开后，这一段送去翻译，对方听到译文。开了原声直通时，对方还会小声听到你的原声。",
+        "talkNotHeld": "Sokuji 不听，你说的话既不翻译，也传不到对方。",
+        "translateHeld": "你说的话送去翻译，对方只听到译文，听不到你的原声。",
+        "translateNotHeld": "你的原声直接传给对方，不翻译。",
+        "change": "更改",
+        "cancel": "取消",
+        "reset": "恢复为 {{key}}",
+        "press": "请按一个键…（Esc 取消）",
+        "refused": "{{key}} 不能用，请换一个键。"
       },
       "actsOn": "作用于{{stages}}",
       "pointer": "作用于{{stages}}的选项在“{{card}}”卡片里。",
@@ -1872,6 +1923,8 @@
         "voiceFor": "{{who}}（{{language}}）"
       },
       "notesNeedKey": "在“账号与密钥”里添加 OpenAI 的 key，才能写纪要。",
+      "notesNeedGeminiKey": "在“账号与密钥”里添加 Gemini 的 key，才能写纪要。",
+      "notesNeedAddress": "在“账号与密钥”里添加兼容服务的地址，才能写纪要。",
       "alsoFiles": "也用于导入文件和重新转写。",
       "wordsLeftOut": "词表：超出这个服务上限的 {{count}} 条没有发送。",
       "wordsUnused": "词表：这个型号用不上。",
@@ -1879,14 +1932,21 @@
       "notesKizunaPrice": "Kizuna AI 估价：实时纪要每小时约 {{live}}，会后纪要每小时约 {{after}}，从支付会话费用的余额中扣除。",
       "notesNeedSignInOrKey": "登录，或在“账号与密钥”里添加 OpenAI 的 key，才能写纪要。",
       "jointCard": "{{stages}}共用一条连接，会一起换。",
+      "partableCard": "{{stages}}共用一条连接。翻译可以交给其他服务：请在下方选择。",
       "notesKizunaLine": "经 Kizuna AI 由 OpenAI 写纪要，从余额扣费。",
       "notesOpenAiLine": "用你自己的 OpenAI key 写纪要。",
-      "notesCompatibleName": "兼容 OpenAI 的服务",
-      "notesCompatibleNeedsConfig": "设置接口地址和模型",
+      "notesGeminiLine": "用你自己的 Gemini key 写纪要。",
+      "notesCompatibleLine": "用你填写的地址上的服务写纪要。",
       "notesNeedSignInOrChoose": "登录，或在这里选 OpenAI，才能写纪要。",
       "notesNeedSignInOrKeyAndChoose": "登录，或在“账号与密钥”里添加 OpenAI 的 key 并在这里选 OpenAI，才能写纪要。",
       "speechNotUsed": "这次没有译文要读出来，只显示文字。",
-      "speechHowToHear": "要读出来，在上面那句话里选「听到」。"
+      "speechHowToHear": "要读出来，在上面那句话里选「听到」。",
+      "notesCompatibleName": "兼容 OpenAI 的服务",
+      "notesCompatibleNeedsConfig": "设置接口地址和模型",
+      "notesBailianLegacyName": "Qwen / Bailian",
+      "notesBailianLegacyLine": "通过 Bailian 使用 Qwen 编写笔记。",
+      "notesCompatibleLegacyName": "OpenAI 兼容（仅用于笔记）",
+      "notesCompatibleLegacyLine": "保留此配置文件现有的笔记端点、模型和密钥。"
     },
     "display": {
       "surface": "哪个界面",
@@ -1963,6 +2023,20 @@
       "others": "OpenAI Translate、OpenAI Live 和 Palabra 没有放词表的地方，不会收到。",
       "byModel": "看型号",
       "byModelNote": "看型号：OpenAI 只有较早的转写型号收背景；Gemini Live 只有 gemini-3.8-live 收写法；本机只有大语言模型翻译会读词表。"
+    },
+    "textModel": {
+      "automatic": "自动",
+      "automaticModel": "自动（{{model}}）",
+      "chooseModel": "选择模型",
+      "modelName": "或输入模型名称",
+      "off": "关闭",
+      "lowest": "最低",
+      "reasoningTooltip": "“最低”会请求模型接受的最少推理，速度最快。其他选择会原样发送：如果模型不接受，会在开始前在会话组成中提示。",
+      "notesReasoningTooltip": "默认的“中”会让纪要的每一步使用测试时的推理程度：每个部分和会话中的纪要用“低”，收尾用“中”，模型接受得更少时就相应降低。其他选择或输入的值会在每次请求中原样发送：如果模型不接受，“纪要”卡片会提示。",
+      "reasoningValue": "或输入一个值，原样发送",
+      "listing": "正在查找模型…",
+      "listEmpty": "此服务没有列出任何模型：请输入模型名称。",
+      "typedOverrides": "填写后使用此值；清空后恢复上面的选择。"
     }
   },
   "history": {
@@ -2060,11 +2134,6 @@
     "notesExplain": "每次会话会用你自己的 key 把这些发给 {{service}}：各句的文字、句子编号、是哪一方哪位说话人说的，以及词表里的写法。不会发送声音、译文或你的账号信息。",
     "notesTurnOn": "打开",
     "notesModel": "纪要模型",
-    "notesModelLine": "写纪要用的文本模型，填它在服务那边的名字。",
-    "notesCompatibleBaseUrl": "API 基础地址",
-    "notesCompatibleUrlInvalid": "请输入 HTTPS 地址，或 localhost/私有网络中的 HTTP 地址。",
-    "notesCompatibleKeyLine": "可留空。需鉴权时填写这个接口自己的密钥。",
-    "notesExplainCompatible": "配置的接口会收到转写文本、句子编号、发言人标签和词表拼写。实时更新时也会发送已有的纪要。",
     "notes": "纪要",
     "transcript": "转写",
     "notesKind": {
@@ -2104,6 +2173,8 @@
       "not-json": "纪要模型的回答格式不对。",
       "no-answer": "纪要模型没有回答。",
       "network": "连不上写纪要的服务。",
+      "timeout": "写纪要的服务没有及时回应。",
+      "no-model": "还没有选择纪要模型。请在“语言与会话组成”的“纪要”卡片里选择。",
       "refused": "服务拒绝了请求（{{status}}）。",
       "sign-in": "要用 Kizuna AI 写纪要，请先登录 Kizuna AI。",
       "unavailable": "Kizuna AI 的纪要服务还没有开放。",
@@ -2193,11 +2264,10 @@
     "notesJumpPlay": "点主题或要点，跳到原句并从那里播放。",
     "notesJump": "点主题或要点，跳到原句。",
     "keptHereNotes": "纪要开启时，每次会话的转写文字也会发给 {{service}}，用来写纪要。",
-    "notesModelOther": "其他",
-    "notesModelName": "模型名",
     "notesExplainKizuna": "每次会话的这些内容会经过 Kizuna AI 的服务器发给 OpenAI，由 OpenAI 写纪要：各句的文字、句子编号、是哪一方哪位说话人说的，以及词表里的写法。Kizuna AI 不保存其中任何内容。费用从支付会话费用的余额中扣除。不会发送声音或译文。",
     "liveExplainKizuna": "会话中每 20 秒，新的句子（文字、编号、是哪一方哪位说话人说的）、目前为止的纪要和词表里的写法会经过 Kizuna AI 的服务器发给 OpenAI，由 OpenAI 写纪要。Kizuna AI 不保存其中任何内容。费用从支付会话费用的余额中扣除。不会发送声音或译文。",
     "notesModelKizuna": "Kizuna AI 用 {{model}} 写纪要。",
+    "notesModelLineUp": "与写纪要的服务一起，在“语言与会话组成”的“纪要”卡片里选择。",
     "copyConversation": "复制对话",
     "saveConversationTxt": "保存对话（.txt）",
     "saveConversationJson": "保存对话（.json）",
@@ -2288,12 +2358,17 @@
     "notesOwner": "负责人",
     "notesDue": "截止",
     "notesEdited": "已手动修改",
+    "notesWrittenBy": "由 {{service}} 用 {{model}} 写成",
     "mergeSpeaker": "把 {{name}} 并入…",
     "mergeInto": "并入…",
     "mergeMenu": "并入",
     "mergeAsk": "{{name}} 已经是这一侧的说话人了。",
     "mergeOne": "并成一个",
-    "keepApart": "分开保留"
+    "keepApart": "分开保留",
+    "notesCompatibleBaseUrl": "API 基础地址",
+    "notesCompatibleUrlInvalid": "请输入 HTTPS 地址，或 localhost/私有网络中的 HTTP 地址。",
+    "notesCompatibleKeyLine": "可留空。需鉴权时填写这个接口自己的密钥。",
+    "notesExplainCompatible": "配置的接口会收到转写文本、句子编号、发言人标签和词表拼写。实时更新时也会发送已有的纪要。"
   },
   "notesQuit": {
     "named": "正在为“{{title}}”写纪要。仍然退出吗？这份纪要会记为已取消。",

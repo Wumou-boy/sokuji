@@ -8,6 +8,9 @@ import { LEGACY_SLICE_KEYS } from '../lib/session/storedSettings';
 import { isKizunaAIEnabled } from '../utils/environment';
 import { fakeLeasedProvider } from './fake/leased';
 import { fakeProvider } from './fake/provider';
+import { fakeTranscriberProvider } from './fake/transcriber';
+import { fakeTranslatorProvider } from './fake/translator';
+import { fakeVoiceProvider } from './fake/voice';
 import { FAKE_DEFAULTS } from './fake/settings';
 import { PROVIDERS, currentPresenceEnv, getProvider, presentProviders } from './registry';
 
@@ -64,6 +67,9 @@ describe('the registry', () => {
   it('includes the fake in development builds, on every platform', () => {
     expect(getProvider('fake')).toBe(fakeProvider);
     expect(getProvider('fake_leased')).toBe(fakeLeasedProvider);
+    expect(getProvider('fake_voice')).toBe(fakeVoiceProvider);
+    expect(getProvider('fake_transcriber')).toBe(fakeTranscriberProvider);
+    expect(getProvider('fake_translator')).toBe(fakeTranslatorProvider);
     for (const platform of ['electron', 'extension', 'web'] as const) {
       const ids = presentProviders({ platform, dev: true, enabled: new Set(), kizuna: true, switchOn: () => false }).map((p) => p.id);
       expect(ids).toContain('fake');
@@ -77,6 +83,9 @@ describe('the registry', () => {
     const released = await import('./registry');
     expect(released.PROVIDERS.map((p) => p.id)).not.toContain('fake');
     expect(released.PROVIDERS.map((p) => p.id)).not.toContain('fake_leased');
+    expect(released.PROVIDERS.map((p) => p.id)).not.toContain('fake_voice');
+    expect(released.PROVIDERS.map((p) => p.id)).not.toContain('fake_transcriber');
+    expect(released.PROVIDERS.map((p) => p.id)).not.toContain('fake_translator');
   });
 
   it("a release build offers no flagged provider and, without the umbrella, no managed one (D24 release check, F6)", () => {
@@ -137,7 +146,7 @@ describe('the invariants every provider meets (F17)', () => {
     vi.resetModules();
   });
 
-  const DEV_ONLY_IDS = ['fake', 'fake_leased'];
+  const DEV_ONLY_IDS = ['fake', 'fake_leased', 'fake_voice', 'fake_transcriber', 'fake_translator'];
   const released = PROVIDERS.filter((p) => !DEV_ONLY_IDS.includes(p.id));
   const at = (tree: unknown, path: string) => path.split('.').reduce<unknown>((node, key) => (node as Record<string, unknown> | undefined)?.[key], tree);
   const signedOut: AuthContext = { signedIn: false, getToken: async () => null };
@@ -159,6 +168,10 @@ describe('the invariants every provider meets (F17)', () => {
       // The region picks the key field (`sonioxKeyField`).
       soniox: ['region'],
       palabraai: ['authMode'],
+      // A text model's check tries the model and the reasoning chosen for the translation, and for the notes.
+      openai_text: ['translationModel', 'translationReasoning'],
+      gemini_text: ['translationModel', 'translationReasoning'],
+      openai_compatible: ['translationModel', 'translationReasoning'],
     });
   });
 
@@ -358,11 +371,12 @@ describe('the invariants every provider meets (F17)', () => {
     // each provider plan adds its id where the owner orders it (spec: "one line in the order test").
     // Kizuna Soniox first, unflagged (Stage 2 Kizuna Soniox, ruling 6): the owner's 2026-09-12
     // product order put the managed provider first; then LocalInference, Gemini (Stage 2 Gemini, ruling 6), Doubao AST 2.0 (Stage 2 Volcengine AST2, ruling 5), Qwen LiveTranslate (spec 2026-10-13 §8, unflagged by the owner 2026-10-14), OpenAI Realtime (Stage 2 OpenAI Realtime, ruling 18), OpenAI Translate (Stage 2 OpenAI Translate, ruling 11), OpenAI Live (Stage 2 OpenAI Live, ruling 9), Soniox with your own key, and Palabra AI last (Stage 2 Palabra, ruling 14).
-    expect(releaseBuild.PROVIDERS.map((p) => p.id)).toEqual(['kizunaai_soniox', 'kizunaai_qwen', 'local_inference', 'gemini', 'volcengine_ast2', 'openai', 'openai_translate', 'openai_live', 'soniox', 'qwen_livetranslate', 'palabraai']);
+    // Then the text models, which translate another provider's transcription (spec 2026-11-22 §2): OpenAI's, Gemini's and a compatible service.
+    expect(releaseBuild.PROVIDERS.map((p) => p.id)).toEqual(['kizunaai_soniox', 'kizunaai_qwen', 'local_inference', 'gemini', 'volcengine_ast2', 'openai', 'openai_translate', 'openai_live', 'soniox', 'qwen_livetranslate', 'palabraai', 'openai_text', 'gemini_text', 'openai_compatible']);
   });
 
-  it('a development build adds exactly the two fakes', () => {
-    expect(PROVIDERS.map((p) => p.id)).toEqual([...released.map((p) => p.id), 'fake', 'fake_leased']);
+  it('a development build adds exactly the five fakes', () => {
+    expect(PROVIDERS.map((p) => p.id)).toEqual([...released.map((p) => p.id), 'fake', 'fake_leased', 'fake_voice', 'fake_transcriber', 'fake_translator']);
   });
 });
 

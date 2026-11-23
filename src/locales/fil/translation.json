@@ -45,7 +45,7 @@
     "systemInstructions": "Mga tagubilin ng sistema",
     "speechMode": "Mode ng Pagsasalita",
     "speechModeAppliesTo": "Naaangkop sa inyong boses. Ang audio ng kausap ay palaging gumagamit ng semantic VAD.",
-    "speechModeTooltip": "Auto: natutukoy ng provider kung kailan ka tapos nang magsalita. \nPush-to-Talk: pindutin nang matagal ang Space o ang microphone button para magpadala ng audio nang manual. \nPush-to-Translate: tulad ng Push-to-Talk, ngunit ipinapadala ang iyong raw mic sa virtual mic kapag idle para makapagsalita ka nang direkta nang walang pagsasalin.",
+    "speechModeTooltip": "Auto: natutukoy ng provider kung kailan ka tapos nang magsalita. \nPush-to-Talk: pindutin nang matagal ang {{key}} o ang microphone button para magpadala ng audio nang manual. \nPush-to-Translate: tulad ng Push-to-Talk, ngunit ipinapadala ang iyong raw mic sa virtual mic kapag idle para makapagsalita ka nang direkta nang walang pagsasalin.",
     "speechModeAppliesToAuto": "Naaangkop sa inyong boses. Ang audio ng kausap ay palaging gumagamit ng awtomatikong pagtukoy ng provider.",
     "userTranscriptModel": "Modelo ng transkripsyon ng gumagamit",
     "noiseReduction": "Pagbawas ng ingay",
@@ -508,6 +508,7 @@
     "microphone": "Microphone",
     "microphoneDesc": "Piliin ang microphone para ma-capture ang inyong pagsasalita. Magsalita sa inyong wika sa microphone na ito, at i-translate ng Sokuji ang lahat ng maririnig niya nang real-time.",
     "swapLanguages": "Palitan ang mga wika",
+    "swapNotSpoken": "Hindi binabasa ng serbisyo sa pagsasalita ang mga wikang ito nang pabaligtad.",
     "textOnly": "Teksto lamang",
     "textOnlyDesc": "Isalin sa teksto lamang — walang boses na output",
     "textOnlyForcedByMode": "Ang mode na \"{{mode}}\" ay ginagawa lang na teksto para sa iyo ang sinasabi ng mga kalahok at hindi kailanman gumagawa ng audio, kaya nananatiling naka-on ang \"Teksto lamang\". Palitan ang translation mode para isalin ang sarili mong boses nang may tunog.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "Libre · online, serbisyo ng Microsoft"
+    },
+    "openai_text": {
+      "name": "OpenAI text model",
+      "description": "Nagsasalin ng anumang pares ng wika gamit ang iyong OpenAI key"
+    },
+    "gemini_text": {
+      "name": "Gemini text model",
+      "description": "Nagsasalin ng anumang pares ng wika gamit ang iyong Gemini key"
+    },
+    "openai_compatible": {
+      "name": "Serbisyong compatible sa OpenAI",
+      "description": "OpenRouter, DeepSeek, Ollama at iba pa, sa address na ilalagay mo"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "Function",
     "noChannelConfigured": "I-enable ang mikropono o ang audio ng kausap bago magsimula.",
     "release": "bitiwan",
-    "pushToTalk": "pindutin para magsalita (Space)",
+    "pushToTalk": "pindutin para magsalita ({{key}})",
     "inputDeviceOff": "naka-off ang input device",
     "endSession": "Tapusin ang session",
     "startSession": "Simulan ang session",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "Hindi gumagana ang pagbasa sa Hapones.",
       "defaultColour": "Default"
     },
-    "pttHint": "Pindutin ang Space upang magsalita"
+    "pttHint": "Pindutin ang {{key}} upang magsalita"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "Naka-sign in na. Buksan ang link na ipinadala namin sa inyong email para i-verify ang inyong address — makukuha ang trial credit kapag nagawa na ninyo ito.",
       "onFile": "Mayroon nang naka-save na key — iwanan itong blangko para mapanatili ito.",
       "offlineHardware": "Maayos ang Sokuji kapag may GPU at sapat na VRAM; kapansin-pansing mas mabagal kung CPU lang.",
-      "openaiOneKey": "Itong iisang key ang gamit ng OpenAI Realtime, Translate at Live."
+      "openaiOneKey": "Itong iisang key ang gamit ng OpenAI Realtime, Translate at Live.",
+      "baseUrl": "Address",
+      "baseUrlPlaceholder": "Address, gaya ng https://openrouter.ai/api/v1",
+      "apiKeyOptional": "API key (opsyonal)"
     },
     "summary": {
       "scenario": "Scenario",
@@ -1534,6 +1550,18 @@
     "source_ended": "Naglaho ang audio source (na-unplug, na-close, o huminto).",
     "still_stopping": "Hinihinto pa ang huling session; subukan ulit sa ilang sandali.",
     "connection_restored": "Naputol ang koneksyon at naibalik na",
+    "lineup_incomplete": "Pumili muna ng serbisyo para sa yugtong “{{stage}}”.",
+    "lineup_not_offered": "Hindi available ang {{provider}} sa bersyong ito. Pumili ng ibang serbisyo para sa yugtong “{{stage}}”.",
+    "lineup_stage_split": "Dapat gawin din ng {{provider}} ang yugtong “{{stage}}”. Piliin ang {{provider}} para sa yugtong “{{stage}}”, o gumamit ng ibang serbisyo kapalit ng {{provider}}.",
+    "lineup_translation_bound": "Kailangan ng salin ng {{provider}} ang transkripsyon ng {{provider}}. Piliin ang {{provider}} para sa transkripsyon, o pumili ng ibang serbisyo sa pagsasalin.",
+    "lineup_no_unit": "Hindi kayang gawin ng {{provider}} nang mag-isa ang yugtong “{{stage}}” dito. Piliin ito para sa mga yugtong sabay nitong ginagawa, o pumili ng ibang serbisyo.",
+    "lineup_voice_not_alone": "Gamitin ang {{provider}} para sa transkripsyon at salin, o pumili ng ibang serbisyo sa pagsasalita.",
+    "lineup_voice_not_taken": "Piliin din ang {{provider}} para sa pagsasalita, o pumili ng ibang serbisyo para sa transkripsyon at salin.",
+    "lineup_two_managed": "Hindi pa maaaring tumakbo ang dalawang serbisyo ng Kizuna AI sa iisang session. Pumili ng isa sa mga ito.",
+    "lineup_language_not_spoken": "Walang boses ang {{provider}} para sa {{language}}. Pumili ng ibang serbisyo sa pagsasalita, o i-off ang pagsasalita para sa session na ito.",
+    "lineup_source_not_fixed": "Kailangang malaman ng {{provider}} ang wikang sinasalita. Piliin ito sa halip na “Awtomatikong Detekta”, o pumili ng ibang serbisyo sa pagsasalin.",
+    "lineup_pair_not_translated": "Hindi isinasalin ng {{provider}} ang {{source}} → {{target}}. Pumili ng ibang mga wika, o ibang serbisyo sa pagsasalin.",
+    "lineup_face_to_face_apart": "Kailangan ng “Magkaharap” ng iisang serbisyo para sa transkripsyon at pagsasalin. Piliin din ang {{provider}} para sa pagsasalin, o itakda ang “Nasaan ang kausap” sa “Nasa meeting”.",
     "session_in_use": "May ibang window o device na gumagamit ng account na ito. Ihinto roon ang session, o kung biglang nagsara ang Sokuji, subukang muli pagkalipas ng isang minuto.",
     "previous_session_ending": "Tinatapos pa ang iyong nakaraang session. Pakisubukang muli pagkalipas ng isang minuto.",
     "app_capture_lost_using_system_audio": "Huminto ang capture ng app, kaya isinasalin na ngayon ang buong system audio.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "Naka-pause ang account ng {{organization}}. Makipag-ugnayan sa may-ari nito, o gamitin ang sarili mong balanse.",
     "org_wallet_frozen_unnamed": "Naka-pause ang account ng organisasyon. Makipag-ugnayan sa may-ari nito, o gamitin ang sarili mong balanse.",
     "org_wallet_frozen_owner": "Naka-pause ang account ng {{organization}}. Makipag-ugnayan sa suporta ng Sokuji, o gamitin ang sarili mong balanse.",
-    "org_wallet_frozen_owner_unnamed": "Naka-pause ang account ng organisasyon. Makipag-ugnayan sa suporta ng Sokuji, o gamitin ang sarili mong balanse."
+    "org_wallet_frozen_owner_unnamed": "Naka-pause ang account ng organisasyon. Makipag-ugnayan sa suporta ng Sokuji, o gamitin ang sarili mong balanse.",
+    "model_missing": "Hindi iniaalok ng serbisyo ang modelong ito: {{detail}}",
+    "quota": "Wala nang credit ang account sa serbisyo: {{detail}}",
+    "text_model_unset": "Pumili ng modelo para sa pagsasalin, o i-type ang pangalan nito, sa “Mga wika at line-up”.",
+    "address_missing": "Ilagay ang address ng compatible na serbisyo sa “Mga account at key” bago magsimula.",
+    "address_invalid": "Hindi magagamit ang address ng compatible na serbisyo: {{detail}}"
   },
   "viewer": {
     "title": "Mga subtitle ng Sokuji",
@@ -1824,7 +1857,10 @@
         "stateSaved": "Na-save ang key",
         "belongsTo": "Para sa {{region}}",
         "switched": "Lumipat sa {{region}}: dito lang gumagana ang key na ito."
-      }
+      },
+      "findModels": "Hanapin ang mga modelo",
+      "configure": "I-configure",
+      "manageModels": "Pamahalaan ang mga model"
     },
     "lineup": {
       "title": "Line-up",
@@ -1837,9 +1873,13 @@
       "and": " at ",
       "joint": "Kasama ng {{stages}} sa iisang koneksyon; sabay silang nagbabago.",
       "granite": "Kasama ang salin: ginagawang salin agad ng Granite Speech ang pagsasalita.",
-      "moved": "Inilipat din ang {{stages}} sa {{providers}}: hindi pa ito maisasama sa pinili mo. Susuportahan ang paghahalo sa susunod.",
       "needsKey": "kailangan ng key",
       "needsSignIn": "kailangang mag-sign in",
+      "needsAddress": "kailangan ng address",
+      "voiceNotAlone": "sariling salin lang ang binabasa",
+      "voiceNotTaken": "sariling boses lang ang ginagamit",
+      "twoManaged": "isang serbisyo ng Kizuna AI lang sa bawat pagkakataon",
+      "voiceFollowed": "Lumipat sa {{provider}} ang pagsasalita. Sariling mga salin lang ang sinusuportahan ng dating serbisyo sa pagsasalita.",
       "options": "Mga opsyon ng {{provider}}",
       "state": {
         "needsKey": "Kailangan ng key",
@@ -1850,18 +1890,29 @@
         "keyRefused": "Hindi tinanggap ang key",
         "keyNotVerified": "Hindi pa beripikado ang key",
         "checkingKey": "Sinusuri ang key…",
-        "notUsed": "Hindi gagamitin ngayon"
+        "notUsed": "Hindi gagamitin ngayon",
+        "languageNotSpoken": "Hindi suportado ang wika",
+        "cannotCombine": "Hindi mapagsasama",
+        "notAvailable": "Hindi available dito",
+        "needsAddress": "Kailangan ng address",
+        "notReady": "Hindi pa handa"
       },
       "speechModeHint": "Kailan ipinapadala sa pagsasalin ang isang bahagi ng pananalita; hindi nababago habang may session",
       "hint": "Aling serbisyo ang gumagawa ng bawat yugto",
       "uses": {
         "turn": "Dulo ng sinasabi",
         "key": "Key",
-        "space": "Space",
-        "released": "Pagkabitaw",
-        "releasedValue": "ipinapadala sa pagsasalin ang bahaging iyon",
+        "held": "Kapag pinipindot",
         "notHeld": "Kapag hindi pinipindot",
-        "notHeldValue": "diretsong napupunta sa kabilang panig ang sarili mong boses, walang salin"
+        "talkHeld": "Nakikinig ang Sokuji; pagbitaw mo, isinasalin ang bahaging iyon at naririnig ng kabilang panig ang salin. Kapag naka-on ang Passthrough, naririnig din ng kabilang panig ang sarili mong boses, nang mahina.",
+        "talkNotHeld": "Hindi nakikinig ang Sokuji; walang anuman sa sinasabi mo ang naisasalin o nakararating sa kabilang panig.",
+        "translateHeld": "Isinasalin ang sinasabi mo; ang salin lang ang naririnig ng kabilang panig, hindi ang sarili mong boses.",
+        "translateNotHeld": "Diretsong napupunta sa kabilang panig ang sarili mong boses, walang salin.",
+        "change": "Palitan",
+        "cancel": "Kanselahin",
+        "reset": "Ibalik sa {{key}}",
+        "press": "Pumindot ng key… (Esc para kanselahin)",
+        "refused": "Hindi magagamit ang {{key}}. Pumindot ng ibang key."
       },
       "actsOn": "Para sa {{stages}}",
       "pointer": "Ang mga opsyon para sa {{stages}} ay nasa card na \"{{card}}\".",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "Magdagdag ng OpenAI key sa “Mga account at key” para maisulat ang mga tala.",
+      "notesNeedGeminiKey": "Magdagdag ng Gemini key sa “Mga account at key” para maisulat ang mga tala.",
+      "notesNeedAddress": "Idagdag ang address ng compatible na serbisyo sa “Mga account at key” para maisulat ang mga tala.",
       "alsoFiles": "Nagta-transcribe din ng mga na-import na file at muli ng mga rekord.",
       "wordsLeftOut": "Listahan ng salita: {{count}} entry na lampas sa limitasyon ng serbisyong ito ang hindi isinasama.",
       "wordsUnused": "Listahan ng salita: hindi ito magagamit ng model na ito.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Tantiya ng Kizuna AI: live na tala mga {{live}} kada oras, tala pagkatapos ng session mga {{after}} kada oras, binabayaran mula sa balanseng nagbabayad sa mga session mo.",
       "notesNeedSignInOrKey": "Mag-sign in, o magdagdag ng OpenAI key sa “Mga account at key”, para maisulat ang mga tala.",
       "jointCard": "Magkasama sa iisang koneksyon ang {{stages}}; sabay silang nagbabago.",
+      "partableCard": "Magkasama sa iisang koneksyon ang {{stages}}. Puwedeng ibang serbisyo ang magsalin: piliin ito sa ibaba.",
       "notesKizunaLine": "Isinusulat ng OpenAI ang mga tala sa pamamagitan ng Kizuna AI, bayad mula sa iyong balanse.",
       "notesOpenAiLine": "Isinusulat ang mga tala gamit ang sarili mong OpenAI key.",
-      "notesCompatibleName": "Tugma sa OpenAI",
-      "notesCompatibleNeedsConfig": "Itakda ang endpoint at modelo",
+      "notesGeminiLine": "Isinusulat ang mga tala gamit ang sarili mong Gemini key.",
+      "notesCompatibleLine": "Isinusulat ang mga tala gamit ang serbisyo sa address na ilalagay mo.",
       "notesNeedSignInOrChoose": "Mag-sign in, o piliin ang OpenAI dito, para maisulat ang mga tala.",
       "notesNeedSignInOrKeyAndChoose": "Mag-sign in, o magdagdag ng OpenAI key sa “Mga account at key” at piliin ang OpenAI dito, para maisulat ang mga tala.",
       "speechNotUsed": "Walang babasahin nang malakas ngayon: teksto lang ang salin.",
-      "speechHowToHear": "Para mabasa nang malakas, piliin ang “naririnig” sa pangungusap sa itaas."
+      "speechHowToHear": "Para mabasa nang malakas, piliin ang “naririnig” sa pangungusap sa itaas.",
+      "notesCompatibleName": "Tugma sa OpenAI",
+      "notesCompatibleNeedsConfig": "Itakda ang endpoint at modelo"
     },
     "display": {
       "surface": "Aling display",
@@ -1961,6 +2017,20 @@
       "others": "Walang lugar para sa listahan ng salita ang OpenAI Translate, OpenAI Live at Palabra; wala silang natatanggap.",
       "byModel": "Depende sa model",
       "byModelNote": "Depende sa model: kinukuha ng OpenAI ang background sa mas lumang transcription model nito lang; kinukuha ng Gemini Live ang mga termino sa gemini-3.8-live lang; binabasa ng device na ito ang listahan sa mga tagasaling large language model lang nito."
+    },
+    "textModel": {
+      "automatic": "Awtomatiko",
+      "automaticModel": "Awtomatiko ({{model}})",
+      "chooseModel": "Pumili ng modelo",
+      "modelName": "O i-type ang pangalan ng modelo",
+      "off": "Naka-off",
+      "lowest": "Pinakamababa",
+      "reasoningTooltip": "Ang “Pinakamababa” ay humihingi ng pinakakaunting pangangatuwiran na tinatanggap ng modelo, na pinakamabilis. Ang ibang pili ay ipinapadala nang eksakto: kung tanggihan ito ng modelo, sasabihin ito ng line-up bago ka magsimula.",
+      "notesReasoningTooltip": "Ang “Katamtaman”, ang default, ay humihingi sa bawat hakbang ng mga tala ng pangangatuwirang sinubok dito: Mababa para sa bawat bahagi at sa mga tala habang may session, Katamtaman para tapusin ang mga ito, at mas kaunti kung mas kaunti ang tinatanggap ng modelo. Ang ibang pili, o halagang itina-type, ay ipinapadala nang eksakto sa bawat request: kung tanggihan ito ng modelo, sasabihin ito ng card na “Mga tala”.",
+      "reasoningValue": "O mag-type ng value, ipapadala nang ganoon",
+      "listing": "Hinahanap ang mga modelo…",
+      "listEmpty": "Walang inililistang modelo ang serbisyong ito: i-type ang pangalan ng modelo.",
+      "typedOverrides": "Pinapalitan ang napili sa itaas. I-clear para magamit muli ang listahan."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "Para sa bawat session, ipinapadala sa {{service}} gamit ang sarili mong key ang teksto ng mga pangungusap nito, ang mga numero nila, kung aling panig at aling tagapagsalita ang nagsabi, at ang mga baybay sa listahan ng salita mo. Hindi kailanman ang audio, ang salin o ang account mo.",
     "notesTurnOn": "I-on",
     "notesModel": "Model ng mga tala",
-    "notesModelLine": "Ang text model na sumusulat ng mga tala, ayon sa pangalan nito sa serbisyo.",
-    "notesCompatibleBaseUrl": "Base URL ng API",
-    "notesCompatibleUrlInvalid": "Maglagay ng HTTPS URL o localhost/pribadong HTTP URL.",
-    "notesCompatibleKeyLine": "Opsyonal. Gumamit ng key para sa endpoint na ito.",
-    "notesExplainCompatible": "Matatanggap ng naka-configure na endpoint ang teksto ng transcript, mga numero ng pangungusap, label ng mga tagapagsalita, at baybay mula sa listahan ng mga salita. Kasama rin sa mga live na update ang mga tala hanggang sa kasalukuyan.",
     "notes": "Tala",
     "transcript": "Transcript",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "Hindi sumagot sa inaasahang anyo ang model ng mga tala.",
       "no-answer": "Walang sagot ang model ng mga tala.",
       "network": "Hindi maabot ang serbisyo ng mga tala.",
+      "timeout": "Hindi sumagot sa oras ang serbisyo ng mga tala.",
+      "no-model": "Walang napiling model ng mga tala. Pumili ng isa sa card na “Mga tala” sa “Mga wika at line-up”.",
       "refused": "Tinanggihan ng serbisyo ang kahilingan ({{status}}).",
       "sign-in": "Mag-sign in sa Kizuna AI para makasulat ng mga tala gamit ito.",
       "unavailable": "Hindi pa available ang mga tala ng Kizuna AI.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "I-click ang isang paksa o punto para pumunta sa pangungusap nito at mag-play mula roon.",
     "notesJump": "I-click ang isang paksa o punto para pumunta sa pangungusap nito.",
     "keptHereNotes": "Habang naka-on ang mga tala, ipinapadala rin sa {{service}} ang teksto ng transcript ng bawat session para isulat ang mga ito.",
-    "notesModelOther": "Iba pa",
-    "notesModelName": "Pangalan ng model",
     "notesExplainKizuna": "Para sa bawat session, ang teksto ng mga pangungusap nito, ang mga numero nila, kung aling panig at aling tagapagsalita ang nagsabi, at ang mga baybay sa listahan ng salita mo ay dumadaan sa server ng Kizuna AI papunta sa OpenAI, na siyang sumusulat ng mga tala. Walang itinatago ang Kizuna AI rito. Binabayaran ito mula sa balanseng nagbabayad sa mga session mo. Hindi kailanman ang audio o ang salin.",
     "liveExplainKizuna": "Habang may session, bawat 20 segundo ang mga bagong pangungusap (ang teksto, numero, at kung aling panig at aling tagapagsalita ang nagsabi), ang mga tala sa ngayon at ang mga baybay sa listahan ng salita mo ay dumadaan sa server ng Kizuna AI papunta sa OpenAI, na siyang sumusulat ng mga tala. Walang itinatago ang Kizuna AI rito. Binabayaran ito mula sa balanseng nagbabayad sa mga session mo. Hindi kailanman ang audio o ang salin.",
     "notesModelKizuna": "Isinusulat ng Kizuna AI ang mga tala gamit ang {{model}}.",
+    "notesModelLineUp": "Pinipili kasama ng serbisyo ng mga tala, sa card na “Mga tala” sa “Mga wika at line-up”.",
     "copyConversation": "Kopyahin ang usapan",
     "saveConversationTxt": "I-save ang usapan (.txt)",
     "saveConversationJson": "I-save ang usapan (.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "May-ari",
     "notesDue": "Takdang petsa",
     "notesEdited": "Inedit nang mano-mano",
+    "notesWrittenBy": "Isinulat ng {{service}} gamit ang {{model}}",
     "mergeSpeaker": "Pagsamahin si {{name}} kay…",
     "mergeInto": "Pagsamahin kay…",
     "mergeMenu": "Pagsamahin kay",
     "mergeAsk": "Nagsasalita na sa panig na ito si {{name}}.",
     "mergeOne": "Gawing isa",
-    "keepApart": "Panatilihing hiwalay"
+    "keepApart": "Panatilihing hiwalay",
+    "notesCompatibleBaseUrl": "Base URL ng API",
+    "notesCompatibleUrlInvalid": "Maglagay ng HTTPS URL o localhost/pribadong HTTP URL.",
+    "notesCompatibleKeyLine": "Opsyonal. Gumamit ng key para sa endpoint na ito.",
+    "notesExplainCompatible": "Matatanggap ng naka-configure na endpoint ang teksto ng transcript, mga numero ng pangungusap, label ng mga tagapagsalita, at baybay mula sa listahan ng mga salita. Kasama rin sa mga live na update ang mga tala hanggang sa kasalukuyan."
   },
   "notesQuit": {
     "named": "Isinusulat ang mga tala para sa “{{title}}”. Isara pa rin? Mamarkahan itong kinansela.",

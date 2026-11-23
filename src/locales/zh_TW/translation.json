@@ -45,7 +45,7 @@
     "systemInstructions": "系統指令",
     "speechMode": "語音模式",
     "speechModeAppliesTo": "適用於您的語音。對方音訊始終使用語意 VAD。",
-    "speechModeTooltip": "自動：由提供商自動偵測您何時說完。\n按住說話：按住空白鍵或麥克風按鈕手動發送音訊。\n按住翻譯：與按住說話類似，但閒置時將原始麥克風音訊直通到虛擬麥克風，您可以直接說話而不進行翻譯。",
+    "speechModeTooltip": "自動：由提供商自動偵測您何時說完。\n按住說話：按住 {{key}} 或麥克風按鈕手動發送音訊。\n按住翻譯：與按住說話類似，但閒置時將原始麥克風音訊直通到虛擬麥克風，您可以直接說話而不進行翻譯。",
     "speechModeAppliesToAuto": "適用於您的語音。對方音訊始終使用提供商的自動偵測。",
     "userTranscriptModel": "使用者轉錄模型",
     "noiseReduction": "降噪",
@@ -508,6 +508,7 @@
     "microphone": "麥克風",
     "microphoneDesc": "選擇麥克風來捕捉您的語音。對著這個麥克風說您的語言，Sokuji 會即時翻譯它聽到的一切。",
     "swapLanguages": "交換語言",
+    "swapNotSpoken": "該語音服務無法反向朗讀這兩種語言。",
     "textOnly": "僅文字",
     "textOnlyDesc": "僅翻譯為文字 — 不產生語音",
     "textOnlyForcedByMode": "「{{mode}}」模式只會把參與者說的話轉成文字給你看，不會產生語音，因此「僅文字」始終開啟。切換翻譯模式即可讓自己的語音帶聲音輸出。",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "免費 · 連網，微軟的服務"
+    },
+    "openai_text": {
+      "name": "OpenAI 文字模型",
+      "description": "用你的 OpenAI 金鑰翻譯任意語言組合"
+    },
+    "gemini_text": {
+      "name": "Gemini 文字模型",
+      "description": "用你的 Gemini 金鑰翻譯任意語言組合"
+    },
+    "openai_compatible": {
+      "name": "OpenAI 相容服務",
+      "description": "OpenRouter、DeepSeek、Ollama 等，使用你填寫的位址"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "功能",
     "noChannelConfigured": "開始前請啟用麥克風或對方音訊。",
     "release": "釋放",
-    "pushToTalk": "按住說話 (空白鍵)",
+    "pushToTalk": "按住說話 ({{key}})",
     "inputDeviceOff": "輸入裝置關閉",
     "endSession": "結束",
     "startSession": "開始",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "日語讀音無法顯示。",
       "defaultColour": "預設"
     },
-    "pttHint": "按住空白鍵說話"
+    "pttHint": "按住 {{key}} 說話"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "已登入。請開啟我們寄給您的驗證信連結以完成信箱驗證 — 完成後即可取得試用額度。",
       "onFile": "已儲存金鑰 — 留空即可沿用。",
       "offlineHardware": "有 GPU 且顯示記憶體充足時執行順暢；僅用 CPU 會明顯較慢。",
-      "openaiOneKey": "這一把金鑰給 OpenAI Realtime、Translate、Live 三種服務共用。"
+      "openaiOneKey": "這一把金鑰給 OpenAI Realtime、Translate、Live 三種服務共用。",
+      "baseUrl": "位址",
+      "baseUrlPlaceholder": "位址，例如 https://openrouter.ai/api/v1",
+      "apiKeyOptional": "API 金鑰（選填）"
     },
     "summary": {
       "scenario": "場景",
@@ -1534,6 +1550,18 @@
     "source_ended": "音訊來源已消失（已拔除、關閉或停止）。",
     "still_stopping": "上一個工作階段仍在停止中，請稍後再試。",
     "connection_restored": "連線已中斷並已恢復",
+    "lineup_incomplete": "請先為「{{stage}}」階段選擇一個服務。",
+    "lineup_not_offered": "此版本不提供 {{provider}}。請為「{{stage}}」階段選擇其他服務。",
+    "lineup_stage_split": "{{provider}} 必須同時負責「{{stage}}」階段。請為「{{stage}}」階段選擇 {{provider}}，或改用其他服務取代 {{provider}}。",
+    "lineup_translation_bound": "{{provider}} 翻譯需要搭配 {{provider}} 轉寫。請選擇 {{provider}} 轉寫，或更換翻譯服務。",
+    "lineup_no_unit": "{{provider}} 在這裡不能單獨負責「{{stage}}」階段。請把它一起負責的階段都選為它，或選擇其他服務。",
+    "lineup_voice_not_alone": "請讓轉寫和翻譯使用 {{provider}}，或選擇其他語音服務。",
+    "lineup_voice_not_taken": "請為語音也選擇 {{provider}}，或為轉寫和翻譯選擇其他服務。",
+    "lineup_two_managed": "一個工作階段中暫時無法同時使用兩個 Kizuna AI 服務。請選擇其中一個。",
+    "lineup_language_not_spoken": "{{provider}} 沒有{{language}}的語音。請選擇其他語音服務，或在本次工作階段中關閉語音。",
+    "lineup_source_not_fixed": "{{provider}} 需要知道所說的語言。請選擇具體語言來取代「自動辨識」，或選擇其他翻譯服務。",
+    "lineup_pair_not_translated": "{{provider}} 不支援 {{source}} → {{target}} 的翻譯。請選擇其他語言，或選擇其他翻譯服務。",
+    "lineup_face_to_face_apart": "「面對面」需要由同一個服務完成轉寫與翻譯。請為翻譯也選擇 {{provider}}，或把「對方在哪裡」設為「線上會議」。",
     "session_in_use": "另一個視窗或裝置正在使用此帳戶。請在該處停止工作階段；如果 Sokuji 剛剛意外關閉，請 1 分鐘後再試一次。",
     "previous_session_ending": "您的上一個工作階段仍在結束中。請 1 分鐘後再試一次。",
     "app_capture_lost_using_system_audio": "應用程式擷取已停止，現在改為翻譯整個系統的聲音。",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "{{organization}} 的帳戶已暫停。請聯絡其擁有者，或使用您自己的餘額。",
     "org_wallet_frozen_unnamed": "該組織的帳戶已暫停。請聯絡其擁有者，或使用您自己的餘額。",
     "org_wallet_frozen_owner": "{{organization}} 的帳戶已暫停。請聯絡 Sokuji 支援團隊，或使用您自己的餘額。",
-    "org_wallet_frozen_owner_unnamed": "該組織的帳戶已暫停。請聯絡 Sokuji 支援團隊，或使用您自己的餘額。"
+    "org_wallet_frozen_owner_unnamed": "該組織的帳戶已暫停。請聯絡 Sokuji 支援團隊，或使用您自己的餘額。",
+    "model_missing": "此服務不提供這個模型：{{detail}}",
+    "quota": "此服務的帳號已沒有餘額：{{detail}}",
+    "text_model_unset": "請在「語言與工作階段組成」中為翻譯選擇模型，或輸入模型名稱。",
+    "address_missing": "開始前請在「帳號與金鑰」中填寫相容服務的位址。",
+    "address_invalid": "相容服務的位址無法使用：{{detail}}"
   },
   "viewer": {
     "title": "Sokuji 字幕",
@@ -1824,7 +1857,10 @@
         "stateSaved": "已儲存金鑰",
         "belongsTo": "屬於 {{region}}",
         "switched": "已切換到 {{region}}：這個金鑰只在那裡能用。"
-      }
+      },
+      "findModels": "尋找模型",
+      "configure": "設定",
+      "manageModels": "管理模型"
     },
     "lineup": {
       "title": "工作階段組成",
@@ -1837,9 +1873,13 @@
       "and": "和",
       "joint": "和{{stages}}共用一條連線，會一起換。",
       "granite": "與翻譯一起：Granite Speech 直接把語音變成譯文。",
-      "moved": "{{stages}}也換成了{{providers}}：目前還不能和這個選擇混用，以後會支援。",
       "needsKey": "需要金鑰",
       "needsSignIn": "需要登入",
+      "needsAddress": "需要位址",
+      "voiceNotAlone": "只朗讀自己的譯文",
+      "voiceNotTaken": "只使用自己的語音",
+      "twoManaged": "一次一個 Kizuna AI 服務",
+      "voiceFollowed": "語音已切換為 {{provider}}。之前的語音服務只支援它自己的譯文。",
       "options": "{{provider}} 的選項",
       "state": {
         "needsKey": "需要金鑰",
@@ -1850,18 +1890,29 @@
         "keyRefused": "金鑰無法使用",
         "keyNotVerified": "金鑰未驗證",
         "checkingKey": "正在驗證金鑰…",
-        "notUsed": "本次不使用"
+        "notUsed": "本次不使用",
+        "languageNotSpoken": "不支援此語言",
+        "cannotCombine": "無法組合",
+        "notAvailable": "此處無法使用",
+        "needsAddress": "需要位址",
+        "notReady": "尚未就緒"
       },
       "speechModeHint": "一段話什麼時候送去翻譯，工作階段中不能換",
       "hint": "每個階段由哪個服務來做",
       "uses": {
         "turn": "斷句",
         "key": "按鍵",
-        "space": "空白鍵",
-        "released": "放開以後",
-        "releasedValue": "這一段送去翻譯",
+        "held": "按住的時候",
         "notHeld": "沒有按住的時候",
-        "notHeldValue": "原聲直接給對方，不翻譯"
+        "talkHeld": "Sokuji 聽你說話；放開後，這一段送去翻譯，對方聽到譯文。開了原聲直通時，對方還會小聲聽到你的原聲。",
+        "talkNotHeld": "Sokuji 不聽，你說的話既不翻譯，也傳不到對方。",
+        "translateHeld": "你說的話送去翻譯，對方只聽到譯文，聽不到你的原聲。",
+        "translateNotHeld": "你的原聲直接傳給對方，不翻譯。",
+        "change": "更改",
+        "cancel": "取消",
+        "reset": "恢復為 {{key}}",
+        "press": "請按一個鍵…（Esc 取消）",
+        "refused": "{{key}} 不能用，請換一個鍵。"
       },
       "actsOn": "作用於{{stages}}",
       "pointer": "作用於{{stages}}的選項在「{{card}}」卡片裡。",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}}（{{language}}）"
       },
       "notesNeedKey": "在「帳號與金鑰」裡新增 OpenAI 的金鑰，才能寫紀要。",
+      "notesNeedGeminiKey": "在「帳號與金鑰」裡新增 Gemini 的金鑰，才能寫紀要。",
+      "notesNeedAddress": "在「帳號與金鑰」裡新增相容服務的位址，才能寫紀要。",
       "alsoFiles": "也用於匯入檔案和重新轉寫。",
       "wordsLeftOut": "詞表：超出這個服務上限的 {{count}} 筆沒有傳送。",
       "wordsUnused": "詞表：這個型號用不上。",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Kizuna AI 估價：即時紀要每小時約 {{live}}，會後紀要每小時約 {{after}}，從支付工作階段費用的餘額中扣除。",
       "notesNeedSignInOrKey": "登入，或在「帳號與金鑰」裡新增 OpenAI 的金鑰，才能寫紀要。",
       "jointCard": "{{stages}}共用一條連線，會一起換。",
+      "partableCard": "{{stages}}共用一條連線。翻譯可以交給其他服務：請在下方選擇。",
       "notesKizunaLine": "經 Kizuna AI 由 OpenAI 寫紀要，從餘額扣費。",
       "notesOpenAiLine": "用你自己的 OpenAI 金鑰寫紀要。",
-        "notesCompatibleName": "相容 OpenAI",
-        "notesCompatibleNeedsConfig": "設定端點和模型",
+      "notesGeminiLine": "用你自己的 Gemini 金鑰寫紀要。",
+      "notesCompatibleLine": "用你填寫的位址上的服務寫紀要。",
       "notesNeedSignInOrChoose": "登入，或在這裡選 OpenAI，才能寫紀要。",
       "notesNeedSignInOrKeyAndChoose": "登入，或在「帳號與金鑰」裡新增 OpenAI 的金鑰並在這裡選 OpenAI，才能寫紀要。",
       "speechNotUsed": "這次沒有譯文要讀出來，只顯示文字。",
-      "speechHowToHear": "要讀出來，在上面那句話裡選「聽到」。"
+      "speechHowToHear": "要讀出來，在上面那句話裡選「聽到」。",
+      "notesCompatibleName": "相容 OpenAI",
+      "notesCompatibleNeedsConfig": "設定端點和模型"
     },
     "display": {
       "surface": "哪個介面",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translate、OpenAI Live 和 Palabra 沒有放詞表的地方，不會收到。",
       "byModel": "看型號",
       "byModelNote": "看型號：OpenAI 只有較早的轉寫型號收背景；Gemini Live 只有 gemini-3.8-live 收寫法；本機只有大型語言模型翻譯會讀詞表。"
+    },
+    "textModel": {
+      "automatic": "自動",
+      "automaticModel": "自動（{{model}}）",
+      "chooseModel": "選擇模型",
+      "modelName": "或輸入模型名稱",
+      "off": "關閉",
+      "lowest": "最低",
+      "reasoningTooltip": "「最低」會要求模型接受的最少推理，速度最快。其他選擇會原樣送出：若模型不接受，會在開始前於工作階段組成中提示。",
+      "notesReasoningTooltip": "預設的「中」會讓紀要的每一步使用測試時的推理程度：每個部分和工作階段中的紀要用「低」，收尾用「中」，模型接受得更少時就相應降低。其他選擇或輸入的值會在每次請求中原樣送出：若模型不接受，「紀要」卡片會提示。",
+      "reasoningValue": "或輸入一個值，原樣送出",
+      "listing": "正在尋找模型…",
+      "listEmpty": "此服務沒有列出任何模型：請輸入模型名稱。",
+      "typedOverrides": "填寫後使用此值；清空後恢復上面的選擇。"
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "每次工作階段會用你自己的金鑰把這些傳給 {{service}}：各句的文字、句子編號、是哪一方哪位說話者說的，以及詞表裡的寫法。不會傳送聲音、譯文或你的帳號資訊。",
     "notesTurnOn": "開啟",
     "notesModel": "紀要模型",
-    "notesModelLine": "寫紀要用的文字模型，填它在服務那邊的名稱。",
-      "notesCompatibleBaseUrl": "API 基礎 URL",
-      "notesCompatibleUrlInvalid": "請輸入 HTTPS URL，或 localhost／私人網路的 HTTP URL。",
-      "notesCompatibleKeyLine": "選填。可為此端點使用金鑰。",
-      "notesExplainCompatible": "已設定的端點會收到逐字稿文字、句子編號、說話者標籤和詞表中的寫法。即時更新也會包含目前的紀要。",
     "notes": "紀要",
     "transcript": "轉寫",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "紀要模型的回答格式不對。",
       "no-answer": "紀要模型沒有回答。",
       "network": "連不上寫紀要的服務。",
+      "timeout": "寫紀要的服務沒有及時回應。",
+      "no-model": "還沒有選擇紀要模型。請在「語言與工作階段組成」的「紀要」卡片裡選擇。",
       "refused": "服務拒絕了請求（{{status}}）。",
       "sign-in": "要用 Kizuna AI 寫紀要，請先登入 Kizuna AI。",
       "unavailable": "Kizuna AI 的紀要服務還沒有開放。",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "點主題或要點，跳到原句並從那裡播放。",
     "notesJump": "點主題或要點，跳到原句。",
     "keptHereNotes": "紀要開啟時，每次會話的轉寫文字也會傳送給 {{service}}，用來撰寫紀要。",
-    "notesModelOther": "其他",
-    "notesModelName": "模型名稱",
     "notesExplainKizuna": "每次工作階段的這些內容會經過 Kizuna AI 的伺服器傳給 OpenAI，由 OpenAI 寫紀要：各句的文字、句子編號、是哪一方哪位說話者說的，以及詞表裡的寫法。Kizuna AI 不保存其中任何內容。費用從支付工作階段費用的餘額中扣除。不會傳送聲音或譯文。",
     "liveExplainKizuna": "工作階段中每 20 秒，新的句子（文字、編號、是哪一方哪位說話者說的）、目前為止的紀要和詞表裡的寫法會經過 Kizuna AI 的伺服器傳給 OpenAI，由 OpenAI 寫紀要。Kizuna AI 不保存其中任何內容。費用從支付工作階段費用的餘額中扣除。不會傳送聲音或譯文。",
     "notesModelKizuna": "Kizuna AI 用 {{model}} 寫紀要。",
+    "notesModelLineUp": "與寫紀要的服務一起，在「語言與工作階段組成」的「紀要」卡片裡選擇。",
     "copyConversation": "複製對話",
     "saveConversationTxt": "儲存對話（.txt）",
     "saveConversationJson": "儲存對話（.json）",
@@ -2286,12 +2352,17 @@
     "notesOwner": "負責人",
     "notesDue": "截止",
     "notesEdited": "已手動修改",
+    "notesWrittenBy": "由 {{service}} 用 {{model}} 寫成",
     "mergeSpeaker": "把 {{name}} 併入…",
     "mergeInto": "併入…",
     "mergeMenu": "併入",
     "mergeAsk": "{{name}} 已經是這一側的說話者了。",
     "mergeOne": "併成一個",
-    "keepApart": "分開保留"
+    "keepApart": "分開保留",
+    "notesCompatibleBaseUrl": "API 基礎 URL",
+    "notesCompatibleUrlInvalid": "請輸入 HTTPS URL，或 localhost／私人網路的 HTTP URL。",
+    "notesCompatibleKeyLine": "選填。可為此端點使用金鑰。",
+    "notesExplainCompatible": "已設定的端點會收到逐字稿文字、句子編號、說話者標籤和詞表中的寫法。即時更新也會包含目前的紀要。"
   },
   "notesQuit": {
     "named": "正在為「{{title}}」寫紀要。仍然結束嗎？這份紀要會記為已取消。",

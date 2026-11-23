@@ -27,10 +27,12 @@ import { notesSpeakerLabel } from '../lib/notes/runner';
 import type { HistorySentence } from '../lib/history/types';
 import { askQuitWhileNotes, type QuitAnswer, type QuitRecord } from '../lib/notes/quitQuestion';
 import type { NotesRunner } from '../lib/notes/runner';
+import { planFromStores } from '../lib/plan/fromStores';
+import type { RunPlan } from '../lib/plan/types';
 import type { AuthContext } from '../lib/provider/types';
 import { openDesktopCapture } from '../lib/screen/desktopFrames';
 import { openTabCapture } from '../lib/screen/tabFrames';
-import { appMicMuted, appParticipantSpeech, appReplayAudio, ensureReadyFromStores, faceToFaceFromStores, persistIfUnchanged, readShapeFromStores, turnScreenContextOff, watchLegsFromStores, watchSpeechFromStores } from '../lib/session/appShape';
+import { appMicMuted, appParticipantSpeech, appReplayAudio, ensureReadyFromStores, faceToFaceFromStores, persistIfUnchanged, planRefusalFromStores, readShapeFromStores, turnScreenContextOff, watchLegsFromStores, watchSpeechFromStores } from '../lib/session/appShape';
 import type { LegName } from '../lib/conversation/types';
 import type { AnalyticsPort, ControlMethod, FramePort } from '../lib/session/ports';
 import { createRunner, type Runner } from '../lib/session/runner';
@@ -44,9 +46,9 @@ import { appProjectionSettings } from '../lib/view/appViewSettings';
 import { createConversationView, type ConversationViewState, type Readable } from '../lib/view/conversationView';
 import { createKaraoke, type KaraokeState } from '../lib/view/karaoke';
 import { presentProviders } from '../providers/registry';
-import { useProviderStore } from '../stores/providerStore';
+import { useLineUpStore } from '../stores/lineUpStore';
 import useSettingsStore from '../stores/settingsStore';
-import { getEnvironment, isElectron } from '../utils/environment';
+import { getApiUrl, getEnvironment, isElectron } from '../utils/environment';
 import { trackBusy } from './busy';
 import { createAppPunctuation, type AppPunctuation } from './punctuation';
 import { createBrowserNetwork } from './network';
@@ -55,6 +57,7 @@ import { registerAuth } from './currentAuth';
 import { registerRunPhase } from './runPhase';
 import { prepareScreenContext, releaseScreenContext, screenContextWanted, type PickedSource, type PickReason } from './screenContext';
 import { watchSonioxVoiceAccount } from './sonioxVoiceAccount';
+import { watchVoiceLeaseRecovery } from './voiceLeaseRecovery';
 import { registerSubtitleFeed } from './subtitleFeed';
 import { appStartInputs, createFrameLog, decorateSessionAnalytics, teeFrames, type FrameLog } from './telemetry';
 import { ORG_REFUSAL_CODES } from '../lib/session/orgNotice';
@@ -141,6 +144,15 @@ const HISTORY_CLOSE_WAIT_MS = 2000;
 /** At a quit, how long the cancelled notes versions may take to be saved. */
 const NOTES_CANCEL_WAIT_MS = 5000;
 
+/**
+ * The plan the app's readiness driver checks: the plan as the stores stand (`planFromStores`), none while it is
+ * loading or the stored line-up is refused.
+ */
+export function readinessPlan(): RunPlan | null {
+  const found = planFromStores();
+  return found.state === 'ready' ? found.plan : null;
+}
+
 export function createAppSession(options: AppSessionOptions = {}): AppSession {
   const clock = options.clock ?? realClock;
   const bridges: AppBridges = {
@@ -177,6 +189,7 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
     platform: getEnvironment(),
     network: createBrowserNetwork(),
     readShape: () => (options.refuse?.() ? null : readShapeFromStores(bridges.auth)),
+    planRefusal: () => (options.refuse?.() ? null : planRefusalFromStores()),
     ensureReady: ensureReadyFromStores,
     persistIfUnchanged,
     replayAudio: appReplayAudio,
@@ -615,7 +628,7 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
         // The languages on offer follow whether a start would speak (Stage 2 Volcengine AST2, choice 1).
         watchSpeechFromStores(),
         driveReadiness({
-          runner, providers: () => presentProviders(), auth: () => bridges.auth, clock,
+          runner, providers: () => presentProviders(), plan: readinessPlan, auth: () => bridges.auth, clock,
           watchSignIn: (fn) => { signInWatchers.add(fn); return () => { signInWatchers.delete(fn); }; },
         }),
         // A custom voice filed under the previous account is checked against the new one (voice reconcile).
@@ -623,11 +636,16 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
           auth: () => bridges.auth, providers: () => presentProviders(),
           watchSignIn: (fn) => { signInWatchers.add(fn); return () => { signInWatchers.delete(fn); }; },
         }),
+        // A voice-only lease a previous launch never ended still holds the account: ended once the sign-in is there.
+        watchVoiceLeaseRecovery({
+          auth: () => bridges.auth, apiUrl: getApiUrl,
+          watchSignIn: (fn) => { signInWatchers.add(fn); return () => { signInWatchers.delete(fn); }; },
+        }),
       ];
-      // The store's own guard on the provider (plan 1e-3b-1 ruling 7).
-      const lock = () => useProviderStore.getState().setSelectionLocked(runner.state.getState().phase !== 'idle');
+      // The line-up store's own guard (plan 1e-3b-1 ruling 7): what runs is fixed while a run is not idle.
+      const lock = () => useLineUpStore.getState().setLocked(runner.state.getState().phase !== 'idle');
       lock();
-      offs.push(runner.state.subscribe(lock), () => useProviderStore.getState().setSelectionLocked(false));
+      offs.push(runner.state.subscribe(lock), () => useLineUpStore.getState().setLocked(false));
       // The extension overlay's publisher reaches the session through this
       // leaf, for as long as the page is attached: the side panel's surface
       // class cannot import the root (plan 1e-4 ruling 1).

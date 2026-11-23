@@ -3,19 +3,28 @@
 // "Languages and line-up": the language pair, the speech mode, and one row per
 // stage choosing the provider that serves it (Plan 4's line-up). Which model or
 // setting a provider uses is that provider's own options, folded under the rows.
-// On the desktop a fourth card chooses who writes the notes: none, Kizuna AI
-// (signed in, paid from the balance, through our relay), or OpenAI with the
-// user's own key.
+// On the desktop a fourth card chooses who writes the notes: Kizuna AI (signed
+// in, paid from the balance, through our relay), or a text model with the user's
+// own key (text models, part C): OpenAI's, Gemini's or a compatible service's,
+// with its notes model and reasoning folded under the choice.
 import { useWordList } from '../../lib/words/list';
 import { modelTakesWords, wordServiceOf, wordsFor } from '../../lib/words/forService';
 import { effectiveGeminiModel } from '../../providers/gemini/settings';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AudioLines, ChevronDown, ChevronRight, Link2, ListX } from 'lucide-react';
 import { useAnalytics } from '../../lib/analytics';
-import { caps } from '../../lib/lineup/catalog';
-import { BAILIAN_NOTES, COMPATIBLE_NOTES, KIZUNA_NOTES, notesServiceOf } from '../../lib/notes/notesService';
-import { notesEndpointOf } from '../../lib/notes/notesEndpoint';
+import { caps, carriedTogether, goesWith } from '../../lib/lineup/catalog';
+import { refusalNotice } from '../../lib/plan/checks';
+import { choiceInput, refusedChoice } from '../../lib/plan/choice';
+import { usePlan } from '../../lib/plan/fromStores';
+import type { PlanRefusalCode } from '../../lib/plan/types';
+import { useLineUpNotice } from '../../lib/session/useLineUpNotice';
+import { noticeText } from '../../lib/view/noticeText';
+import {
+  BAILIAN_NOTES, COMPATIBLE_NOTES, GEMINI_KEY_HOLDERS, GEMINI_NOTES, KIZUNA_NOTES, LEGACY_COMPATIBLE_NOTES,
+  notesProviderOf, notesServiceOf, OPENAI_KEY_HOLDERS, OPENAI_NOTES,
+} from '../../lib/notes/notesService';
 import { perHour, useNotesPricing } from '../../lib/notes/notesPricing';
 import { RUN_STAGES, type LineUp, type RunStage, type StageName } from '../../lib/lineup/types';
 import { presentProviders } from '../../providers/registry';
@@ -30,10 +39,9 @@ import { directionKey, type Selections } from '../../lib/local-inference/selecti
 import { ProviderLanguages } from '../providers/ProviderLanguages';
 import type { ReceiveChoice } from '../providers/LanguagePairSection';
 import { useHearingRows } from '../MainPanel/useHearingRows';
-import { useSelectedProvider } from '../providers/useSelectedProvider';
 import { AudioModeSwitch } from './AudioModeSwitch';
 import { ProviderEngine, ProviderOwnSettings, ProviderTurnDetectionControls } from '../providers/ProviderOwnSettings';
-import { ProviderOption, useOptionModel, type ProviderOptionModel } from '../providers/ProviderOption';
+import { ProviderOption, optionText, useOptionModel, type ProviderOptionModel } from '../providers/ProviderOption';
 import { KizunaOpenAIIcon } from '../Icons/ProviderIcons';
 import { SettingsStage, cardOptions, useStageList } from '../providers/stageParts';
 import { useAuthContext } from '../providers/useAuthContext';
@@ -60,18 +68,42 @@ const TARGET_CARD: Readonly<Record<string, RunStage | 'first'>> = {
 /** An engine slot's stage, as the line-up names it. */
 const SLOT_CARD: Readonly<Record<string, RunStage>> = { asr: 'transcription', translation: 'translation', tts: 'speech' };
 
+/** The refusals that say the chosen services do not go together. */
+const CANNOT_COMBINE: ReadonlySet<string> = new Set(['lineup_voice_not_alone', 'lineup_voice_not_taken', 'lineup_stage_split', 'lineup_translation_bound', 'lineup_no_unit', 'lineup_two_managed', 'lineup_face_to_face_apart']);
+
 import { stageInSentence } from '../../lib/lineup/stageWords';
+import { isTextModelProvider } from '../../lib/textModel/ids';
+import type { TextModelService } from '../../lib/textModel/client';
+import type { TextModelSettings } from '../../lib/textModel/unit';
+import type { Readiness } from '../../stores/providerStore';
+import { TextModelSettingsView } from '../providers/TextModelSettings';
+import { useNotesReadiness } from './notesReadiness';
 export { stageInSentence };
 
-/** Whether a provider's key or sign-in is in place, as far as this page can tell without a check. */
-function credentialsMissing(p: AnyProvider | undefined, signedIn: boolean): 'key' | 'sign-in' | null {
+/**
+ * The stages one connection of `id` carries together with `stage` when the line-up gives it all of them, when that
+ * is more than `stage` alone: an end-to-end provider's three, or Soniox's transcription and translation.
+ */
+function carriedWith(id: string, stage: RunStage): readonly RunStage[] | undefined {
+  const option = caps(id);
+  const group = option && carriedTogether(option);
+  return group && group.length > 1 && group.includes(stage) ? group : undefined;
+}
+
+/**
+ * Whether a provider's key or sign-in is in place, as far as this page can tell without a check. A field that may
+ * be left empty (a compatible service's key) is not missing; a compatible service's address is said as such.
+ */
+function credentialsMissing(p: AnyProvider | undefined, signedIn: boolean): 'key' | 'sign-in' | 'address' | null {
   if (!p) return null;
   if (p.kind === 'managed') return signedIn ? null : 'sign-in';
   if (p.kind !== 'own-key') return null;
   const entry = useProviderStore.getState().entries[p.id];
-  if (!entry) return 'key';
-  const fields = p.credentials.fields(entry.settings as never);
-  return fields.every((f) => String(entry.credentials[f.key] ?? '').trim() !== '') ? null : 'key';
+  // Nothing stored yet: the fields of the provider's defaults, so a compatible service not yet set up needs an address.
+  const fields = p.credentials.fields((entry?.settings ?? p.settings.defaults) as never);
+  const missing = fields.find((f) => !f.optional && String(entry?.credentials[f.key] ?? '').trim() === '');
+  if (!missing) return null;
+  return missing.key === 'baseUrl' ? 'address' : 'key';
 }
 
 export function LineUpCategory({ locked }: CategoryBodyProps) {
@@ -96,9 +128,14 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
   // Who hears and who reads (owner, 2026-11-18, design 1): the sentence's words are the audio page's two switches, by
   // the same rules (useHearingRows); the speech stage is used only while a running leg is read aloud.
   const hearing = useHearingRows(locked);
-  // The sentence shows once its provider's entry has loaded (ProviderLanguages); until then nothing points to it.
-  const sentenceShown = Boolean(useSelectedProvider(providers)?.entry);
+  // The sentence shows once the plan is ready, its providers' entries loaded (ProviderLanguages); until then nothing points to it.
+  const plan = usePlan();
+  const sentenceShown = plan.state === 'ready';
   const setTextOnly = useSetTextOnly();
+  // A line-up that cannot run is never silent: the composer's refusal of it, or what its plan cannot do for the
+  // pair and the legs a start would open, in the start gate's words. The hook follows everything it is read from:
+  // the plan, a provider's pair, the mode and who hears.
+  const refusal = useLineUpNotice();
   const model = useOptionModel();
   const [rich] = useState(() => supportsBaseSelect());
   // Which stage cards have their provider's options open (mock v19: each card its own).
@@ -106,7 +143,17 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
   // A slot a notice asked for (a voice to fix, #619): the engine opens it, then it is spent.
   const engineSlotTarget = useEngineSlotTarget();
   const setEngineSlotTarget = useSetEngineSlotTarget();
-  const [moved, setMoved] = useState<{ stage: StageName; text: string } | null>(null);
+  // Speech followed the last choice (its voice could not stay beside the chosen text side): said on the speech
+  // card while the line-up is the one that choice made, and until the next choice.
+  const [followedBy, setFollowedBy] = useState<{ text: string; lineUp: LineUp } | null>(null);
+  const followed = followedBy && lineUp && RUN_STAGES.every((s) => lineUp[s] === followedBy.lineUp[s]) ? followedBy.text : null;
+  // Once the line-up is another one, the line is spent: it is not said again should the line-up come back.
+  useEffect(() => {
+    if (followedBy && !followed) setFollowedBy(null);
+  }, [followedBy, followed]);
+  // Counts the choices made on this page, the notes' included: a choice whose save completes after a later one was
+  // made says nothing, the line having been taken away by that later choice.
+  const choiceCount = useRef(0);
 
   // Every provider with a key is loaded, so that its row can say whether the key is there.
   useEffect(() => {
@@ -122,93 +169,159 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
 
   const stageName = (s: StageName) => stageInSentence(t(`settingsPage.lineup.stages.${s}`, STAGE_TITLES[s as RunStage] ?? s), i18n?.language ?? 'en');
 
+  // What the composer is asked with for a choice not made yet: what the store asks it with when the choice is made.
+  const composing = choiceInput(providers, entries);
+
+  /** Why an option cannot be combined with the other stages, short enough to stand after its name. */
+  const shortReason = (code: PlanRefusalCode): string | undefined => {
+    if (code === 'lineup_voice_not_alone') return t('settingsPage.lineup.voiceNotAlone', 'reads only its own translation');
+    if (code === 'lineup_voice_not_taken') return t('settingsPage.lineup.voiceNotTaken', 'uses only its own voice');
+    if (code === 'lineup_two_managed') return t('settingsPage.lineup.twoManaged', 'one Kizuna AI service at a time');
+    return undefined;
+  };
+
+  /** What a service lacks before a session can start on it, short enough to stand after its name in a list. */
+  const needsText = (missing: 'key' | 'sign-in' | 'address' | null): string | undefined => {
+    if (missing === 'key') return t('settingsPage.lineup.needsKey', 'needs a key');
+    if (missing === 'sign-in') return t('settingsPage.lineup.needsSignIn', 'needs a sign-in');
+    if (missing === 'address') return t('settingsPage.lineup.needsAddress', 'needs an address');
+    return undefined;
+  };
+
   const optionsFor = (stage: RunStage): ProviderOptionModel[] => {
-    void entries; // re-render when an entry loads, so the key state is current
     return providers.flatMap((p) => (p.id === 'local_inference' ? [p.id, 'bing', 'edge'] : [p.id]))
       .filter((id) => offered.has(id) && caps(id)?.stages.includes(stage))
       .map((id) => {
         const p = providers.find((x) => x.id === id);
-        const missing = credentialsMissing(p, auth.signedIn);
         const m = model(id, p);
-        if (missing && lineUp?.[stage] !== id) m.blocked = missing === 'key' ? t('settingsPage.lineup.needsKey', 'needs a key') : t('settingsPage.lineup.needsSignIn', 'needs a sign-in');
+        // A service not set up yet stays a choice (owner, 2026-11-22): it says what it needs, its card leads to where
+        // that is set up, and Start waits for it. Hiding it would hide what the app offers from a user with no keys yet.
+        // The current choice says so too: the select shows the chosen option as it was when chosen, so an option that
+        // lost its note once chosen would still show it there.
+        const needs = needsText(credentialsMissing(p, auth.signedIn));
+        if (needs) m.needs = needs;
+        // The current choice is never held back: it is shown, and can be left.
+        if (lineUp?.[stage] === id) return m;
+        // A choice that would leave a line-up the composer refuses, the other stages as they are: said before it
+        // is made, in a few words, and not a choice; the whole sentence is the card's, once such a line-up is stored.
+        const refused = lineUp ? refusedChoice(lineUp, stage, id, composing) : null;
+        if (refused) m.blocked = shortReason(refused.refusal.refused) ?? noticeText(t, refusalNotice(refused.refusal, refused.lineUp, providers));
         return m;
       });
   };
 
-  // The notes card: Kizuna AI wherever the hosted services are, usable signed in; OpenAI once it has a key. Either
-  // stays listed while it is chosen, to show what it lacks. It always names one (owner, 2026-11-17: no "None"): with
-  // none stored, the default; whether notes are written is the switches' call in History and notes.
+  // The notes card: Kizuna AI wherever the hosted services are; OpenAI; Gemini's text model and a compatible service
+  // where the desktop app offers them (text models, part C). One not set up yet is a choice too, saying what it needs
+  // (owner, 2026-11-22), as on the other stages. It always names one (owner, 2026-11-17: no "None"): with none
+  // stored, the default; whether notes are written is the switches' call in History and notes.
   const openAi = providers.find((p) => p.id === 'openai');
-  const openAiKeyed = Boolean(openAi) && credentialsMissing(openAi, auth.signedIn) === null;
+  const keyedAmong = (ids: readonly string[]) => ids.some((id) => {
+    const p = providers.find((x) => x.id === id);
+    return Boolean(p) && credentialsMissing(p, auth.signedIn) === null;
+  });
+  const openAiKeyed = keyedAmong(OPENAI_KEY_HOLDERS);
   const kizunaOffered = isElectron() && providers.some((p) => p.kind === 'managed');
-  const notesService = notesServiceOf(lineUp, { hostedOffered: kizunaOffered, signedIn: auth.signedIn, openAiKeyed });
+  const textModelsOffered = providers.some((p) => p.id === notesProviderOf(GEMINI_NOTES));
+  const geminiKeyed = keyedAmong(GEMINI_KEY_HOLDERS);
+  const notesService = notesServiceOf(lineUp, { hostedOffered: kizunaOffered, signedIn: auth.signedIn, openAiKeyed, geminiKeyed, textModelsOffered });
   const kizunaChosen = notesService === KIZUNA_NOTES;
+  // The provider that writes them with the user's own key (OpenAI's notes are its text model's), and what it lacks.
+  const notesProvider = providers.find((p) => p.id === notesProviderOf(notesService));
+  const notesMissing = credentialsMissing(notesProvider, auth.signedIn);
+  // The notes are no run stage: nothing checks their service by itself. The card asks the provider's check about the
+  // notes (the key, then the notes' model with their reasoning) while it shows a service that has what it needs; not
+  // during a session (the owner, 2026-11-17: "Key not verified" for ever otherwise).
+  const notesReadiness = useNotesReadiness(notesProvider && !notesMissing ? notesProvider : undefined, auth, locked);
+  const notesPricing = useNotesPricing(kizunaOffered);
   const bailianEntry = entries.qwen_livetranslate as { settings?: { connection?: string }; credentials?: { apiKey?: string } } | undefined;
   const bailianReady = bailianEntry?.settings?.connection === 'bailian-cn' && Boolean(bailianEntry.credentials?.apiKey?.trim());
-  const compatibleConfig = useSettingsStore((s) => s.notesCompatible);
-  const compatibleReady = Boolean(notesEndpointOf(compatibleConfig?.baseUrl ?? '') && compatibleConfig?.model?.trim());
-  // The app checks only the session's own provider by itself: OpenAI chosen for the notes alone was never checked, and
-  // its card said "Key not verified" for ever (the owner, 2026-11-17). The card checks the key it shows, once, while
-  // nothing has checked it yet; not during a session.
-  const openAiNotesUnchecked = notesService === 'openai' && openAiKeyed && Boolean(entries.openai)
-    && (readiness.openai?.state ?? 'unknown') === 'unknown';
-  useEffect(() => {
-    if (!openAiNotesUnchecked || locked || !openAi) return;
-    void useProviderStore.getState().refreshReadiness(openAi, auth);
-  }, [openAiNotesUnchecked, locked]); // eslint-disable-line react-hooks/exhaustive-deps
-  const notesPricing = useNotesPricing(kizunaOffered);
-  const kizunaBlocked = kizunaOffered && !auth.signedIn && !kizunaChosen;
-  // The notes' choices, as the other stages draw theirs; their lines say how each writes the notes.
+  const legacyCompatible = useSettingsStore((s) => s.notesCompatible);
+  const legacyCompatibleReady = Boolean(legacyCompatible.baseUrl.trim() && legacyCompatible.model.trim());
+  const providerName = (id: string, fallback: string) => t(`providers.${id}.name`, fallback);
+  const compatibleMissing = credentialsMissing(providers.find((p) => p.id === notesProviderOf(COMPATIBLE_NOTES)), auth.signedIn);
+  /** The notes services with the user's own key: their names, icons and lines, whether each is offered here, and what each lacks. */
+  const ownKeyNotes: Array<{ id: string; name: string; line: string; offered: boolean; missing: 'key' | 'address' | null }> = [
+    {
+      id: OPENAI_NOTES, name: providerName('openai_text', 'OpenAI Text Model'), line: t('settingsPage.lineup.notesOpenAiLine', 'Writes the notes with your own OpenAI key.'),
+      offered: providers.some((p) => (OPENAI_KEY_HOLDERS as readonly string[]).includes(p.id)), missing: openAiKeyed ? null : 'key',
+    },
+    {
+      id: GEMINI_NOTES, name: providerName('gemini_text', 'Gemini Text Model'),
+      line: t('settingsPage.lineup.notesGeminiLine', 'Writes the notes with your own Gemini key.'), offered: textModelsOffered, missing: geminiKeyed ? null : 'key',
+    },
+    {
+      id: COMPATIBLE_NOTES, name: providerName('openai_compatible', 'OpenAI-Compatible Service'),
+      line: t('settingsPage.lineup.notesCompatibleLine', 'Writes the notes with the service at the address you enter.'), offered: textModelsOffered,
+      missing: compatibleMissing === 'address' ? 'address' : null,
+    },
+  ];
+  // The notes' choices, as the other stages draw theirs; their lines say how each writes the notes, and each says what
+  // it needs, the current one too (the stages' choices say why).
+  const notesNeeds = (missing: 'key' | 'sign-in' | 'address' | null) => {
+    const needs = needsText(missing);
+    return needs ? { needs } : {};
+  };
   const notesOptions: ProviderOptionModel[] = [
     ...(kizunaOffered || kizunaChosen ? [{
       id: KIZUNA_NOTES, name: 'Kizuna AI', icon: KizunaOpenAIIcon,
       description: t('settingsPage.lineup.notesKizunaLine', 'OpenAI writes the notes through Kizuna AI, paid from your balance.'),
-      ...(kizunaBlocked ? { blocked: t('settingsPage.lineup.needsSignIn', 'needs a sign-in') } : {}),
+      ...notesNeeds(kizunaOffered && !auth.signedIn ? 'sign-in' : null),
     }] : []),
-    ...(openAiKeyed || notesService === 'openai' ? [{
-      id: 'openai', name: 'OpenAI', icon: openAi?.icon,
-      description: t('settingsPage.lineup.notesOpenAiLine', 'Writes the notes with your own OpenAI key.'),
+    ...ownKeyNotes.filter((o) => o.offered || notesService === o.id).map((o) => ({
+      id: o.id, name: o.name, icon: providers.find((p) => p.id === notesProviderOf(o.id))?.icon ?? (o.id === OPENAI_NOTES ? openAi?.icon : undefined),
+      description: o.line,
+      ...notesNeeds(o.missing),
+    })),
+    ...(isElectron() ? [{
+      id: BAILIAN_NOTES, name: t('settingsPage.lineup.notesBailianLegacyName', 'Qwen / Bailian'),
+      icon: providers.find((p) => p.id === 'qwen_livetranslate')?.icon,
+      description: t('settingsPage.lineup.notesBailianLegacyLine', 'Writes the notes with Qwen through Bailian.'),
+      ...notesNeeds(bailianReady ? null : 'key'),
     }] : []),
     ...(isElectron() ? [{
-      id: BAILIAN_NOTES, name: 'Qwen / Bailian', icon: providers.find((p) => p.id === 'qwen_livetranslate')?.icon,
-    }] : []),
-    ...(isElectron() ? [{
-      id: COMPATIBLE_NOTES, name: t('settingsPage.lineup.notesCompatibleName', 'OpenAI-compatible'),
+      id: LEGACY_COMPATIBLE_NOTES, name: t('settingsPage.lineup.notesCompatibleLegacyName', 'OpenAI-compatible (notes only)'),
+      description: t('settingsPage.lineup.notesCompatibleLegacyLine', 'Keeps this profile’s existing endpoint, model and key for notes.'),
+      ...notesNeeds(legacyCompatibleReady ? null : 'address'),
     }] : []),
   ];
+  const notesName = ownKeyNotes.find((o) => o.id === notesService)?.name
+    ?? notesOptions.find((o) => o.id === notesService)?.name
+    ?? notesService;
+  const [notesOpen, setNotesOpen] = useState(false);
   const chooseNotes = async (id: string) => {
+    choiceCount.current += 1;
+    setFollowedBy(null);
     const before: LineUp | null = useLineUpStore.getState().lineUp;
     const choice = await useLineUpStore.getState().choose('summarisation', id);
     if (choice && before) trackEvent('lineup_changed', lineUpChangedEvent('summarisation', before, choice));
   };
 
   const choose = async (stage: RunStage, id: string) => {
+    // What the last choice made speech do is not said of this one, whatever comes of it.
+    const made = (choiceCount.current += 1);
+    setFollowedBy(null);
     const before: LineUp | null = useLineUpStore.getState().lineUp;
     const choice = await useLineUpStore.getState().choose(stage, id);
     if (!choice || !before) return;
     trackEvent('lineup_changed', lineUpChangedEvent(stage, before, choice));
-    // The stages the chosen provider binds are said by the joint line; say only what else moved (owner, 2026-11-15).
-    const group = caps(id)?.binds.find((g) => g.includes(stage)) ?? [stage];
-    const extra = choice.moved.filter((s) => !group.includes(s as RunStage));
-    if (!extra.length) { setMoved(null); return; }
-    const names = extra.map((s, i) => (i === 0 ? t(`settingsPage.lineup.stages.${s}`, STAGE_TITLES[s as RunStage]) : stageName(s)));
-    const providerNames = [...new Set(extra.map((s) => model(choice.lineUp[s] ?? '', providers.find((p) => p.id === choice.lineUp[s])).name))];
-    setMoved({
-      stage,
-      text: t('settingsPage.lineup.moved', '{{stages}} moved to {{providers}} too: they cannot be combined with this choice yet. Mixing will be supported later.', {
-        stages: names.join(t('settingsPage.lineup.and', ' and ')), providers: providerNames.join(t('settingsPage.lineup.and', ' and ')),
-      }),
-    });
+    // Named as an option's text names it: a hosted provider with its engine.
+    const name = (option: string) => optionText(model(option, providers.find((p) => p.id === option)));
+    if (choice.followed && made === choiceCount.current) {
+      setFollowedBy({
+        text: t('settingsPage.lineup.voiceFollowed', 'Speech switched to {{provider}}. The previous speech service only supports its own translations.', { provider: name(choice.followed.to) }),
+        lineUp: choice.lineUp,
+      });
+    }
     // A one-shot target that opened this page is spent once something is chosen here.
     if (target) navigateToSettings(null);
   };
 
-  // Each card's options (mock v19): the provider family serving the card's stage (Bing and Edge belong to this
-  // device's), and the stages that family serves; Bing has no options.
-  const familyOf = (id: string) => caps(id)?.family ?? id;
+  // Each card's options (mock v19): the host serving the card's stage (Bing and Edge run on this device's
+  // provider), and the stages that host serves; Bing has no options.
+  const hostOf = (id: string) => caps(id)?.host ?? id;
   const ownerOf = (stage: RunStage): string | null => {
     const id = lineUp?.[stage];
-    return !id || id === 'bing' ? null : familyOf(id);
+    return !id || id === 'bing' ? null : hostOf(id);
   };
   const servedBy = (owner: string) => RUN_STAGES.filter((s) => ownerOf(s) === owner);
   const optionsOf = (stage: RunStage) => {
@@ -287,12 +400,15 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
     );
   };
 
-  /** The line-up's cards: one per stage, but the stages one provider binds, next to each other, in one (owner, 2026-11-17). */
+  /**
+   * The line-up's cards: one per stage, but the stages one provider carries over one connection, next to each
+   * other, in one (owner, 2026-11-17). Soniox transcribing for another service's translation has a card of its own.
+   */
   const cards: RunStage[][] = [];
   for (let i = 0; i < RUN_STAGES.length; ) {
     const stage = RUN_STAGES[i];
     const id = lineUp?.[stage] ?? '';
-    const group = caps(id)?.binds.find((g) => g.includes(stage) && g.length > 1);
+    const group = carriedWith(id, stage);
     let j = i + 1;
     while (group && j < RUN_STAGES.length && group.includes(RUN_STAGES[j]) && (lineUp?.[RUN_STAGES[j]] ?? '') === id) j += 1;
     cards.push(RUN_STAGES.slice(i, j) as RunStage[]);
@@ -300,15 +416,16 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
   }
 
   /** A row's state: what the chosen provider lacks, or Ready; a key it lacks or that does not work, or a sign-in it waits for, takes you to
-   *  that provider's row in Accounts and keys. */
-  const stateOf = (id: string): { ok: boolean; text: string; toAccount?: boolean } => {
-    const p = providers.find((x) => x.id === id) ?? (caps(id)?.family === 'local_inference' ? providers.find((x) => x.id === 'local_inference') : undefined);
-    // Bing and Edge are online services of the local family: no key and no model.
+   *  that provider's row in Accounts and keys. `own`: a readiness of the card's own in place of the provider's (the notes'). */
+  const stateOf = (id: string, own?: Readiness): { ok: boolean; text: string; toAccount?: boolean } => {
+    const p = providers.find((x) => x.id === id) ?? (caps(id)?.host === 'local_inference' ? providers.find((x) => x.id === 'local_inference') : undefined);
+    // Bing and Edge are online services the local provider runs: no key and no model.
     if (id === 'bing' || id === 'edge') return { ok: true, text: t('settingsPage.lineup.state.ready', 'Ready') };
     const missing = credentialsMissing(p, auth.signedIn);
     if (missing === 'key') return { ok: false, text: t('settingsPage.lineup.state.needsKey', 'Needs a key'), toAccount: true };
+    if (missing === 'address') return { ok: false, text: t('settingsPage.lineup.state.needsAddress', 'Needs an address'), toAccount: true };
     if (missing === 'sign-in') return { ok: false, text: t('settingsPage.lineup.state.needsSignIn', 'Needs a sign-in'), toAccount: true };
-    const r = p ? readiness[p.id] : undefined;
+    const r = own ?? (p ? readiness[p.id] : undefined);
     if (p?.kind === 'local' && r?.state === 'not-ready') return { ok: false, text: t('settingsPage.lineup.state.needsModel', 'Needs a model') };
     // A saved key is Ready only once its check passed (B-11; Rudolf's review: saved is not working). The store keeps a
     // passed check for the same key and region, so a key that worked before stays Ready when the service is out of reach.
@@ -324,25 +441,72 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
             : t('settingsPage.lineup.state.keyRefused', 'Key not accepted'),
         };
       }
+      // A text model's check said what else is wrong (the model, the reasoning, the service): its words are on the
+      // card (`checkWords`); an address that cannot be used is fixed where it is entered.
+      if (r?.state === 'not-ready' && isTextModelProvider(p.id) && r.code !== undefined) {
+        return { ok: false, text: t('settingsPage.lineup.state.notReady', 'Not ready'), ...(r.code.startsWith('address_') ? { toAccount: true } : {}) };
+      }
       // Never checked, or the check could not reach the service.
       return { ok: false, toAccount: true, text: t('settingsPage.lineup.state.keyNotVerified', 'Key not verified') };
     }
     return { ok: true, text: t('settingsPage.lineup.state.ready', 'Ready') };
   };
-  /** A row's state as drawn: a key it lacks or that does not work, or a sign-in it waits for, is a way to its account row. */
-  const stateTag = (id: string) => {
-    const s = stateOf(id);
+  /**
+   * A row's state as drawn: a key it lacks or that does not work, or a sign-in it waits for, is a way to its account row.
+   * `o.readiness`: the card's own (the notes'); `o.target`: the id whose account row it leads to, when not `id`.
+   */
+  const stateTag = (id: string, o: { readiness?: Readiness; target?: string } = {}) => {
+    const s = stateOf(id, o.readiness);
     const className = `lineup-stage__state${s.ok ? ' is-ready' : ''}`;
     return s.toAccount
-      ? <button type="button" className={`${className} lineup-stage__state--link`} onClick={() => navigateToSettings(providerTarget(id))}>{s.text}</button>
+      ? <button type="button" className={`${className} lineup-stage__state--link`} onClick={() => navigateToSettings(providerTarget(o.target ?? id))}>{s.text}</button>
       : <em className={className}>{s.text}</em>;
   };
 
-  // The notes card's state: Kizuna AI's from the sign-in; OpenAI's is the OpenAI stage's own (stateTag), so a key that
-  // is missing, rejected or not yet checked reads the same here as on a stage, and takes you to the key (review).
+  /**
+   * A stage's state while the line-up is refused on that stage: why, in a few words, in place of its provider's
+   * readiness (the line-up has to change before a key or a sign-in matters). Plain text: nothing in Accounts and
+   * keys answers it. Undefined for a stage with no service, which keeps the state it has.
+   */
+  const refusalTag = (code: string | undefined) => {
+    const language = code === 'lineup_language_not_spoken' || code === 'lineup_pair_not_translated' || code === 'lineup_source_not_fixed';
+    const text = language ? t('settingsPage.lineup.state.languageNotSpoken', 'Unsupported language')
+      : code === 'lineup_not_offered' ? t('settingsPage.lineup.state.notAvailable', 'Not available here')
+      : code && CANNOT_COMBINE.has(code) ? t('settingsPage.lineup.state.cannotCombine', "Can't be combined")
+      : undefined;
+    return text === undefined ? undefined : <em className="lineup-stage__state">{text}</em>;
+  };
+
+  /**
+   * What a text model's check found wrong, in its words, on the card of the stage it serves (the model the service
+   * does not offer, a reasoning value it refuses), while the line-up itself is not refused there.
+   */
+  const checkWords = (stage: RunStage) => {
+    const id = lineUp?.[stage];
+    if (!isTextModelProvider(id) || refusal?.stage === stage) return null;
+    const r = readiness[id!];
+    if (r?.state !== 'not-ready' || r.code === undefined || r.code === 'auth' || credentialsMissing(providers.find((p) => p.id === id), auth.signedIn)) return null;
+    return <p className="lineup-stage__refusal" role="status">{noticeText(t, { code: r.code, message: r.reason, ...(r.params ? { params: r.params } : {}) })}</p>;
+  };
+
+  // The notes card's state: Kizuna AI's from the sign-in; a service with the user's own key reads as a stage's does
+  // (stateTag), from the notes' own check, so a key that is missing, rejected or not yet checked reads the same here as
+  // on a stage, and takes you to the key (review); a model or a reasoning value the service refuses is "Not ready",
+  // in the service's words under the choice.
   const kizunaNotesState = auth.signedIn
     ? { ok: true, text: t('settingsPage.lineup.state.ready', 'Ready') }
     : { ok: false, text: t('settingsPage.lineup.state.needsSignIn', 'Needs a sign-in') };
+  /** What the notes' check found wrong, in the service's words, under the Notes card's choice. */
+  const notesCheckWords = (() => {
+    if (kizunaChosen || !notesProvider || notesMissing) return null;
+    const r = notesReadiness;
+    if (r.state !== 'not-ready' || r.code === undefined || r.code === 'auth') return null;
+    return <p className="lineup-stage__refusal" role="status">{noticeText(t, { code: r.code, message: r.reason, ...(r.params ? { params: r.params } : {}) })}</p>;
+  })();
+  /** The service each text-model provider asks. */
+  const TEXT_SERVICE: Readonly<Record<string, TextModelService>> = { openai_text: 'openai', gemini_text: 'gemini', openai_compatible: 'compatible' };
+  const notesEntry = notesProvider ? entries[notesProvider.id] : undefined;
+  const notesTextService = notesProvider ? TEXT_SERVICE[notesProvider.id] : undefined;
 
   // Granite Speech is a local model: when the local transcription and translation choices are the same Granite
   // Speech model, today's code turns speech straight into the translation (Plan 4, Task 3).
@@ -414,27 +578,40 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
         {cards.map((stages) => {
           const first = stages[0];
           const id = lineUp?.[first] ?? '';
-          const group = caps(id)?.binds.find((g) => g.includes(first) && g.length > 1);
-          // Partners the card does not hold (bound, but not next to it): named under the choice, as before.
-          const partners = group?.filter((s) => !stages.includes(s as RunStage)) ?? [];
+          const option = caps(id);
+          // The stages this service serves with this one in this line-up and the card does not hold (not next to it):
+          // named under the choice. A stage it must serve too and another service was given is not joined with this
+          // one: the refusal says so on its card, and neither the line nor the frame of a joint card is drawn.
+          const partners = option ? goesWith(option, first).filter((s) => !stages.includes(s) && lineUp?.[s] === id) : [];
           const joint = stages.length > 1;
+          // One connection carries the card's stages, and yet they can be parted: Soniox's translation can be given
+          // to another service, which its transcription then stands beside. The later stages get a choice of their own.
+          const partable = joint && !option?.joint;
           const titleOf = (stage: RunStage) => t(`settingsPage.lineup.stages.${stage}`, STAGE_TITLES[stage]);
           const title = joint ? [titleOf(first), ...stages.slice(1).map(stageName)].join(t('settingsPage.lineup.and', ' and ')) : titleOf(first);
           // The speech stage, not used this time (nothing a running leg says is read aloud).
           const idle = (stage: RunStage) => stage === 'speech' && speechIdle;
-          const movedLine = (stage: RunStage) => moved?.stage === stage && <p className="lineup-stage__moved" role="status">{moved.text}</p>;
+          // Why the line-up cannot run a session now, on the card of the stage it is about.
+          // On the speech card, first: that the voice changed with the last choice.
+          const refusalLine = (stage: RunStage) => (
+            <>
+              {/* News, in the secondary text colour: the voice followed, nothing is wrong and nothing is a standing rule. */}
+              {stage === 'speech' && followed && <p className="lineup-stage__joint lineup-stage__joint--news" role="status">{followed}</p>}
+              {refusal?.stage === stage && <p className="lineup-stage__refusal" role="status">{noticeText(t, refusal)}</p>}
+            </>
+          );
           const head = (stage: RunStage) => (
             <div className="lineup-stage__head">
               <span className="lineup-stage__name">{titleOf(stage)}</span>
-              {idle(stage)
+              {(refusal?.stage === stage ? refusalTag(refusal.code) : undefined) ?? (idle(stage)
                 ? <em className="lineup-stage__state is-unused">{t('settingsPage.lineup.state.notUsed', 'Not used this time')}</em>
-                : stateTag(id)}
+                : stateTag(id))}
             </div>
           );
-          // Idle: what moved with a choice, and why it is not used; no options (the choice stays for next time).
+          // Idle: why the line-up cannot run, and why speech is not used; no options (the choice stays for next time).
           const idleBody = (stage: RunStage) => (
             <>
-              {movedLine(stage)}
+              {refusalLine(stage)}
               {speechUnusedNote}
             </>
           );
@@ -448,7 +625,8 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
                   {t('settingsPage.lineup.granite', 'With translation: Granite Speech turns speech straight into the translation.')}
                 </p>
               )}
-              {stage === 'transcription' && isElectron() && lineUp?.transcription === 'soniox' && (
+              {/* Every recognition that also does files (Soniox with a key, and Kizuna AI's Soniox through the sign-in) says so. */}
+              {stage === 'transcription' && isElectron() && providers.some((p) => p.id === lineUp?.transcription && p.fileRecognition) && (
                 <p className="lineup-stage__joint">
                   <AudioLines size={12} aria-hidden="true" />
                   {t('settingsPage.lineup.alsoFiles', 'Also transcribes imported files and records again.')}
@@ -479,17 +657,25 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
                   </p>
                 );
               })()}
-              {movedLine(stage)}
+              {refusalLine(stage)}
+              {checkWords(stage)}
               {stageOptions(stage, id, stages)}
             </>
           ));
-          const select = (
-            <select className="select-dropdown provider-select" value={id} disabled={locked} aria-label={title}
-              onChange={(e) => void choose(first, e.target.value)}>
-              {rich && <button type="button"><selectedcontent /></button>}
-              {optionsFor(first).map((m) => <ProviderOption key={m.id} model={m} rich={rich} />)}
-            </select>
-          );
+          const selectFor = (stage: RunStage, label: string) => {
+            const options = optionsFor(stage);
+            // The select shows a copy of the chosen option made when it was chosen: drawn anew when what the chosen
+            // service needs changes here (a sign-in through the title bar), so the copy never says it still needs it.
+            const shownNeeds = options.find((m) => m.id === lineUp?.[stage])?.needs ?? '';
+            return (
+              <select key={`${stage}:${shownNeeds}`} className="select-dropdown provider-select" value={lineUp?.[stage] ?? ''} disabled={locked} aria-label={label}
+                onChange={(e) => void choose(stage, e.target.value)}>
+                {rich && <button type="button"><selectedcontent /></button>}
+                {options.map((m) => <ProviderOption key={m.id} model={m} rich={rich} />)}
+              </select>
+            );
+          };
+          const select = selectFor(first, title);
           const partnersLine = partners.length > 0 && (
             <p className="lineup-stage__joint">
               <Link2 size={12} aria-hidden="true" />
@@ -498,7 +684,7 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
           );
           return (
             // A card per stage (the mock's): its name and state on one line, the choice under them. The stages one
-            // provider binds over one connection share one card (owner, 2026-11-17): the line saying so and the one
+            // provider carries over one connection share one card (owner, 2026-11-17): the line saying so and the one
             // choice on top, then a part per stage, each with its name and state and its own options under them (the
             // options are not merged). Stages that merely use the same provider keep their own cards.
             <div className={`lineup-stage${joint || partners.length > 0 ? ' is-joint' : ''}`} key={stages.join('+')}>
@@ -506,13 +692,17 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
                 <>
                   <p className="lineup-stage__joint">
                     <Link2 size={12} aria-hidden="true" />
-                    {t('settingsPage.lineup.jointCard', '{{stages}} go over one connection; they change together.', { stages: title })}
+                    {partable
+                      ? t('settingsPage.lineup.partableCard', '{{stages}} go over one connection. Another service can do the translation: choose it below.', { stages: title })
+                      : t('settingsPage.lineup.jointCard', '{{stages}} go over one connection; they change together.', { stages: title })}
                   </p>
                   {select}
                   {partnersLine}
                   {stages.map((stage) => (
                     <div className="lineup-stage__part" key={stage}>
                       {head(stage)}
+                      {/* A stage that can be given to another service keeps a choice of its own in the shared card. */}
+                      {partable && stage !== first && selectFor(stage, titleOf(stage))}
                       {stageBody(stage)}
                     </div>
                   ))}
@@ -529,7 +719,7 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
           );
         })}
         {isElectron() && (
-          <div className="lineup-stage">
+          <div className="lineup-stage" id="lineup-notes-section">
             <div className="lineup-stage__head">
               <span className="lineup-stage__name">{t('settingsPage.lineup.stages.summarisation', 'Notes')}</span>
               {kizunaChosen
@@ -541,15 +731,15 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
                     ? null
                     : <button type="button" className="lineup-stage__state lineup-stage__state--link"
                       onClick={() => navigateToSettings('provider:qwen_livetranslate')}>{t('settingsPage.lineup.state.needsKey', 'Needs a key')}</button>
-                  : notesService === COMPATIBLE_NOTES
-                    ? compatibleReady
+                  : notesService === LEGACY_COMPATIBLE_NOTES
+                    ? legacyCompatibleReady
                       ? null
                       : <button type="button" className="lineup-stage__state lineup-stage__state--link"
                         onClick={() => navigateToSettings('history')}>{t('settingsPage.lineup.notesCompatibleNeedsConfig', 'Set endpoint and model')}</button>
-                    : stateTag('openai')}
+                : stateTag(notesProvider?.id ?? notesService, { readiness: notesReadiness, target: notesService })}
             </div>
             {/* Drawn like the other stages' choices (owner, 2026-11-17): an icon, the name, a line about writing notes. */}
-            <select className="select-dropdown provider-select" value={notesService} disabled={locked} aria-label={t('settingsPage.lineup.stages.summarisation', 'Notes')}
+            <select key={`notes:${notesOptions.find((m) => m.id === notesService)?.needs ?? ''}`} className="select-dropdown provider-select" value={notesService} disabled={locked} aria-label={t('settingsPage.lineup.stages.summarisation', 'Notes')}
               onChange={(e) => void chooseNotes(e.target.value)}>
               {rich && <button type="button"><selectedcontent /></button>}
               {notesOptions.map((m) => <ProviderOption key={m.id} model={m} rich={rich} />)}
@@ -558,14 +748,36 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
             {kizunaChosen && auth.signedIn && notesPricing && (
               <p className="lineup-stage__joint">{t('settingsPage.lineup.notesKizunaPrice', 'Kizuna AI estimates: live notes about {{live}} an hour, notes after a session about {{after}} an hour, paid from the balance that pays for your sessions.', { live: perHour(notesPricing.liveUsdPerHour), after: perHour(notesPricing.afterSessionUsdPerHour) })}</p>
             )}
-            {notesService === 'openai' && !openAiKeyed && !kizunaOffered && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedKey', 'Add an OpenAI key in Accounts and keys to have notes written.')}</p>}
+            {/* Where OpenAI would write them and has no key. */}
+            {notesService === OPENAI_NOTES && !openAiKeyed && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedKey', 'Add an OpenAI key in Accounts and keys to have notes written.')}</p>}
+            {/* Gemini's text model or a compatible service without what it needs: the notes service only by choice. */}
+            {notesService === GEMINI_NOTES && notesMissing === 'key' && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedGeminiKey', 'Add a Gemini key in Accounts and keys to have notes written.')}</p>}
+            {notesService === COMPATIBLE_NOTES && notesMissing === 'address' && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedAddress', "Add the compatible service's address in Accounts and keys to have notes written.")}</p>}
             {/* Signed out where Kizuna AI writes the notes: chosen on purpose, adding a key does not change the choice, so
                 the line says to choose OpenAI here too (review); by default, a key is enough. */}
             {(kizunaChosen || notesService === 'openai') && kizunaOffered && !auth.signedIn && (lineUp?.summarisation === KIZUNA_NOTES
               ? <p className="lineup-stage__joint">{openAiKeyed
                 ? t('settingsPage.lineup.notesNeedSignInOrChoose', 'Sign in, or choose OpenAI here, to have notes written.')
                 : t('settingsPage.lineup.notesNeedSignInOrKeyAndChoose', 'Sign in, or add an OpenAI key in Accounts and keys and choose OpenAI here, to have notes written.')}</p>
-              : !openAiKeyed && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedSignInOrKey', 'Sign in, or add an OpenAI key in Accounts and keys, to have notes written.')}</p>)}
+              : kizunaChosen && !openAiKeyed && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedSignInOrKey', 'Sign in, or add an OpenAI key in Accounts and keys, to have notes written.')}</p>)}
+            {notesCheckWords}
+            {/* The service's notes model and reasoning (text models, part C), folded as a stage's options are. */}
+            {notesProvider && notesEntry && notesTextService && (
+              <div className="lineup-stage__options" id="lineup-options-notes">
+                <button type="button" className="lineup-options__fold" aria-expanded={notesOpen} onClick={() => setNotesOpen(!notesOpen)}>
+                  {notesOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  {t('settingsPage.lineup.options', '{{provider}} options', { provider: notesName })}
+                </button>
+                {notesOpen && (
+                  <div className="lineup-stage__options-body">
+                    <TextModelSettingsView service={notesTextService} stage="notes" settings={notesEntry.settings as TextModelSettings}
+                      update={(patch) => useProviderStore.getState().updateSettings(notesProvider, patch)} disabled={locked}
+                      models={notesReadiness.state === 'ready' ? notesReadiness.models : []}
+                      account={{ credentials: notesEntry.credentials, auth }} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

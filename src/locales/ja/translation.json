@@ -45,7 +45,7 @@
     "systemInstructions": "システム指示",
     "speechMode": "音声モード",
     "speechModeAppliesTo": "あなたの声に適用されます。相手の音声は常にセマンティックVADを使用します。",
-    "speechModeTooltip": "自動：話し終わりをプロバイダーが自動的に検出します。\nプッシュトゥトーク：スペースまたはマイクボタンを押して音声を手動で送信します。\nプッシュトゥトランスレート：プッシュトゥトークと同様ですが、アイドル時に生のマイク音声を仮想マイクへパススルーするので、翻訳せずに直接話せます。",
+    "speechModeTooltip": "自動：話し終わりをプロバイダーが自動的に検出します。\nプッシュトゥトーク：{{key}}またはマイクボタンを押して音声を手動で送信します。\nプッシュトゥトランスレート：プッシュトゥトークと同様ですが、アイドル時に生のマイク音声を仮想マイクへパススルーするので、翻訳せずに直接話せます。",
     "speechModeAppliesToAuto": "あなたの声に適用されます。相手の音声は常にプロバイダーの自動検出を使用します。",
     "userTranscriptModel": "ユーザー転写モデル",
     "noiseReduction": "ノイズ低減",
@@ -218,8 +218,6 @@
       "xhigh": "最高"
     },
     "translateInfoBanner": "話者が出力言語と同じ言語を話す場合、このモデルは無音になります。混合言語の発話では空白が生じる可能性があります。",
-    "translateDetectParticipantLanguage": "相手の中国語・日本語・英語を自動判定",
-    "translateDetectParticipantLanguageHelp": "相手の言語が中国語、日本語、英語の場合、原文から字幕ごとの言語を判定します。翻訳先は選択した言語のままです。",
     "translateModelNotAvailable": "APIキーは有効ですが、このキーでは gpt-realtime-translate にアクセスできません。",
     "participantSectionHeader": "相手の音声",
     "participantSectionDescriptionElectron": "このシステムで再生されている任意のアプリケーションの音声を翻訳します。",
@@ -351,7 +349,9 @@
     "voiceTheyHear": "相手に聞こえる音声",
     "voiceIHear": "自分に聞こえる音声",
     "voiceIHearSame": "相手に聞こえる音声と同じため、代わりに {{voice}} が読み上げます。",
-    "voiceCustom": "カスタム音声"
+    "voiceCustom": "カスタム音声",
+    "translateDetectParticipantLanguage": "相手の中国語・日本語・英語を自動判定",
+    "translateDetectParticipantLanguageHelp": "相手の言語が中国語、日本語、英語の場合、原文から字幕ごとの言語を判定します。翻訳先は選択した言語のままです。"
   },
   "simpleSettings": {
     "autoAuthenticated": "アカウントで自動的に認証されました",
@@ -510,6 +510,7 @@
     "microphone": "マイクロフォン",
     "microphoneDesc": "音声を取り込むマイクを選択してください。このマイクに向かってあなたの言語で話すと、Sokujiがリアルタイムで聞こえるすべてを翻訳します。",
     "swapLanguages": "言語を入れ替え",
+    "swapNotSpoken": "この音声サービスは、これらの言語を逆向きには読み上げられません。",
     "textOnly": "テキストのみ",
     "textOnlyDesc": "テキストのみに翻訳 — 音声出力なし",
     "textOnlyForcedByMode": "「{{mode}}」モードは参加者の発言をテキストにするだけで音声は生成しないため、「テキストのみ」は常にオンになります。自分の声を音声付きで翻訳するには翻訳モードを切り替えてください。",
@@ -613,6 +614,18 @@
     "edge": {
       "name": "Edge",
       "note": "無料 · オンライン、Microsoft のサービス"
+    },
+    "openai_text": {
+      "name": "OpenAI テキストモデル",
+      "description": "OpenAI のキーで、どの言語の組み合わせも翻訳"
+    },
+    "gemini_text": {
+      "name": "Gemini テキストモデル",
+      "description": "Gemini のキーで、どの言語の組み合わせも翻訳"
+    },
+    "openai_compatible": {
+      "name": "OpenAI 互換サービス",
+      "description": "OpenRouter、DeepSeek、Ollama など。入力したアドレスで接続"
     }
   },
   "logsPanel": {
@@ -642,7 +655,7 @@
     "function": "関数",
     "noChannelConfigured": "開始する前にマイクまたは相手の音声を有効にしてください。",
     "release": "離す",
-    "pushToTalk": "プッシュトゥトーク (スペース)",
+    "pushToTalk": "プッシュトゥトーク ({{key}})",
     "inputDeviceOff": "入力デバイスがオフ",
     "endSession": "セッション終了",
     "startSession": "セッション開始",
@@ -1135,7 +1148,7 @@
       "readingsFailed": "日本語の読みを表示できません。",
       "defaultColour": "デフォルト"
     },
-    "pttHint": "スペースキーを押して話す"
+    "pttHint": "{{key}}を押して話す"
   },
   "titleBar": {
     "account": {
@@ -1432,7 +1445,10 @@
       "guide": "キーの取得方法",
       "onFile": "キーは保存済みです。空欄のままにすると、そのまま使われます。",
       "offlineHardware": "GPU と十分な VRAM があれば Sokuji は快適に動きます。CPU のみでは明らかに遅くなります。",
-      "openaiOneKey": "このキー 1 つで OpenAI Realtime・Translate・Live のすべてに使えます。"
+      "openaiOneKey": "このキー 1 つで OpenAI Realtime・Translate・Live のすべてに使えます。",
+      "baseUrl": "アドレス",
+      "baseUrlPlaceholder": "アドレス（例: https://openrouter.ai/api/v1）",
+      "apiKeyOptional": "API キー（任意）"
     },
     "summary": {
       "scenario": "シナリオ",
@@ -1536,6 +1552,18 @@
     "source_ended": "音声ソースがなくなりました（取り外し、終了、または停止）。",
     "still_stopping": "前回のセッションはまだ停止処理中です。しばらくしてから再試行してください。",
     "connection_restored": "接続が中断されましたが、復旧しました",
+    "lineup_incomplete": "先に「{{stage}}」を担当するサービスを選んでください。",
+    "lineup_not_offered": "{{provider}} はこのバージョンでは利用できません。「{{stage}}」には別のサービスを選んでください。",
+    "lineup_stage_split": "{{provider}} は「{{stage}}」も担当する必要があります。「{{stage}}」に {{provider}} を選ぶか、{{provider}} の代わりに別のサービスを使ってください。",
+    "lineup_translation_bound": "{{provider}} の翻訳には {{provider}} の文字起こしが必要です。文字起こしに {{provider}} を選ぶか、別の翻訳サービスを選んでください。",
+    "lineup_no_unit": "{{provider}} はここでは「{{stage}}」だけを担当できません。一緒に担当する段階にまとめて選ぶか、別のサービスを選んでください。",
+    "lineup_voice_not_alone": "文字起こしと翻訳に {{provider}} を使うか、別の音声サービスを選んでください。",
+    "lineup_voice_not_taken": "音声にも {{provider}} を選ぶか、文字起こしと翻訳に別のサービスを選んでください。",
+    "lineup_two_managed": "Kizuna AI のサービス 2 つを 1 つのセッションで同時に使うことはまだできません。どちらか一方を選んでください。",
+    "lineup_language_not_spoken": "{{provider}} には{{language}}の音声がありません。別の音声サービスを選ぶか、このセッションでは読み上げをオフにしてください。",
+    "lineup_source_not_fixed": "{{provider}} には話される言語の指定が必要です。「自動検出」の代わりに言語を選ぶか、別の翻訳サービスを選んでください。",
+    "lineup_pair_not_translated": "{{provider}} は {{source}} → {{target}} の翻訳に対応していません。別の言語を選ぶか、別の翻訳サービスを選んでください。",
+    "lineup_face_to_face_apart": "「対面」では、文字起こしと翻訳を1つのサービスで行う必要があります。翻訳にも {{provider}} を選ぶか、「相手の場所」を「オンライン会議」にしてください。",
     "session_in_use": "別のウィンドウまたはデバイスがこのアカウントを使用しています。そちらでセッションを停止するか、Sokuji が予期せず終了した直後の場合は、1 分ほどしてから再試行してください。",
     "previous_session_ending": "前回のセッションはまだ終了処理中です。1 分ほどしてから再試行してください。",
     "app_capture_lost_using_system_audio": "アプリのキャプチャが停止したため、代わりにシステム音声全体が翻訳されています。",
@@ -1579,7 +1607,12 @@
     "org_wallet_frozen": "{{organization}} のアカウントは一時停止されています。オーナーにお問い合わせいただくか、ご自身の残高をご利用ください。",
     "org_wallet_frozen_unnamed": "組織のアカウントは一時停止されています。オーナーにお問い合わせいただくか、ご自身の残高をご利用ください。",
     "org_wallet_frozen_owner": "{{organization}} のアカウントは一時停止されています。Sokuji サポートにお問い合わせいただくか、ご自身の残高をご利用ください。",
-    "org_wallet_frozen_owner_unnamed": "組織のアカウントは一時停止されています。Sokuji サポートにお問い合わせいただくか、ご自身の残高をご利用ください。"
+    "org_wallet_frozen_owner_unnamed": "組織のアカウントは一時停止されています。Sokuji サポートにお問い合わせいただくか、ご自身の残高をご利用ください。",
+    "model_missing": "このサービスはこのモデルを提供していません: {{detail}}",
+    "quota": "サービスのアカウントにクレジットが残っていません: {{detail}}",
+    "text_model_unset": "「言語と構成」で翻訳のモデルを選ぶか、モデル名を入力してください。",
+    "address_missing": "開始する前に「アカウントとキー」で互換サービスのアドレスを入力してください。",
+    "address_invalid": "互換サービスのアドレスは使えません: {{detail}}"
   },
   "viewer": {
     "title": "Sokuji 字幕",
@@ -1826,7 +1859,10 @@
         "stateSaved": "キー保存済み",
         "belongsTo": "{{region}}のキー",
         "switched": "{{region}}に切り替えました：このキーはそこでのみ使えます。"
-      }
+      },
+      "findModels": "モデルを探す",
+      "configure": "設定",
+      "manageModels": "モデルを管理"
     },
     "lineup": {
       "title": "構成",
@@ -1839,9 +1875,13 @@
       "and": "・",
       "joint": "{{stages}}と1つの接続で動きます。一緒に切り替わります。",
       "granite": "翻訳と一緒に：Granite Speech が音声をそのまま訳文にします。",
-      "moved": "{{stages}}も{{providers}}に切り替わりました。まだこの選択とは組み合わせられません。組み合わせには今後対応します。",
       "needsKey": "キーが必要",
       "needsSignIn": "サインインが必要",
+      "needsAddress": "アドレスが必要",
+      "voiceNotAlone": "自身の翻訳のみ読み上げ",
+      "voiceNotTaken": "自身の音声のみ使用",
+      "twoManaged": "Kizuna AI のサービスは一度に 1 つ",
+      "voiceFollowed": "音声は {{provider}} に切り替わりました。以前の音声サービスは自身の翻訳にのみ対応しています。",
       "options": "{{provider}} のオプション",
       "state": {
         "needsKey": "キーが必要",
@@ -1852,18 +1892,29 @@
         "keyRefused": "キーが受け付けられません",
         "keyNotVerified": "キー未確認",
         "checkingKey": "キーを確認しています…",
-        "notUsed": "今回は使わない"
+        "notUsed": "今回は使わない",
+        "languageNotSpoken": "未対応の言語",
+        "cannotCombine": "組み合わせ不可",
+        "notAvailable": "ここでは利用不可",
+        "needsAddress": "アドレスが必要",
+        "notReady": "準備できていません"
       },
       "speechModeHint": "ひと区切りの発話をいつ翻訳に送るか。セッション中は変えられません",
       "hint": "各段階をどのサービスが担当するか",
       "uses": {
         "turn": "区切り",
         "key": "キー",
-        "space": "スペース",
-        "released": "離したあと",
-        "releasedValue": "その区切りを翻訳に送る",
+        "held": "押しているとき",
         "notHeld": "押していないとき",
-        "notHeldValue": "自分の声がそのまま翻訳せずに相手へ届く"
+        "talkHeld": "Sokuji が聞き取ります。離すと、その区切りが翻訳され、相手には翻訳が聞こえます。原音パススルーがオンのときは、自分の声も小さく相手に届きます。",
+        "talkNotHeld": "Sokuji は聞き取りません。何を話しても翻訳されず、相手にも届きません。",
+        "translateHeld": "話した内容が翻訳されます。相手に聞こえるのは翻訳だけで、自分の声は届きません。",
+        "translateNotHeld": "自分の声が翻訳されずにそのまま相手へ届きます。",
+        "change": "変更",
+        "cancel": "キャンセル",
+        "reset": "{{key}}に戻す",
+        "press": "キーを押してください…（Esc でキャンセル）",
+        "refused": "{{key}}は使えません。別のキーを押してください。"
       },
       "actsOn": "{{stages}}に作用します",
       "pointer": "{{stages}}に作用するオプションは「{{card}}」カードにあります。",
@@ -1872,6 +1923,8 @@
         "voiceFor": "{{who}}（{{language}}）"
       },
       "notesNeedKey": "メモを書くには「アカウントとキー」で OpenAI のキーを追加してください。",
+      "notesNeedGeminiKey": "メモを書くには「アカウントとキー」で Gemini のキーを追加してください。",
+      "notesNeedAddress": "メモを書くには「アカウントとキー」で互換サービスのアドレスを追加してください。",
       "alsoFiles": "取り込んだファイルの文字起こしと、記録の再文字起こしにも使います。",
       "wordsLeftOut": "単語リスト：このサービスの上限を超える {{count}} 件は送られません。",
       "wordsUnused": "単語リスト：このモデルでは使えません。",
@@ -1879,14 +1932,17 @@
       "notesKizunaPrice": "Kizuna AI の目安：ライブメモは 1 時間あたり約 {{live}}、会議後のメモは 1 時間あたり約 {{after}}。セッションの料金を払う残高から支払われます。",
       "notesNeedSignInOrKey": "メモを書くには、サインインするか、「アカウントとキー」で OpenAI のキーを追加してください。",
       "jointCard": "{{stages}}は1つの接続で動きます。一緒に切り替わります。",
+      "partableCard": "{{stages}}は1つの接続で動きます。翻訳は別のサービスに任せられます。下で選んでください。",
       "notesKizunaLine": "Kizuna AI 経由で OpenAI がメモを書きます。料金は残高から支払われます。",
       "notesOpenAiLine": "あなた自身の OpenAI キーでメモを書きます。",
-      "notesCompatibleName": "OpenAI 互換",
-      "notesCompatibleNeedsConfig": "エンドポイントとモデルを設定",
+      "notesGeminiLine": "あなた自身の Gemini キーでメモを書きます。",
+      "notesCompatibleLine": "入力したアドレスのサービスでメモを書きます。",
       "notesNeedSignInOrChoose": "メモを書くには、サインインするか、ここで OpenAI を選んでください。",
       "notesNeedSignInOrKeyAndChoose": "メモを書くには、サインインするか、「アカウントとキー」で OpenAI のキーを追加して、ここで OpenAI を選んでください。",
       "speechNotUsed": "今回は訳を読み上げず、文字だけを表示します。",
-      "speechHowToHear": "読み上げるには、上の文で「聞く」を選んでください。"
+      "speechHowToHear": "読み上げるには、上の文で「聞く」を選んでください。",
+      "notesCompatibleName": "OpenAI 互換",
+      "notesCompatibleNeedsConfig": "エンドポイントとモデルを設定"
     },
     "display": {
       "surface": "どの表示",
@@ -1963,6 +2019,20 @@
       "others": "OpenAI Translate、OpenAI Live、Palabra には単語リストを受け取る欄がないため、送られません。",
       "byModel": "モデルによる",
       "byModelNote": "モデルによる：OpenAI が背景を受け取るのは以前の文字起こしモデルだけです。Gemini Live は gemini-3.8-live でのみ書き方を受け取ります。このデバイスは大規模言語モデルの翻訳でのみリストを読みます。"
+    },
+    "textModel": {
+      "automatic": "自動",
+      "automaticModel": "自動（{{model}}）",
+      "chooseModel": "モデルを選択",
+      "modelName": "またはモデル名を入力",
+      "off": "オフ",
+      "lowest": "最低",
+      "reasoningTooltip": "「最低」はモデルが受け付ける最小の推論を求め、最も速くなります。それ以外の選択はそのまま送られます。モデルが受け付けない場合は、開始前に構成の欄でお知らせします。",
+      "notesReasoningTooltip": "既定の「中」は、メモの各段階に試したときの推論を求めます。各部分とセッション中のメモには「低」、仕上げには「中」、モデルがそれより少ない推論しか受け付けない場合はそれに合わせます。それ以外の選択や入力した値は、すべてのリクエストにそのまま送られます。モデルが受け付けない場合は「メモ」カードでお知らせします。",
+      "reasoningValue": "または値を入力（そのまま送信）",
+      "listing": "モデルを探しています…",
+      "listEmpty": "このサービスはモデルの一覧を返しません。モデル名を入力してください。",
+      "typedOverrides": "入力するとこの値を使います。空にすると上の選択に戻ります。"
     }
   },
   "history": {
@@ -2060,11 +2130,6 @@
     "notesExplain": "セッションごとに、文の本文、その番号、どちら側のどの話者が話したか、単語リストの表記が、あなた自身のキーで {{service}} に送られます。音声、翻訳、アカウントは送られません。",
     "notesTurnOn": "オンにする",
     "notesModel": "メモのモデル",
-    "notesModelLine": "メモを書くテキストモデル。サービスでの名前で入力します。",
-    "notesCompatibleBaseUrl": "API のベース URL",
-    "notesCompatibleUrlInvalid": "HTTPS URL、または localhost／プライベートネットワークの HTTP URL を入力してください。",
-    "notesCompatibleKeyLine": "任意。このエンドポイント用のキーを使用します。",
-    "notesExplainCompatible": "設定したエンドポイントには、文字起こしのテキスト、文番号、話者ラベル、単語リストの表記が送信されます。ライブ更新には、その時点までのメモも含まれます。",
     "notes": "メモ",
     "transcript": "文字起こし",
     "notesKind": {
@@ -2104,6 +2169,8 @@
       "not-json": "メモのモデルが想定した形式で答えませんでした。",
       "no-answer": "メモのモデルから答えがありませんでした。",
       "network": "メモのサービスに接続できませんでした。",
+      "timeout": "メモのサービスが時間内に応答しませんでした。",
+      "no-model": "メモのモデルが選ばれていません。「言語と構成」の「メモ」カードで選んでください。",
       "refused": "サービスが要求を拒否しました（{{status}}）。",
       "sign-in": "Kizuna AI でメモを書くには、Kizuna AI にサインインしてください。",
       "unavailable": "Kizuna AI のメモはまだ利用できません。",
@@ -2193,11 +2260,10 @@
     "notesJumpPlay": "トピックや要点をクリックすると、その文に移動してそこから再生します。",
     "notesJump": "トピックや要点をクリックすると、その文に移動します。",
     "keptHereNotes": "メモがオンの間は、各セッションの文字起こしのテキストもメモを書くために {{service}} に送られます。",
-    "notesModelOther": "その他",
-    "notesModelName": "モデル名",
     "notesExplainKizuna": "セッションごとに、文の本文、その番号、どちら側のどの話者が話したか、単語リストの表記が、Kizuna AI のサーバーを経由して OpenAI に送られ、OpenAI がメモを書きます。Kizuna AI はどれも保存しません。料金はセッションの料金を払う残高から支払われます。音声と翻訳は送られません。",
     "liveExplainKizuna": "セッション中、20 秒ごとに新しい文（本文、番号、どちら側のどの話者が話したか）、ここまでのメモ、単語リストの表記が、Kizuna AI のサーバーを経由して OpenAI に送られ、OpenAI がメモを書きます。Kizuna AI はどれも保存しません。料金はセッションの料金を払う残高から支払われます。音声と翻訳は送られません。",
     "notesModelKizuna": "Kizuna AI は {{model}} でメモを書きます。",
+    "notesModelLineUp": "メモのサービスと一緒に、「言語と構成」の「メモ」カードで選びます。",
     "copyConversation": "会話をコピー",
     "saveConversationTxt": "会話を保存 (.txt)",
     "saveConversationJson": "会話を保存 (.json)",
@@ -2288,12 +2354,17 @@
     "notesOwner": "担当",
     "notesDue": "期限",
     "notesEdited": "手動で修正済み",
+    "notesWrittenBy": "{{service}} が {{model}} で作成",
     "mergeSpeaker": "{{name}} を統合…",
     "mergeInto": "統合先…",
     "mergeMenu": "統合先",
     "mergeAsk": "{{name}} はすでにこちら側の話者です。",
     "mergeOne": "一人にまとめる",
-    "keepApart": "別々のままにする"
+    "keepApart": "別々のままにする",
+    "notesCompatibleBaseUrl": "API のベース URL",
+    "notesCompatibleUrlInvalid": "HTTPS URL、または localhost／プライベートネットワークの HTTP URL を入力してください。",
+    "notesCompatibleKeyLine": "任意。このエンドポイント用のキーを使用します。",
+    "notesExplainCompatible": "設定したエンドポイントには、文字起こしのテキスト、文番号、話者ラベル、単語リストの表記が送信されます。ライブ更新には、その時点までのメモも含まれます。"
   },
   "notesQuit": {
     "named": "「{{title}}」のメモを書いています。それでも終了しますか？メモは中止として記録されます。",

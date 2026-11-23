@@ -10,13 +10,17 @@ import { ExternalLink } from 'lucide-react';
 import { openExternalUrl } from '../../utils/openExternalUrl';
 import { useTranslation } from 'react-i18next';
 import { useAnalytics } from '../../lib/analytics';
-import { caps } from '../../lib/lineup/catalog';
+import { caps, carriedTogether } from '../../lib/lineup/catalog';
 import { RUN_STAGES, type RunStage } from '../../lib/lineup/types';
+import { planFromStores } from '../../lib/plan/fromStores';
+import { transcriptionProvider } from '../../lib/plan/read';
 import type { AnyProvider } from '../../lib/provider/types';
 import { presentProviders } from '../../providers/registry';
+import { stageProviderId } from '../../stores/lineUpStore';
 import { useProviderStore } from '../../stores/providerStore';
 import { useModelStore, useModelStatuses, useStorageUsedMb } from '../../stores/modelStore';
 import { useAccountStore } from '../../stores/accountStore';
+import { useNavigateToSettings } from '../../stores/settingsStore';
 import { payerDisplayBalance } from '../../lib/session/orgNotice';
 import { useOptionalUserProfile } from '../../contexts/UserProfileContext';
 import { MODEL_MANIFEST } from '../../lib/local-inference/modelManifest';
@@ -32,7 +36,8 @@ import { useRunState } from '../../app/useRun';
 import { useShownPayer } from '../../app/useShownPayer';
 import { useAuthContext } from '../providers/useAuthContext';
 import type { CategoryBodyProps } from './SettingsPage';
-import { accountAnchor, accountKeyOf, OPENAI_IDS, providerOfTarget } from './accountRows';
+import { accountAnchor, accountKeyOf, providerOfTarget } from './accountRows';
+import { FindModels } from './FindModels';
 
 const STAGE_TITLES: Record<RunStage, string> = { transcription: 'Transcription', translation: 'Translation', speech: 'Speech' };
 
@@ -58,6 +63,7 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
   const entries = useProviderStore((s) => s.entries);
   const readiness = useProviderStore((s) => s.readiness);
   const [open, setOpen] = useState<string | null>(null);
+  const navigateToSettings = useNavigateToSettings();
   // The balance the title bar shows: a member's wallet the next Start spends, else the account's own.
   const quota = useOptionalUserProfile()?.quota;
   const account = useAccountStore((s) => s.account);
@@ -75,16 +81,19 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
   }, []);
   const localModels = MODEL_MANIFEST.filter((m) => !m.isCloudModel && m.type !== 'punctuation' && m.type !== 'turn' && statuses[m.id] === 'downloaded').length;
 
-  // Opened by a notice or the tour about a key or a sign-in: the selected provider's account is shown open.
+  // Opened by a notice or the tour about a key or a sign-in: the account of the provider that transcribes is shown open.
   useEffect(() => {
     if (openedBy === 'user-account') { setOpen('kizuna'); return; }
     // One provider's key, named by the link that opened the page (owner, 2026-11-17): that provider's row, whatever the session runs on.
     const named = providerOfTarget(openedBy);
     if (named) { setOpen(accountKeyOf(named)); return; }
     if (openedBy !== 'provider') return;
-    const p = providers.find((x) => x.id === useProviderStore.getState().selected);
+    // The plan's transcription provider; while the plan loads or is refused, the provider the line-up names for it.
+    const found = planFromStores();
+    const id = found.state === 'ready' ? transcriptionProvider(found.plan).id : stageProviderId('transcription');
+    const p = providers.find((x) => x.id === id);
     if (p?.kind === 'managed') setOpen('kizuna');
-    else if (p?.kind === 'own-key') setOpen(OPENAI_IDS.includes(p.id) ? 'openai' : p.id);
+    else if (p?.kind === 'own-key') setOpen(accountKeyOf(p.id));
   }, [openedBy, providers]);
 
   // Every provider with a key is loaded, so its row can say whether the key is there.
@@ -103,27 +112,32 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
       list.push({ key: 'bing', name: t('providers.bing.name', 'Bing'), kind: 'online', serves: ['bing'], icon: BingIcon });
       list.push({ key: 'edge', name: t('providers.edge.name', 'Edge'), kind: 'online', serves: ['edge'], icon: EdgeIcon });
     }
-    const openai = providers.filter((p) => OPENAI_IDS.includes(p.id));
-    let openaiListed = false;
+    // One row per key: the providers that share one (OpenAI's, Gemini's) are one row, edited through the first present
+    // one of them, and showing what each can do.
+    const listed = new Set<string>();
     for (const p of providers) {
       if (p.kind !== 'own-key') continue;
-      if (OPENAI_IDS.includes(p.id)) {
-        if (openaiListed) continue;
-        openaiListed = true;
-        // One key for the three (Plan 4): the row edits it through the first present OpenAI provider.
-        list.push({ key: 'openai', name: 'OpenAI', kind: 'key', provider: openai[0], serves: openai.map((x) => x.id), guide: openai.find((x) => x.guideUrl)?.guideUrl, icon: openai[0].icon });
-        continue;
-      }
-      list.push({ key: p.id, name: t(`providers.${p.id}.name`, p.id), kind: 'key', provider: p, serves: [p.id], guide: p.guideUrl, icon: p.icon });
+      const key = accountKeyOf(p.id);
+      if (listed.has(key)) continue;
+      listed.add(key);
+      const sharing = providers.filter((x) => x.kind === 'own-key' && accountKeyOf(x.id) === key);
+      const name = key === 'openai' ? 'OpenAI' : t(`providers.${key}.name`, key);
+      list.push({ key, name, kind: 'key', provider: sharing[0], serves: sharing.map((x) => x.id), guide: sharing.find((x) => x.guideUrl)?.guideUrl, icon: sharing[0].icon });
     }
     return list;
   }, [providers, t]);
 
-  const keySaved = (p: AnyProvider | undefined) => {
-    const entry = p ? entries[p.id] : undefined;
-    if (!p || !entry) return false;
-    return p.credentials.fields(entry.settings as never).every((f) => String(entry.credentials[f.key] ?? '').trim() !== '');
+  /**
+   * The fields of a provider's key that are still empty; one that may stay empty (a compatible service's key) never is.
+   * Nothing stored yet: every field its default settings ask for (a compatible service's address first).
+   */
+  const unfilled = (p: AnyProvider | undefined) => {
+    if (!p) return [{ key: 'apiKey' }];
+    const entry = entries[p.id];
+    return p.credentials.fields((entry?.settings ?? p.settings.defaults) as never)
+      .filter((f) => !f.optional && String(entry?.credentials[f.key] ?? '').trim() === '');
   };
+  const keySaved = (p: AnyProvider | undefined) => unfilled(p).length === 0;
 
   const stateOf = (a: Account): string => {
     switch (a.kind) {
@@ -133,6 +147,7 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
           ? t('settingsPage.accounts.signedInBalance', 'Signed in; balance {{amount}}', { amount: formatUsdFloor(balance) })
           : t('settingsPage.accounts.signedIn', 'Signed in');
       case 'key': {
+        if (unfilled(a.provider).some((f) => f.key === 'baseUrl')) return t('settingsPage.lineup.state.needsAddress', 'Needs an address');
         if (!keySaved(a.provider)) return t('settingsPage.accounts.needsKey', 'Needs a key');
         // Saved is not working (Rudolf's review of B-11): the row says what the key's check found.
         const r = a.provider ? readiness[a.provider.id] : undefined;
@@ -161,7 +176,9 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
     for (const id of a.serves) {
       const c = caps(id);
       if (!c) continue;
-      const groups = c.binds.filter((g) => g.length > 1);
+      // What one connection of it carries: an end-to-end provider's three stages, or Soniox's transcription and translation.
+      const together = carriedTogether(c);
+      const groups = together && together.length > 1 ? [together] : [];
       for (const g of groups) {
         add(g.length >= RUN_STAGES.length ? t('settingsPage.accounts.endToEnd', 'End to end')
           : g.includes('transcription') && g.includes('translation') && g.length === 2 ? t('settingsPage.accounts.transcribeTranslate', 'Transcription and translation')
@@ -204,10 +221,21 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
                   )}
                 </span>
               </div>
-              <button type="button" className="accounts-row__toggle" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : a.key)}>
-                {isOpen ? t('settingsPage.accounts.hide', 'Hide')
-                  : a.kind === 'key' && !keySaved(p) ? t('settingsPage.accounts.addKey', 'Add key') : t('settingsPage.accounts.view', 'View')}
-              </button>
+              {/* A row opens only where there is something to fill in (owner, 2026-11-22): a sign-in or a key. This
+                  device's models are set up in Models and storage, so its button goes there; Bing and Edge need
+                  nothing, and their line says so. */}
+              {a.kind === 'local' ? (
+                <button type="button" className="accounts-row__toggle" onClick={() => navigateToSettings('models')}>
+                  {t('settingsPage.accounts.manageModels', 'Manage models')}
+                </button>
+              ) : a.kind !== 'online' && (
+                <button type="button" className="accounts-row__toggle" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : a.key)}>
+                  {isOpen ? t('settingsPage.accounts.hide', 'Hide')
+                    // The compatible service is set up by its address first, and its key may be none: it is configured, not keyed.
+                    : a.kind === 'key' && !keySaved(p) ? (p?.id === 'openai_compatible' ? t('settingsPage.accounts.configure', 'Configure') : t('settingsPage.accounts.addKey', 'Add key'))
+                      : t('settingsPage.accounts.view', 'View')}
+                </button>
+              )}
             </div>
             {/* Signed in, the title bar's account panel (owner, 2026-11-15): the balance, the organization's too, and
                 the dashboard, sign-out, feedback and top-up; else the sign-in. */}
@@ -249,6 +277,10 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
                 }}
                 disabled={locked}
               />
+            )}
+            {/* A compatible service's models, asked with the address and key as they stand (spec 2026-11-22 §7). */}
+            {isOpen && a.kind === 'key' && p && entry && p.id === 'openai_compatible' && (
+              <FindModels service="compatible" credentials={entry.credentials} disabled={locked} />
             )}
           </div>
         );

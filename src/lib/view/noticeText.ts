@@ -8,6 +8,7 @@
 import type { TFunction } from 'i18next';
 import i18next from 'i18next';
 import { languageLabel } from '../language/label';
+import { stageInSentence } from '../lineup/stageWords';
 
 export interface NoticeWords {
   code?: string;
@@ -16,11 +17,32 @@ export interface NoticeWords {
 }
 
 /** Params that carry a language code: shown by the name every language menu uses (`no_asr`'s `{{source}}`, roadmap 1e-2 → 1e-3). */
-const LANGUAGE_PARAMS = new Set(['source', 'target']);
+const LANGUAGE_PARAMS = new Set(['source', 'target', 'language']);
 
-function named(params: Record<string, string | number> | undefined): Record<string, string | number> | undefined {
+/** The English of a line-up stage, where a catalog lacks it. */
+const STAGE_NAMES: Readonly<Record<string, string>> = { transcription: 'Transcription', translation: 'Translation', speech: 'Speech' };
+/** The names of the two options no provider definition carries: they run on this device's provider. */
+const OPTION_NAMES: Readonly<Record<string, string>> = { bing: 'Bing', edge: 'Edge' };
+
+/**
+ * A refusal of the line-up names a stage and a service the way the line-up page does: the stage as it reads
+ * inside a sentence, the service by its name, with its engine where two services share a name (`vendor`).
+ */
+function lineUpNamed(t: TFunction, params: Record<string, string | number>): Record<string, string | number> {
+  const out = { ...params };
+  const { stage, provider, vendor } = params;
+  if (typeof stage === 'string') out.stage = stageInSentence(String(t(`settingsPage.lineup.stages.${stage}`, { defaultValue: STAGE_NAMES[stage] ?? stage })), i18next.language ?? 'en');
+  if (typeof provider === 'string') {
+    const name = String(t(`providers.${provider}.name`, { defaultValue: OPTION_NAMES[provider] ?? provider }));
+    out.provider = typeof vendor === 'string' && vendor !== '' ? `${name} (${vendor})` : name;
+  }
+  return out;
+}
+
+function named(t: TFunction, code: string | undefined, params: Record<string, string | number> | undefined): Record<string, string | number> | undefined {
   if (!params) return params;
-  return Object.fromEntries(Object.entries(params).map(([key, value]) => [key, LANGUAGE_PARAMS.has(key) && typeof value === 'string' ? languageLabel(value, i18next.language) : value]));
+  const languages = Object.fromEntries(Object.entries(params).map(([key, value]) => [key, LANGUAGE_PARAMS.has(key) && typeof value === 'string' ? languageLabel(value, i18next.language) : value]));
+  return code?.startsWith('lineup_') ? lineUpNamed(t, languages) : languages;
 }
 
 /** The English for every code a surface puts into words; `src/locales/en/translation.json`'s `notices` holds the same, word for word. */
@@ -41,6 +63,22 @@ export const NOTICE_WORDS: Readonly<Record<string, string>> = {
   source_ended: 'The audio source went away (unplugged, closed or stopped).',
   still_stopping: 'The last session is still stopping; try again in a moment.',
   connection_restored: 'Connection lost and restored',
+  // A line-up that cannot run (the composer's refusals): the stage and the service by the line-up page's names.
+  lineup_incomplete: 'Choose a service for {{stage}} first.',
+  lineup_not_offered: '{{provider}} is not available in this version. Choose another service for {{stage}}.',
+  lineup_stage_split: '{{provider}} must also do {{stage}}. Choose {{provider}} for {{stage}}, or use another service instead of {{provider}}.',
+  // A translation bound to its own transcription (Soniox's), beside another service's: which stage to change.
+  lineup_translation_bound: '{{provider}} translation requires {{provider}} transcription. Choose {{provider}} for transcription, or choose another translation service.',
+  lineup_no_unit: '{{provider}} cannot do {{stage}} on its own here. Choose it for the stages it does together, or choose another service.',
+  lineup_voice_not_alone: 'Use {{provider}} for transcription and translation, or choose another speech service.',
+  lineup_voice_not_taken: 'Choose {{provider}} for speech too, or choose another service for transcription and translation.',
+  lineup_two_managed: 'Two Kizuna AI services cannot run in one session yet. Choose one of them.',
+  lineup_language_not_spoken: '{{provider}} has no voice for {{language}}. Choose another speech service, or turn speech off for this session.',
+  // Another service translates what one heard: it needs a stated language, it translates some pairs only, and it
+  // cannot run face-to-face. The quoted words are the language menu's and the Both popover's own.
+  lineup_source_not_fixed: '{{provider}} needs to know the spoken language. Choose it instead of “Auto Detect”, or choose another translation service.',
+  lineup_pair_not_translated: '{{provider}} does not translate {{source}} into {{target}}. Choose other languages, or another translation service.',
+  lineup_face_to_face_apart: 'Face-to-face needs one service to transcribe and translate. Choose {{provider}} for translation too, or set “Other side” to “In a meeting”.',
   // A managed lease refused a start, by what blocks the account (its 409's `blocker`).
   session_in_use: 'Another window or device is using this account. Stop the session there, or if Sokuji just closed unexpectedly, try again in a minute.',
   previous_session_ending: 'Your previous session is still ending. Please try again in a minute.',
@@ -86,6 +124,13 @@ export const NOTICE_WORDS: Readonly<Record<string, string>> = {
   network: 'The connection to the provider failed: {{detail}}',
   server: 'The provider had a problem: {{detail}}',
   client: 'The provider rejected the request: {{detail}}',
+  // A text model's service (spec 2026-11-22 §9): a model it does not offer, an account with no credit left, no model
+  // chosen, and a compatible service's address missing or unusable.
+  model_missing: 'The service does not offer this model: {{detail}}',
+  quota: 'The service account has no credit left: {{detail}}',
+  text_model_unset: 'Choose a model for the translation, or type its name, in “Languages and line-up”.',
+  address_missing: "Enter the compatible service's address in “Accounts and keys” before starting.",
+  address_invalid: "The compatible service's address cannot be used: {{detail}}",
   // The key is good, its account has not enabled the model in the key's region (Qwen's AccessDenied.Unpurchased, probe 2026-10-23).
   model_access_denied: "The key works, but its account can't use this model in the key's region. Enable the model for that region in the provider's console, or use a key from a region where it is enabled: {{detail}}",
   // Local engines (LocalInference).
@@ -144,6 +189,9 @@ export const NOTICE_ALIASES: Readonly<Record<string, string>> = {
   // A leg's speech failed (Stage 2 Soniox, choice 9): the sentences name no vendor.
   tts_segment_lost: 'mainPanel.sonioxTtsSegmentLost',
   tts_stopped: 'mainPanel.sonioxTtsFailed',
+  // A text model's service refused the request for another reason (a reasoning value its model does not take): the
+  // sentence of any other rejected request, with the service's own words.
+  refused: 'notices.client',
   // Gemini (Stage 2 Gemini, ruling 13): a key that lists no Live model, and a start with no model to run — the old client's sentences, which name no vendor.
   no_realtime_model: 'settings.realtimeModelNotAvailable',
   models_required: 'mainPanel.modelsRequired',
@@ -180,9 +228,9 @@ function wordsKey(code: string, params: Record<string, string | number> | undefi
 export function noticeText(t: TFunction, notice: NoticeWords): string {
   const alias = notice.code === undefined ? undefined : NOTICE_ALIASES[notice.code];
   // A catalog lacking the key shows the diagnostic English, as a code with no words does.
-  if (alias !== undefined) return t(alias, { defaultValue: notice.message, ...named(notice.params), detail: notice.message });
+  if (alias !== undefined) return t(alias, { defaultValue: notice.message, ...named(t, notice.code, notice.params), detail: notice.message });
   const key = notice.code === undefined ? undefined : wordsKey(notice.code, notice.params);
   const words = key === undefined ? undefined : NOTICE_WORDS[key];
   if (key === undefined || words === undefined) return notice.message;
-  return t(`notices.${key}`, { defaultValue: words, ...named(notice.params), detail: notice.message });
+  return t(`notices.${key}`, { defaultValue: words, ...named(t, notice.code, notice.params), detail: notice.message });
 }

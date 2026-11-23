@@ -6,11 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // ServiceFactory no longer reaches ModernAudioRecorder at all; this test's
 // subject, session.ts, reaches it only via `capture/mic`, which is mocked
 // directly below. Not needed by the current graph for that reason.
+// `storedSettings`: what a test puts in the settings storage before the page attaches; empty otherwise.
+const { storedSettings, settingWrites } = vi.hoisted(() => ({ storedSettings: {} as Record<string, unknown>, settingWrites: [] as Array<[string, unknown]> }));
 vi.mock('../services/ServiceFactory', () => ({
   ServiceFactory: {
     getSettingsService: () => ({
-      getSetting: async (_key: string, def: unknown) => def,
-      setSetting: async () => ({ success: true }),
+      getSetting: async (key: string, def: unknown) => (key in storedSettings ? storedSettings[key] : def),
+      setSetting: async (key: string, value: unknown) => { settingWrites.push([key, value]); return { success: true }; },
     }),
   },
 }));
@@ -150,9 +152,19 @@ import { useScreenContextStore, type PickedSource } from '../stores/screenContex
 import useAudioStore from '../stores/audioStore';
 import useLogStore from '../stores/logStore';
 import { useProviderStore } from '../stores/providerStore';
+import { TEXT_MODEL_DEFAULTS } from '../lib/textModel/unit';
+
+/**
+ * OpenAI's text model holding the user's key, whose notes the live notes are written with (text models, part C), its
+ * notes model chosen: no model list is asked, so nothing here reaches a service.
+ */
+const OPENAI_TEXT_ENTRY = { settings: { ...TEXT_MODEL_DEFAULTS, notesModel: { listed: 'gpt-6-luna', typed: '' } }, credentials: { apiKey: 'sk-test' }, pair: { source: 'en', target: 'ja' } };
+import { runsOn } from '../stores/lineUpStore.testing';
 import { useSegmentationStore } from '../stores/segmentationStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useLineUpStore } from '../stores/lineUpStore';
+import { planFromStores } from '../lib/plan/fromStores';
+import { transcriptionProvider } from '../lib/plan/read';
 import { useLiveNotes } from '../lib/notes/live/liveStore';
 import { useTurnModeStore } from '../stores/turnModeStore';
 import { READINESS_DELAY_MS } from './readiness';
@@ -174,7 +186,8 @@ const segmentationBefore = useSegmentationStore.getState();
 const turnModeBefore = useTurnModeStore.getState();
 
 beforeEach(() => {
-  useProviderStore.setState({ entries: {}, intent: undefined, readiness: {}, selected: null, legs: ['speaker'] });
+  runsOn(null);
+  useProviderStore.setState({ entries: {}, intent: undefined, readiness: {}, legs: ['speaker'] });
   useAudioStore.setState({ mode: 'speaker', selectedInputDevice: null });
   devices.next = null;
   vi.clearAllMocks();
@@ -192,7 +205,7 @@ afterEach(() => {
 async function setup(options: AppSessionOptions = {}) {
   const clock = createVirtualClock(0);
   await useProviderStore.getState().load(fakeProvider);
-  useProviderStore.getState().select('fake');
+  runsOn('fake');
   const session = createAppSession({
     clock,
     newSessionId: () => 'run1',
@@ -492,7 +505,7 @@ describe('start — screen context (spec 2026-10-22 §3.1)', () => {
   async function qwen(screenContext: boolean, withPicker = true) {
     const clock = createVirtualClock(0);
     await useProviderStore.getState().load(qwenLiveTranslateProvider);
-    useProviderStore.getState().select('qwen_livetranslate');
+    runsOn('qwen_livetranslate');
     useProviderStore.getState().updateSettings(qwenLiveTranslateProvider, { screenContext });
     const session = createAppSession({
       clock,
@@ -750,8 +763,8 @@ describe('attach', () => {
   it('checks a local provider by itself', async () => {
     const { session, clock } = await setup();
     const spy = vi.fn(async () => ({ state: 'unknown' as const }));
+    runsOn('local_inference');
     useProviderStore.setState({
-      selected: 'local_inference',
       entries: { local_inference: { settings: {}, credentials: {}, pair: { source: 'ja', target: 'en' } } },
       readiness: {},
       refreshReadiness: spy,
@@ -768,8 +781,8 @@ describe('attach', () => {
 
   it("forgets a managed provider's readiness when the sign-in or the account flips — after the render, not during it", async () => {
     const { session } = await setup();
+    runsOn('fake_leased');
     useProviderStore.setState({
-      selected: 'fake_leased',
       entries: { fake_leased: { settings: FAKE_LEASED_DEFAULTS, credentials: {}, pair: { source: 'en', target: 'ja' } } },
       readiness: { fake_leased: { state: 'ready', models: [] } },
     });
@@ -793,10 +806,34 @@ describe('attach', () => {
     detach();
   });
 
+  it('ends a voice-only lease a previous launch left behind once the sign-in is there, and forgets it', async () => {
+    const { getApiUrl } = await import('../utils/environment');
+    storedSettings['soniox.voiceOnlyLease'] = { leaseId: 'lease-left', apiUrl: getApiUrl() };
+    settingWrites.length = 0;
+    const fetchStub = vi.fn(async (_url: string, _init?: RequestInit) => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchStub);
+    try {
+      const { session } = await setup();
+      const detach = session.attach();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      // Signed out: nothing is sent.
+      expect(fetchStub).not.toHaveBeenCalled();
+      session.setBridges({ auth: { signedIn: true, userId: 'u1', getToken: async () => 'fresh' } });
+      await vi.waitFor(() => expect(settingWrites).toContainEqual(['soniox.voiceOnlyLease', null]));
+      const ends = fetchStub.mock.calls.filter(([url]) => url === `${getApiUrl()}/soniox/session-end`);
+      expect(ends).toHaveLength(1);
+      expect(ends[0][1]).toMatchObject({ method: 'POST', headers: { Authorization: 'Bearer fresh' }, body: '{"leaseId":"lease-left"}' });
+      detach();
+    } finally {
+      delete storedSettings['soniox.voiceOnlyLease'];
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('forgets it too when the sign-in finishes loading', async () => {
     const { session } = await setup();
+    runsOn('fake_leased');
     useProviderStore.setState({
-      selected: 'fake_leased',
       entries: { fake_leased: { settings: FAKE_LEASED_DEFAULTS, credentials: {}, pair: { source: 'en', target: 'ja' } } },
       readiness: { fake_leased: { state: 'ready', models: [] } },
     });
@@ -980,7 +1017,7 @@ describe('attach', () => {
       const lineUpBefore = useLineUpStore.getState().lineUp;
       useSettingsStore.setState({ liveNotes: on } as never);
       useLineUpStore.setState({ lineUp: { transcription: 'fake', translation: 'fake', speech: 'fake', summarisation: service } } as never);
-      useProviderStore.setState({ entries: { ...useProviderStore.getState().entries, openai: { settings: {}, credentials: { apiKey: 'sk-test' }, pair: { source: 'en', target: 'ja' } } } } as never);
+      useProviderStore.setState({ entries: { ...useProviderStore.getState().entries, openai_text: OPENAI_TEXT_ENTRY } } as never);
       try { await run(); } finally {
         useSettingsStore.setState({ liveNotes: false } as never);
         useLineUpStore.setState({ lineUp: lineUpBefore });
@@ -1012,11 +1049,11 @@ describe('attach', () => {
         useProviderStore.setState({
           entries: {},
           load: async (provider: { id: string }) => {
-            // The session's own provider loads as usual; only OpenAI's, read for the notes, fails once.
-            if (provider?.id !== 'openai') return realLoad(provider as never);
+            // The session's own provider loads as usual; only OpenAI's text model's, read for the notes, fails once.
+            if (provider?.id !== 'openai_text') return realLoad(provider as never);
             loads += 1;
             if (loads === 1) throw new Error('settings could not be read');
-            useProviderStore.setState({ entries: { openai: { settings: {}, credentials: { apiKey: 'sk-test' }, pair: { source: 'en', target: 'ja' } } } } as never);
+            useProviderStore.setState({ entries: { openai_text: OPENAI_TEXT_ENTRY } } as never);
           },
         } as never);
         try {
@@ -1358,7 +1395,7 @@ describe('attach', () => {
         const { session, clock } = await setup({ history: historyPort(), ipc: null, liveNotes: live.factory as never });
         // The notes service's key is still being read when the session stops.
         const entries = useProviderStore.getState().entries;
-        const { openai: _openai, ...others } = entries as Record<string, unknown>;
+        const { openai_text: _openai, ...others } = entries as Record<string, unknown>;
         const loadBefore = useProviderStore.getState().load;
         let release!: () => void;
         const loaded = new Promise<void>((r) => { release = r; });
@@ -1403,7 +1440,7 @@ describe('attach', () => {
         const live = watchedLive();
         const { session, clock } = await setup({ history: historyPort(), ipc: null, liveNotes: live.factory as never });
         const entries = useProviderStore.getState().entries;
-        const { openai: _openai, ...others } = entries as Record<string, unknown>;
+        const { openai_text: _openai, ...others } = entries as Record<string, unknown>;
         const loadBefore = useProviderStore.getState().load;
         useProviderStore.setState({ entries: others, load: async () => { throw new Error('unreadable'); } } as never);
         try {
@@ -1619,7 +1656,7 @@ describe('attach', () => {
   async function refusedLease(code: string) {
     const { session } = await setup();
     await useProviderStore.getState().load(fakeLeasedProvider);
-    useProviderStore.getState().select('fake_leased');
+    runsOn('fake_leased');
     const refetchQuota = vi.fn(async () => {});
     session.setBridges({ refetchQuota, auth: { signedIn: true, userId: 'u1', getToken: async () => 't' } });
     const acquire = vi.spyOn(fakeLeasedProvider.session!, 'acquire').mockRejectedValueOnce(new AdapterStartError('The service refused the lease.', code));
@@ -1669,35 +1706,38 @@ describe('attach', () => {
     detach();
   });
 
-  it('keeps the provider put while a run is not idle, and lets it change once idle', async () => {
-    useLogStore.getState().setEnabled(true);
-    useLogStore.getState().clearLogs();
+  it('keeps the line-up put while a run is not idle, and lets it change once idle', async () => {
     const { session } = await setup();
     const detach = session.attach();
+    const local = { transcription: 'local_inference', translation: 'bing', speech: 'edge' };
 
     await session.runner.start();
     expect(session.runner.state.getState().phase).toBe('running');
-    useProviderStore.getState().select('local_inference');
-    expect(useProviderStore.getState().selected).toBe('fake');
-    await settleReports();
-    expect(useLogStore.getState().logs.filter((l) => l.type === 'warning' && l.message.includes('cannot change during a session'))).toHaveLength(1);
+    const before = useLineUpStore.getState().lineUp;
+    // Neither the setup wizard's whole line-up nor a choice on the line-up page lands during a run.
+    expect(await useLineUpStore.getState().replace(local)).toBe(false);
+    expect(await useLineUpStore.getState().choose('speech', 'edge')).toBeNull();
+    expect(useLineUpStore.getState()).toMatchObject({ lineUp: before, unstoredProvider: 'fake' });
+    const running = planFromStores();
+    expect(running.state === 'ready' && transcriptionProvider(running.plan).id).toBe('fake');
 
     await session.runner.stop();
     await session.runner.settled();
-    useProviderStore.getState().select('local_inference');
-    expect(useProviderStore.getState().selected).toBe('local_inference');
+    expect(await useLineUpStore.getState().replace(local)).toBe(true);
+    expect(useLineUpStore.getState()).toMatchObject({ stored: true, lineUp: local });
 
     detach();
+    useLineUpStore.setState({ lineUp: null, stored: false, unstoredProvider: null });
   });
 
   it('holds the provider from an attach made mid-run, and lets it go on detach', async () => {
     const { session } = await setup();
     await session.runner.start();
     const detach = session.attach();
-    expect(useProviderStore.getState().selectionLocked).toBe(true);
+    expect(useLineUpStore.getState().locked).toBe(true);
 
     detach();
-    expect(useProviderStore.getState().selectionLocked).toBe(false);
+    expect(useLineUpStore.getState().locked).toBe(false);
     await session.runner.stop();
   });
 });
@@ -1713,7 +1753,7 @@ describe('getAppSession', () => {
     const { currentRunPhase } = await import('./runPhase');
     // A provider a start could open, so only `refuse` stands between a start and a run.
     await freshProviders.getState().load(freshFake);
-    freshProviders.getState().select('fake');
+    (await import('../stores/lineUpStore')).useLineUpStore.setState({ unstoredProvider: 'fake' });
     let refusing = true;
     const clock = createVirtualClock(0);
     m.configureAppSession({ refuse: () => refusing, clock, capture: () => async () => createFakeSource(clock) });

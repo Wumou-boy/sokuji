@@ -18,12 +18,15 @@ vi.mock('../../services/ServiceFactory', () => ({
 import { OpenAIIcon } from '../../components/Icons/ProviderIcons';
 import { createVirtualClock } from '../../lib/contract/clock';
 import { recordEvents } from '../../lib/contract/events';
+import { runsByItself } from '../../lib/lineup/catalog';
 import { readCredentials } from '../../lib/provider/credentials';
 import { AUTO } from '../../lib/provider/languages';
+import { planOf } from '../../lib/plan/testing';
 import { contextsFor, gate } from '../../lib/session/shape';
 import { selectionFromStored } from '../../lib/session/storedSettings';
 import type { RunShape } from '../../lib/session/types';
 import { useProviderStore } from '../../stores/providerStore';
+import { runsOn } from '../../stores/lineUpStore.testing';
 import { presentProviders, PROVIDERS } from '../registry';
 import { buildRealtime, describeRealtime, type RealtimeConfig } from './config';
 import { openaiProvider } from './provider';
@@ -37,11 +40,12 @@ afterEach(() => {
   stored.clear();
   getSetting.mockClear();
   setSetting.mockClear();
-  useProviderStore.setState({ entries: {}, intent: undefined, readiness: {}, selected: null, selectionLocked: false, legs: ['speaker'], speech: { textOnly: false, participantSpeech: false } });
+  runsOn(null);
+  useProviderStore.setState({ entries: {}, intent: undefined, readiness: {}, legs: ['speaker'], speech: { textOnly: false, participantSpeech: false } });
 });
 
 const both = (pair: { source: string; target: string }, patch: Partial<RunShape> = {}) =>
-  ({ provider: openaiProvider, settings: REALTIME_DEFAULTS, pair, legs: ['speaker', 'participant'], textOnly: false, participantSpeech: false, turnMode: 'auto', ...patch }) as unknown as RunShape;
+  ({ plan: planOf(openaiProvider), accounts: { [openaiProvider.id]: { settings: REALTIME_DEFAULTS, credentials: {} } }, pair, legs: ['speaker', 'participant'], textOnly: false, participantSpeech: false, turnMode: 'auto', ...patch }) as unknown as RunShape;
 const noAuth = { signedIn: false, getToken: async () => null };
 
 describe('the OpenAI Realtime definition', () => {
@@ -73,16 +77,21 @@ describe('the OpenAI Realtime definition', () => {
     expect(openaiProvider.turns(REALTIME_DEFAULTS)).toEqual(['auto', 'manual']);
   });
 
-  it('sits after Doubao AST 2.0 and before OpenAI Translate, and OpenAI Compatible is registered nowhere (rulings 18, 1)', () => {
+  it('sits after Doubao AST 2.0 and before OpenAI Translate, and OpenAI Compatible is registered nowhere as a provider that runs a session (rulings 18, 1)', () => {
     const ids = PROVIDERS.map((p) => p.id);
     expect(ids.indexOf('openai')).toBe(ids.indexOf('volcengine_ast2') + 1);
     expect(ids.indexOf('openai')).toBe(ids.indexOf('openai_translate') - 1);
-    expect(ids).not.toContain('openai_compatible');
+    // Its id is a text model's now (text models, part B): a unit that translates another provider's transcription,
+    // never a session of its own.
+    const compatible = PROVIDERS.find((p) => p.id === 'openai_compatible')!;
+    expect(compatible.units?.map((u) => u.start)).toEqual([undefined]);
+    expect(runsByItself('openai_compatible')).toBe(false);
   });
 
   it('a stored OpenAI Compatible selection falls to the first provider offered, through the existing rule: nothing is written (ruling 1)', () => {
     for (const platform of ['electron', 'extension', 'web'] as const) {
-      const offered = presentProviders({ platform, dev: false, enabled: new Set(), kizuna: true, switchOn: () => false }).map((p) => p.id);
+      // What a load picks from: the providers offered here that run a session by themselves.
+      const offered = presentProviders({ platform, dev: false, enabled: new Set(), kizuna: true, switchOn: () => false }).map((p) => p.id).filter((id) => runsByItself(id));
       expect(selectionFromStored('openai_compatible', offered, 'kizunaai_soniox'), platform).toEqual({ id: offered[0], fromStorage: false });
     }
   });

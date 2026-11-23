@@ -3,12 +3,15 @@
 // The shapes that cross the History bridge (electron/history-store.js and electron/history-ipc.js). Times inside
 // a record are milliseconds on the record's clock; wall-clock times are epoch milliseconds.
 import type { Languages, LegName, Notice, Segment } from '../conversation/types';
+import type { StageIds } from '../lineup/types';
 
-/** The services a record ran on: what a run reports today, and the line-up's stages when there is one. */
+/** The services a record ran on: what a run reports today, and the line-up id that served each stage. */
 export interface HistoryServices {
+  /** The transcription provider's id: the record's one provider where one id is asked for. */
   provider: string;
   models: Record<string, string>;
-  stages?: Record<string, { provider: string; ability: string }>;
+  /** Absent from a record written before records named them: read through `recordStages`, never directly. */
+  stages?: StageIds;
   /** An imported file's: what its transcription was asked for, kept even when that transcription failed. */
   options?: FileTranscriptionOptions;
 }
@@ -261,7 +264,11 @@ export interface HistorySpeaker {
 }
 
 export type HistoryNotesWriter =
-  | { kind: 'sokuji'; promptVersion: number | string; model: string }
+  /**
+   * `service`: the line-up's notes service that wrote them (`kizunaai_openai`, `openai`, `gemini_text`,
+   * `openai_compatible`; text models, part C). Absent in versions written before it was kept.
+   */
+  | { kind: 'sokuji'; promptVersion: number | string; model: string; service?: string }
   | { kind: 'service'; name: string; version: string };
 
 export interface HistoryNotesBody {

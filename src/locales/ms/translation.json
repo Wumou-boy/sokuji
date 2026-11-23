@@ -45,7 +45,7 @@
     "systemInstructions": "Arahan sistem",
     "speechMode": "Mod Pertuturan",
     "speechModeAppliesTo": "Digunakan untuk suara anda. Audio pihak lain sentiasa menggunakan VAD semantik.",
-    "speechModeTooltip": "Auto: penyedia mengesan apabila anda selesai bercakap. \nTekan untuk Bercakap: tahan kekunci Space atau butang mikrofon untuk menghantar audio secara manual. \nTekan untuk Terjemah: seperti Tekan untuk Bercakap, tetapi menghalakan mikrofon mentah anda ke mikrofon maya apabila tidak aktif supaya anda boleh bercakap secara langsung tanpa terjemahan.",
+    "speechModeTooltip": "Auto: penyedia mengesan apabila anda selesai bercakap. \nTekan untuk Bercakap: tahan kekunci {{key}} atau butang mikrofon untuk menghantar audio secara manual. \nTekan untuk Terjemah: seperti Tekan untuk Bercakap, tetapi menghalakan mikrofon mentah anda ke mikrofon maya apabila tidak aktif supaya anda boleh bercakap secara langsung tanpa terjemahan.",
     "speechModeAppliesToAuto": "Digunakan untuk suara anda. Audio pihak lain sentiasa menggunakan pengesanan automatik penyedia.",
     "userTranscriptModel": "Model transkrip pengguna",
     "noiseReduction": "Pengurangan bunyi bising",
@@ -508,6 +508,7 @@
     "microphone": "Mikrofon",
     "microphoneDesc": "Pilih mikrofon untuk menangkap pertuturan anda. Bercakap dalam bahasa anda ke mikrofon ini, dan Sokuji akan menterjemah semua yang didengarinya dalam masa nyata.",
     "swapLanguages": "Tukar bahasa",
+    "swapNotSpoken": "Perkhidmatan pertuturan tidak membacakan bahasa-bahasa ini dalam arah sebaliknya.",
     "textOnly": "Teks sahaja",
     "textOnlyDesc": "Terjemah ke teks sahaja — tiada output suara",
     "textOnlyForcedByMode": "Mod \"{{mode}}\" hanya menukar apa yang diucapkan peserta kepada teks untuk anda dan tidak pernah menghasilkan audio, jadi \"Teks sahaja\" kekal dihidupkan. Tukar mod terjemahan untuk menterjemah suara anda sendiri dengan pertuturan.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "Percuma · dalam talian, perkhidmatan Microsoft"
+    },
+    "openai_text": {
+      "name": "Model teks OpenAI",
+      "description": "Menterjemah mana-mana pasangan bahasa dengan kunci OpenAI anda"
+    },
+    "gemini_text": {
+      "name": "Model teks Gemini",
+      "description": "Menterjemah mana-mana pasangan bahasa dengan kunci Gemini anda"
+    },
+    "openai_compatible": {
+      "name": "Perkhidmatan serasi OpenAI",
+      "description": "OpenRouter, DeepSeek, Ollama dan lain-lain, di alamat yang anda masukkan"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "Fungsi",
     "noChannelConfigured": "Dayakan mikrofon atau audio pihak lain sebelum bermula.",
     "release": "lepaskan",
-    "pushToTalk": "tekan untuk bercakap (Space)",
+    "pushToTalk": "tekan untuk bercakap ({{key}})",
     "inputDeviceOff": "peranti input mati",
     "endSession": "Tamat sesi",
     "startSession": "Mula sesi",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "Bacaan bahasa Jepun tidak berfungsi.",
       "defaultColour": "Lalai"
     },
-    "pttHint": "Tekan Bar Ruang untuk bercakap"
+    "pttHint": "Tekan {{key}} untuk bercakap"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "Log masuk berjaya. Buka pautan yang kami e-melkan kepada anda untuk mengesahkan alamat anda — kredit percubaan akan masuk sebaik sahaja anda berbuat demikian.",
       "onFile": "Kunci sudah disimpan — biarkan ini kosong untuk mengekalkannya.",
       "offlineHardware": "Sokuji berjalan lancar dengan GPU dan VRAM yang mencukupi; dengan CPU sahaja ia jelas lebih perlahan.",
-      "openaiOneKey": "Satu kunci ini digunakan untuk OpenAI Realtime, Translate dan Live."
+      "openaiOneKey": "Satu kunci ini digunakan untuk OpenAI Realtime, Translate dan Live.",
+      "baseUrl": "Alamat",
+      "baseUrlPlaceholder": "Alamat, seperti https://openrouter.ai/api/v1",
+      "apiKeyOptional": "Kunci API (pilihan)"
     },
     "summary": {
       "scenario": "Senario",
@@ -1534,6 +1550,18 @@
     "source_ended": "Sumber audio hilang (dicabut, ditutup atau dihentikan).",
     "still_stopping": "Sesi terakhir masih sedang dihentikan; cuba lagi sebentar lagi.",
     "connection_restored": "Sambungan terputus dan dipulihkan",
+    "lineup_incomplete": "Pilih perkhidmatan untuk peringkat “{{stage}}” dahulu.",
+    "lineup_not_offered": "{{provider}} tidak tersedia dalam versi ini. Pilih perkhidmatan lain untuk peringkat “{{stage}}”.",
+    "lineup_stage_split": "{{provider}} mesti turut membuat peringkat “{{stage}}”. Pilih {{provider}} untuk peringkat “{{stage}}”, atau gunakan perkhidmatan lain sebagai ganti {{provider}}.",
+    "lineup_translation_bound": "Terjemahan {{provider}} memerlukan transkripsi {{provider}}. Pilih {{provider}} untuk transkripsi, atau pilih perkhidmatan terjemahan lain.",
+    "lineup_no_unit": "{{provider}} tidak dapat membuat peringkat “{{stage}}” secara bersendirian di sini. Pilihnya untuk peringkat yang dibuatnya bersama, atau pilih perkhidmatan lain.",
+    "lineup_voice_not_alone": "Gunakan {{provider}} untuk transkripsi dan terjemahan, atau pilih perkhidmatan pertuturan lain.",
+    "lineup_voice_not_taken": "Pilih {{provider}} untuk pertuturan juga, atau pilih perkhidmatan lain untuk transkripsi dan terjemahan.",
+    "lineup_two_managed": "Dua perkhidmatan Kizuna AI belum boleh berjalan dalam satu sesi. Pilih salah satu.",
+    "lineup_language_not_spoken": "{{provider}} tiada suara untuk {{language}}. Pilih perkhidmatan pertuturan lain, atau matikan pertuturan untuk sesi ini.",
+    "lineup_source_not_fixed": "{{provider}} perlu tahu bahasa yang dituturkan. Pilih bahasa itu sebagai ganti “Kesan Automatik”, atau pilih perkhidmatan terjemahan lain.",
+    "lineup_pair_not_translated": "{{provider}} tidak menterjemah {{source}} → {{target}}. Pilih bahasa lain, atau perkhidmatan terjemahan lain.",
+    "lineup_face_to_face_apart": "“Bersemuka” memerlukan satu perkhidmatan untuk transkripsi dan terjemahan. Pilih {{provider}} untuk terjemahan juga, atau tetapkan “Kedudukan pihak lain” kepada “Dalam mesyuarat”.",
     "session_in_use": "Tetingkap atau peranti lain sedang menggunakan akaun ini. Hentikan sesi di sana, atau jika Sokuji baru sahaja tertutup tanpa dijangka, cuba lagi dalam seminit.",
     "previous_session_ending": "Sesi anda sebelum ini masih sedang ditamatkan. Sila cuba lagi dalam seminit.",
     "app_capture_lost_using_system_audio": "Tangkapan aplikasi terhenti, jadi semua audio sistem kini diterjemahkan.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "Akaun {{organization}} digantung. Hubungi pemiliknya, atau gunakan baki peribadi anda.",
     "org_wallet_frozen_unnamed": "Akaun organisasi digantung. Hubungi pemiliknya, atau gunakan baki peribadi anda.",
     "org_wallet_frozen_owner": "Akaun {{organization}} digantung. Hubungi sokongan Sokuji, atau gunakan baki peribadi anda.",
-    "org_wallet_frozen_owner_unnamed": "Akaun organisasi digantung. Hubungi sokongan Sokuji, atau gunakan baki peribadi anda."
+    "org_wallet_frozen_owner_unnamed": "Akaun organisasi digantung. Hubungi sokongan Sokuji, atau gunakan baki peribadi anda.",
+    "model_missing": "Perkhidmatan tidak menawarkan model ini: {{detail}}",
+    "quota": "Akaun perkhidmatan tiada baki kredit: {{detail}}",
+    "text_model_unset": "Pilih model untuk terjemahan, atau taip namanya, dalam “Bahasa dan susunan”.",
+    "address_missing": "Masukkan alamat perkhidmatan serasi dalam “Akaun dan kunci” sebelum bermula.",
+    "address_invalid": "Alamat perkhidmatan serasi tidak boleh digunakan: {{detail}}"
   },
   "viewer": {
     "title": "Sari kata Sokuji",
@@ -1824,7 +1857,10 @@
         "stateSaved": "Kunci disimpan",
         "belongsTo": "Milik {{region}}",
         "switched": "Bertukar ke {{region}}: kunci ini hanya berfungsi di sana."
-      }
+      },
+      "findModels": "Cari model",
+      "configure": "Tetapkan",
+      "manageModels": "Urus model"
     },
     "lineup": {
       "title": "Susunan",
@@ -1837,9 +1873,13 @@
       "and": " dan ",
       "joint": "Berjalan bersama {{stages}} melalui satu sambungan; kedua-duanya berubah bersama.",
       "granite": "Bersama terjemahan: Granite Speech menukar pertuturan terus kepada terjemahan.",
-      "moved": "{{stages}} juga beralih ke {{providers}}: belum boleh digabungkan dengan pilihan ini. Campuran akan disokong kemudian.",
       "needsKey": "perlu kunci",
       "needsSignIn": "perlu log masuk",
+      "needsAddress": "perlu alamat",
+      "voiceNotAlone": "hanya membacakan terjemahannya sendiri",
+      "voiceNotTaken": "hanya menggunakan suaranya sendiri",
+      "twoManaged": "satu perkhidmatan Kizuna AI pada satu masa",
+      "voiceFollowed": "Pertuturan bertukar kepada {{provider}}. Perkhidmatan pertuturan sebelum ini hanya menyokong terjemahannya sendiri.",
       "options": "Pilihan {{provider}}",
       "state": {
         "needsKey": "Perlu kunci",
@@ -1850,18 +1890,29 @@
         "keyRefused": "Kunci ditolak",
         "keyNotVerified": "Kunci belum disahkan",
         "checkingKey": "Menyemak kunci…",
-        "notUsed": "Tidak digunakan kali ini"
+        "notUsed": "Tidak digunakan kali ini",
+        "languageNotSpoken": "Bahasa tidak disokong",
+        "cannotCombine": "Tidak boleh digabungkan",
+        "notAvailable": "Tidak tersedia di sini",
+        "needsAddress": "Perlu alamat",
+        "notReady": "Belum sedia"
       },
       "speechModeHint": "Bila sepotong pertuturan dihantar untuk diterjemah; tetap semasa sesi",
       "hint": "Perkhidmatan mana yang membuat setiap peringkat",
       "uses": {
         "turn": "Akhir pertuturan",
         "key": "Kekunci",
-        "space": "Ruang",
-        "released": "Selepas dilepaskan",
-        "releasedValue": "potongan itu dihantar untuk diterjemah",
+        "held": "Semasa ditekan",
         "notHeld": "Semasa tidak ditekan",
-        "notHeldValue": "suara anda terus kepada pihak lain tanpa terjemahan"
+        "talkHeld": "Sokuji mendengar; apabila anda melepaskan kekunci, potongan itu diterjemah dan pihak lain mendengar terjemahannya. Apabila Passthrough dihidupkan, pihak lain juga mendengar suara anda sendiri secara perlahan.",
+        "talkNotHeld": "Sokuji tidak mendengar; apa sahaja yang anda katakan tidak diterjemah dan tidak sampai kepada pihak lain.",
+        "translateHeld": "Apa yang anda katakan diterjemah; pihak lain hanya mendengar terjemahannya, bukan suara anda sendiri.",
+        "translateNotHeld": "Suara anda sendiri terus sampai kepada pihak lain, tanpa terjemahan.",
+        "change": "Tukar",
+        "cancel": "Batal",
+        "reset": "Tetapkan semula kepada {{key}}",
+        "press": "Tekan satu kekunci… (Esc untuk membatalkan)",
+        "refused": "{{key}} tidak boleh digunakan. Tekan kekunci lain."
       },
       "actsOn": "Terpakai pada {{stages}}",
       "pointer": "Pilihan yang terpakai pada {{stages}} ada dalam kad \"{{card}}\".",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "Tambah kunci OpenAI dalam “Akaun dan kunci” supaya nota ditulis.",
+      "notesNeedGeminiKey": "Tambah kunci Gemini dalam “Akaun dan kunci” supaya nota ditulis.",
+      "notesNeedAddress": "Tambah alamat perkhidmatan serasi dalam “Akaun dan kunci” supaya nota ditulis.",
       "alsoFiles": "Juga mentranskrip fail yang diimport dan rekod semula.",
       "wordsLeftOut": "Senarai perkataan: {{count}} entri yang melebihi had perkhidmatan ini ditinggalkan.",
       "wordsUnused": "Senarai perkataan: model ini tidak dapat menggunakannya.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Anggaran Kizuna AI: nota langsung kira-kira {{live}} sejam, nota selepas sesi kira-kira {{after}} sejam, dibayar daripada baki yang membayar sesi anda.",
       "notesNeedSignInOrKey": "Log masuk, atau tambah kunci OpenAI dalam “Akaun dan kunci”, supaya nota ditulis.",
       "jointCard": "{{stages}} berjalan melalui satu sambungan; kedua-duanya berubah bersama.",
+      "partableCard": "{{stages}} berjalan melalui satu sambungan. Perkhidmatan lain boleh membuat terjemahan: pilih di bawah.",
       "notesKizunaLine": "OpenAI menulis nota melalui Kizuna AI, dibayar daripada baki anda.",
       "notesOpenAiLine": "Menulis nota dengan kunci OpenAI anda sendiri.",
-        "notesCompatibleName": "Serasi OpenAI",
-        "notesCompatibleNeedsConfig": "Tetapkan titik akhir dan model",
+      "notesGeminiLine": "Menulis nota dengan kunci Gemini anda sendiri.",
+      "notesCompatibleLine": "Menulis nota dengan perkhidmatan di alamat yang anda masukkan.",
       "notesNeedSignInOrChoose": "Log masuk, atau pilih OpenAI di sini, supaya nota ditulis.",
       "notesNeedSignInOrKeyAndChoose": "Log masuk, atau tambah kunci OpenAI dalam “Akaun dan kunci” dan pilih OpenAI di sini, supaya nota ditulis.",
       "speechNotUsed": "Kali ini tiada apa-apa yang dibacakan: terjemahan hanya dipaparkan sebagai teks.",
-      "speechHowToHear": "Untuk dibacakan, pilih “dengar” dalam ayat di atas."
+      "speechHowToHear": "Untuk dibacakan, pilih “dengar” dalam ayat di atas.",
+      "notesCompatibleName": "Serasi OpenAI",
+      "notesCompatibleNeedsConfig": "Tetapkan titik akhir dan model"
     },
     "display": {
       "surface": "Paparan mana",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translate, OpenAI Live dan Palabra tiada tempat untuk senarai perkataan; ia tidak dihantar.",
       "byModel": "Bergantung pada model",
       "byModelNote": "Bergantung pada model: OpenAI mengambil latar belakang dengan model transkripsi lamanya sahaja; Gemini Live mengambil istilah dengan gemini-3.8-live sahaja; peranti ini membaca senarai dengan penterjemah model bahasa besarnya sahaja."
+    },
+    "textModel": {
+      "automatic": "Automatik",
+      "automaticModel": "Automatik ({{model}})",
+      "chooseModel": "Pilih model",
+      "modelName": "Atau taip nama model",
+      "off": "Mati",
+      "lowest": "Paling rendah",
+      "reasoningTooltip": "“Paling rendah” meminta penaakulan paling sedikit yang diterima model, iaitu yang paling pantas. Pilihan lain dihantar tepat seperti adanya: jika model menolaknya, susunan memberitahu sebelum anda bermula.",
+      "notesReasoningTooltip": "“Sederhana”, lalai, meminta setiap langkah nota menggunakan penaakulan yang diuji untuknya: Rendah untuk setiap bahagian dan nota semasa sesi, Sederhana untuk menyiapkannya, dan kurang jika model menerima kurang. Pilihan lain, atau nilai yang ditaip, dihantar tepat seperti adanya dalam setiap permintaan: jika model menolaknya, kad “Nota” memberitahu.",
+      "reasoningValue": "Atau taip nilai, dihantar seperti adanya",
+      "listing": "Mencari model…",
+      "listEmpty": "Perkhidmatan ini tidak menyenaraikan model: taip nama model.",
+      "typedOverrides": "Menggantikan pilihan di atas. Kosongkan untuk menggunakan senarai semula."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "Bagi setiap sesi, teks ayatnya, nombornya, pihak dan penutur yang menyebutnya, serta ejaan dalam senarai perkataan anda dihantar kepada {{service}} dengan kunci anda sendiri. Tidak sekali-kali audio, terjemahan atau akaun anda.",
     "notesTurnOn": "Hidupkan",
     "notesModel": "Model nota",
-    "notesModelLine": "Model teks yang menulis nota, mengikut namanya di perkhidmatan.",
-      "notesCompatibleBaseUrl": "URL asas API",
-      "notesCompatibleUrlInvalid": "Masukkan URL HTTPS atau URL HTTP localhost/rangkaian peribadi.",
-      "notesCompatibleKeyLine": "Pilihan. Gunakan kunci untuk titik akhir ini.",
-      "notesExplainCompatible": "Titik akhir yang dikonfigurasikan menerima teks transkrip, nombor ayat, label penutur dan ejaan dalam senarai perkataan. Kemas kini langsung turut menyertakan nota setakat ini.",
     "notes": "Nota",
     "transcript": "Transkrip",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "Model nota tidak menjawab dalam bentuk yang dijangka.",
       "no-answer": "Model nota tidak memberi jawapan.",
       "network": "Perkhidmatan nota tidak dapat dihubungi.",
+      "timeout": "Perkhidmatan nota tidak menjawab dalam masa.",
+      "no-model": "Tiada model nota dipilih. Pilih satu pada kad “Nota” dalam “Bahasa dan susunan”.",
       "refused": "Perkhidmatan menolak permintaan ({{status}}).",
       "sign-in": "Log masuk ke Kizuna AI untuk menulis nota dengannya.",
       "unavailable": "Nota oleh Kizuna AI belum tersedia.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "Klik topik atau perkara untuk pergi ke ayatnya dan main dari situ.",
     "notesJump": "Klik topik atau perkara untuk pergi ke ayatnya.",
     "keptHereNotes": "Semasa nota dihidupkan, teks transkrip setiap sesi juga dihantar kepada {{service}} untuk menulisnya.",
-    "notesModelOther": "Lain-lain",
-    "notesModelName": "Nama model",
     "notesExplainKizuna": "Bagi setiap sesi, teks ayatnya, nombornya, pihak dan penutur yang menyebutnya, serta ejaan dalam senarai perkataan anda melalui pelayan Kizuna AI ke OpenAI, yang menulis nota. Kizuna AI tidak menyimpan apa-apa daripadanya. Kosnya dibayar daripada baki yang membayar sesi anda. Tidak sekali-kali audio atau terjemahan.",
     "liveExplainKizuna": "Semasa sesi, setiap 20 saat ayat baharu (teks, nombor, serta pihak dan penutur yang menyebutnya), nota setakat ini dan ejaan dalam senarai perkataan anda melalui pelayan Kizuna AI ke OpenAI, yang menulis nota. Kizuna AI tidak menyimpan apa-apa daripadanya. Kosnya dibayar daripada baki yang membayar sesi anda. Tidak sekali-kali audio atau terjemahan.",
     "notesModelKizuna": "Kizuna AI menulis nota dengan {{model}}.",
+    "notesModelLineUp": "Dipilih bersama perkhidmatan nota, pada kad “Nota” dalam “Bahasa dan susunan”.",
     "copyConversation": "Salin perbualan",
     "saveConversationTxt": "Simpan perbualan (.txt)",
     "saveConversationJson": "Simpan perbualan (.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "Pemilik tugas",
     "notesDue": "Tarikh akhir",
     "notesEdited": "Disunting secara manual",
+    "notesWrittenBy": "Ditulis oleh {{service}} dengan {{model}}",
     "mergeSpeaker": "Gabungkan {{name}} dengan…",
     "mergeInto": "Gabungkan dengan…",
     "mergeMenu": "Gabungkan dengan",
     "mergeAsk": "{{name}} sudah menjadi penutur di sebelah ini.",
     "mergeOne": "Gabungkan menjadi satu",
-    "keepApart": "Biarkan berasingan"
+    "keepApart": "Biarkan berasingan",
+    "notesCompatibleBaseUrl": "URL asas API",
+    "notesCompatibleUrlInvalid": "Masukkan URL HTTPS atau URL HTTP localhost/rangkaian peribadi.",
+    "notesCompatibleKeyLine": "Pilihan. Gunakan kunci untuk titik akhir ini.",
+    "notesExplainCompatible": "Titik akhir yang dikonfigurasikan menerima teks transkrip, nombor ayat, label penutur dan ejaan dalam senarai perkataan. Kemas kini langsung turut menyertakan nota setakat ini."
   },
   "notesQuit": {
     "named": "Nota untuk “{{title}}” sedang ditulis. Keluar juga? Nota akan ditandakan dibatalkan.",

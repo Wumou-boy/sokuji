@@ -27,13 +27,16 @@ vi.mock('../../utils/openExternalUrl', () => ({ openExternalUrl: (url: string) =
 
 import { AccountsCategory } from './AccountsCategory';
 import { useProviderStore } from '../../stores/providerStore';
+import { runsOn } from '../../stores/lineUpStore.testing';
 import { useModelStore } from '../../stores/modelStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 
 const row = (name: string) => screen.getByRole('group', { name });
 
 beforeEach(() => {
+  runsOn('soniox');
   useProviderStore.setState({
-    selected: 'soniox', selectionLocked: false, readiness: {},
+    readiness: {},
     entries: {
       soniox: { settings: { region: 'us' }, credentials: { apiKey: 'k', apiKeyEu: '', apiKeyJp: '' }, pair: { source: 'ja', target: 'en' } },
       openai: { settings: {}, credentials: { apiKey: '' }, pair: { source: 'ja', target: 'en' } },
@@ -89,6 +92,20 @@ describe('accounts and keys', () => {
     expect(within(row('Soniox')).getByRole('button', { name: 'Hide' })).toHaveAttribute('aria-expanded', 'true');
   });
 
+  // Owner, 2026-11-22: a row opens only where there is something to fill in. Bing and Edge need nothing; This
+  // device's models are set up in Models and storage, so its button goes there.
+  it('gives Bing and Edge no button, and This device a way to its models', () => {
+    useSettingsStore.setState({ settingsNavigationTarget: null });
+    render(<AccountsCategory locked={false} />);
+    for (const name of ['Bing', 'Edge']) expect([name, within(row(name)).queryAllByRole('button')]).toEqual([name, []]);
+    const manage = within(row('This device')).getByRole('button', { name: 'Manage models' });
+    expect(manage).not.toHaveAttribute('aria-expanded');
+    fireEvent.click(manage);
+    expect(useSettingsStore.getState().settingsNavigationTarget).toBe('models');
+    // Nothing unfolds in the row itself.
+    expect(row('This device').querySelectorAll('.accounts-row__head ~ *')).toHaveLength(0);
+  });
+
   // The mock's order: the accounts that need no key first, then the ones with a key.
   it('lists Kizuna AI, This device, Bing and Edge first, then the providers with a key', () => {
     render(<AccountsCategory locked={false} />);
@@ -137,11 +154,57 @@ describe('accounts and keys', () => {
 
   it('one OpenAI row with one key for the three OpenAI providers, and one Kizuna AI sign-in for both hosted ones', () => {
     render(<AccountsCategory locked={false} />);
-    expect(screen.getAllByRole('group', { name: /OpenAI/ })).toHaveLength(1);
+    // OpenAI's own row; the compatible service, with an address of its own, is another.
+    expect(screen.getAllByRole('group', { name: /OpenAI/ }).map((g) => g.getAttribute('aria-label'))).toEqual(['OpenAI', 'OpenAI-Compatible Service']);
     expect(screen.getAllByRole('group', { name: /Kizuna AI/ })).toHaveLength(1);
     expect(screen.queryByRole('group', { name: /OpenAI Live/ })).toBeNull();
     expect(document.getElementById('provider-section')).not.toBeNull();
     expect(document.getElementById('user-account-section')).toBe(row('Kizuna AI'));
+  });
+
+  // Text models, part B: Gemini's text models use Gemini's key, OpenAI's the OpenAI key; a compatible service has a
+  // row of its own, with its address, an optional key and a way to find its models.
+  it("one Gemini row for Gemini Live and Gemini's text models, and the OpenAI row says it also translates", () => {
+    render(<AccountsCategory locked={false} />);
+    expect(screen.getAllByRole('group', { name: /Gemini/ }).map((g) => g.getAttribute('aria-label'))).toEqual(['Google Gemini']);
+    const chipsOf = (name: string) => row(name).querySelector('.accounts-row__chips')!.textContent;
+    expect(chipsOf('OpenAI')).toContain('End to end');
+    expect(chipsOf('OpenAI')).toContain('Translation');
+    expect(chipsOf('Google Gemini')).toContain('Translation');
+    expect(row('Google Gemini')).toHaveAttribute('id', 'account-gemini-section');
+  });
+
+  it('a compatible service: its address and an optional key, Check once the address is there, and Find models', () => {
+    useProviderStore.setState((st) => ({ entries: { ...st.entries, openai_compatible: { settings: {}, credentials: { baseUrl: '', apiKey: '' }, pair: { source: 'ja', target: 'en' } } } as never }));
+    render(<AccountsCategory locked={false} />);
+    expect(row('OpenAI-Compatible Service')).toHaveTextContent('Needs an address');
+    expect(row('OpenAI-Compatible Service').querySelector('.accounts-row__chips')).toHaveTextContent('Translation');
+    fireEvent.click(within(row('OpenAI-Compatible Service')).getByRole('button', { name: 'Configure' }));
+    expect(within(row('OpenAI-Compatible Service')).getByRole('textbox', { name: 'Address' })).toBeInTheDocument();
+    expect(within(row('OpenAI-Compatible Service')).getByLabelText('API key (optional)')).toBeInTheDocument();
+    expect(within(row('OpenAI-Compatible Service')).getByRole('button', { name: 'Find models' })).toBeDisabled();
+    cleanup();
+    useProviderStore.setState((st) => ({ entries: { ...st.entries, openai_compatible: { settings: {}, credentials: { baseUrl: 'http://localhost:11434/v1', apiKey: '' }, pair: { source: 'ja', target: 'en' } } } as never }));
+    render(<AccountsCategory locked={false} />);
+    // The key may stay empty: the address is all a check needs.
+    expect(row('OpenAI-Compatible Service')).toHaveTextContent('Key not verified');
+    fireEvent.click(within(row('OpenAI-Compatible Service')).getByRole('button', { name: 'View' }));
+    expect(within(row('OpenAI-Compatible Service')).getByRole('button', { name: /check|validate/i })).toBeEnabled();
+    expect(within(row('OpenAI-Compatible Service')).getByRole('button', { name: 'Find models' })).toBeEnabled();
+  });
+
+  it('a compatible service never configured (nothing stored yet) needs an address, and is configured, not keyed', () => {
+    // Its entry is not loaded: the row reads the fields its provider asks for, as it does once one is.
+    const load = useProviderStore.getState().load;
+    useProviderStore.setState({ load: async () => {} } as never);
+    try {
+      render(<AccountsCategory locked={false} />);
+      expect(useProviderStore.getState().entries.openai_compatible).toBeUndefined();
+      expect(row('OpenAI-Compatible Service').querySelector('.accounts-row__state')).toHaveTextContent('Needs an address');
+      expect(within(row('OpenAI-Compatible Service')).getByRole('button', { name: 'Configure' })).toBeInTheDocument();
+    } finally {
+      useProviderStore.setState({ load } as never);
+    }
   });
 
   it('refuses edits during a session', () => {
@@ -155,7 +218,7 @@ describe('accounts and keys', () => {
 
 describe('accounts and keys — opened from a notice or the tour', () => {
   it("opened by the 'provider' target, shows the selected provider's key at once", () => {
-    useProviderStore.setState({ selected: 'openai' });
+    runsOn('openai');
     render(<AccountsCategory locked={false} openedBy="provider" />);
     expect(within(row('OpenAI')).getByRole('button', { name: 'Hide' })).toHaveAttribute('aria-expanded', 'true');
     expect(within(row('Soniox')).getByRole('button', { name: 'View' })).toHaveAttribute('aria-expanded', 'false');
@@ -164,7 +227,7 @@ describe('accounts and keys — opened from a notice or the tour', () => {
   // Owner, 2026-11-17: a link about OpenAI's key, with the session on another provider, opens OpenAI's row, which the page then
   // scrolls to by its id.
   it("opened by one provider's target, shows that provider's key, whatever the session runs on", () => {
-    useProviderStore.setState({ selected: 'soniox' });
+    runsOn('soniox');
     render(<AccountsCategory locked={false} openedBy="provider:openai" />);
     expect(within(row('OpenAI')).getByRole('button', { name: 'Hide' })).toHaveAttribute('aria-expanded', 'true');
     expect(within(row('Soniox')).getByRole('button', { name: 'View' })).toHaveAttribute('aria-expanded', 'false');
@@ -174,7 +237,20 @@ describe('accounts and keys — opened from a notice or the tour', () => {
 
   it("opened by the 'provider' target under a hosted provider, shows the Kizuna AI sign-in", () => {
     authState.signedIn = false;
-    useProviderStore.setState({ selected: 'kizunaai_soniox' });
+    runsOn('kizunaai_soniox');
+    render(<AccountsCategory locked={false} openedBy="provider" />);
+    expect(within(row('Kizuna AI')).getByText('account row')).toBeInTheDocument();
+    authState.signedIn = true;
+  });
+
+  // A selection not offered here falls back, as the plan does, to the first provider offered (Kizuna AI's Soniox) once
+  // its entry has loaded: its account is the one shown.
+  it("opened by the 'provider' target with a selection not offered here, shows the first offered provider's account once it has loaded", () => {
+    authState.signedIn = false;
+    runsOn('not_offered_here');
+    useProviderStore.setState((st) => ({
+      entries: { ...st.entries, kizunaai_soniox: { settings: {}, credentials: {}, pair: { source: 'ja', target: 'en' } } } as never,
+    }));
     render(<AccountsCategory locked={false} openedBy="provider" />);
     expect(within(row('Kizuna AI')).getByText('account row')).toBeInTheDocument();
     authState.signedIn = true;

@@ -45,7 +45,7 @@
     "systemInstructions": "Systeeminstructies",
     "speechMode": "Spraakmodus",
     "speechModeAppliesTo": "Van toepassing op uw stem. Audio van de ander gebruikt altijd semantische VAD.",
-    "speechModeTooltip": "Auto: de provider detecteert wanneer u klaar bent met spreken. \nPush-to-Talk: houd Spatie of de microfoonknop ingedrukt om audio handmatig te verzenden. \nPush-to-Translate: zoals Push-to-Talk, maar leidt uw onbewerkte microfoon door naar de virtuele microfoon wanneer inactief, zodat u direct kunt spreken zonder vertaling.",
+    "speechModeTooltip": "Auto: de provider detecteert wanneer u klaar bent met spreken. \nPush-to-Talk: houd {{key}} of de microfoonknop ingedrukt om audio handmatig te verzenden. \nPush-to-Translate: zoals Push-to-Talk, maar leidt uw onbewerkte microfoon door naar de virtuele microfoon wanneer inactief, zodat u direct kunt spreken zonder vertaling.",
     "speechModeAppliesToAuto": "Van toepassing op uw stem. Audio van de ander gebruikt altijd de automatische detectie van de provider.",
     "userTranscriptModel": "Gebruiker transcript model",
     "noiseReduction": "Ruisonderdrukking",
@@ -508,6 +508,7 @@
     "microphone": "Microfoon",
     "microphoneDesc": "Selecteer de microfoon om uw spraak op te vangen. Spreek uw taal in deze microfoon, en Sokuji zal alles wat het hoort in realtime vertalen.",
     "swapLanguages": "Talen wisselen",
+    "swapNotSpoken": "De spraakdienst leest deze talen niet voor in omgekeerde richting.",
     "textOnly": "Alleen tekst",
     "textOnlyDesc": "Vertaal alleen naar tekst — geen spraakuitvoer",
     "textOnlyForcedByMode": "De modus \"{{mode}}\" zet alleen om wat deelnemers zeggen in tekst voor jou en genereert nooit audio, dus \"Alleen tekst\" blijft aan. Wissel van vertaalmodus om je eigen stem met spraak te vertalen.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "Gratis · online, een dienst van Microsoft"
+    },
+    "openai_text": {
+      "name": "OpenAI-tekstmodel",
+      "description": "Vertaalt elk talenpaar met je OpenAI-sleutel"
+    },
+    "gemini_text": {
+      "name": "Gemini-tekstmodel",
+      "description": "Vertaalt elk talenpaar met je Gemini-sleutel"
+    },
+    "openai_compatible": {
+      "name": "OpenAI-compatibele dienst",
+      "description": "OpenRouter, DeepSeek, Ollama en andere, op het adres dat je invoert"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "Functie",
     "noChannelConfigured": "Schakel de microfoon of Audio van de ander in voordat u begint.",
     "release": "loslaten",
-    "pushToTalk": "druk om te spreken (Spatie)",
+    "pushToTalk": "druk om te spreken ({{key}})",
     "inputDeviceOff": "invoerapparaat uit",
     "endSession": "Sessie beëindigen",
     "startSession": "Sessie starten",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "De Japanse leesvormen werken niet.",
       "defaultColour": "Standaard"
     },
-    "pttHint": "Druk op Spatie om te spreken"
+    "pttHint": "Druk op {{key}} om te spreken"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "Ingelogd. Open de link die we u per e-mail hebben gestuurd om uw adres te verifiëren — het proeftegoed wordt bijgeschreven zodra u dat doet.",
       "onFile": "Er is al een sleutel opgeslagen — laat dit veld leeg om deze te behouden.",
       "offlineHardware": "Sokuji werkt goed met een GPU en genoeg VRAM; met alleen een CPU is het merkbaar trager.",
-      "openaiOneKey": "Deze ene sleutel geldt voor OpenAI Realtime, Translate en Live."
+      "openaiOneKey": "Deze ene sleutel geldt voor OpenAI Realtime, Translate en Live.",
+      "baseUrl": "Adres",
+      "baseUrlPlaceholder": "Adres, zoals https://openrouter.ai/api/v1",
+      "apiKeyOptional": "API-sleutel (optioneel)"
     },
     "summary": {
       "scenario": "Scenario",
@@ -1534,6 +1550,18 @@
     "source_ended": "De audiobron is verdwenen (losgekoppeld, gesloten of gestopt).",
     "still_stopping": "De vorige sessie wordt nog gestopt; probeer het zo opnieuw.",
     "connection_restored": "Verbinding verbroken en hersteld",
+    "lineup_incomplete": "Kies eerst een dienst voor de stap ‘{{stage}}’.",
+    "lineup_not_offered": "{{provider}} is niet beschikbaar in deze versie. Kies een andere dienst voor de stap ‘{{stage}}’.",
+    "lineup_stage_split": "{{provider}} moet ook de stap ‘{{stage}}’ doen. Kies {{provider}} voor de stap ‘{{stage}}’, of gebruik een andere dienst in plaats van {{provider}}.",
+    "lineup_translation_bound": "Vertaling door {{provider}} vereist transcriptie door {{provider}}. Kies {{provider}} voor transcriptie, of kies een andere vertaaldienst.",
+    "lineup_no_unit": "{{provider}} kan de stap ‘{{stage}}’ hier niet alleen doen. Kies het voor de stappen die het samen doet, of kies een andere dienst.",
+    "lineup_voice_not_alone": "Gebruik {{provider}} voor transcriptie en vertaling, of kies een andere spraakdienst.",
+    "lineup_voice_not_taken": "Kies {{provider}} ook voor spraak, of kies een andere dienst voor transcriptie en vertaling.",
+    "lineup_two_managed": "Twee diensten van Kizuna AI kunnen nog niet in één sessie draaien. Kies er één.",
+    "lineup_language_not_spoken": "{{provider}} heeft geen stem voor {{language}}. Kies een andere spraakdienst, of zet spraak uit voor deze sessie.",
+    "lineup_source_not_fixed": "{{provider}} moet weten welke taal er gesproken wordt. Kies die in plaats van ‘Automatische Detectie’, of kies een andere vertaaldienst.",
+    "lineup_pair_not_translated": "{{provider}} vertaalt niet {{source}} → {{target}}. Kies andere talen, of een andere vertaaldienst.",
+    "lineup_face_to_face_apart": "‘Face-to-face’ heeft één dienst nodig die transcribeert en vertaalt. Kies {{provider}} ook voor de vertaling, of zet ‘Waar is de ander’ op ‘In een vergadering’.",
     "session_in_use": "Een ander venster of apparaat gebruikt dit account. Stop de sessie daar, of probeer het over een minuut opnieuw als Sokuji net onverwacht is afgesloten.",
     "previous_session_ending": "Uw vorige sessie wordt nog beëindigd. Probeer het over een minuut opnieuw.",
     "app_capture_lost_using_system_audio": "Het vastleggen van de app is gestopt, dus wordt nu alle systeemaudio vertaald.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "Het account van {{organization}} is gepauzeerd. Neem contact op met de eigenaar of gebruik je eigen saldo.",
     "org_wallet_frozen_unnamed": "Het account van de organisatie is gepauzeerd. Neem contact op met de eigenaar of gebruik je eigen saldo.",
     "org_wallet_frozen_owner": "Het account van {{organization}} is gepauzeerd. Neem contact op met Sokuji-support of gebruik je eigen saldo.",
-    "org_wallet_frozen_owner_unnamed": "Het account van de organisatie is gepauzeerd. Neem contact op met Sokuji-support of gebruik je eigen saldo."
+    "org_wallet_frozen_owner_unnamed": "Het account van de organisatie is gepauzeerd. Neem contact op met Sokuji-support of gebruik je eigen saldo.",
+    "model_missing": "De dienst biedt dit model niet aan: {{detail}}",
+    "quota": "Het account bij de dienst heeft geen tegoed meer: {{detail}}",
+    "text_model_unset": "Kies een model voor de vertaling, of typ de naam ervan, bij ‘Talen en opstelling’.",
+    "address_missing": "Voer het adres van de compatibele dienst in bij ‘Accounts en sleutels’ voordat je begint.",
+    "address_invalid": "Het adres van de compatibele dienst is niet bruikbaar: {{detail}}"
   },
   "viewer": {
     "title": "Sokuji-ondertiteling",
@@ -1824,7 +1857,10 @@
         "stateSaved": "Sleutel opgeslagen",
         "belongsTo": "Hoort bij {{region}}",
         "switched": "Overgeschakeld naar {{region}}: deze sleutel werkt alleen daar."
-      }
+      },
+      "findModels": "Modellen zoeken",
+      "configure": "Instellen",
+      "manageModels": "Modellen beheren"
     },
     "lineup": {
       "title": "Opstelling",
@@ -1837,9 +1873,13 @@
       "and": " en ",
       "joint": "Gaat samen met {{stages}} over één verbinding; ze wisselen samen.",
       "granite": "Met vertaling: Granite Speech zet spraak meteen om in de vertaling.",
-      "moved": "{{stages}} is ook naar {{providers}} gegaan: dit is nog niet te combineren met deze keuze. Mengen wordt later ondersteund.",
       "needsKey": "sleutel nodig",
       "needsSignIn": "inloggen nodig",
+      "needsAddress": "adres nodig",
+      "voiceNotAlone": "leest alleen de eigen vertaling voor",
+      "voiceNotTaken": "gebruikt alleen de eigen stem",
+      "twoManaged": "één dienst van Kizuna AI tegelijk",
+      "voiceFollowed": "Spraak is overgezet naar {{provider}}. De vorige spraakdienst ondersteunt alleen de eigen vertalingen.",
       "options": "Opties van {{provider}}",
       "state": {
         "needsKey": "Sleutel nodig",
@@ -1850,18 +1890,29 @@
         "keyRefused": "Sleutel geweigerd",
         "keyNotVerified": "Sleutel niet gecontroleerd",
         "checkingKey": "Sleutel controleren…",
-        "notUsed": "Deze keer niet gebruikt"
+        "notUsed": "Deze keer niet gebruikt",
+        "languageNotSpoken": "Taal niet ondersteund",
+        "cannotCombine": "Niet te combineren",
+        "notAvailable": "Hier niet beschikbaar",
+        "needsAddress": "Adres nodig",
+        "notReady": "Niet klaar"
       },
       "speechModeHint": "Wanneer een stuk spraak naar de vertaling gaat; vast tijdens een sessie",
       "hint": "Welke dienst elke stap doet",
       "uses": {
         "turn": "Einde beurt",
         "key": "Toets",
-        "space": "Spatie",
-        "released": "Na loslaten",
-        "releasedValue": "gaat dat stuk naar de vertaling",
+        "held": "Zolang ingedrukt",
         "notHeld": "Zolang niet ingedrukt",
-        "notHeldValue": "gaat uw eigen stem onvertaald rechtstreeks naar de andere kant"
+        "talkHeld": "Sokuji luistert; als u loslaat, wordt dat stuk vertaald en hoort de andere kant de vertaling. Met Doorvoer aan hoort de andere kant ook zachtjes uw eigen stem.",
+        "talkNotHeld": "Sokuji luistert niet; niets wat u zegt wordt vertaald of bereikt de andere kant.",
+        "translateHeld": "Wat u zegt wordt vertaald; de andere kant hoort alleen de vertaling, niet uw eigen stem.",
+        "translateNotHeld": "Uw eigen stem gaat onvertaald rechtstreeks naar de andere kant.",
+        "change": "Wijzigen",
+        "cancel": "Annuleren",
+        "reset": "Terugzetten naar {{key}}",
+        "press": "Druk op een toets… (Esc om te annuleren)",
+        "refused": "{{key}} kan niet worden gebruikt. Druk op een andere toets."
       },
       "actsOn": "Geldt voor {{stages}}",
       "pointer": "De opties voor {{stages}} staan in de kaart ‘{{card}}’.",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "Voeg een OpenAI-sleutel toe bij ‘Accounts en sleutels’ om notities te laten schrijven.",
+      "notesNeedGeminiKey": "Voeg een Gemini-sleutel toe bij ‘Accounts en sleutels’ om notities te laten schrijven.",
+      "notesNeedAddress": "Voeg het adres van de compatibele dienst toe bij ‘Accounts en sleutels’ om notities te laten schrijven.",
       "alsoFiles": "Transcribeert ook geïmporteerde bestanden en verslagen opnieuw.",
       "wordsLeftOut": "Woordenlijst: {{count}} items boven de grens van deze dienst worden weggelaten.",
       "wordsUnused": "Woordenlijst: dit model kan hem niet gebruiken.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Schatting van Kizuna AI: live notities ongeveer {{live}} per uur, notities na een sessie ongeveer {{after}} per uur, betaald uit het saldo dat je sessies betaalt.",
       "notesNeedSignInOrKey": "Log in, of voeg een OpenAI-sleutel toe bij ‘Accounts en sleutels’, om notities te laten schrijven.",
       "jointCard": "{{stages}} gaan over één verbinding; ze wisselen samen.",
+      "partableCard": "{{stages}} gaan over één verbinding. Een andere dienst kan de vertaling doen: kies die hieronder.",
       "notesKizunaLine": "OpenAI schrijft de notities via Kizuna AI, betaald uit je saldo.",
       "notesOpenAiLine": "Schrijft de notities met je eigen OpenAI-sleutel.",
-        "notesCompatibleName": "OpenAI-compatibel",
-        "notesCompatibleNeedsConfig": "Stel eindpunt en model in",
+      "notesGeminiLine": "Schrijft de notities met je eigen Gemini-sleutel.",
+      "notesCompatibleLine": "Schrijft de notities met de dienst op het adres dat je invult.",
       "notesNeedSignInOrChoose": "Log in, of kies hier OpenAI, om notities te laten schrijven.",
       "notesNeedSignInOrKeyAndChoose": "Log in, of voeg een OpenAI-sleutel toe bij ‘Accounts en sleutels’ en kies hier OpenAI, om notities te laten schrijven.",
       "speechNotUsed": "Deze keer wordt niets voorgelezen: de vertaling verschijnt alleen als tekst.",
-      "speechHowToHear": "Wil je dat ze wordt voorgelezen, kies dan ‘horen’ in de zin hierboven."
+      "speechHowToHear": "Wil je dat ze wordt voorgelezen, kies dan ‘horen’ in de zin hierboven.",
+      "notesCompatibleName": "OpenAI-compatibel",
+      "notesCompatibleNeedsConfig": "Stel eindpunt en model in"
     },
     "display": {
       "surface": "Welke weergave",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translate, OpenAI Live en Palabra hebben geen veld voor een woordenlijst; ze krijgen er geen.",
       "byModel": "Afhankelijk van model",
       "byModelNote": "Afhankelijk van model: OpenAI neemt de achtergrond alleen bij zijn oudere transcriptiemodellen; Gemini Live neemt de termen alleen bij gemini-3.8-live; dit apparaat leest de lijst alleen bij zijn vertalers met grote taalmodellen."
+    },
+    "textModel": {
+      "automatic": "Automatisch",
+      "automaticModel": "Automatisch ({{model}})",
+      "chooseModel": "Kies een model",
+      "modelName": "Of typ een modelnaam",
+      "off": "Uit",
+      "lowest": "Laagst",
+      "reasoningTooltip": "‘Laagst’ vraagt om zo weinig redeneren als het model toestaat, wat het snelst is. Elke andere keuze wordt precies zo verstuurd: weigert het model die, dan meldt de opstelling dat voordat je begint.",
+      "notesReasoningTooltip": "‘Gemiddeld’, de standaard, vraagt elke stap van de notities om het redeneren waarmee die is getest: Laag voor elk deel en voor de notities tijdens de sessie, Gemiddeld om ze af te ronden, en minder waar het model minder toestaat. Elke andere keuze, of een ingetypte waarde, wordt bij elk verzoek precies zo verstuurd: weigert het model die, dan meldt de kaart ‘Notities’ dat.",
+      "reasoningValue": "Of typ een waarde, die ongewijzigd wordt verstuurd",
+      "listing": "Modellen worden gezocht…",
+      "listEmpty": "Deze dienst geeft geen modellen: typ de naam van het model.",
+      "typedOverrides": "Vervangt de keuze hierboven. Maak leeg om de lijst weer te gebruiken."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "Voor elke sessie worden de tekst van de zinnen, hun nummers, welke kant en welke spreker ze zei en de schrijfwijzen uit je woordenlijst met je eigen sleutel naar {{service}} gestuurd. Nooit de audio, de vertaling of je account.",
     "notesTurnOn": "Inschakelen",
     "notesModel": "Model voor notities",
-    "notesModelLine": "Het tekstmodel dat de notities schrijft, met de naam die de dienst gebruikt.",
-      "notesCompatibleBaseUrl": "API-basis-URL",
-      "notesCompatibleUrlInvalid": "Voer een HTTPS-URL in, of een HTTP-URL voor localhost/een privénetwerk.",
-      "notesCompatibleKeyLine": "Optioneel. Gebruik een sleutel voor dit eindpunt.",
-      "notesExplainCompatible": "Het ingestelde eindpunt ontvangt transcripttekst, zinsnummers, sprekerlabels en schrijfwijzen uit de woordenlijst. Live updates bevatten ook de notities tot dan toe.",
     "notes": "Notities",
     "transcript": "Transcriptie",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "Het model antwoordde niet in de verwachte vorm.",
       "no-answer": "Het model gaf geen antwoord.",
       "network": "De dienst voor notities was niet bereikbaar.",
+      "timeout": "De dienst voor notities antwoordde niet op tijd.",
+      "no-model": "Er is geen model voor notities gekozen. Kies er een op de kaart ‘Notities’ bij ‘Talen en opstelling’.",
       "refused": "De dienst weigerde het verzoek ({{status}}).",
       "sign-in": "Meld je aan bij Kizuna AI om er notities mee te schrijven.",
       "unavailable": "Notities van Kizuna AI zijn nog niet beschikbaar.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "Klik op een onderwerp of punt om naar de zin te gaan en vanaf daar af te spelen.",
     "notesJump": "Klik op een onderwerp of punt om naar de zin te gaan.",
     "keptHereNotes": "Zolang notities aan staan, wordt de tekst van het transcript van elke sessie ook naar {{service}} gestuurd om ze te schrijven.",
-    "notesModelOther": "Anders",
-    "notesModelName": "Modelnaam",
     "notesExplainKizuna": "Voor elke sessie gaan de tekst van de zinnen, hun nummers, welke kant en welke spreker ze zei en de schrijfwijzen uit je woordenlijst via de server van Kizuna AI naar OpenAI, dat de notities schrijft. Kizuna AI bewaart er niets van. Het wordt betaald uit het saldo dat je sessies betaalt. Nooit de audio of de vertaling.",
     "liveExplainKizuna": "Tijdens een sessie gaan elke 20 seconden de nieuwe zinnen (hun tekst, nummers en welke kant en welke spreker ze zei), de notities tot nu toe en de schrijfwijzen uit je woordenlijst via de server van Kizuna AI naar OpenAI, dat de notities schrijft. Kizuna AI bewaart er niets van. Het wordt betaald uit het saldo dat je sessies betaalt. Nooit de audio of de vertaling.",
     "notesModelKizuna": "Kizuna AI schrijft de notities met {{model}}.",
+    "notesModelLineUp": "Wordt gekozen met de dienst voor notities, op de kaart ‘Notities’ bij ‘Talen en opstelling’.",
     "copyConversation": "Gesprek kopiëren",
     "saveConversationTxt": "Gesprek opslaan (.txt)",
     "saveConversationJson": "Gesprek opslaan (.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "Eigenaar",
     "notesDue": "Deadline",
     "notesEdited": "Met de hand bewerkt",
+    "notesWrittenBy": "Geschreven door {{service}} met {{model}}",
     "mergeSpeaker": "{{name}} samenvoegen met…",
     "mergeInto": "Samenvoegen met…",
     "mergeMenu": "Samenvoegen met",
     "mergeAsk": "{{name}} is al een spreker aan deze kant.",
     "mergeOne": "Samenvoegen tot één",
-    "keepApart": "Apart houden"
+    "keepApart": "Apart houden",
+    "notesCompatibleBaseUrl": "API-basis-URL",
+    "notesCompatibleUrlInvalid": "Voer een HTTPS-URL in, of een HTTP-URL voor localhost/een privénetwerk.",
+    "notesCompatibleKeyLine": "Optioneel. Gebruik een sleutel voor dit eindpunt.",
+    "notesExplainCompatible": "Het ingestelde eindpunt ontvangt transcripttekst, zinsnummers, sprekerlabels en schrijfwijzen uit de woordenlijst. Live updates bevatten ook de notities tot dan toe."
   },
   "notesQuit": {
     "named": "Er worden notities geschreven voor ‘{{title}}’. Toch afsluiten? Ze worden als geannuleerd gemarkeerd.",

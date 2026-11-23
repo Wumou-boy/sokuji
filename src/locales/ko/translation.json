@@ -45,7 +45,7 @@
     "systemInstructions": "시스템 지시사항",
     "speechMode": "음성 모드",
     "speechModeAppliesTo": "내 음성에 적용됩니다. 상대방 오디오는 항상 의미론적 VAD를 사용합니다.",
-    "speechModeTooltip": "자동: 말이 끝나는 시점을 제공자가 자동으로 감지합니다. \n푸시 투 토크: 스페이스 또는 마이크 버튼을 눌러 오디오를 수동으로 전송합니다. \n푸시 투 트랜슬레이트: 푸시 투 토크와 비슷하지만, 유휴 상태일 때 원본 마이크 오디오를 가상 마이크로 패스스루하여 번역 없이 직접 말할 수 있습니다.",
+    "speechModeTooltip": "자동: 말이 끝나는 시점을 제공자가 자동으로 감지합니다. \n푸시 투 토크: {{key}} 또는 마이크 버튼을 눌러 오디오를 수동으로 전송합니다. \n푸시 투 트랜슬레이트: 푸시 투 토크와 비슷하지만, 유휴 상태일 때 원본 마이크 오디오를 가상 마이크로 패스스루하여 번역 없이 직접 말할 수 있습니다.",
     "speechModeAppliesToAuto": "내 음성에 적용됩니다. 상대방 오디오는 항상 제공자의 자동 감지를 사용합니다.",
     "userTranscriptModel": "사용자 전사 모델",
     "noiseReduction": "노이즈 감소",
@@ -508,6 +508,7 @@
     "microphone": "마이크",
     "microphoneDesc": "음성을 캡처할 마이크를 선택하세요. 이 마이크에 당신의 언어로 말하면, Sokuji가 들리는 모든 것을 실시간으로 번역합니다.",
     "swapLanguages": "언어 전환",
+    "swapNotSpoken": "이 음성 서비스는 이 언어들을 반대 방향으로 읽지 못합니다.",
     "textOnly": "텍스트만",
     "textOnlyDesc": "텍스트로만 번역 — 음성 출력 없음",
     "textOnlyForcedByMode": "\"{{mode}}\" 모드는 참가자의 말을 텍스트로만 보여주고 음성을 생성하지 않으므로 \"텍스트만\"이 항상 켜져 있습니다. 자신의 음성을 소리로 번역하려면 번역 모드를 전환하세요.",
@@ -611,6 +612,18 @@
     "edge": {
       "name": "Edge",
       "note": "무료 · 온라인, Microsoft 서비스"
+    },
+    "openai_text": {
+      "name": "OpenAI 텍스트 모델",
+      "description": "내 OpenAI 키로 어떤 언어 쌍이든 번역"
+    },
+    "gemini_text": {
+      "name": "Gemini 텍스트 모델",
+      "description": "내 Gemini 키로 어떤 언어 쌍이든 번역"
+    },
+    "openai_compatible": {
+      "name": "OpenAI 호환 서비스",
+      "description": "OpenRouter, DeepSeek, Ollama 등, 입력한 주소로 연결"
     }
   },
   "logsPanel": {
@@ -640,7 +653,7 @@
     "function": "기능",
     "noChannelConfigured": "시작하기 전에 마이크 또는 상대방 오디오를 활성화하세요.",
     "release": "놓기",
-    "pushToTalk": "눌러서 말하기 (스페이스)",
+    "pushToTalk": "눌러서 말하기 ({{key}})",
     "inputDeviceOff": "입력 장치 꺼짐",
     "endSession": "세션 종료",
     "startSession": "세션 시작",
@@ -1133,7 +1146,7 @@
       "readingsFailed": "일본어 읽는 법을 표시할 수 없습니다.",
       "defaultColour": "기본값"
     },
-    "pttHint": "스페이스바를 눌러 말하세요"
+    "pttHint": "{{key}} 키를 눌러 말하세요"
   },
   "titleBar": {
     "account": {
@@ -1430,7 +1443,10 @@
       "verifyEmail": "로그인되었습니다. 이메일로 보내드린 링크를 열어 주소를 인증하세요 — 인증하면 체험 크레딧이 지급됩니다.",
       "onFile": "이미 저장된 키가 있습니다 — 그대로 두면 유지됩니다.",
       "offlineHardware": "GPU와 충분한 VRAM이 있으면 Sokuji가 원활하게 동작하고, CPU만으로는 눈에 띄게 느립니다.",
-      "openaiOneKey": "이 키 하나로 OpenAI Realtime, Translate, Live를 모두 씁니다."
+      "openaiOneKey": "이 키 하나로 OpenAI Realtime, Translate, Live를 모두 씁니다.",
+      "baseUrl": "주소",
+      "baseUrlPlaceholder": "주소 (예: https://openrouter.ai/api/v1)",
+      "apiKeyOptional": "API 키 (선택)"
     },
     "summary": {
       "scenario": "시나리오",
@@ -1534,6 +1550,18 @@
     "source_ended": "오디오 소스가 사라졌습니다(연결 해제, 종료 또는 중지됨).",
     "still_stopping": "이전 세션이 아직 종료되는 중입니다. 잠시 후 다시 시도하세요.",
     "connection_restored": "연결이 끊어졌다가 복구되었습니다",
+    "lineup_incomplete": "먼저 ‘{{stage}}’ 단계를 맡을 서비스를 선택하세요.",
+    "lineup_not_offered": "{{provider}} 서비스는 이 버전에서 사용할 수 없습니다. ‘{{stage}}’ 단계에는 다른 서비스를 선택하세요.",
+    "lineup_stage_split": "{{provider}} 서비스는 ‘{{stage}}’ 단계도 맡아야 합니다. ‘{{stage}}’ 단계에 {{provider}} 서비스를 선택하거나 {{provider}} 대신 다른 서비스를 사용하세요.",
+    "lineup_translation_bound": "{{provider}} 번역에는 {{provider}} 전사가 필요합니다. 전사에 {{provider}} 서비스를 선택하거나 다른 번역 서비스를 선택하세요.",
+    "lineup_no_unit": "{{provider}} 서비스는 여기에서 ‘{{stage}}’ 단계만 따로 맡을 수 없습니다. 함께 맡는 단계에 모두 선택하거나 다른 서비스를 선택하세요.",
+    "lineup_voice_not_alone": "전사와 번역에 {{provider}} 서비스를 사용하거나 다른 음성 서비스를 선택하세요.",
+    "lineup_voice_not_taken": "음성에도 {{provider}} 서비스를 선택하거나, 전사와 번역에 다른 서비스를 선택하세요.",
+    "lineup_two_managed": "아직 한 세션에서 Kizuna AI 서비스 두 개를 함께 실행할 수 없습니다. 둘 중 하나를 선택하세요.",
+    "lineup_language_not_spoken": "{{provider}} 서비스에는 {{language}} 음성이 없습니다. 다른 음성 서비스를 선택하거나 이 세션에서는 음성을 끄세요.",
+    "lineup_source_not_fixed": "{{provider}} 서비스는 말하는 언어를 알아야 합니다. ‘자동 감지’ 대신 언어를 선택하거나 다른 번역 서비스를 선택하세요.",
+    "lineup_pair_not_translated": "{{provider}} 서비스는 {{source}} → {{target}} 번역을 지원하지 않습니다. 다른 언어를 선택하거나 다른 번역 서비스를 선택하세요.",
+    "lineup_face_to_face_apart": "‘대면’에는 받아쓰기와 번역을 함께 하는 하나의 서비스가 필요합니다. 번역에도 {{provider}} 서비스를 선택하거나 ‘상대방 위치’ 설정을 ‘온라인 회의’(으)로 바꾸세요.",
     "session_in_use": "다른 창이나 기기에서 이 계정을 사용하고 있습니다. 그곳에서 세션을 중지하거나, Sokuji가 방금 예기치 않게 종료되었다면 1분 후에 다시 시도하세요.",
     "previous_session_ending": "이전 세션이 아직 종료되는 중입니다. 1분 후에 다시 시도해 주세요.",
     "app_capture_lost_using_system_audio": "앱 캡처가 중지되어 지금은 시스템 오디오 전체가 대신 번역되고 있습니다.",
@@ -1577,7 +1605,12 @@
     "org_wallet_frozen": "{{organization}}의 계정이 일시 중지되었습니다. 소유자에게 문의하거나 개인 잔액을 사용하세요.",
     "org_wallet_frozen_unnamed": "조직의 계정이 일시 중지되었습니다. 소유자에게 문의하거나 개인 잔액을 사용하세요.",
     "org_wallet_frozen_owner": "{{organization}}의 계정이 일시 중지되었습니다. Sokuji 지원팀에 문의하거나 개인 잔액을 사용하세요.",
-    "org_wallet_frozen_owner_unnamed": "조직의 계정이 일시 중지되었습니다. Sokuji 지원팀에 문의하거나 개인 잔액을 사용하세요."
+    "org_wallet_frozen_owner_unnamed": "조직의 계정이 일시 중지되었습니다. Sokuji 지원팀에 문의하거나 개인 잔액을 사용하세요.",
+    "model_missing": "서비스가 이 모델을 제공하지 않습니다: {{detail}}",
+    "quota": "서비스 계정에 남은 크레딧이 없습니다: {{detail}}",
+    "text_model_unset": "‘언어와 구성’에서 번역 모델을 고르거나 모델 이름을 입력하세요.",
+    "address_missing": "시작하기 전에 ‘계정과 키’에서 호환 서비스의 주소를 입력하세요.",
+    "address_invalid": "호환 서비스의 주소를 사용할 수 없습니다: {{detail}}"
   },
   "viewer": {
     "title": "Sokuji 자막",
@@ -1824,7 +1857,10 @@
         "stateSaved": "키 저장됨",
         "belongsTo": "{{region}} 키",
         "switched": "{{region}}(으)로 전환했습니다: 이 키는 그곳에서만 작동합니다."
-      }
+      },
+      "findModels": "모델 찾기",
+      "configure": "설정",
+      "manageModels": "모델 관리"
     },
     "lineup": {
       "title": "구성",
@@ -1837,9 +1873,13 @@
       "and": " 및 ",
       "joint": "{{stages}}와 하나의 연결로 함께 동작하며, 함께 바뀝니다.",
       "granite": "번역과 함께: Granite Speech가 음성을 바로 번역문으로 바꿉니다.",
-      "moved": "{{stages}}도 {{providers}}(으)로 바뀌었습니다. 아직은 이 선택과 함께 쓸 수 없습니다. 섞어 쓰기는 나중에 지원할 예정입니다.",
       "needsKey": "키 필요",
       "needsSignIn": "로그인 필요",
+      "needsAddress": "주소 필요",
+      "voiceNotAlone": "자체 번역만 읽음",
+      "voiceNotTaken": "자체 음성만 사용",
+      "twoManaged": "Kizuna AI 서비스는 한 번에 하나",
+      "voiceFollowed": "음성이 {{provider}} 서비스로 전환되었습니다. 이전 음성 서비스는 자체 번역만 지원합니다.",
       "options": "{{provider}} 옵션",
       "state": {
         "needsKey": "키 필요",
@@ -1850,18 +1890,29 @@
         "keyRefused": "키가 거부됨",
         "keyNotVerified": "키 확인 안 됨",
         "checkingKey": "키 확인 중…",
-        "notUsed": "이번에는 사용 안 함"
+        "notUsed": "이번에는 사용 안 함",
+        "languageNotSpoken": "지원하지 않는 언어",
+        "cannotCombine": "함께 쓸 수 없음",
+        "notAvailable": "여기서는 사용 불가",
+        "needsAddress": "주소 필요",
+        "notReady": "준비 안 됨"
       },
       "speechModeHint": "말 한 토막을 언제 번역으로 보낼지; 세션 중에는 바꿀 수 없음",
       "hint": "각 단계를 어떤 서비스가 맡는지",
       "uses": {
         "turn": "말 끝 판단",
         "key": "키",
-        "space": "스페이스",
-        "released": "떼고 나면",
-        "releasedValue": "그 토막을 번역으로 보냄",
+        "held": "누르고 있을 때",
         "notHeld": "누르고 있지 않을 때",
-        "notHeldValue": "내 목소리가 번역 없이 바로 상대방에게 감"
+        "talkHeld": "Sokuji가 듣습니다. 키를 떼면 그 토막이 번역되고, 상대방은 번역을 듣습니다. 원음 패스스루가 켜져 있으면 상대방에게 내 목소리도 작게 들립니다.",
+        "talkNotHeld": "Sokuji가 듣지 않습니다. 무슨 말을 해도 번역되지 않고 상대방에게도 전달되지 않습니다.",
+        "translateHeld": "내가 하는 말이 번역됩니다. 상대방은 내 목소리가 아닌 번역만 듣습니다.",
+        "translateNotHeld": "내 목소리가 번역 없이 바로 상대방에게 갑니다.",
+        "change": "변경",
+        "cancel": "취소",
+        "reset": "{{key}} 키로 되돌리기",
+        "press": "키를 누르세요… (Esc로 취소)",
+        "refused": "{{key}} 키는 사용할 수 없습니다. 다른 키를 누르세요."
       },
       "actsOn": "{{stages}}에 적용됨",
       "pointer": "{{stages}}에 적용되는 옵션은 \"{{card}}\" 카드에 있습니다.",
@@ -1870,6 +1921,8 @@
         "voiceFor": "{{who}} ({{language}})"
       },
       "notesNeedKey": "메모를 작성하려면 ‘계정과 키’에서 OpenAI 키를 추가하세요.",
+      "notesNeedGeminiKey": "메모를 작성하려면 ‘계정과 키’에서 Gemini 키를 추가하세요.",
+      "notesNeedAddress": "메모를 작성하려면 ‘계정과 키’에서 호환 서비스의 주소를 추가하세요.",
       "alsoFiles": "가져온 파일과 기록을 다시 받아 적을 때도 씁니다.",
       "wordsLeftOut": "단어 목록: 이 서비스의 한도를 넘는 {{count}}개 항목은 빠집니다.",
       "wordsUnused": "단어 목록: 이 모델은 사용할 수 없습니다.",
@@ -1877,14 +1930,17 @@
       "notesKizunaPrice": "Kizuna AI 예상 비용: 실시간 메모 시간당 약 {{live}}, 세션 후 메모 시간당 약 {{after}}. 세션 비용을 내는 잔액에서 지불됩니다.",
       "notesNeedSignInOrKey": "메모를 작성하려면 로그인하거나 ‘계정과 키’에서 OpenAI 키를 추가하세요.",
       "jointCard": "{{stages}}는 하나의 연결로 동작하며, 함께 바뀝니다.",
+      "partableCard": "{{stages}}는 하나의 연결로 동작합니다. 번역은 다른 서비스에 맡길 수 있습니다. 아래에서 선택하세요.",
       "notesKizunaLine": "Kizuna AI를 통해 OpenAI가 메모를 작성하며, 비용은 잔액에서 지불됩니다.",
       "notesOpenAiLine": "본인의 OpenAI 키로 메모를 작성합니다.",
-      "notesCompatibleName": "OpenAI 호환",
-      "notesCompatibleNeedsConfig": "엔드포인트와 모델 설정",
+      "notesGeminiLine": "본인의 Gemini 키로 메모를 작성합니다.",
+      "notesCompatibleLine": "입력한 주소의 서비스로 메모를 작성합니다.",
       "notesNeedSignInOrChoose": "메모를 작성하려면 로그인하거나 여기에서 OpenAI를 선택하세요.",
       "notesNeedSignInOrKeyAndChoose": "메모를 작성하려면 로그인하거나 ‘계정과 키’에서 OpenAI 키를 추가한 뒤 여기에서 OpenAI를 선택하세요.",
       "speechNotUsed": "이번에는 번역을 읽어 주지 않고 글자로만 보여 줍니다.",
-      "speechHowToHear": "읽어 주게 하려면 위 문장에서 ‘듣는’을 고르세요."
+      "speechHowToHear": "읽어 주게 하려면 위 문장에서 ‘듣는’을 고르세요.",
+      "notesCompatibleName": "OpenAI 호환",
+      "notesCompatibleNeedsConfig": "엔드포인트와 모델 설정"
     },
     "display": {
       "surface": "어느 화면",
@@ -1961,6 +2017,20 @@
       "others": "OpenAI Translate, OpenAI Live, Palabra에는 단어 목록을 받을 자리가 없어 보내지 않습니다.",
       "byModel": "모델에 따라 다름",
       "byModelNote": "모델에 따라 다름: OpenAI는 이전 전사 모델에서만 배경을 받습니다. Gemini Live는 gemini-3.8-live에서만 용어를 받습니다. 이 기기는 대규모 언어 모델 번역기에서만 목록을 읽습니다."
+    },
+    "textModel": {
+      "automatic": "자동",
+      "automaticModel": "자동 ({{model}})",
+      "chooseModel": "모델 선택",
+      "modelName": "또는 모델 이름 입력",
+      "off": "끄기",
+      "lowest": "최저",
+      "reasoningTooltip": "‘최저’는 모델이 받아들이는 가장 적은 추론을 요청하며, 가장 빠릅니다. 다른 선택은 그대로 전송됩니다. 모델이 거부하면 시작하기 전에 구성에서 알려 줍니다.",
+      "notesReasoningTooltip": "기본값인 ‘중간’은 메모의 각 단계에 시험해 본 추론 수준을 요청합니다. 각 부분과 세션 중 메모에는 ‘낮음’, 마무리에는 ‘중간’을 쓰며, 모델이 더 적게 받아들이면 그만큼 낮춥니다. 다른 선택이나 입력한 값은 모든 요청에 그대로 전송됩니다. 모델이 거부하면 ‘메모’ 카드에서 알려 줍니다.",
+      "reasoningValue": "또는 값 입력 (그대로 전송)",
+      "listing": "모델을 찾는 중…",
+      "listEmpty": "이 서비스는 모델 목록을 제공하지 않습니다. 모델 이름을 입력하세요.",
+      "typedOverrides": "입력하면 이 값을 사용합니다. 비우면 위의 선택으로 돌아갑니다."
     }
   },
   "history": {
@@ -2058,11 +2128,6 @@
     "notesExplain": "세션마다 문장의 텍스트, 문장 번호, 어느 쪽의 어느 화자가 말했는지, 단어 목록의 표기가 본인의 키로 {{service}}에 전송됩니다. 음성, 번역, 계정은 절대 보내지 않습니다.",
     "notesTurnOn": "켜기",
     "notesModel": "메모 모델",
-    "notesModelLine": "메모를 작성하는 텍스트 모델. 서비스에서 쓰는 이름으로 입력합니다.",
-    "notesCompatibleBaseUrl": "API 기본 URL",
-    "notesCompatibleUrlInvalid": "HTTPS URL 또는 localhost/사설 HTTP URL을 입력하세요.",
-    "notesCompatibleKeyLine": "선택 사항입니다. 이 엔드포인트에 사용할 키를 입력하세요.",
-    "notesExplainCompatible": "설정한 엔드포인트에는 대화록 텍스트, 문장 번호, 화자 레이블, 단어 목록의 표기가 전송됩니다. 실시간 업데이트에는 지금까지 작성된 메모도 포함됩니다.",
     "notes": "메모",
     "transcript": "전사",
     "notesKind": {
@@ -2102,6 +2167,8 @@
       "not-json": "메모 모델이 예상한 형식으로 답하지 않았습니다.",
       "no-answer": "메모 모델이 답하지 않았습니다.",
       "network": "메모 서비스에 연결할 수 없습니다.",
+      "timeout": "메모 서비스가 제시간에 응답하지 않았습니다.",
+      "no-model": "메모 모델이 선택되지 않았습니다. ‘언어와 구성’의 ‘메모’ 카드에서 하나를 고르세요.",
       "refused": "서비스가 요청을 거부했습니다({{status}}).",
       "sign-in": "Kizuna AI로 메모를 작성하려면 Kizuna AI에 로그인하세요.",
       "unavailable": "Kizuna AI 메모는 아직 사용할 수 없습니다.",
@@ -2191,11 +2258,10 @@
     "notesJumpPlay": "주제나 요점을 클릭하면 해당 문장으로 이동해 거기서부터 재생합니다.",
     "notesJump": "주제나 요점을 클릭하면 해당 문장으로 이동합니다.",
     "keptHereNotes": "메모가 켜져 있는 동안에는 각 세션의 전사 텍스트도 메모 작성을 위해 {{service}}로 전송됩니다.",
-    "notesModelOther": "기타",
-    "notesModelName": "모델 이름",
     "notesExplainKizuna": "세션마다 문장의 텍스트, 문장 번호, 어느 쪽의 어느 화자가 말했는지, 단어 목록의 표기가 Kizuna AI 서버를 거쳐 OpenAI로 전송되고, OpenAI가 메모를 작성합니다. Kizuna AI는 아무것도 저장하지 않습니다. 비용은 세션 비용을 내는 잔액에서 지불됩니다. 음성과 번역은 절대 보내지 않습니다.",
     "liveExplainKizuna": "세션 중에는 20초마다 새 문장(텍스트, 번호, 어느 쪽의 어느 화자가 말했는지), 지금까지의 메모, 단어 목록의 표기가 Kizuna AI 서버를 거쳐 OpenAI로 전송되고, OpenAI가 메모를 작성합니다. Kizuna AI는 아무것도 저장하지 않습니다. 비용은 세션 비용을 내는 잔액에서 지불됩니다. 음성과 번역은 절대 보내지 않습니다.",
     "notesModelKizuna": "Kizuna AI는 {{model}}(으)로 메모를 작성합니다.",
+    "notesModelLineUp": "메모 서비스와 함께 ‘언어와 구성’의 ‘메모’ 카드에서 고릅니다.",
     "copyConversation": "대화 복사",
     "saveConversationTxt": "대화 저장(.txt)",
     "saveConversationJson": "대화 저장(.json)",
@@ -2286,12 +2352,17 @@
     "notesOwner": "담당자",
     "notesDue": "기한",
     "notesEdited": "직접 수정됨",
+    "notesWrittenBy": "{{service}}이(가) {{model}}(으)로 작성",
     "mergeSpeaker": "{{name}} 합치기…",
     "mergeInto": "합치기…",
     "mergeMenu": "합칠 대상",
     "mergeAsk": "{{name}}은(는) 이미 이쪽 화자입니다.",
     "mergeOne": "한 사람으로 합치기",
-    "keepApart": "따로 두기"
+    "keepApart": "따로 두기",
+    "notesCompatibleBaseUrl": "API 기본 URL",
+    "notesCompatibleUrlInvalid": "HTTPS URL 또는 localhost/사설 HTTP URL을 입력하세요.",
+    "notesCompatibleKeyLine": "선택 사항입니다. 이 엔드포인트에 사용할 키를 입력하세요.",
+    "notesExplainCompatible": "설정한 엔드포인트에는 대화록 텍스트, 문장 번호, 화자 레이블, 단어 목록의 표기가 전송됩니다. 실시간 업데이트에는 지금까지 작성된 메모도 포함됩니다."
   },
   "notesQuit": {
     "named": "“{{title}}”의 메모를 작성하는 중입니다. 그래도 종료할까요? 취소된 것으로 표시됩니다.",

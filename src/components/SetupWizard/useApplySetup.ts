@@ -3,7 +3,8 @@
 //
 // applyProvider writes through the provider store, the one writer of the
 // session's provider settings, and resolves once those writes have landed;
-// readiness re-checks on the store's own reset.
+// readiness re-checks on the store's own reset. It does not say which
+// provider runs: applyLineUp does, through the line-up store.
 import { useCallback } from 'react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useRoutingStore } from '../../stores/routingStore';
@@ -11,8 +12,7 @@ import useAudioStore from '../../stores/audioStore';   // default export only â€
 import { useSetupStore, SetupPersistError } from '../../stores/setupStore';
 import { PAIR_FIELDS, useProviderStore } from '../../stores/providerStore';
 import { useLineUpStore } from '../../stores/lineUpStore';
-import { presentProviders } from '../../providers/registry';
-import { providerIdFromStored } from '../../lib/session/storedSettings';
+import { wizardProvider } from './providerPaths';
 import { applySetupDraft } from './applySetup';
 import type { SetupDraft } from './setupDraft';
 
@@ -26,8 +26,8 @@ export function useApplySetup(): (draft: SetupDraft) => Promise<void> {
       setTextOnly: s.setTextOnly,
       setParticipantSpeech: useRoutingStore.getState().setParticipantSpeech,
       applyProvider: async (provider, pair, credentials, settings) => {
-        const id = providerIdFromStored(provider);
-        const p = presentProviders().find((candidate) => candidate.id === id);
+        // Only a provider that runs a session by itself: the retired OpenAI Compatible's id is now a text model's.
+        const p = wizardProvider(provider);
         if (!p) throw new Error(`This build does not offer "${provider}".`);
         const store = useProviderStore.getState();
         await store.load(p);
@@ -47,8 +47,7 @@ export function useApplySetup(): (draft: SetupDraft) => Promise<void> {
           written.push(key);
         }
         store.setPair(p, pair);
-        // A wizard choice is a person's: it persists (1e-3b-1 ruling 8).
-        store.select(p.id, 'pick');
+        // What runs is the line-up's to say: `applyLineUp` stores it next, and the provider's id beside it.
         // The record comes last and says setup is done: never over what this
         // Finish wrote before it is on disk (the extension's storage is
         // asynchronous, and a closed side panel would keep the record alone).
@@ -56,7 +55,9 @@ export function useApplySetup(): (draft: SetupDraft) => Promise<void> {
         // refused for its size, say â€” is not its to fail on.
         if (!await store.flush(p, written)) throw new SetupPersistError();
       },
-      // The line-up of the chosen path, stored before the record: one that did not land fails Finish as a provider write does.
+      // The line-up of the chosen path, stored before the record, and with it the id of the provider that
+      // transcribes (for an older version of the app): from here on the chosen provider runs. One that did not land
+      // fails Finish as a provider write does.
       applyLineUp: async (lineUp) => {
         if (!await useLineUpStore.getState().replace(lineUp)) throw new SetupPersistError();
       },

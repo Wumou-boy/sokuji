@@ -120,7 +120,7 @@ describe('the Qwen LiveTranslate adapter: the seeded lifecycles', () => {
     },
   };
 
-  // 300 lives, about a second alone: the bound is for a loaded machine.
+  // The lifecycle harness yields to real timers. Windows can take over 20 seconds for 300 lives.
   it('every life settles, ends clean, and leaves no timer, socket or send behind', async () => {
     const report = await runLifecycles(lifecycles, { seed: 20261013, runs: 300 });
     expect(report.failures).toEqual([]);
@@ -129,7 +129,7 @@ describe('the Qwen LiveTranslate adapter: the seeded lifecycles', () => {
       'refused', 'live', 'stopped', 'end.failed.connection_lost', 'end.failed.client', 'end.failed.server', 'opening.bound', 'opening.abort',
       'harness.drop', 'harness.silent', 'harness.refused', 'harness.close_1007', 'harness.unanswered', 'harness.created_only', 'harness.reconnect',
     ]) expect(report.stats[key] ?? 0, key).toBeGreaterThan(0);
-  }, 20_000);
+  }, 45_000);
 });
 
 describe('the Qwen LiveTranslate adapter: the start (spec §6)', () => {

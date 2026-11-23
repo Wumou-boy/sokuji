@@ -133,6 +133,14 @@ import { createVirtualClock } from '../lib/contract/clock';
 import { fakeProvider } from '../providers/fake/provider';
 import { createFakeSource, type FakeSource } from '../providers/fake/source';
 import { useProviderStore } from '../stores/providerStore';
+import { TEXT_MODEL_DEFAULTS } from '../lib/textModel/unit';
+
+/**
+ * OpenAI's text model holding the user's key, whose notes the live notes are written with (text models, part C), its
+ * notes model chosen: no model list is asked, so nothing here reaches a service.
+ */
+const OPENAI_TEXT_ENTRY = { settings: { ...TEXT_MODEL_DEFAULTS, notesModel: { listed: 'gpt-6-luna', typed: '' } }, credentials: { apiKey: 'sk-test' }, pair: { source: 'en', target: 'ja' } };
+import { runsOn } from '../stores/lineUpStore.testing';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useLineUpStore } from '../stores/lineUpStore';
 import { useLiveNotes } from '../lib/notes/live/liveStore';
@@ -146,7 +154,8 @@ const settingsBefore = useSettingsStore.getState();
 const lineUpBefore = useLineUpStore.getState().lineUp;
 
 beforeEach(() => {
-  useProviderStore.setState({ entries: {}, intent: undefined, readiness: {}, selected: null, legs: ['speaker'] });
+  runsOn(null);
+  useProviderStore.setState({ entries: {}, intent: undefined, readiness: {}, legs: ['speaker'] });
   devices.next = null;
   vi.clearAllMocks();
 });
@@ -160,7 +169,7 @@ afterEach(() => {
 async function setup(options: AppSessionOptions = {}) {
   const clock = createVirtualClock(0);
   await useProviderStore.getState().load(fakeProvider);
-  useProviderStore.getState().select('fake');
+  runsOn('fake');
   const session = createAppSession({
     clock,
     newSessionId: () => 'run1',
@@ -210,7 +219,7 @@ describe('the last update at Stop, and none at the app\'s own quit', () => {
   it('lets the loop go without its last update when the app quits during a session, and answers the close', async () => {
     useSettingsStore.setState({ liveNotes: true, notesAfterSession: false } as never);
     useLineUpStore.setState({ lineUp: { transcription: 'fake', translation: 'fake', speech: 'fake', summarisation: 'openai' } } as never);
-    useProviderStore.setState({ entries: { ...useProviderStore.getState().entries, openai: { settings: {}, credentials: { apiKey: 'sk-test' }, pair: { source: 'en', target: 'ja' } } } } as never);
+    useProviderStore.setState({ entries: { ...useProviderStore.getState().entries, openai_text: OPENAI_TEXT_ENTRY } } as never);
     const { ipc, closeRequested } = electronIpc();
     const live = hangingLive();
     const { session, clock } = await setup({ ipc, history: historyPort(), liveNotes: live.factory as never, askQuit: async () => 'quit' });
