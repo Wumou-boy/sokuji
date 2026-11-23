@@ -14,14 +14,15 @@ import { useTranslation } from 'react-i18next';
 import { AudioLines, ChevronDown, ChevronRight, Link2, ListX } from 'lucide-react';
 import { useAnalytics } from '../../lib/analytics';
 import { caps } from '../../lib/lineup/catalog';
-import { KIZUNA_NOTES, notesServiceOf } from '../../lib/notes/notesService';
+import { BAILIAN_NOTES, COMPATIBLE_NOTES, KIZUNA_NOTES, notesServiceOf } from '../../lib/notes/notesService';
+import { notesEndpointOf } from '../../lib/notes/notesEndpoint';
 import { perHour, useNotesPricing } from '../../lib/notes/notesPricing';
 import { RUN_STAGES, type LineUp, type RunStage, type StageName } from '../../lib/lineup/types';
 import { presentProviders } from '../../providers/registry';
 import { lineUpChangedEvent, useLineUpStore } from '../../stores/lineUpStore';
 import { useProviderStore } from '../../stores/providerStore';
 import { useMode } from '../../stores/audioStore';
-import { useEngineSlotTarget, useNavigateToSettings, useSetEngineSlotTarget, useSetTextOnly, useSettingsNavigationTarget, useTextOnly } from '../../stores/settingsStore';
+import useSettingsStore, { useEngineSlotTarget, useNavigateToSettings, useSetEngineSlotTarget, useSetTextOnly, useSettingsNavigationTarget, useTextOnly } from '../../stores/settingsStore';
 import { supportsBaseSelect } from '../../utils/supportsBaseSelect';
 import { isElectron } from '../../utils/environment';
 import { getManifestEntry } from '../../lib/local-inference/modelManifest';
@@ -142,6 +143,10 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
   const kizunaOffered = isElectron() && providers.some((p) => p.kind === 'managed');
   const notesService = notesServiceOf(lineUp, { hostedOffered: kizunaOffered, signedIn: auth.signedIn, openAiKeyed });
   const kizunaChosen = notesService === KIZUNA_NOTES;
+  const bailianEntry = entries.qwen_livetranslate as { settings?: { connection?: string }; credentials?: { apiKey?: string } } | undefined;
+  const bailianReady = bailianEntry?.settings?.connection === 'bailian-cn' && Boolean(bailianEntry.credentials?.apiKey?.trim());
+  const compatibleConfig = useSettingsStore((s) => s.notesCompatible);
+  const compatibleReady = Boolean(notesEndpointOf(compatibleConfig?.baseUrl ?? '') && compatibleConfig?.model?.trim());
   // The app checks only the session's own provider by itself: OpenAI chosen for the notes alone was never checked, and
   // its card said "Key not verified" for ever (the owner, 2026-11-17). The card checks the key it shows, once, while
   // nothing has checked it yet; not during a session.
@@ -163,6 +168,12 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
     ...(openAiKeyed || notesService === 'openai' ? [{
       id: 'openai', name: 'OpenAI', icon: openAi?.icon,
       description: t('settingsPage.lineup.notesOpenAiLine', 'Writes the notes with your own OpenAI key.'),
+    }] : []),
+    ...(isElectron() ? [{
+      id: BAILIAN_NOTES, name: 'Qwen / Bailian', icon: providers.find((p) => p.id === 'qwen_livetranslate')?.icon,
+    }] : []),
+    ...(isElectron() ? [{
+      id: COMPATIBLE_NOTES, name: t('settingsPage.lineup.notesCompatibleName', 'OpenAI-compatible'),
     }] : []),
   ];
   const chooseNotes = async (id: string) => {
@@ -525,7 +536,17 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
                 ? kizunaNotesState.ok
                   ? <em className="lineup-stage__state is-ready">{kizunaNotesState.text}</em>
                   : <button type="button" className="lineup-stage__state lineup-stage__state--link" onClick={() => navigateToSettings('user-account')}>{kizunaNotesState.text}</button>
-                : stateTag('openai')}
+                : notesService === BAILIAN_NOTES
+                  ? bailianReady
+                    ? null
+                    : <button type="button" className="lineup-stage__state lineup-stage__state--link"
+                      onClick={() => navigateToSettings('provider:qwen_livetranslate')}>{t('settingsPage.lineup.state.needsKey', 'Needs a key')}</button>
+                  : notesService === COMPATIBLE_NOTES
+                    ? compatibleReady
+                      ? null
+                      : <button type="button" className="lineup-stage__state lineup-stage__state--link"
+                        onClick={() => navigateToSettings('history')}>{t('settingsPage.lineup.notesCompatibleNeedsConfig', 'Set endpoint and model')}</button>
+                    : stateTag('openai')}
             </div>
             {/* Drawn like the other stages' choices (owner, 2026-11-17): an icon, the name, a line about writing notes. */}
             <select className="select-dropdown provider-select" value={notesService} disabled={locked} aria-label={t('settingsPage.lineup.stages.summarisation', 'Notes')}
@@ -537,10 +558,10 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
             {kizunaChosen && auth.signedIn && notesPricing && (
               <p className="lineup-stage__joint">{t('settingsPage.lineup.notesKizunaPrice', 'Kizuna AI estimates: live notes about {{live}} an hour, notes after a session about {{after}} an hour, paid from the balance that pays for your sessions.', { live: perHour(notesPricing.liveUsdPerHour), after: perHour(notesPricing.afterSessionUsdPerHour) })}</p>
             )}
-            {!openAiKeyed && !kizunaOffered && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedKey', 'Add an OpenAI key in Accounts and keys to have notes written.')}</p>}
+            {notesService === 'openai' && !openAiKeyed && !kizunaOffered && <p className="lineup-stage__joint">{t('settingsPage.lineup.notesNeedKey', 'Add an OpenAI key in Accounts and keys to have notes written.')}</p>}
             {/* Signed out where Kizuna AI writes the notes: chosen on purpose, adding a key does not change the choice, so
                 the line says to choose OpenAI here too (review); by default, a key is enough. */}
-            {kizunaOffered && !auth.signedIn && (lineUp?.summarisation === KIZUNA_NOTES
+            {(kizunaChosen || notesService === 'openai') && kizunaOffered && !auth.signedIn && (lineUp?.summarisation === KIZUNA_NOTES
               ? <p className="lineup-stage__joint">{openAiKeyed
                 ? t('settingsPage.lineup.notesNeedSignInOrChoose', 'Sign in, or choose OpenAI here, to have notes written.')
                 : t('settingsPage.lineup.notesNeedSignInOrKeyAndChoose', 'Sign in, or add an OpenAI key in Accounts and keys and choose OpenAI here, to have notes written.')}</p>

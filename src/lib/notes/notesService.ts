@@ -12,8 +12,12 @@ import { useProviderStore } from '../../stores/providerStore';
 export const KIZUNA_NOTES = 'kizunaai_openai';
 /** The line-up's notes service with the user's own OpenAI key: the provider's own id. */
 export const OPENAI_NOTES = 'openai';
+/** Alibaba Bailian's OpenAI-compatible endpoint, using the Qwen provider's Bailian connection and key. */
+export const BAILIAN_NOTES = 'bailian_notes';
+/** A user-configured OpenAI-compatible endpoint for a local or third-party model. */
+export const COMPATIBLE_NOTES = 'compatible_notes';
 /** The notes services the app knows. */
-const NOTES_SERVICES: readonly string[] = [KIZUNA_NOTES, OPENAI_NOTES];
+const NOTES_SERVICES: readonly string[] = [KIZUNA_NOTES, OPENAI_NOTES, BAILIAN_NOTES, COMPATIBLE_NOTES];
 
 /** Whether this build offers Kizuna AI's notes: the desktop app, with the hosted services in it. */
 export function hostedNotesOffered(): boolean {

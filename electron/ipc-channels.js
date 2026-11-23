@@ -70,6 +70,10 @@ export const INVOKE_CHANNELS = [
   'fix-monitor-volume',
   // Opt-in managed session-service transport diagnostics
   'session-network:set-enabled',
+  'agent-control:ready',
+  'agent-control:response',
+  'notes-http:complete',
+  'notes-http:abort',
   // WebSocket header injection (renderer → main)
   'ws-headers-set',
   'ws-headers-clear',

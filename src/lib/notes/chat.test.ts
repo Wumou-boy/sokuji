@@ -1,6 +1,6 @@
 // The notes model, called with the user's own key on an OpenAI-compatible chat interface.
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { ChatError, NOTES_MODELS, openAiChat } from './chat';
+import { ChatError, NOTES_MODELS, compatibleChat, openAiChat } from './chat';
 
 const answer = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 const content = (obj: unknown) => ({ choices: [{ message: { content: JSON.stringify(obj) } }] });
@@ -24,6 +24,33 @@ describe('the notes chat', () => {
       max_completion_tokens: 32000,
       reasoning_effort: 'none',
     });
+  });
+
+  it('uses the generic compatible body without OpenAI-only fields and accepts a JSON code fence', async () => {
+    const fetch = vi.fn(async () => answer(200, { choices: [{ message: { content: '```json\n{"title":"T"}\n```' } }] }));
+    await expect(ask(compatibleChat({ baseUrl: 'http://127.0.0.1:8000/v1/', model: 'qwen-local', fetch }))).resolves.toEqual({ title: 'T' });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('http://127.0.0.1:8000/v1/chat/completions');
+    expect(init.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(JSON.parse(init.body as string)).toEqual({
+      model: 'qwen-local', messages: [{ role: 'system', content: 'S' }, { role: 'user', content: '{"sentences":[{"sid":1,"speaker":"Me","text":"你好"}]}' }], max_tokens: 32000,
+    });
+  });
+
+  it('adds Bailian thinking control and bearer auth only on the Bailian route', async () => {
+    const fetch = vi.fn(async () => answer(200, content({ title: 'T' })));
+    await ask(compatibleChat({ baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-flash', apiKey: 'qwen-key', bailian: true, fetch }));
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions');
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer qwen-key' });
+    expect(JSON.parse(init.body as string)).toMatchObject({ model: 'qwen-flash', max_tokens: 32000, enable_thinking: false });
+    expect(JSON.parse(init.body as string)).not.toHaveProperty('response_format');
+    expect(JSON.parse(init.body as string)).not.toHaveProperty('reasoning_effort');
+  });
+
+  it('keeps code fences invalid for the strict OpenAI route', async () => {
+    const fetch = vi.fn(async () => answer(200, { choices: [{ message: { content: '```json\n{"title":"T"}\n```' } }] }));
+    await expect(ask(openAiChat({ ...base, fetch }))).rejects.toMatchObject({ code: 'not-json' });
   });
 
   // Review: a model that does not take `reasoning_effort: 'none'` refuses every request with it (400, not retried).

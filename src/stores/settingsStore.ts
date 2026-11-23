@@ -60,6 +60,24 @@ export type {
 // copy of this union (subtitleStore.ts) — change both together.
 export type DisplayMode = 'source' | 'translation' | 'both' | 'none';
 
+export interface CompatibleNotesSettings {
+  baseUrl: string;
+  model: string;
+  apiKey: string;
+}
+
+const EMPTY_COMPATIBLE_NOTES: CompatibleNotesSettings = { baseUrl: '', model: '', apiKey: '' };
+
+function asCompatibleNotes(value: unknown): CompatibleNotesSettings {
+  if (!value || typeof value !== 'object') return EMPTY_COMPATIBLE_NOTES;
+  const { baseUrl, model, apiKey } = value as Record<string, unknown>;
+  return {
+    baseUrl: typeof baseUrl === 'string' ? baseUrl.trim() : '',
+    model: typeof model === 'string' ? model.trim() : '',
+    apiKey: typeof apiKey === 'string' ? apiKey.trim() : '',
+  };
+}
+
 // Common Settings
 export interface CommonSettings {
   provider: ProviderType;
@@ -75,6 +93,8 @@ export interface CommonSettings {
   notesAfterSession: boolean;
   /** The text model the notes use. */
   notesModel: string;
+  notesBailianModel: string;
+  notesCompatible: CompatibleNotesSettings;
   /** Turning the notes on has been explained once (what is sent where). */
   notesExplained: boolean;
   /** Live notes during a session (desktop): every 20 seconds, with the line-up's notes service. Off by default. */
@@ -167,6 +187,7 @@ function clampSegmentationMode(value: unknown): SegmentationMode {
 
 /** The notes' model until the user names another (the one the notes were measured with). */
 export const DEFAULT_NOTES_MODEL = 'gpt-6-luna';
+export const DEFAULT_NOTES_BAILIAN_MODEL = 'qwen-flash';
 
 const defaultCommonSettings: CommonSettings = {
   // An id the old registry does not hold, so nothing old runs for it. Local
@@ -183,6 +204,8 @@ const defaultCommonSettings: CommonSettings = {
   diagnosticLogs: false,
   notesAfterSession: false,
   notesModel: DEFAULT_NOTES_MODEL,
+  notesBailianModel: DEFAULT_NOTES_BAILIAN_MODEL,
+  notesCompatible: EMPTY_COMPATIBLE_NOTES,
   notesExplained: false,
   liveNotes: false,
   liveNotesExplained: false,
@@ -255,6 +278,8 @@ export interface SettingsStore {
   /** Notes after the session, their model, and whether turning them on was explained (see CommonSettings). */
   notesAfterSession: boolean;
   notesModel: string;
+  notesBailianModel: string;
+  notesCompatible: CompatibleNotesSettings;
   notesExplained: boolean;
   liveNotes: boolean;
   liveNotesExplained: boolean;
@@ -300,6 +325,8 @@ export interface SettingsStore {
   setNotesAfterSession: (on: boolean) => Promise<void>;
   /** An empty name puts the default back. */
   setNotesModel: (model: string) => Promise<void>;
+  setNotesBailianModel: (model: string) => Promise<void>;
+  setNotesCompatible: (settings: Partial<CompatibleNotesSettings>) => Promise<void>;
   setNotesExplained: (explained: boolean) => Promise<void>;
   setLiveNotes: (on: boolean) => Promise<void>;
   setLiveNotesExplained: (explained: boolean) => Promise<void>;
@@ -501,6 +528,24 @@ const useSettingsStore = create<SettingsStore>()(
       const notesModel = model.trim() || DEFAULT_NOTES_MODEL;
       set({ notesModel });
       if (!await persistSetting('settings.notes.model', notesModel)) set({ notesModel: previous });
+    },
+
+    setNotesBailianModel: async (model) => {
+      const previous = get().notesBailianModel;
+      const notesBailianModel = model.trim() || DEFAULT_NOTES_BAILIAN_MODEL;
+      set({ notesBailianModel });
+      if (!await persistSetting('settings.notes.bailianModel', notesBailianModel) && get().notesBailianModel === notesBailianModel) {
+        set({ notesBailianModel: previous });
+      }
+    },
+
+    setNotesCompatible: async (patch) => {
+      const previous = get().notesCompatible;
+      const notesCompatible = asCompatibleNotes({ ...previous, ...patch });
+      set({ notesCompatible });
+      if (!await persistSetting('settings.notes.compatible', notesCompatible) && get().notesCompatible === notesCompatible) {
+        set({ notesCompatible: previous });
+      }
     },
 
     setNotesExplained: async (notesExplained) => {
@@ -749,6 +794,10 @@ const useSettingsStore = create<SettingsStore>()(
         const notesAfterSession = await service.getSetting('settings.notes.afterSession', defaultCommonSettings.notesAfterSession) === true;
         const storedNotesModel = await service.getSetting<unknown>('settings.notes.model', defaultCommonSettings.notesModel);
         const notesModel = typeof storedNotesModel === 'string' && storedNotesModel.trim() ? storedNotesModel.trim() : DEFAULT_NOTES_MODEL;
+        const storedNotesBailianModel = await service.getSetting<unknown>('settings.notes.bailianModel', DEFAULT_NOTES_BAILIAN_MODEL);
+        const notesBailianModel = typeof storedNotesBailianModel === 'string' && storedNotesBailianModel.trim()
+          ? storedNotesBailianModel.trim() : DEFAULT_NOTES_BAILIAN_MODEL;
+        const notesCompatible = asCompatibleNotes(await service.getSetting<unknown>('settings.notes.compatible', EMPTY_COMPATIBLE_NOTES));
         const notesExplained = await service.getSetting('settings.notes.explained', defaultCommonSettings.notesExplained) === true;
         const liveNotes = await service.getSetting('settings.notes.live', defaultCommonSettings.liveNotes) === true;
         const liveNotesExplained = await service.getSetting('settings.notes.liveExplained', defaultCommonSettings.liveNotesExplained) === true;
@@ -799,6 +848,8 @@ const useSettingsStore = create<SettingsStore>()(
           autoSaveOnStop,
           notesAfterSession,
           notesModel,
+          notesBailianModel,
+          notesCompatible,
           notesExplained,
           liveNotes,
           liveNotesExplained,

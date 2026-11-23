@@ -545,7 +545,7 @@ describe('the notes card', () => {
   it('signed out with no OpenAI key: Kizuna AI by default, waiting for a sign-in, and the card says how to have notes written', () => {
     authState.signedIn = false;
     render(<LineUpCategory locked={false} />);
-    expect(optionTexts('Notes')).toEqual(['Kizuna AI']);
+    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'Qwen / Bailian', 'OpenAI-compatible']);
     expect(screen.getByRole('combobox', { name: 'Notes' })).toHaveValue('kizunaai_openai');
     const card = screen.getByRole('combobox', { name: 'Notes' }).closest('.lineup-stage') as HTMLElement;
     expect(within(card).getByText('Needs a sign-in')).toBeInTheDocument();
@@ -582,7 +582,7 @@ describe('the notes card', () => {
     notesPricing.value = { liveUsdPerHour: 0.04, afterSessionUsdPerHour: 0.012 };
     useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'openai' }, stored: true });
     render(<LineUpCategory locked={false} />);
-    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'OpenAI']);
+    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'OpenAI', 'Qwen / Bailian', 'OpenAI-compatible']);
     expect(screen.queryByText(/Add an OpenAI key/)).toBeNull();
     // The owner, 2026-11-17: Kizuna AI's prices only where Kizuna AI writes the notes; not under OpenAI's own key.
     const price = 'Kizuna AI estimates: live notes about $0.04 an hour, notes after a session about $0.012 an hour, paid from the balance that pays for your sessions.';
@@ -613,7 +613,7 @@ describe('the notes card', () => {
     authState.signedIn = false;
     useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'kizunaai_openai' }, stored: true });
     render(<LineUpCategory locked={false} />);
-    expect(optionTexts('Notes')).toEqual(['Kizuna AI']);
+    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'Qwen / Bailian', 'OpenAI-compatible']);
     const card = screen.getByRole('combobox', { name: 'Notes' }).closest('.lineup-stage') as HTMLElement;
     expect(within(card).getByText('Needs a sign-in')).toBeInTheDocument();
   });
@@ -621,7 +621,7 @@ describe('the notes card', () => {
   it('without the hosted services, OpenAI by default, needing a key, and the card says where to add one', () => {
     noHosted.value = true;
     render(<LineUpCategory locked={false} />);
-    expect(optionTexts('Notes')).toEqual(['OpenAI']);
+    expect(optionTexts('Notes')).toEqual(['OpenAI', 'Qwen / Bailian', 'OpenAI-compatible']);
     const card = screen.getByRole('combobox', { name: 'Notes' }).closest('.lineup-stage') as HTMLElement;
     expect(within(card).getByText('Needs a key')).toBeInTheDocument();
     expect(screen.getByText('Add an OpenAI key in Accounts and keys to have notes written.')).toBeInTheDocument();
@@ -630,10 +630,20 @@ describe('the notes card', () => {
   it('offers OpenAI once it has a key, and a choice sets the notes stage alone', async () => {
     openAiKey();
     render(<LineUpCategory locked={false} />);
-    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'OpenAI']);
+    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'OpenAI', 'Qwen / Bailian', 'OpenAI-compatible']);
     fireEvent.change(screen.getByRole('combobox', { name: 'Notes' }), { target: { value: 'openai' } });
     await waitFor(() => expect(useLineUpStore.getState().lineUp).toEqual({ ...soniox, summarisation: 'openai' }));
     expect(tracked).toContainEqual(['lineup_changed', { stage: 'summarisation', from: null, to: 'openai', moved: [], during_session: false }]);
+  });
+
+  it('offers both desktop notes presets and choosing one changes only the notes stage', async () => {
+    openAiKey();
+    useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'openai' }, stored: true });
+    render(<LineUpCategory locked={false} />);
+    expect(optionTexts('Notes')).toContain('Qwen / Bailian');
+    expect(optionTexts('Notes')).toContain('OpenAI-compatible');
+    fireEvent.change(screen.getByRole('combobox', { name: 'Notes' }), { target: { value: 'compatible_notes' } });
+    await waitFor(() => expect(useLineUpStore.getState().lineUp).toEqual({ ...soniox, summarisation: 'compatible_notes' }));
   });
 
   // B-11 (the owner, 2026-11-17): Ready means the key works, not only that one is saved. A Soniox key the selected
@@ -736,7 +746,7 @@ describe('the notes card', () => {
   it('keeps showing OpenAI while it is chosen, saying it needs a key once the key is gone', () => {
     useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'openai' }, stored: true });
     render(<LineUpCategory locked={false} />);
-    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'OpenAI']);
+    expect(optionTexts('Notes')).toEqual(['Kizuna AI', 'OpenAI', 'Qwen / Bailian', 'OpenAI-compatible']);
     const card = screen.getByRole('combobox', { name: 'Notes' }).closest('.lineup-stage') as HTMLElement;
     expect(within(card).getByText('Needs a key')).toBeInTheDocument();
   });
@@ -751,7 +761,7 @@ describe('the notes card', () => {
       const select = screen.getByRole('combobox', { name: 'Notes' });
       expect(select).toHaveClass('provider-select');
       const kizuna = within(select).getByRole('option', { name: /^Kizuna AI/ });
-      const openai = within(select).getByRole('option', { name: /^OpenAI/ });
+      const openai = select.querySelector('option[value="openai"]') as HTMLOptionElement;
       expect(kizuna.querySelector('.provider-select__icon')).not.toBeNull();
       expect(openai.querySelector('.provider-select__icon')).not.toBeNull();
       expect(kizuna.querySelector('.provider-select__description')).toHaveTextContent('OpenAI writes the notes through Kizuna AI, paid from your balance.');

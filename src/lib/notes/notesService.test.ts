@@ -1,6 +1,6 @@
 // The line-up's notes service: always one (owner, 2026-11-17: no "None"); whether notes are written is the switches' call.
 import { describe, it, expect } from 'vitest';
-import { notesServiceOf, KIZUNA_NOTES } from './notesService';
+import { notesServiceOf, KIZUNA_NOTES, BAILIAN_NOTES, COMPATIBLE_NOTES } from './notesService';
 
 const d = (hostedOffered: boolean, signedIn: boolean, openAiKeyed: boolean) => ({ hostedOffered, signedIn, openAiKeyed });
 
@@ -20,6 +20,8 @@ describe('the notes service', () => {
   it('is the one the line-up chose', () => {
     expect(notesServiceOf({ summarisation: 'openai' }, d(true, true, false))).toBe('openai');
     expect(notesServiceOf({ summarisation: KIZUNA_NOTES }, d(false, false, true))).toBe(KIZUNA_NOTES);
+    expect(notesServiceOf({ summarisation: BAILIAN_NOTES }, d(false, false, false))).toBe(BAILIAN_NOTES);
+    expect(notesServiceOf({ summarisation: COMPATIBLE_NOTES }, d(false, false, false))).toBe(COMPATIBLE_NOTES);
   });
 
   // The owner's call (2026-11-17): Kizuna AI by default where it can write the notes, otherwise OpenAI.

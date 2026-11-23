@@ -51,6 +51,7 @@ export const GROUPS: readonly CategoryGroup[] = ['session', 'providers', 'device
 
 /** Today's `navigateToSettings` targets: the category that holds each, and the element to highlight (`#<anchor>-section`). */
 const TARGETS: Record<string, { category: CategoryId; anchor: string | null }> = {
+  history: { category: 'history', anchor: null },
   languages: { category: 'lineup', anchor: 'languages' },
   'turn-detection': { category: 'lineup', anchor: 'turn-detection' },
   'turn-detection-tuning': { category: 'lineup', anchor: 'turn-detection-tuning' },

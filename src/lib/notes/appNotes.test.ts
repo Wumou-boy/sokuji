@@ -15,7 +15,9 @@ import i18n from '../../locales';
 import { useLineUpStore } from '../../stores/lineUpStore';
 import { useProviderStore } from '../../stores/providerStore';
 import useSettingsStore from '../../stores/settingsStore';
-import { notesChatFromStores, notesLanguageOf } from './appNotes';
+import { notesChatForService, notesChatFromStores, notesLanguageOf } from './appNotes';
+import { BAILIAN_NOTES, COMPATIBLE_NOTES } from './notesService';
+import { BAILIAN_ENDPOINT_ID } from '../../providers/qwen_livetranslate/endpoints';
 import { registerAuth } from '../../app/currentAuth';
 import { useAccountStore } from '../../stores/accountStore';
 import { setUseOwnBalance } from '../session/payerChoice';
@@ -27,7 +29,7 @@ beforeEach(() => {
   desktop.hosted = false;
   useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'openai' }, stored: true });
   useProviderStore.setState({ entries: { openai: { settings: {}, credentials: { apiKey: ' sk-test ' }, pair: { source: 'en', target: 'ja' } } } as never });
-  useSettingsStore.setState({ notesModel: 'gpt-6-luna' } as never);
+  useSettingsStore.setState({ notesModel: 'gpt-6-luna', notesBailianModel: 'qwen-flash', notesCompatible: { baseUrl: '', model: '', apiKey: '' } } as never);
 });
 
 describe('the notes service from the stores', () => {
@@ -116,6 +118,34 @@ describe('the notes service from the stores', () => {
     useLineUpStore.setState({ lineUp: { ...soniox, summarisation: 'openai' }, stored: true });
     useProviderStore.setState({ entries: { openai: { settings: {}, credentials: { apiKey: '' }, pair: { source: 'en', target: 'ja' } } } as never });
     expect(await notesChatFromStores()).toBeNull();
+  });
+
+  it('uses a normalized generic endpoint and its own optional key without borrowing the Qwen key', async () => {
+    useSettingsStore.setState({ notesCompatible: { baseUrl: 'http://127.0.0.1:9000/v1/chat/completions', model: 'pgx-model', apiKey: '' } } as never);
+    useProviderStore.setState({ entries: { qwen_livetranslate: { settings: { connection: BAILIAN_ENDPOINT_ID }, credentials: { apiKey: 'qwen-secret' }, pair: { source: 'en', target: 'ja' } } } as never });
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: '{"title":"PGX"}' } }] })));
+    const service = await notesChatForService(COMPATIBLE_NOTES, undefined, { fetch });
+    expect(service?.model).toBe('pgx-model');
+    await service!.chat({ system: 'S', prompt: 'whole-meeting', promptVersion: 2, user: {}, effort: 'none', maxTokens: 10, signal: new AbortController().signal });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('http://127.0.0.1:9000/v1/chat/completions');
+    expect((init.headers as Record<string, string>).Authorization).toBeUndefined();
+  });
+
+  it('uses the Qwen key for Bailian only when the Qwen provider is explicitly configured for Bailian', async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: '{}' } }] })));
+    useProviderStore.setState({ entries: { qwen_livetranslate: { settings: { connection: 'auto' }, credentials: { apiKey: 'qwen-secret' }, pair: { source: 'en', target: 'ja' } } } as never });
+    expect(await notesChatForService(BAILIAN_NOTES, undefined, { fetch })).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    useProviderStore.setState({ entries: { qwen_livetranslate: { settings: { connection: BAILIAN_ENDPOINT_ID }, credentials: { apiKey: ' qwen-secret ' }, pair: { source: 'en', target: 'ja' } } } as never });
+    useSettingsStore.setState({ notesBailianModel: 'qwen-plus' } as never);
+    const service = await notesChatForService(BAILIAN_NOTES, undefined, { fetch });
+    expect(service?.model).toBe('qwen-plus');
+    await service!.chat({ system: 'S', prompt: 'whole-meeting', promptVersion: 2, user: {}, effort: 'none', maxTokens: 10, signal: new AbortController().signal });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer qwen-secret');
+    expect(JSON.parse(init.body as string)).toMatchObject({ model: 'qwen-plus', enable_thinking: false });
   });
 });
 

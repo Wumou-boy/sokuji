@@ -17,6 +17,8 @@ const { createCloseHandshake } = require('./close-handshake.js');
 const { registerOutputFormFactor } = require('./output-form-factor.js');
 const { createWsHeaderRules } = require('./ws-header-rules.js');
 const { registerSessionNetworkDiagnostics } = require('./session-network-diagnostics.js');
+const { startAgentControl } = require('./agent-control.js');
+const { createNotesHttp } = require('./notes-http.js');
 const { applyLinuxGpuFlags } = require('./linux-gpu-flags');
 const { captureSourceMode, listCaptureSources, screenRecordingState, reaskScreenRecording, MAC_BUNDLE_ID } = require('./capture-sources');
 const { windowStateOf, watchWindowState } = require('./window-state');
@@ -57,6 +59,15 @@ if (IS_E2E) process.env.SOKUJI_E2E_BUILD = '1';
 const mainPageUrl = () => (isDevBuild() ? 'http://localhost:5173' : pathToFileURL(path.join(app.getAppPath(), 'build/index.html')).href);
 // An IPC call from the main window's own page: the webContents alone would also pass a page the window was taken to.
 const isMainPageSender = (sender) => sender === mainWindow?.webContents && isAppPage(sender.getURL(), mainPageUrl());
+
+const notesHttp = createNotesHttp();
+ipcMain.handle('notes-http:complete', (event, args) => {
+  if (!isMainPageSender(event.sender) || event.senderFrame !== event.sender.mainFrame) return { ok: false, code: 'invalid' };
+  return notesHttp.complete(event.sender.id, args);
+});
+ipcMain.handle('notes-http:abort', (event, args) => {
+  if (isMainPageSender(event.sender) && event.senderFrame === event.sender.mainFrame) notesHttp.abort(event.sender.id, args);
+});
 
 const { UpdateManager } = require('./update-manager');
 const { NativeHostManager } = require('./native-host-manager');
@@ -247,6 +258,57 @@ if (sandboxRecovery) {
 
 // Keep a global reference of the window object to prevent garbage collection
 let mainWindow;
+const agentControlEnabled = process.platform === 'win32' && process.argv.includes('--agent-control');
+let agentControl;
+let agentPage = null;
+let nextAgentRequest = 0;
+const agentRequests = new Map();
+const agentError = (code, message) => ({ ok: false, error: { code, message } });
+
+function resetAgentPage() {
+  agentPage = null;
+  for (const request of agentRequests.values()) {
+    request.finish(agentError('renderer_unavailable', 'The main Sokuji window is reloading or closing.'));
+  }
+}
+
+function dispatchAgentCommand(command, args) {
+  if (!agentPage || agentPage.isDestroyed() || !isMainPageSender(agentPage)) {
+    return agentError('renderer_unavailable', 'The main Sokuji window is not ready yet.');
+  }
+  if (agentRequests.size >= 16) return agentError('busy', 'Too many pending Sokuji commands.');
+  const id = String(++nextAgentRequest);
+  return new Promise((resolve) => {
+    const finish = (result) => {
+      clearTimeout(timer);
+      agentRequests.delete(id);
+      resolve(result);
+    };
+    const timer = setTimeout(() => finish(agentError('renderer_timeout', 'Sokuji did not finish the command in time.')), 38_000);
+    agentRequests.set(id, { sender: agentPage, finish });
+    try {
+      agentPage.send('agent-control:request', { id, command, args });
+    } catch {
+      finish(agentError('renderer_unavailable', 'The main Sokuji window is unavailable.'));
+    }
+  });
+}
+
+ipcMain.handle('agent-control:ready', (event) => {
+  if (!agentControlEnabled || !isMainPageSender(event.sender) || event.senderFrame !== event.sender.mainFrame) return false;
+  agentPage = event.sender;
+  return true;
+});
+
+ipcMain.handle('agent-control:response', (event, response) => {
+  if (!agentControlEnabled || !isMainPageSender(event.sender) || event.senderFrame !== event.sender.mainFrame) return;
+  const request = typeof response?.id === 'string' ? agentRequests.get(response.id) : undefined;
+  if (!request || request.sender !== event.sender) return;
+  const result = response.result;
+  const valid = result?.ok === true || (result?.ok === false
+    && typeof result.error?.code === 'string' && typeof result.error?.message === 'string');
+  request.finish(valid ? result : agentError('renderer_response_invalid', 'Sokuji returned an invalid response.'));
+});
 
 // Most recently computed virtual-audio-device status, forwarded to the
 // renderer over the 'audio-status' channel once it's ready to receive it.
@@ -528,6 +590,10 @@ function createWindow() {
   closeHandshake.attachWindow(mainWindow);
   // A reload keeps the window: a question the old page was asking will never be answered.
   mainWindow.webContents.on('did-navigate', () => closeHandshake.pageReplaced());
+  mainWindow.webContents.on('did-start-navigation', (_event, _url, isInPlace, isMainFrame) => {
+    if (agentControlEnabled && isMainFrame && !isInPlace) resetAgentPage();
+  });
+  mainWindow.webContents.on('render-process-gone', resetAgentPage);
   mainWindow.on('close', (event) => closeHandshake.onWindowClose(event));
 
   // Set custom User Agent for the window
@@ -573,6 +639,7 @@ function createWindow() {
 
   // Emitted when the window is closed
   mainWindow.on('closed', function () {
+    resetAgentPage();
     // On macOS closing the window does not quit the app; the before-quit
     // listener below runs the cleanup when it actually quits. (This used to
     // register a second before-quit listener per close, which would run the
@@ -722,6 +789,12 @@ app.whenReady().then(async () => {
 
   createWindow();
 
+  if (agentControlEnabled) {
+    startAgentControl({ profileDir: app.getPath('userData'), dispatch: dispatchAgentCommand })
+      .then((control) => { agentControl = control; })
+      .catch(() => console.warn('[Sokuji] Could not start the local agent control endpoint.'));
+  }
+
   // Initialize auto-update manager. An install ends a running session first:
   // the updater quits the app itself, and holding that quit for the session
   // keeps this instance alive while the new one starts.
@@ -737,6 +810,11 @@ app.whenReady().then(async () => {
 // Ensure cleanup happens before app exits
 const cleanupAndExit = () => {
   if (isDuplicateInstance) return;
+  resetAgentPage();
+  if (agentControl) {
+    void agentControl.close().catch(() => {});
+    agentControl = null;
+  }
   console.log('[Sokuji] [Main] Cleaning up virtual audio devices before exit...');
   removeVirtualAudioDevices();
   nativeHost.stop();

@@ -123,8 +123,7 @@ export function chatBody(model: string, r: Pick<ChatRequest, 'system' | 'user' |
   });
 }
 
-/** The model's answer from a chat completion response: always a JSON object, or a ChatError. */
-export async function answerOf(response: Response): Promise<object> {
+async function parseAnswer(response: Response, allowFence: boolean): Promise<object> {
   let content: unknown;
   try {
     content = ((await response.json()) as { choices?: Array<{ message?: { content?: unknown } }> })?.choices?.[0]?.message?.content;
@@ -132,9 +131,10 @@ export async function answerOf(response: Response): Promise<object> {
     content = undefined;
   }
   if (typeof content !== 'string') throw new ChatError('The notes model gave no answer', { code: 'no-answer' });
+  const fenced = allowFence ? content.match(/^\s*```(?:json)?\s*([\s\S]*?)\s*```\s*$/i) : null;
   let parsed: unknown;
   try {
-    parsed = JSON.parse(content);
+    parsed = JSON.parse(fenced ? fenced[1] : content);
   } catch {
     throw new ChatError('The notes model answered with something other than JSON', { code: 'not-json' });
   }
@@ -144,17 +144,50 @@ export async function answerOf(response: Response): Promise<object> {
   return parsed;
 }
 
+/** The model's answer from a chat completion response: always a JSON object, or a ChatError. */
+export function answerOf(response: Response): Promise<object> {
+  return parseAnswer(response, false);
+}
+
+export interface CompatibleChatOptions {
+  baseUrl: string;
+  apiKey?: string;
+  model: string;
+  /** Use Bailian's non-thinking mode for the short periodic updates. */
+  bailian?: boolean;
+  fetch?: typeof fetch;
+}
+
+/** OpenAI-compatible Chat Completions for endpoints that do not support OpenAI-specific body fields. */
+export function compatibleChat(o: CompatibleChatOptions): ChatPort {
+  return completions(o, (r) => JSON.stringify({
+    model: o.model,
+    messages: [{ role: 'system', content: r.system }, { role: 'user', content: JSON.stringify(r.user) }],
+    max_tokens: r.maxTokens,
+    ...(o.bailian ? { enable_thinking: false } : {}),
+  }), true);
+}
+
 export function openAiChat(o: { baseUrl: string; apiKey: string; model: string; fetch?: typeof fetch }): ChatPort {
+  return completions(o, (r) => chatBody(o.model, r), false);
+}
+
+function completions(
+  o: Pick<CompatibleChatOptions, 'baseUrl' | 'apiKey' | 'fetch'>,
+  bodyFor: (r: ChatRequest) => string,
+  allowFence: boolean,
+): ChatPort {
   const send = o.fetch ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init));
   const url = `${o.baseUrl.replace(/\/+$/, '')}/chat/completions`;
+  const headers = { 'Content-Type': 'application/json', ...(o.apiKey ? { Authorization: `Bearer ${o.apiKey}` } : {}) };
 
   return async (r) => {
     const { signal, onAnswered } = r;
-    const body = chatBody(o.model, r);
+    const body = bodyFor(r);
     for (let waited = 0; ; ) {
       const response = await send(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${o.apiKey}` },
+        headers,
         body,
         signal,
       });
@@ -170,10 +203,12 @@ export function openAiChat(o: { baseUrl: string; apiKey: string; model: string; 
           continue;
         }
         throw new ChatError(`The notes model refused the request (${response.status})`, {
-          status: response.status, serviceMessage: refusal.message, ...(noCredit ? { retryable: false } : {}),
+          status: response.status,
+          serviceMessage: o.apiKey ? refusal.message?.split(o.apiKey).join('[redacted]') : refusal.message,
+          ...(noCredit ? { retryable: false } : {}),
         });
       }
-      return answerOf(response);
+      return parseAnswer(response, allowFence);
     }
   };
 }
