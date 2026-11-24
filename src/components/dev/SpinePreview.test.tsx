@@ -318,24 +318,25 @@ describe('SpinePreview', () => {
     }
   });
 
-  // `&signedin=1` also reaches the settings page through `AuthStandIn`, so
-  // its Kizuna AI account reads signed in, with no network for Kizuna Soniox.
-  it.each([['1', 'settingsPage.accounts.signedIn'], ['0', 'settingsPage.accounts.signedOut']] as const)(
-    '&signedin=%s: the settings page shows the account so, and Kizuna Soniox calls no backend',
-    async (signedIn, state) => {
+  it.each(['1', '0'])(
+    '&signedin=%s: the settings page shows the approved key providers and Kizuna Soniox calls no backend',
+    async (signedIn) => {
       const before = window.location.href;
       const fetchMock = vi.fn(async (input: RequestInfo | URL) => { void input; return new Response('{}'); });
+      const userAgent = vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue('Electron');
       vi.stubGlobal('fetch', fetchMock);
       window.history.replaceState(null, '', `/?preview=spine&settings=1&provider=kizunaai_soniox&signedin=${signedIn}`);
       try {
         render(<SpinePreview />);
         fireEvent.click(await screen.findByRole('button', { name: 'settingsPage.categories.accounts' }));
-        await screen.findByText(state);
+        expect(await screen.findByRole('group', { name: 'Qwen LiveTranslate' })).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'providers.openai_compatible.name' })).toBeInTheDocument();
         for (const call of fetchMock.mock.calls) {
           expect(String(call[0])).not.toContain('/soniox/');
         }
       } finally {
         window.history.replaceState(null, '', before);
+        userAgent.mockRestore();
         vi.unstubAllGlobals();
       }
     },

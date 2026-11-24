@@ -116,7 +116,8 @@ const mockDownload = vi.fn();
 const mockUpdate = vi.fn();
 const mockRefresh = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('react-i18next', () => ({
+vi.mock('react-i18next', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
   useTranslation: () => ({
     t: (_k: string, fallback?: string, vars?: Record<string, unknown>) =>
       typeof fallback === 'string'

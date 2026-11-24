@@ -211,7 +211,8 @@ const mockRetrySidecar = vi.fn();
 // Module mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('react-i18next', () => ({
+vi.mock('react-i18next', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
   // Interpolating — needed so the
   // availableWhenLang line's {{lang}} actually resolves to the language
   // NAME the component passed in, not the raw placeholder.

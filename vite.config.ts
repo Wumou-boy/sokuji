@@ -180,6 +180,7 @@ export default defineConfig(({ command, mode }) => {
             'file-recognition': 'electron/file-recognition.js',
             'text-model-request': 'electron/text-model-request.js',
             'agent-control': 'electron/agent-control.js',
+            'qwen-voice-ipc': 'electron/qwen-voice-ipc.js',
             'notes-http': 'electron/notes-http.js',
             'close-handshake': 'electron/close-handshake.js',
             'exit-handler': 'electron/exit-handler.js',

@@ -1389,12 +1389,14 @@ describe('SonioxVoiceSection', () => {
       sampleRate = 16000;
       destination = {};
       createMediaStreamSource() { return { connect: vi.fn(), disconnect: vi.fn() }; }
+      createAnalyser() { return { fftSize: 1024, getFloatTimeDomainData: vi.fn(), disconnect: vi.fn() }; }
       createScriptProcessor() {
         processorNode = { connect: vi.fn(), disconnect: vi.fn(), onaudioprocess: null };
         return processorNode;
       }
       close = vi.fn().mockResolvedValue(undefined);
     }
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
     vi.stubGlobal('AudioContext', FakeAudioContext);
 
     try {

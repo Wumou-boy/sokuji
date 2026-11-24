@@ -600,7 +600,15 @@
       "screenContextNone": "ウィンドウはまだ選ばれていません。セッション開始時に尋ねられます。",
       "screenContextChoose": "選択…",
       "speakerLabels": "話者ラベル",
-      "speakerLabelsTooltip": "相手側の人に番号を付けます（話者 1、話者 2…）。2 人以上の声が聞こえたときに表示されます。\n\n1 人を複数人と誤認することがあります。無効：番号は表示されません。\n\n次回のセッションから適用されます。"
+      "speakerLabelsTooltip": "相手側の人に番号を付けます（話者 1、話者 2…）。2 人以上の声が聞こえたときに表示されます。\n\n1 人を複数人と誤認することがあります。無効：番号は表示されません。\n\n次回のセッションから適用されます。",
+      "connectionPersonal": "Personal QwenCloud",
+      "connectionBailianShared": "Bailian shared",
+      "connectionBailianWorkspace": "Company workspace",
+      "workspaceApiKey": "Company workspace API key",
+      "workspaceId": "Bailian workspace ID",
+      "workspaceKeyNote": "Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.",
+      "workspaceDesktopOnly": "Dedicated workspace connections are available in the Windows desktop app only.",
+      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace)"
     },
     "local_inference": {
       "name": "このデバイス",
@@ -1040,7 +1048,10 @@
       "engineHint": "以前のバージョンがこのコンピューターでモデルを動かすためにダウンロードしたデスクトップ用エンジンです。現在の「このデバイス」サービスでは使われません。削除すると空き容量が増えます。",
       "remove": "削除",
       "engineConfirm": "ローカルエンジンを削除しますか？",
-      "engineFrees": "{{size}} の空きができます。"
+      "engineFrees": "{{size}} の空きができます。",
+      "pgxGuideTitle": "PGX WebGPU models",
+      "pgxGuideHint": "Built-in WebGPU picks sized for PGX’s GB10 GPU and 128 GB unified-memory profile. Recommendations use the hardware specification; downloading requires WebGPU, and the model variant follows this device’s features.",
+      "pgxWebGpuTag": "PGX profile pick · WebGPU"
     }
   },
   "notes": {
