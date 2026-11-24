@@ -15,7 +15,7 @@ const DISPATCH_TIMEOUT_MS = 40_000;
 const DEFAULT_CLIENT_TIMEOUT_MS = 45_000;
 const MAX_CLIENT_TIMEOUT_MS = 60_000;
 const COMMANDS = new Set([
-  'status', 'view.set-mode', 'audio.inputs', 'audio.system-check', 'session.start', 'session.stop', 'logs.enable', 'logs.list', 'captions.list',
+  'status', 'view.set-mode', 'audio.inputs', 'audio.system-check', 'audio.echo-check', 'session.start', 'session.stop', 'logs.enable', 'logs.list', 'captions.list',
   'provider.configure-qwen-beijing', 'provider.configure-qwen-workspace', 'provider.configure-qwen-defaults', 'credentials.status', 'notes.check',
   'voice.benchmark', 'face-to-face.start', 'face-to-face.stop', 'face-to-face.replay', 'usage.summary',
 ]);
@@ -47,6 +47,19 @@ function isWorkspaceKey(value) {
 function normalizeArgs(command, args) {
   if (args === undefined) args = {};
   if (!isPlainObject(args)) return { error: failure('BAD_ARGS', 'Command arguments must be an object.') };
+  if (command === 'audio.system-check') {
+    if (!ownKeysOnly(args, ['auto']) || (args.auto !== undefined && typeof args.auto !== 'boolean')) {
+      return { error: failure('BAD_ARGS', 'The audio check accepts only a boolean auto option.') };
+    }
+    return { args };
+  }
+  if (command === 'audio.echo-check') {
+    if (!ownKeysOnly(args, ['micLabel']) || (args.micLabel !== undefined &&
+      (typeof args.micLabel !== 'string' || args.micLabel.length < 1 || args.micLabel.length > 180))) {
+      return { error: failure('BAD_ARGS', 'The echo check accepts only an exact microphone label.') };
+    }
+    return { args };
+  }
   if (command === 'usage.summary') {
     if (!ownKeysOnly(args, ['month']) || (args.month !== undefined &&
       (typeof args.month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(args.month)))) {

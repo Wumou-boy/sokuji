@@ -113,6 +113,61 @@ const bearers = (h: Pick<Live, 'seam'>) => h.seam.registrations.map((r) => r.set
 const refs = (h: Pick<Live, 'of'>, kind: 'segmentOpened' | 'segmentClosed') => h.of(kind).map((e) => e.payload.ref);
 const dropOf = (drop: Omit<DropInfo, 'retryable' | 'managed'>, isManaged = false): DropInfo => ({ ...drop, retryable: true, managed: isManaged });
 
+describe('live outgoing language changes', () => {
+  it('feeds the old target until the replacement accepts Japanese, then labels new captions', async () => {
+    const h = await live();
+    const first = h.socket();
+    const changed = h.session.setTargetLanguage!('ja');
+    await flush();
+    const next = h.socket();
+    next.open();
+    await flush();
+    next.receive(SERVER.created('sess_2'));
+    expect(next.sentJson()).toContainEqual(expect.objectContaining({
+      type: 'session.update',
+      session: expect.objectContaining({ translation: expect.objectContaining({ language: 'ja' }) }),
+    }));
+    h.session.appendAudio(chunk());
+    expect(types(first)).toContain('input_audio_buffer.append');
+    expect(types(next)).not.toContain('input_audio_buffer.append');
+
+    next.receive(SERVER.updated());
+    expect(await changed).toBe(true);
+    expect(first.closedByClient?.code).toBe(1000);
+    h.session.appendAudio(chunk());
+    expect(types(next)).toContain('input_audio_buffer.append');
+    next.receive(SERVER.transcriptDelta('ja-translation', 'こんにちは'));
+    const captions = h.of('segmentText');
+    expect(captions[captions.length - 1]?.payload).toMatchObject({ language: 'ja', text: 'こんにちは' });
+    await h.session.stop();
+  });
+
+  it('preserves the first socket on a rejection and aborts a pending switch on stop', async () => {
+    const h = await live();
+    const first = h.socket();
+    const refused = h.session.setTargetLanguage!('ja');
+    await flush();
+    const second = h.socket();
+    second.open();
+    await flush();
+    second.receive(SERVER.created('sess_2'));
+    second.receive(SERVER.error());
+    expect(await refused).toBe(false);
+    expect(first.readyState).toBe(FakeSocket.OPEN);
+    h.session.appendAudio(chunk());
+    expect(types(first)).toContain('input_audio_buffer.append');
+
+    const pending = h.session.setTargetLanguage!('ja');
+    await flush();
+    const third = h.socket();
+    third.open();
+    await flush();
+    await h.session.stop();
+    expect(await pending).toBe(false);
+    expect(third.closedByClient?.code).toBe(1000);
+  });
+});
+
 describe('qwenDropAction: what a live socket\'s close means (spec §4.1; open point §9.2)', () => {
   it('a recent error decides first: the server\'s own fault or a passing request rate reconnects whatever the close; the key, a quota, a refused request or a model the key may not use end whatever the close', () => {
     for (const code of ['server', 'throttled']) {

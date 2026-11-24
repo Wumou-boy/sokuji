@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createVirtualClock } from '../contract/clock';
 import { createFakeSource, type FakeSource } from '../../providers/fake/source';
+import { synthPcm } from '../../providers/fake/synth';
 
 vi.mock('../../services/ServiceFactory', () => ({
   ServiceFactory: {
@@ -47,6 +48,34 @@ beforeEach(() => {
 });
 
 describe('createAppCapture', () => {
+  it('uses the other side as an echo reference before the Windows mic feeds translation and passthrough', async () => {
+    const original = useAudioStore.getState();
+    vi.stubGlobal('electron', { osInfo: { platform: 'win32' } });
+    useAudioStore.setState({ mode: 'both', echoCancellationMode: 'all', selectedInputDevice: { deviceId: 'mic', label: 'Laptop Microphone' } });
+    const playback = fakePlayback();
+    const capture = createAppCapture(playback, 'electron');
+    const participant = await capture.openSource('participant', live());
+    opened.sources.push(createFakeSource(clock, { voiced: true }));
+    const speaker = await capture.openSource('speaker', live());
+    const sent = vi.fn();
+    speaker.onPcm(sent);
+    try {
+      clock.advance(100);
+      const reduced = sent.mock.calls[0][0] as Int16Array;
+      expect(reduced.reduce((energy, sample) => energy + sample ** 2, 0)).toBeLessThan(0.1 * synthPcm(100).reduce((energy, sample) => energy + sample ** 2, 0));
+      expect(playback.passthrough).toHaveBeenLastCalledWith(reduced);
+
+      useAudioStore.setState({ echoCancellationMode: 'app' });
+      clock.advance(100);
+      expect(sent).toHaveBeenLastCalledWith(synthPcm(100));
+    } finally {
+      await speaker.stop();
+      await participant.stop();
+      useAudioStore.setState(original, true);
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('opens the microphone for the speaker and feeds its chunks to passthrough', async () => {
     const playback = fakePlayback();
     const capture = createAppCapture(playback, 'electron');

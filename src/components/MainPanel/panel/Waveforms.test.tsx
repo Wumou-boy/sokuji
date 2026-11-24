@@ -48,6 +48,7 @@ afterEach(() => {
 const makeMeter = (values: Float32Array): LevelMeter => ({
   push: vi.fn(),
   read: vi.fn(() => values),
+  readPeak: vi.fn(() => 0),
   reset: vi.fn(),
 });
 

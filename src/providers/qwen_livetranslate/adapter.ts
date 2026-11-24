@@ -49,7 +49,7 @@ import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, bailianWorkspaceSock
 import { isBailianWorkspaceAvailable } from './workspace';
 import { resolveQwenVoiceForSession } from './voiceIdentity';
 import { QwenSegments } from './segments';
-import type { QwenCredentials } from './settings';
+import { QWEN_LANGUAGES, QWEN_SPOKEN, type QwenCredentials } from './settings';
 import {
   appendFrame,
   base64ToPcm,
@@ -168,7 +168,12 @@ export interface QwenAdapterDeps {
   trackUsage?: (config: QwenConfig, route: { endpoint: EndpointId | null; workspaceId: string | null; managed: boolean }) => (raw: unknown) => void;
 }
 
-type Phase = 'opening' | 'configuring' | 'live' | 'ended';
+type Phase = 'opening' | 'live' | 'ended';
+
+interface TargetSwitch {
+  target: string;
+  previous: WebSocket;
+}
 
 /** Hears nothing more from a socket the leg has moved on from. */
 function detach(ws: WebSocket): void {
@@ -218,6 +223,9 @@ class QwenLeg implements AdapterSession {
   private sessionVoice: QwenConfig['voice'];
   /** The connection in use once live. */
   private socket: WebSocket | null = null;
+  private targetLanguage: string;
+  private targetSwitch: AbortController | null = null;
+  readonly setTargetLanguage?: (language: string) => Promise<boolean>;
   /** The live connection's: lets it go, telling the lease when its session was reported. A no-op when none is live. */
   private letGoSession: () => void = () => {};
   /** Each connection's own: a reconnect's segments start afresh, their refs carrying on. */
@@ -290,6 +298,8 @@ class QwenLeg implements AdapterSession {
     private readonly deps: QwenAdapterDeps,
   ) {
     this.sessionVoice = request.config.voice;
+    this.targetLanguage = request.config.target;
+    if (!request.credentials.lease) this.setTargetLanguage = (language) => this.switchTarget(language);
     this.segments = new QwenSegments({
       sink: events,
       person: request.config.person,
@@ -643,6 +653,25 @@ class QwenLeg implements AdapterSession {
     return this.phase === 'live' && ws !== null && ws.readyState === WS_OPEN ? ws : null;
   }
 
+  /** Qwen accepts one session.update per socket. Keep using the old connection while the new target opens. */
+  private async switchTarget(target: string): Promise<boolean> {
+    const previous = this.live();
+    if (!previous || this.targetSwitch || this.reconnector.active) return false;
+    if (target === this.targetLanguage) return true;
+    const languages = this.request.config.speech ? QWEN_SPOKEN : QWEN_LANGUAGES;
+    if (!languages.some(({ value }) => value === target)) return false;
+    const attempt = new AbortController();
+    this.targetSwitch = attempt;
+    try {
+      await this.connect(this.endpoint, this.workspaceId, attempt.signal, { target, previous });
+      return this.targetLanguage === target && !this.hasEnded();
+    } catch {
+      return false;
+    } finally {
+      this.targetSwitch = null;
+    }
+  }
+
   /** The key's endpoint, when no check has found it (§2): a refusal in the check's words, anything else the network's. */
   private async detect(): Promise<EndpointId> {
     const { credentials, clock, signal } = this.request;
@@ -667,9 +696,10 @@ class QwenLeg implements AdapterSession {
    * `signal` aborts — the request's at the start, the reconnector's for an
    * attempt.
    */
-  private connect(endpoint: EndpointId | null, workspaceId: string | null, signal: AbortSignal): Promise<WebSocket> {
+  private connect(endpoint: EndpointId | null, workspaceId: string | null, signal: AbortSignal, replacement?: TargetSwitch): Promise<WebSocket> {
     return new Promise<WebSocket>((resolve, reject) => {
-      const { clock, config, credentials } = this.request;
+      const { clock, credentials } = this.request;
+      const config = { ...this.request.config, target: replacement?.target ?? this.targetLanguage };
       // A response.done usage value is a cumulative snapshot for this socket only.
       // Reconnects create a fresh closure and therefore cannot carry old totals forward.
       const trackUsage = this.deps.trackUsage?.(config, { endpoint, workspaceId, managed: credentials.lease !== undefined });
@@ -681,6 +711,7 @@ class QwenLeg implements AdapterSession {
       const seam = new AbortController();
       let ws: WebSocket | null = null;
       let settled = false;
+      let configured = false;
       const settle = (error?: unknown) => {
         if (settled) return;
         settled = true;
@@ -755,7 +786,11 @@ class QwenLeg implements AdapterSession {
         ws = socket;
         socket.binaryType = 'arraybuffer';
         socket.onmessage = (e: MessageEvent) => {
-          if (!settled) this.handshake(socket, e.data, settle, (id) => { created = id; report(); });
+          if (!settled) this.handshake(socket, e.data, settle, config, configured, (id) => {
+            configured = true;
+            created = id;
+            report();
+          }, replacement);
           else if (socket === this.socket) this.onMessage(e.data, trackUsage);
         };
         // A Logs line: the close that follows says what it did to the session.
@@ -763,7 +798,7 @@ class QwenLeg implements AdapterSession {
         socket.onclose = (e: CloseEvent) => {
           if (!settled) {
             // An attempt's close is one of the reconnect's; `session.connection_lost` is the start's, and the give-up's.
-            this.frame('in', this.reconnector.active ? 'session.closed' : 'session.connection_lost', { code: e.code, reason: e.reason });
+            this.frame('in', replacement || this.reconnector.active ? 'session.closed' : 'session.connection_lost', { code: e.code, reason: e.reason });
             const error = new AdapterStartError(`Qwen closed the connection before the session started (${closeWords(e)}).`, e.reason ? errorCode({ code: null, message: e.reason }) : 'server');
             if (qwenDropAction({ close: e.code, reason: e.reason }) === 'end') closesThatEnd.add(error);
             settle(error);
@@ -774,7 +809,10 @@ class QwenLeg implements AdapterSession {
   }
 
   /** A frame before the leg is live: `session.created` sends the update, `session.updated` settles the start, an `error` refuses it. */
-  private handshake(ws: WebSocket, data: unknown, settle: (error?: unknown) => void, created: (id: string) => void): void {
+  private handshake(
+    ws: WebSocket, data: unknown, settle: (error?: unknown) => void, config: QwenConfig,
+    configured: boolean, markConfigured: (id?: string) => void, replacement?: TargetSwitch,
+  ): void {
     let e: ServerEvent;
     try {
       e = decodeServerEvent(data);
@@ -785,15 +823,27 @@ class QwenLeg implements AdapterSession {
     if (e.type === 'session.created') {
       const s = (typeof e.session === 'object' && e.session !== null ? e.session : {}) as { id?: unknown; model?: unknown };
       this.frame('in', 'session.created', { id: str(s.id), model: str(s.model) });
-      if (this.phase !== 'opening') return;
-      const update = sessionUpdate({ ...this.request.config, voice: this.sessionVoice }, { video: this.request.frames !== undefined });
-      ws.send(JSON.stringify(update));
+      if (configured) return;
+      const update = sessionUpdate({ ...config, voice: this.sessionVoice }, { video: this.request.frames !== undefined });
+      markConfigured(typeof s.id === 'string' && s.id ? s.id : undefined);
+      try {
+        ws.send(JSON.stringify(update));
+      } catch (error) {
+        settle(error);
+        return;
+      }
       this.frame('out', 'session.update', update.session);
-      this.phase = 'configuring';
-      if (typeof s.id === 'string' && s.id) created(s.id);
     } else if (e.type === 'session.updated') {
       this.frame('in', 'session.updated');
-      if (this.phase !== 'configuring') return;
+      if (!configured) return;
+      if (replacement) {
+        if (this.live() !== replacement.previous) {
+          settle(new Error('The previous Qwen session ended before the language switch.'));
+          return;
+        }
+        this.targetLanguage = replacement.target;
+        this.disconnectLive();
+      }
       this.socket = ws;
       this.phase = 'live';
       this.lastSentAt = this.request.clock.now();
@@ -986,6 +1036,17 @@ class QwenLeg implements AdapterSession {
    */
   private dropped(drop: Pick<DropInfo, 'cause' | 'closeCode' | 'errorCode'>): void {
     if (this.phase === 'ended') return;
+    this.targetSwitch?.abort();
+    this.disconnectLive();
+    // An attempt's connection that dropped as it came live: the reconnector fails that attempt, whether or not it has seen it live, and the next one follows.
+    if (this.reconnector.active) {
+      this.reconnector.dropped(this.dropInfo(drop, true));
+      return;
+    }
+    this.newDrop(this.dropInfo(drop, true));
+  }
+
+  private disconnectLive(): void {
     this.request.config.turnAudio?.resetStream();
     this.segments.abandon();
     this.resetTurnState();
@@ -1004,12 +1065,6 @@ class QwenLeg implements AdapterSession {
     this.phase = 'opening';
     this.stopFrames();
     this.watchFrames();
-    // An attempt's connection that dropped as it came live: the reconnector fails that attempt, whether or not it has seen it live, and the next one follows.
-    if (this.reconnector.active) {
-      this.reconnector.dropped(this.dropInfo(drop, true));
-      return;
-    }
-    this.newDrop(this.dropInfo(drop, true));
   }
 
   /** A drop the reconnector takes up: its start, its words, and the tokens it fetched or saw refused, start afresh. */
@@ -1049,7 +1104,8 @@ class QwenLeg implements AdapterSession {
       connection: this.connection,
       detectIncomingLanguage: this.request.config.detectIncomingLanguage,
       skipSameLanguageText: this.request.config.skipSameLanguageText,
-      targetLanguage: this.request.config.target,
+      targetLanguage: this.targetLanguage,
+      labelTranslationLanguage: this.targetLanguage !== this.request.config.target,
     });
   }
 
@@ -1154,6 +1210,7 @@ class QwenLeg implements AdapterSession {
   /** Every way a leg ends: the reconnect cancelled, the segments silent, the socket closed and no longer heard. */
   private shutDown(): void {
     this.phase = 'ended';
+    this.targetSwitch?.abort();
     // Waits, an attempt's connect and a reissue's late answer: all cancelled, and nothing more is said.
     this.reconnector.cancel();
     this.stopKeepalive();

@@ -145,6 +145,29 @@ function setup(o: Options = {}) {
 }
 
 describe('runner — starting', () => {
+  it('switches the live speaker target without changing the participant leg', async () => {
+    let resolveSwitch: (changed: boolean) => void = () => {};
+    const changeSpeaker = vi.fn(() => new Promise<boolean>((resolve) => { resolveSwitch = resolve; }));
+    const changeParticipant = vi.fn(async () => true);
+    const provider = withWhole(fakeProvider, FAKE_WHOLE, {
+      start: async (request: Parameters<typeof startFake>[0], events: AdapterEvents) => {
+        const session = await startFake(request, events);
+        session.setTargetLanguage = request.context.direction.target === 'ja' ? changeSpeaker : changeParticipant;
+        return session;
+      },
+    });
+    const { runner } = setup({ shape: { provider, legs: ['speaker', 'participant'] } });
+    await runner.start();
+    const change = runner.setOutgoingTarget('zh');
+    expect(runner.state.getState()).toMatchObject({ phase: 'running', outgoingTarget: { language: 'ja', pending: true } });
+    expect(changeSpeaker).toHaveBeenCalledWith('zh');
+    expect(changeParticipant).not.toHaveBeenCalled();
+    resolveSwitch(true);
+    expect(await change).toBe(true);
+    expect(runner.state.getState()).toMatchObject({ phase: 'running', outgoingTarget: { language: 'zh', pending: false } });
+    await runner.stop();
+  });
+
   it("checks the readiness of the plan's provider on the frozen shape, with the run's signal", async () => {
     const ensureReady = vi.fn<RunnerDeps['ensureReady']>(async () => ({ state: 'ready', models: [] }));
     const { runner, shape } = setup({ ensureReady });

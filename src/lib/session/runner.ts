@@ -36,6 +36,7 @@ export interface Runner {
   /** Whether the speaker's voice is fed into processing now — what the mic strip shows: while running, except under push-to-talk only while a turn is held. False when idle, starting or stopping. */
   speakerAudioInUse(): boolean;
   sendText(text: string): void;
+  setOutgoingTarget(language: string): Promise<boolean>;
   /** Empties the conversation, and the queued audio with it. */
   clear(): void;
 }
@@ -276,7 +277,8 @@ export function createRunner(rawDeps: RunnerDeps): Runner {
     // Before the state says running: a subscriber that stops the run at once
     // must leave playback not live, not live again after its stop.
     deps.playback.live(true);
-    set({ phase: 'running', participantSpeech: run.shape.participantSpeech, ...payerOf(run.shape), since: run.liveSince!, legs: legs(run), ...(run.budget ? { budget: run.budget } : {}), ...reconnect(run) });
+    const outgoingTarget = run.canSetOutgoingTarget ? { language: shape.pair.target, pending: false } : undefined;
+    set({ phase: 'running', participantSpeech: run.shape.participantSpeech, ...payerOf(run.shape), since: run.liveSince!, legs: legs(run), ...(run.budget ? { budget: run.budget } : {}), ...reconnect(run), ...(outgoingTarget ? { outgoingTarget } : {}) });
     run.analytics.track('translation_session_start', {
       session_id: run.id,
       provider: run.providerId,
@@ -305,11 +307,30 @@ export function createRunner(rawDeps: RunnerDeps): Runner {
     return end(run, { reason: 'user' });
   };
 
+  const setOutgoingTarget = async (language: string): Promise<boolean> => {
+    const run = current;
+    const before = state.getState();
+    if (!run || before.phase !== 'running' || !before.outgoingTarget || before.outgoingTarget.pending || before.legs.speaker !== 'live') return false;
+    if (language === before.outgoingTarget.language) return true;
+    set({ ...before, outgoingTarget: { ...before.outgoingTarget, pending: true } });
+    let changed = false;
+    try {
+      changed = await run.setOutgoingTarget(language);
+    } catch (error) {
+      reportWarning('SessionRunner', 'The outgoing target could not be changed.', { cause: error });
+    }
+    const now = state.getState();
+    if (run !== current || now.phase !== 'running') return false;
+    set({ ...now, outgoingTarget: { language: changed ? language : before.outgoingTarget.language, pending: false } });
+    return changed;
+  };
+
   return {
     state,
     conversation,
     start,
     stop,
+    setOutgoingTarget,
     settled: async () => {
       // An ending in flight may overrun into a lingering one: wait until neither is left.
       for (let wait = ending ?? lingering?.done; wait; wait = ending ?? lingering?.done) await wait;

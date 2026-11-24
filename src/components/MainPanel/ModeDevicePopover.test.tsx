@@ -42,7 +42,9 @@ const store = {
   setOtherSide: vi.fn(),
   sources: [] as Array<{ deviceId: string; label: string }>,
   selected: null as { deviceId: string; label: string } | null,
+  autoResolved: null as { deviceId: string; label: string } | null,
   select: vi.fn(),
+  refresh: vi.fn(async () => {}),
   setParticipantMuted: vi.fn(),
   setMicMuted: vi.fn(),
   monitor: { deviceId: 'out-1', label: 'AirPods Pro' } as { deviceId: string; label: string } | null,
@@ -75,7 +77,9 @@ vi.mock('../../stores/audioStore', () => ({
   useParticipantSources: () => store.sources,
   useParticipantCaptureWidened: () => widened.value,
   useSelectedParticipantSource: () => store.selected,
+  useAutoMeetingResolvedSource: () => store.autoResolved,
   useSelectParticipantSource: () => store.select,
+  useRefreshParticipantSources: () => store.refresh,
   useOtherSide: () => store.otherSide,
   useSetOtherSide: () => store.setOtherSide,
 }));
@@ -152,6 +156,7 @@ beforeEach(() => {
   report.error.mockReset();
   store.setOtherSide.mockReset();
   store.select.mockReset();
+  store.refresh.mockReset();
   store.setParticipantMuted.mockReset();
   store.setMicMuted.mockReset();
 });
@@ -187,18 +192,24 @@ describe('ModeDevicePopover participant row', () => {
     expect(store.setParticipantMuted).toHaveBeenCalledWith(false);
   });
 
-  it('is not expandable when there is nothing to pick', () => {
+  it('keeps the system-only row expandable so the list can be refreshed', () => {
     store.sources = [SYSTEM];
     store.selected = SYSTEM;
     mount();
-    expect(screen.getByText("Other's audio").closest('button')!.hasAttribute('aria-expanded')).toBe(false);
+    fireEvent.click(screen.getByText("Other's audio").closest('button')!);
+    expect(screen.getByRole('listbox', { name: "Other's audio" })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refresh devices' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh devices' }));
+    expect(store.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the subtitle when no per-application helper reported sources', () => {
+  it('shows system capture and the refresh picker when no per-application helper reported sources', async () => {
     store.sources = [SYSTEM];
     store.selected = SYSTEM;
-    mount();
-    expect(screen.getByText('All system audio')).toBeInTheDocument();
+    await act(async () => { mount(); await Promise.resolve(); });
+    expect(screen.getByText('System Audio (All Applications)')).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Other's audio").closest('button')!);
+    expect(screen.getByRole('button', { name: 'Refresh devices' })).toBeInTheDocument();
   });
 
   it('keeps the extension subtitle and offers no picker', () => {
@@ -469,6 +480,7 @@ describe('ModeDevicePopover — the speech rows in Me and Other', () => {
     widened.value = true;
     mount('participant');
     const button = screen.getByRole('button', { name: 'Turn on Translation I hear' });
+    expect(screen.getByText('Capture fell back to all system audio')).toBeInTheDocument();
     expect(button).toBeDisabled();
     expect(button.getAttribute('title')).toMatch(/All system sound is being captured/);
     expect(button).toHaveAttribute('aria-pressed', 'false');

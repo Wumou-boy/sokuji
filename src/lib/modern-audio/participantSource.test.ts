@@ -31,6 +31,7 @@ describe('isApplicationSource', () => {
   it('recognises an application source', () => {
     expect(isApplicationSource('app:pid:3940')).toBe(true);
     expect(isApplicationSource('app:205')).toBe(true);
+    expect(isApplicationSource('auto-meeting-audio')).toBe(true);
   });
 
   it('does not treat whole-system capture as an application', () => {

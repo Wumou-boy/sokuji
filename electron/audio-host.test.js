@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { EventEmitter } from 'events';
-import { listAppSources, startCapture, stopCapture, ensureUnityGain } from './audio-host.js';
+import { listAppSources, probeAppSource, startCapture, stopCapture, ensureUnityGain } from './audio-host.js';
 import { makeSelfIdentity } from './own-app-source.js';
 
 // Every call names the running app's identity. Left out, it defaults to
@@ -54,6 +54,17 @@ describe('listAppSources', () => {
     expect((await p).map((s) => s.label)).toEqual(['Google Chrome (42)', 'Google Chrome (77)']);
   });
 
+  it('skips inactive sessions when listing candidates for an audio probe', async () => {
+    const child = fakeChild();
+    const p = listAppSources({ selfIdentity: SELF, spawn: () => child, resolvePath, activeOnly: true });
+    child.stdout.emit('data', Buffer.from(JSON.stringify([
+      { id: 'pid:42', label: 'Zoom', active: false },
+      { id: 'pid:43', label: 'Teams', active: true },
+    ])));
+    child.emit('close', 0);
+    expect((await p).map((s) => s.deviceId)).toEqual(['app:pid:43']);
+  });
+
   it('never lists the running app itself', async () => {
     const child = fakeChild();
     // The helper excludes its own helper pid, but the Electron app whose TTS
@@ -81,6 +92,14 @@ describe('listAppSources', () => {
     child.stdout.emit('data', Buffer.from('[{"id":"node:31","label":"Firefox","exe":"firefox"}]'));
     child.emit('close', 0);
     expect((await p)[0].label).toBe('Firefox');
+  });
+
+  it('uses the executable name when the file description only contains spaces', async () => {
+    const child = fakeChild();
+    const p = listAppSources({ selfIdentity: SELF, spawn: () => child, resolvePath });
+    child.stdout.emit('data', Buffer.from('[{"id":"pid:31","label":" ","exe":"OfficeAudioClient.exe"}]'));
+    child.emit('close', 0);
+    expect((await p)[0].label).toBe('OfficeAudioClient.exe (31)');
   });
 
   it('carries the window titles through for the row tooltip', async () => {
@@ -143,6 +162,18 @@ describe('listAppSources', () => {
   it('returns an empty array when spawn itself throws', async () => {
     const spawn = () => { throw new Error('ENOENT'); };
     expect(await listAppSources({ selfIdentity: SELF, spawn, resolvePath })).toEqual([]);
+  });
+});
+
+describe('probeAppSource', () => {
+  it('measures PCM peaks from a bounded per-application loopback probe', async () => {
+    const child = fakeChild();
+    const spawn = vi.fn(() => child);
+    const pending = probeAppSource('app:pid:42', { spawn, resolvePath, durationMs: 100 });
+    child.stdout.emit('data', Buffer.from([0, 64, 0, 32]));
+    expect(await pending).toBeCloseTo(0.5, 3);
+    expect(spawn.mock.calls[0][1]).toEqual(['--target', 'pid:42']);
+    expect(child.kill).toHaveBeenCalled();
   });
 });
 

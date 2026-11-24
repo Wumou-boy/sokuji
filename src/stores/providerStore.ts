@@ -57,10 +57,13 @@ export interface ProviderStore {
   models: Readonly<Record<string, readonly ModelOption[]>>;
   /** The pair the user picked, for every provider: undefined until storage is read, null when nothing was ever picked. Only `setPair` changes it. */
   intent: LanguagePair | null | undefined;
+  /** Independent incoming source preference; absent until storage is read. */
+  incomingLanguage: string | undefined;
   load(p: AnyProvider): Promise<void>;
   updateSettings(p: AnyProvider, patch: Readonly<Record<string, unknown>>): void;
   setCredential(p: AnyProvider, key: string, value: string): void;
   setPair(p: AnyProvider, pair: LanguagePair): void;
+  setIncomingLanguage(language: string): void;
   /**
    * Writes again every value whose last write did not land, then waits for
    * every write started so far, those included. True when nothing it answers
@@ -112,8 +115,10 @@ const SOURCE = 'sourceLanguage';
 const TARGET = 'targetLanguage';
 /** The pair persists once, for every provider (spec "Unified language codes" §5). */
 const PAIR_KEYS = { source: 'settings.common.sourceLanguage', target: 'settings.common.targetLanguage' } as const;
+const INCOMING_KEY = 'settings.common.incomingLanguage';
 /** The fields a pair is stored under, for a caller that flushes what it wrote: `flush(p, PAIR_FIELDS)` answers for the global keys. */
 export const PAIR_FIELDS = [SOURCE, TARGET] as const;
+export const INCOMING_LANGUAGE_FIELD = 'incomingLanguage' as const;
 
 function storageKey(p: AnyProvider, field: string): string {
   return `settings.${p.settings.key}.${field}`;
@@ -238,6 +243,7 @@ export const useProviderStore = create<ProviderStore>()((set, get) => {
   return {
     entries: {},
     intent: undefined,
+    incomingLanguage: undefined,
     readiness: {},
     models: {},
     legs: ['speaker'],
@@ -286,7 +292,7 @@ export const useProviderStore = create<ProviderStore>()((set, get) => {
       // Every value is read with a default of its own type: getSetting returns
       // a stored string untouched only when the default is a string, and
       // JSON-parses it otherwise — a key "123456" would come back a number.
-      const [values, secrets, legacyValues, source, target] = await Promise.all([
+      const [values, secrets, legacyValues, source, target, incomingLanguage] = await Promise.all([
         Promise.all(fields.map((f) => service.getSetting<unknown>(storageKey(p, f), defaults[f]))),
         Promise.all(p.credentials.keys.map(async (k) => {
           if (!p.credentials.storedAt) return service.getSetting(storageKey(p, k), '');
@@ -306,6 +312,7 @@ export const useProviderStore = create<ProviderStore>()((set, get) => {
         Promise.all(legacyKeys.map((k) => service.getSetting<unknown>(legacyStorageKey(p, k), undefined))),
         service.getSetting(PAIR_KEYS.source, ''),
         service.getSetting(PAIR_KEYS.target, ''),
+        service.getSetting(INCOMING_KEY, ''),
       ]);
       // A second load racing the first (a remounted panel) must not undo an
       // edit made after the first one landed.
@@ -327,6 +334,7 @@ export const useProviderStore = create<ProviderStore>()((set, get) => {
       const settings = p.settings.migrate ? p.settings.migrate(stored, { legacy, credentials }) : stored;
       // The first load to land reads the intent; a pick made meanwhile is newer and stays.
       if (get().intent === undefined) set({ intent: source || target ? { source, target } : null });
+      if (get().incomingLanguage === undefined) set({ incomingLanguage: incomingLanguage || undefined });
       loadedProviders.set(p.id, p);
       put(p, { settings, credentials, pair: derive(p, settings) });
     },
@@ -383,12 +391,18 @@ export const useProviderStore = create<ProviderStore>()((set, get) => {
       }
     },
 
+    setIncomingLanguage(language) {
+      if (get().incomingLanguage === language) return;
+      set({ incomingLanguage: language });
+      write(INCOMING_KEY, language);
+    },
+
     async flush(p, fields) {
       const pairKey = (field: string) => (field === SOURCE ? PAIR_KEYS.source : field === TARGET ? PAIR_KEYS.target : undefined);
       const covers = (key: string) => !p
         || (fields
-          ? fields.some((field) => key === storageKey(p, field) || key === credentialKey(p, field) || key === pairKey(field))
-          : key.startsWith(`settings.${p.settings.key}.`) || key === PAIR_KEYS.source || key === PAIR_KEYS.target
+          ? fields.some((field) => key === storageKey(p, field) || key === credentialKey(p, field) || key === pairKey(field) || (field === INCOMING_LANGUAGE_FIELD && key === INCOMING_KEY))
+          : key.startsWith(`settings.${p.settings.key}.`) || key === PAIR_KEYS.source || key === PAIR_KEYS.target || key === INCOMING_KEY
             // Its credentials too, where they are kept elsewhere (the one OpenAI key).
             || p.credentials.keys.some((k) => key === credentialKey(p, k)));
       for (const [key, value] of [...unsaved]) {

@@ -376,6 +376,28 @@ describe('VoiceLibrarySection', () => {
     expect(onDelete).toHaveBeenCalledWith('custom:1');
   });
 
+  it('shows the fixed voice row for both recording and connection guidance', () => {
+    const createAction = { title: 'Your own voice (fixed)', buttonLabel: 'Record voice…' };
+    const options = {
+      ...base,
+      voices: [],
+      createAction,
+      manageNote: 'Fixed voice enrollment uses the Bailian shared Beijing connection.',
+    };
+    const { rerender } = render(<VoiceLibrarySection {...options} capability={{ importModes: [] }} />);
+    const row = screen.getByRole('group', { name: createAction.title });
+    expect(row).toHaveTextContent(options.manageNote);
+    expect(within(row).queryByRole('button')).toBeNull();
+
+    rerender(<VoiceLibrarySection {...options} capability={{ importModes: ['record'] }} onRecord={vi.fn()} isSessionActive />);
+    expect(within(row).getByRole('button', { name: createAction.buttonLabel })).toBeDisabled();
+
+    rerender(<VoiceLibrarySection {...options} capability={{ importModes: ['record'] }} onRecord={vi.fn()} />);
+    expect(row).not.toHaveTextContent(options.manageNote);
+    fireEvent.click(within(row).getByRole('button', { name: createAction.buttonLabel }));
+    expect(screen.getByRole('dialog', { name: /add a voice/i })).toHaveTextContent(options.manageNote);
+  });
+
   it('opening the create modal renders its dialog', () => {
     render(
       <VoiceLibrarySection

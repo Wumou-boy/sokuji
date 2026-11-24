@@ -16,8 +16,11 @@ const HELP = `Usage: sokuji-agent [--profile <userData>] [--json] <command>
   face start              Start Face to Face with the selected microphone
   face replay             Test Face to Face with synthetic audio supplied at launch
   face stop               Stop Face to Face and release its microphone
-  audio inputs            Read microphone selection and Windows default input
-  audio system-check      Open and release the selected participant audio locally
+  audio inputs            Read audio devices, participant source and speech routes
+  audio system-check [--auto]
+                          Check the selected source or detect a meeting app locally
+  audio echo-check [--mic-label <exact-label>]
+                          Compare local speaker reference and configured mic capture
   voice benchmark --round N
                           Compare three Qwen voices with the synthetic audio supplied at launch
   credentials status      Check whether OpenAI, Qwen and workspace keys are configured
@@ -26,7 +29,7 @@ const HELP = `Usage: sokuji-agent [--profile <userData>] [--json] <command>
   start                   Start an incoming-audio, subtitles-only session
   stop                    End the current session
   logs enable             Enable Sokuji diagnostic logging
-  logs list [--limit N]    Read recent caption-translation diagnostics
+  logs list [--limit N]    Read recent caption-translation and echo diagnostics
   captions [--limit N]    Read recent paired caption metadata
            [--include-text]  Include the actual source and translation text
   configure qwen-beijing --stdin
@@ -50,6 +53,7 @@ const commands = {
   'face stop': 'face-to-face.stop',
   'audio inputs': 'audio.inputs',
   'audio system-check': 'audio.system-check',
+  'audio echo-check': 'audio.echo-check',
   'voice benchmark': 'voice.benchmark',
   'credentials status': 'credentials.status',
   'notes check bailian': 'notes.check',
@@ -92,6 +96,8 @@ async function run(argv) {
       workspace: { type: 'string' },
       round: { type: 'string' },
       month: { type: 'string' },
+      auto: { type: 'boolean' },
+      'mic-label': { type: 'string' },
       json: { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
     } });
@@ -123,6 +129,16 @@ async function run(argv) {
     || (process.env.APPDATA ? path.join(process.env.APPDATA, 'sokuji') : '');
   if (!profileDir) return failure('profile_required', 'Pass the Sokuji user-data path with --profile.');
   const args = {};
+  if (parsed.values.auto) {
+    if (command !== 'audio.system-check') return failure('invalid_arguments', '--auto is available for audio system-check.');
+    args.auto = true;
+  }
+  if (parsed.values['mic-label'] !== undefined) {
+    if (command !== 'audio.echo-check' || parsed.values['mic-label'].length < 1 || parsed.values['mic-label'].length > 180) {
+      return failure('invalid_arguments', '--mic-label is available for audio echo-check and must be 1 to 180 characters.');
+    }
+    args.micLabel = parsed.values['mic-label'];
+  }
   if (month !== undefined) args.month = month;
   if (command === 'voice.benchmark') {
     if (!/^[1-9]$/.test(parsed.values.round ?? '')) return failure('invalid_round', 'Use --round 1 through 9.');
@@ -152,7 +168,7 @@ async function run(argv) {
     return failure('invalid_arguments', '--stdin is available for Bailian configuration commands.');
   }
   try {
-    const result = await agentControlCommunicate({ profileDir: path.resolve(profileDir), command, args, timeoutMs: 45_000 });
+    const result = await agentControlCommunicate({ profileDir: path.resolve(profileDir), command, args, timeoutMs: command === 'audio.echo-check' ? 25_000 : 45_000 });
     if (requested !== 'doctor' || !result.ok) return result;
     return { ok: true, data: { protocolVersion: 1, transport: 'windows-named-pipe', app: result.data } };
   } catch (error) {

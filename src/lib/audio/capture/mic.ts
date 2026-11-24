@@ -58,6 +58,7 @@ export interface MicSettings {
   markUnusable(deviceId: string): void;
   noiseSuppression(): NoiseSuppression;
   echoCancellation(): EchoCancellation;
+  captureStarted?(requested: EchoCancellation, applied: unknown): void;
   muted(): boolean;
   /** Called when any of them may have changed. */
   subscribe(listener: () => void): () => void;
@@ -153,8 +154,10 @@ export async function openMic(
     open = true;
     label = name;
     const mine = ++generation;
-    unwatch = core.watch(recorder.getStream(), () => queue(() => trackEnded(mine)));
+    const stream = recorder.getStream();
+    unwatch = core.watch(stream, () => queue(() => trackEnded(mine)));
     await recorder.record((data) => core.deliver(data.mono));
+    settings.captureStarted?.(echo, stream?.getAudioTracks()[0]?.getSettings?.().echoCancellation);
   };
 
   // A device switch is a passing event: the surfaces hide its notice after a

@@ -44,7 +44,7 @@ export function GeneralCategory({ locked }: CategoryBodyProps) {
   const setLogs = useSetDiagnosticLogs();
   const setWizardOpen = useSetSetupWizardOpen();
   const startTour = useStartBasicsTour();
-  const version = `v${__APP_VERSION__}`;
+  const version = __APP_RELEASE__;
   const logsName = t('settings.diagnosticLogs', 'Diagnostic logs');
 
   return (
@@ -77,7 +77,7 @@ export function GeneralCategory({ locked }: CategoryBodyProps) {
         <Row name={logsName} line={t('settings.diagnosticLogsTooltip', 'Record what the app does, so you can attach it to a bug report. Off by default. While on, a “Logs” button appears in the title bar, and the setting stays on after a restart.')}>
           <ToggleSwitch checked={logs} onChange={() => void setLogs(!logs)} label="" ariaLabel={logsName} />
         </Row>
-        {isElectron() ? (
+        {isElectron() && !__AED_PORTABLE__ ? (
           <Row name={t('settingsPage.general.update', 'Updates')} line={t('settingsPage.general.updateLine', 'You have {{version}}.', { version })}>
             <button type="button" className="model-row__btn" disabled={update.status === 'checking'} onClick={update.check}>
               {update.status === 'checking' ? t('update.checking', 'Checking…')

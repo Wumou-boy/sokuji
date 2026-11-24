@@ -12,7 +12,8 @@ import { useRunState } from '../../app/useRun';
 import { isDevelopment } from '../../config/analytics';
 import { useAnalytics } from '../../lib/analytics';
 import type { LegName } from '../../lib/conversation/types';
-import { describeCause, reportError, reportWarning } from '../../lib/diagnostics/report';
+import { describeCause, reportError } from '../../lib/diagnostics/report';
+import useLogStore from '../../stores/logStore';
 import { useStageUnit } from '../../lib/plan/fromStores';
 import { NO_MICROPHONE } from '../../lib/session/shape';
 import type { RunEnd, RunState } from '../../lib/session/types';
@@ -22,6 +23,7 @@ import { currentAuth } from '../../app/currentAuth';
 import { isPanelNoteId, noticeActionSpec, panelNoteEntries } from '../../lib/view/panelNotes';
 import {
   useIsMicMuted,
+  useAutoMeetingResolvedSource,
   useMode,
   useParticipantSources,
   useSelectedParticipantSource,
@@ -73,6 +75,8 @@ import { useStatusLine } from './useStatusLine';
 import { toneOf } from '../../lib/view/tone';
 import { useLiveNotesShows } from '../../lib/notes/live/livePanel';
 import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
+import { AUTO_MEETING_PARTICIPANT_SOURCE_ID } from '../../lib/modern-audio/participantSource';
+import type { AutoAudioSourceStatus } from './AutoAudioSourceMeter';
 import './MainPanel.scss';
 
 /**
@@ -95,6 +99,8 @@ function useLoadedAudio(session: AppSession, phase: RunState['phase']): LoadedAu
   }, [session, phase, loaded]);
   return audio;
 }
+
+const silentPeak = () => 0;
 
 /**
  * The development test tone (1e-3 ruling 16): a press plays it, a second
@@ -183,6 +189,7 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   const micMuted = useIsMicMuted();
   const participantSources = useParticipantSources();
   const participantSource = useSelectedParticipantSource();
+  const autoMeetingApp = useAutoMeetingResolvedSource();
   // The unit that transcribes, once the plan is ready: whether typed text reaches it.
   const transcription = useStageUnit('transcription');
   // Face-to-face and whether each leg is voiced, from one source: the replay gate, the strip and the tags.
@@ -296,7 +303,10 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   const { notice: echo, dismiss: dismissEcho } = useEchoNotice(
     useMemo(() => (audio ? echoSource(audio.capture.echo) : null), [audio]),
     (state) => {
-      reportWarning('MainPanel', `Echo detected: ${state.cause} (lag ${Math.round(state.lagMs)}ms, rho ${state.rho.toFixed(2)})`, { dedupeKey: 'echo' });
+      const type = 'audio.echo.warning';
+      useLogStore.getState().addRealtimeEvent({
+        type, data: { cause: state.cause, lagMs: Math.round(state.lagMs), rho: Number(state.rho.toFixed(2)) },
+      }, 'client', type);
       trackEvent('echo_detected', { cause: state.cause, lag_ms: Math.round(state.lagMs) });
     },
   );
@@ -325,6 +335,12 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   }, [runner]);
   // Out of render (review Minor 8): the first call wires an AnalyserNode into the graph.
   const outputMeter = useMemo(() => audio?.playback.meter('virtual') ?? null, [audio]);
+  let autoAudioSource: AutoAudioSourceStatus | undefined;
+  if (isElectron() && !f2f.active && mode !== 'speaker' && participantSource?.deviceId === AUTO_MEETING_PARTICIPANT_SOURCE_ID) {
+    if (run.phase === 'idle' || run.phase === 'stopping') autoAudioSource = { state: 'ready' };
+    else if (!autoMeetingApp) autoAudioSource = { state: 'waiting' };
+    else autoAudioSource = { state: 'capturing', appName: autoMeetingApp.label, readPeak: audio?.capture.levels.participant.readPeak ?? silentPeak };
+  }
   const footer = (site: 'basic' | 'advanced') => (
     <PanelFooter
       site={site} run={run} mode={mode} missingDevice={missingDevice}
@@ -332,13 +348,14 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
       holdToTalk={speakerLive && subtitle.holdToTalk} held={ptt.held} micMuted={micMuted}
       pair={subtitle.pair} duration={duration} faceToFace={f2f.active} faceToFaceOffered={f2f.offered} ears={ears}
       sessionTokens={sessionTokens}
+      autoAudioSource={autoAudioSource}
       // Ruling 11: `session.start` is the one start every surface calls — never a start while the gate is shut, the button is off then; this also holds for a click that beat its render (as the takeover's Start).
       onStart={() => void session.start('button')}
       onStop={() => void runner.stop('button')}
       onPress={ptt.press} onRelease={ptt.release}
       onModeSegment={onModeSegment} onLanguages={() => navigateToSettings('languages')}
       testTone={site === 'advanced' ? testTone : undefined}
-      waveforms={site === 'advanced' ? { input: <InputWaveforms mode={mode} levels={audio?.capture.levels ?? null} />, output: <OutputWaveform meter={outputMeter} /> } : undefined}
+      waveforms={site === 'advanced' ? { input: <InputWaveforms mode={mode} levels={audio?.capture.levels ?? null} hideParticipant={autoAudioSource !== undefined} />, output: <OutputWaveform meter={outputMeter} /> } : undefined}
       // The name only in the advanced layout of the desktop app: the side panel is as narrow as the basic footer.
       screenContext={screenContext.chip && { ...screenContext.chip, iconOnly: site === 'basic' || isExtension() }}
       preparing={screenContext.preparing}

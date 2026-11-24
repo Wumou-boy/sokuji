@@ -39,9 +39,10 @@ export interface QwenSegmentsOptions {
   connection?: number;
   /** Infer a lightweight EN/JA/ZH badge from the final source transcript. */
   detectIncomingLanguage?: boolean;
-  /** For text-only Chinese captions, wait for source finalization and omit zh→zh translation text. */
+  /** For text-only Chinese captions, omit zh→zh and stream once a partial indicates another language. */
   skipSameLanguageText?: boolean;
   targetLanguage?: string;
+  labelTranslationLanguage?: boolean;
 }
 
 interface Item {
@@ -69,7 +70,7 @@ interface Item {
   finished: boolean;
   language?: string;
   suppressed: boolean;
-  released: boolean;
+  foreignPartial: boolean;
   /** The current phrase's samples so far, and where its provisional ranges reached, from the phrase's start. */
   cum: number;
   reached: number;
@@ -119,12 +120,7 @@ export class QwenSegments {
     const heard = this.items.get(previous);
     if (heard?.side !== 'source') return;
     it.source = previous;
-    if (this.suppressedBySource(heard)) {
-      it.suppressed = true;
-      it.closed = true;
-      return;
-    }
-    if (heard.finished) it.released = true;
+    if (this.suppressedBySource(heard)) this.suppress(itemId, it);
   }
 
   text(itemId: string, side: Side, delta: string): void {
@@ -133,8 +129,16 @@ export class QwenSegments {
     // Words after the phrase's audio begin the next phrase: the one before is whole. A blank delta adds no word.
     if (side === 'translation' && delta.trim() !== '' && it.samples.length > it.phraseAudio && it.shown.length > it.phraseText) this.fill(it);
     it.text += delta;
-    if (side === 'translation' && this.waitingForSource(it)) return;
+    const pendingSource = side === 'translation' ? this.pendingSource(it) : undefined;
+    if (pendingSource && !pendingSource.foreignPartial) return;
     this.show(itemId, it);
+    if (side === 'source' && this.filtersChinese && !it.foreignPartial) {
+      const language = meetingTranscriptLanguage(it.text);
+      if (language === 'en' || language === 'ja') {
+        it.foreignPartial = true;
+        this.releaseTranslations(itemId, it);
+      }
+    }
   }
 
   /** The final text replaces what the deltas built, unless it is empty; then the segment closes. */
@@ -147,8 +151,11 @@ export class QwenSegments {
       const language = meetingTranscriptLanguage(it.text);
       if (language !== 'und') it.language = language;
     }
-    if (side === 'translation' && this.waitingForSource(it)) return;
+    const pendingSource = side === 'translation' ? this.pendingSource(it) : undefined;
+    if (pendingSource && !pendingSource.foreignPartial) return;
     this.show(itemId, it);
+    // The translated row stays provisional until the final source language can be checked.
+    if (pendingSource) return;
     this.restate(it);
     this.close(it);
     this.finish(it);
@@ -200,7 +207,7 @@ export class QwenSegments {
     if (this.stopped) return null;
     let it = this.items.get(itemId);
     if (!it) {
-      it = { side, text: '', shown: '', stated: false, closed: false, samples: [], phraseText: 0, phraseAudio: 0, ranges: new Map(), spoken: false, finished: false, suppressed: false, released: false, cum: 0, reached: 0 };
+      it = { side, text: '', shown: '', stated: false, closed: false, samples: [], phraseText: 0, phraseAudio: 0, ranges: new Map(), spoken: false, finished: false, suppressed: false, foreignPartial: false, cum: 0, reached: 0 };
       this.items.set(itemId, it);
     }
     return it.side === side ? it : null;
@@ -209,7 +216,7 @@ export class QwenSegments {
   /** The snapshot, when it changed: a segment opens with its first words, so blank text opens nothing. */
   private show(itemId: string, it: Item): void {
     const text = it.text.trim();
-    const language = it.side === 'source' ? it.language : undefined;
+    const language = it.side === 'source' ? it.language : this.o.labelTranslationLanguage ? this.o.targetLanguage : undefined;
     if (text === it.shown && language === it.shownLanguage) return;
     if (it.ref === undefined) this.open(itemId, it);
     it.shown = text;
@@ -219,33 +226,39 @@ export class QwenSegments {
     this.o.sink.segmentText({ ref, text, ...(language ? { language } : {}), ...(person === undefined ? {} : { person }) });
   }
 
-  private waitingForSource(it: Item): boolean {
-    if (it.released || !this.o.skipSameLanguageText || this.o.targetLanguage !== 'zh' || it.source === undefined) return false;
+  private get filtersChinese(): boolean {
+    return this.o.skipSameLanguageText === true && this.o.targetLanguage === 'zh';
+  }
+
+  private pendingSource(it: Item): Item | undefined {
+    if (!this.filtersChinese || it.source === undefined) return undefined;
     const source = this.items.get(it.source);
-    if (!source?.finished) return true;
-    if (this.suppressedBySource(source)) {
-      it.suppressed = true;
-      it.closed = true;
-      return true;
-    }
-    it.released = true;
-    return false;
+    return source && !source.finished ? source : undefined;
   }
 
   private suppressedBySource(source: Item): boolean {
-    return this.o.skipSameLanguageText === true && this.o.targetLanguage === 'zh' && source.language === 'zh';
+    return this.filtersChinese && source.language === 'zh';
+  }
+
+  private suppress(itemId: string, it: Item): void {
+    it.suppressed = true;
+    if (it.closed) return;
+    // A final transcript can revise the provisional language evidence.
+    if (it.ref !== undefined) {
+      it.text = '';
+      this.show(itemId, it);
+    }
+    this.close(it);
   }
 
   private releaseTranslations(sourceId: string, source: Item): void {
     for (const [itemId, item] of this.items) {
       if (item.side !== 'translation' || item.source !== sourceId || item.closed) continue;
       if (this.suppressedBySource(source)) {
-        item.suppressed = true;
-        item.closed = true;
+        this.suppress(itemId, item);
       } else {
-        item.released = true;
         this.show(itemId, item);
-        if (item.finished) {
+        if (source.finished && item.finished) {
           this.restate(item);
           this.close(item);
           this.finish(item);

@@ -66,6 +66,12 @@ describe("Qwen LiveTranslate's builder (spec §5)", () => {
     });
   });
 
+  it('labels detected participant speech with Auto even when the translation is spoken', () => {
+    expect(buildQwen(ctx(AUTO, 'zh'), QWEN_DEFAULTS, { ...SHARED, reversed: () => true })).toMatchObject({
+      target: 'zh', speech: true, detectIncomingLanguage: true, skipSameLanguageText: false,
+    });
+  });
+
   it('carries a dedicated workspace identity without inheriting a shared or detected endpoint', () => {
     const workspace = { ...QWEN_DEFAULTS, connection: 'bailian-workspace' as const, workspaceId: 'llm-team123' };
     expect(buildQwen(ctx('en', 'zh'), workspace, { ...SHARED, models: [{ id: 'cn' }] })).toMatchObject({

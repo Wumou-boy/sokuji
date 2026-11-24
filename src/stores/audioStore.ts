@@ -91,6 +91,13 @@ export const DEFAULT_PARTICIPANT_SOURCE: AudioDevice = {
   label: 'System Audio (All Applications)',
 };
 
+/** Windows-only opt-in selector; the runner resolves this to a real app before capture starts. */
+export const AUTO_MEETING_PARTICIPANT_SOURCE: AudioDevice = {
+  deviceId: 'auto-meeting-audio',
+  label: 'Auto (Meeting app)',
+  appKey: 'auto-meeting-audio',
+};
+
 interface AudioStore {
   // State
   audioInputDevices: AudioDevice[];
@@ -99,6 +106,8 @@ interface AudioStore {
   selectedMonitorDevice: AudioDevice | null;
   participantSources: AudioDevice[];
   selectedParticipantSource: AudioDevice | null;
+  /** Actual application resolved for the current Auto meeting capture, when known. */
+  autoMeetingResolvedSource: AudioDevice | null;
   /** Saved app key from a previous run, used to re-find the app on startup. */
   persistedParticipantAppKey: string | null;
   /** The user's own picks, as persisted: the devices the choice returns to (spec 2026-10-04 §1). */
@@ -161,6 +170,7 @@ interface AudioStore {
   selectMonitorDevice: (device: AudioDevice) => void;
   setParticipantSources: (sources: AudioDevice[]) => void;
   selectParticipantSource: (source: AudioDevice) => void;
+  setAutoMeetingResolvedSource: (source: AudioDevice | null) => void;
   toggleRealVoicePassthrough: () => void;
   setRealVoicePassthroughVolume: (volume: number) => void;
   setNoiseSuppressionMode: (mode: NoiseSuppressionMode) => void;
@@ -184,6 +194,8 @@ interface AudioStore {
 
   // Complex actions
   refreshDevices: () => Promise<{ defaultInputDevice: AudioDevice | null; defaultMonitorDevice: AudioDevice | null }>;
+  /** Refresh only per-application participant capture sources; leaves device and mute settings untouched. */
+  refreshParticipantSources: () => Promise<void>;
   /**
    * Follows the OS (spec 2026-10-04 §1): re-lists the devices and applies the choice. Never persists, never mutes, never prompts.
    * `retryUnusable`: the OS reported a change (`devicechange`, the audio system recovering), so every unusable mark is cleared and the user's device tried again.
@@ -219,6 +231,7 @@ const useAudioStore = create<AudioStore>()(
     selectedMonitorDevice: null,
     participantSources: [],
     selectedParticipantSource: DEFAULT_PARTICIPANT_SOURCE,
+    autoMeetingResolvedSource: null,
     persistedParticipantAppKey: null,
     savedInputDeviceId: null,
     savedMonitorDeviceId: null,
@@ -278,7 +291,11 @@ const useAudioStore = create<AudioStore>()(
       const wantedKey = (hasRealSelection ? current!.appKey : null)
         || state.persistedParticipantAppKey;
       if (wantedKey) {
-        const byKey = sources.find((s) => s.appKey && s.appKey === wantedKey);
+        const matches = sources.filter((s) => s.appKey && s.appKey === wantedKey);
+        // A process key can identify several running instances (for example,
+        // two browser windows/processes). Without a stable PID selection, do
+        // not silently choose an arbitrary capture target.
+        const byKey = matches.length === 1 ? matches[0] : undefined;
         if (byKey) {
           console.info(`[Sokuji] [AudioStore] Re-matched participant source by key: ${byKey.label} (${byKey.deviceId})`);
           return { participantSources: sources, selectedParticipantSource: byKey };
@@ -297,6 +314,7 @@ const useAudioStore = create<AudioStore>()(
       // Persist the stable key, not the deviceId: its pid is gone next launch.
       void persistSetting(STORAGE_KEYS.SELECTED_PARTICIPANT_APP_KEY, source.appKey ?? '');
     },
+    setAutoMeetingResolvedSource: (source) => set({ autoMeetingResolvedSource: source }),
     selectInputDevice: (device) => {
       console.info(`[Sokuji] [AudioStore] Selected input device: ${device.label} (${device.deviceId})`);
       set({
@@ -442,6 +460,13 @@ const useAudioStore = create<AudioStore>()(
     },
 
     // Complex actions
+    refreshParticipantSources: async () => {
+      try {
+        get().setParticipantSources(await listSystemAudioSources());
+      } catch (error) {
+        reportWarning('AudioStore', `Failed to list participant sources: ${describeCause(error)}`, { cause: error });
+      }
+    },
     refreshDevices: async () => {
       set({ isLoading: true });
 
@@ -736,8 +761,10 @@ export const useToggleNoiseSuppression = () => {
 export const useSelectInputDevice = () => useAudioStore((state) => state.selectInputDevice);
 export const useSelectMonitorDevice = () => useAudioStore((state) => state.selectMonitorDevice);
 export const useParticipantSources = () => useAudioStore((state) => state.participantSources);
+export const useRefreshParticipantSources = () => useAudioStore((state) => state.refreshParticipantSources);
 export const useParticipantCaptureWidened = () => useAudioStore((state) => state.participantCaptureWidened);
 export const useSelectedParticipantSource = () => useAudioStore((state) => state.selectedParticipantSource);
+export const useAutoMeetingResolvedSource = () => useAudioStore((state) => state.autoMeetingResolvedSource);
 export const useSelectParticipantSource = () => useAudioStore((state) => state.selectParticipantSource);
 export const useToggleRealVoicePassthrough = () => useAudioStore((state) => state.toggleRealVoicePassthrough);
 export const useSetRealVoicePassthroughVolume = () => useAudioStore((state) => state.setRealVoicePassthroughVolume);

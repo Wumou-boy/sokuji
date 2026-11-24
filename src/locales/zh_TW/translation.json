@@ -22,6 +22,10 @@
   },
   "settings": {
     "title": "設定",
+    "autoMeetingResolved": "自動選擇正在監聽 {{app}}",
+    "autoMeetingWaiting": "可以先啟動工作階段，不必等會議音訊出現。自動選擇會持續檢查有聲音的應用程式，偵測到會議音訊後便開始擷取。瀏覽器來源可能包含其他分頁；若選錯音訊，請手動選擇會議應用程式。",
+    "autoMeetingWaitingShort": "自動（等待會議音訊）",
+    "autoMeetingLabel": "自動（會議應用程式）",
     "tabs": {
       "general": "一般",
       "audio": "音訊",
@@ -597,7 +601,7 @@
       "screenContextChoose": "選擇…",
       "speakerLabels": "說話者標籤",
       "speakerLabelsTooltip": "為對方的人編號（說話者 1、說話者 2…），聽到不只一個聲音時顯示。\n\n可能會把一個人誤認成好幾個人。停用：不顯示編號。\n\n將於下次工作階段生效。",
-      "voiceSummaryFixed": "Your own voice (fixed)",
+      "voiceSummaryFixed": "我自己的聲音（固定）",
       "voiceDefaultName": "My voice",
       "voiceReadAloudTitle": "Read this aloud at your usual speaking pace",
       "voiceReadAloudSample": "Let’s review the project schedule. The first samples should arrive on Wednesday. Please check the quantities and specifications when they arrive, and send me a photo if anything looks wrong.",
@@ -605,7 +609,7 @@
       "voiceConsent": "After you confirm, AED Translator uses Alibaba temporary private storage by default. The optional public HTTPS URL is sent to Alibaba as the reference source; AED Translator does not upload audio to that host. Cloned voices remain in your Alibaba account until deleted.",
       "voiceReferenceUrlLabel": "Optional public HTTPS audio URL (fallback)",
       "voiceReferenceUrlPlaceholder": "https://your-public-host.example/voice.wav",
-      "voiceBailianOnly": "Voice enrollment is currently supported only with a Bailian shared Beijing API key. Choose Bailian shared and save its API key. Company workspace, QwenCloud and managed connections are not supported for enrollment.",
+      "voiceBailianOnly": "此版本錄製固定音色需要選擇「百煉共享端點（北京）」並儲存對應的 API Key。",
       "voiceDesktopOnly": "Recording and enrollment are available in the AED Translator Windows desktop app.",
       "voiceListError": "Could not load voice profiles saved in this app profile.",
       "voiceCreateFailed": "Could not create this voice. Check the Bailian connection and try again."
@@ -666,6 +670,9 @@
     "logsCopied": "已複製！"
   },
   "mainPanel": {
+    "autoAudioReady": "自動音訊",
+    "autoAudioWaiting": "自動音訊 · 正在搜尋",
+    "autoAudioCapturing": "自動音訊：{{app}} · {{db}}",
     "subtitleTakeover": "翻譯內容正在字幕浮層中顯示",
     "payer": {
       "paidBy": "由 {{name}} 付費",
@@ -1581,6 +1588,7 @@
     "no_legs": "開始前請選擇要翻譯的內容。",
     "turn_mode_unsupported": "此提供商不支援所選的通話模式。",
     "participant_source_unavailable": "此處無法翻譯對方。",
+    "auto_meeting_not_detected": "自動選擇未能偵測到會議應用程式的聲音。請讓對方先說話後重試，或手動選擇會議應用程式。",
     "participant_unsupported": "此提供商無法為此語言對翻譯對方。",
     "credentials_missing": "開始前請在設定中輸入您的API金鑰。",
     "not_ready": "提供商尚未就緒：{{detail}}",
@@ -1592,6 +1600,7 @@
     "source_ended": "音訊來源已消失（已拔除、關閉或停止）。",
     "still_stopping": "上一個工作階段仍在停止中，請稍後再試。",
     "connection_restored": "連線已中斷並已恢復",
+    "outgoing_language_switch_failed": "未能切換對方聽到的語言，仍使用原語言。",
     "lineup_incomplete": "請先為「{{stage}}」階段選擇一個服務。",
     "lineup_not_offered": "此版本不提供 {{provider}}。請為「{{stage}}」階段選擇其他服務。",
     "lineup_stage_split": "{{provider}} 必須同時負責「{{stage}}」階段。請為「{{stage}}」階段選擇 {{provider}}，或改用其他服務取代 {{provider}}。",

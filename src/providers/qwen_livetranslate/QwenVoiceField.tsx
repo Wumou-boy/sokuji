@@ -4,7 +4,7 @@ import { isElectron } from '../../utils/environment';
 import VoiceLibrarySection, { type VoiceEntry } from '../../components/Settings/sections/VoiceLibrarySection';
 import type { ProviderAccount } from '../../lib/provider/types';
 import { SPEAKER_CLONE, SPEAKER_CLONE_ONCE, QWEN_VOICES, qwenParticipantVoice, type QwenSettings } from './settings';
-import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION } from './endpoints';
+import { BAILIAN_ENDPOINT_ID } from './endpoints';
 import { encodeQwenVoiceWav, QwenVoiceError, qwenVoiceClient } from './voiceEnrollment';
 import { ensureQwenVoiceProfileStorage, forgetQwenVoiceProfile, loadQwenVoiceProfiles, qwenVoiceKeyFingerprint, rememberQwenVoiceProfile, type StoredQwenVoice } from './voiceProfileStorage';
 
@@ -23,8 +23,7 @@ const cloneLabel = (voice: StoredQwenVoice) => voice.name || 'My voice';
 /** Qwen's own outgoing voice library: local capture/review and explicit, model-matched enrollment. */
 export default function QwenVoiceField({ settings, update, account, endpoint, disabled = false, participantSpeaks = false, managed = false }: Props) {
   const { t } = useTranslation();
-  const workspace = settings.connection === BAILIAN_WORKSPACE_CONNECTION;
-  const bailian = !workspace && (settings.connection === BAILIAN_ENDPOINT_ID || (settings.connection === 'auto' && endpoint === BAILIAN_ENDPOINT_ID));
+  const bailian = settings.connection === BAILIAN_ENDPOINT_ID || (settings.connection === 'auto' && endpoint === BAILIAN_ENDPOINT_ID);
   const apiKey = account?.credentials.apiKey?.trim() ?? '';
   const client = useMemo(() => bailian && apiKey ? qwenVoiceClient(apiKey) : null, [bailian, apiKey]);
   const [clones, setClones] = useState<StoredQwenVoice[]>([]);
@@ -128,11 +127,9 @@ export default function QwenVoiceField({ settings, update, account, endpoint, di
   const canManage = !!client && isElectron() && !managed;
   const manageNote = managed ? undefined : canManage
     ? t('providers.qwen_livetranslate.voiceUploadNotice', 'After you confirm, this 10–20 second recording is uploaded to Alibaba Model Studio temporary storage (private, expires in 48 hours) to create a Qwen 3.8 voice. Voice creation may be billed. The resulting profile is retained by Alibaba until you delete it.')
-    : workspace
-      ? t('providers.qwen_livetranslate.voiceBailianOnly', 'Fixed voice enrollment currently requires the Bailian shared Beijing connection and its API key. Company workspace enrollment is not documented for this route.')
-      : bailian && !isElectron()
-        ? t('providers.qwen_livetranslate.voiceDesktopOnly', 'Recording and enrollment are available in AED Translator on Windows.')
-        : t('providers.qwen_livetranslate.voiceBailianOnly', 'Fixed voice recording and enrollment require a Bailian (Beijing) API key. Choose Bailian shared and save its API key. QwenCloud and managed connections do not expose this enrollment API.');
+    : bailian && !isElectron()
+      ? t('providers.qwen_livetranslate.voiceDesktopOnly', 'Recording and enrollment are available in AED Translator on Windows.')
+      : t('providers.qwen_livetranslate.voiceBailianOnly', 'In this app, fixed voice enrollment uses the Bailian shared Beijing connection and its API key.');
 
   return (
     <div className="settings-section voice-settings-section" id="voice-settings-section">
@@ -150,6 +147,10 @@ export default function QwenVoiceField({ settings, update, account, endpoint, di
         onRefresh={canManage ? () => void refresh() : undefined}
         refreshing={loading}
         onRecord={canManage ? onRecord : undefined}
+        createAction={managed ? undefined : {
+          title: t('providers.qwen_livetranslate.voiceSummaryFixed', 'Your own voice (fixed)'),
+          buttonLabel: t('voiceLibrary.recordVoice', 'Record voice…'),
+        }}
         useMeetingMicrophone={canManage}
         recordingPrompt={canManage ? {
           title: t('providers.qwen_livetranslate.voiceReadAloudTitle', 'Read this aloud at your usual speaking pace'),

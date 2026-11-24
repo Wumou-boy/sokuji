@@ -185,6 +185,8 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.DEV': JSON.stringify(isDevMode),
       global: 'globalThis',
       __APP_VERSION__: JSON.stringify(pkg.version),
+      __APP_RELEASE__: JSON.stringify(`v${pkg.version}`),
+      __AED_PORTABLE__: 'false',
     },
     css: {
       preprocessorOptions: {

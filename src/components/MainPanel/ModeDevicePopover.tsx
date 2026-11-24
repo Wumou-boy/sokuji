@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRunParticipantSpeech } from '../../app/useRun';
 import {
   useFloating,
@@ -11,15 +11,15 @@ import {
   size,
   autoUpdate,
 } from '@floating-ui/react';
-import { Mic, AudioLines, Volume2, Power, PowerOff, Play, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mic, AudioLines, Volume2, Power, PowerOff, Play, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { LucideIcon } from 'lucide-react';
 import {
   useAudioContext,
   useIsMicMuted, useIsMonitorMuted, useIsParticipantMuted,
   useSetMicMuted, useSetMonitorMuted, useSetParticipantMuted,
-  useParticipantCaptureWidened, useParticipantSources, useSelectedParticipantSource, useSelectParticipantSource,
-  useOutlets, useSetOutletDevice, useSetOutletChannel, useSelectedMonitorDevice,
+  useParticipantCaptureWidened, useParticipantSources, useSelectedParticipantSource, useSelectParticipantSource, useAutoMeetingResolvedSource,
+  useOutlets, useSetOutletDevice, useSetOutletChannel, useSelectedMonitorDevice, useRefreshParticipantSources,
 } from '../../stores/audioStore';
 import { useFaceToFace } from './useFaceToFace';
 import { useLanguageLabel } from '../../lib/language/useLanguageLabel';
@@ -93,7 +93,9 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
   const isParticipantMuted = useIsParticipantMuted();
   const participantSources = useParticipantSources();
   const selectedParticipantSource = useSelectedParticipantSource();
+  const autoResolvedSource = useAutoMeetingResolvedSource();
   const selectParticipantSource = useSelectParticipantSource();
+  const refreshParticipantSources = useRefreshParticipantSources();
   const setMicMuted = useSetMicMuted();
   const setMonitorMuted = useSetMonitorMuted();
   const setParticipantMuted = useSetParticipantMuted();
@@ -119,7 +121,7 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
   // The twin of the page's: a run's frozen Translation I hear wins over the live stores.
   const runSpeech = useRunParticipantSpeech();
   // Subscribed so the blocked state follows a capture that widens mid-run.
-  useParticipantCaptureWidened();
+  const participantCaptureWidened = useParticipantCaptureWidened();
   const heard = heardFromStores(beside);
   const blockedReason = t('audioPanel.blockedWholeSystem', 'All system sound is being captured: these playback options are off, so the translation is not translated again.');
   const channelName = (c: 'left' | 'right') => (c === 'left' ? t('audioPanel.channelLeft', 'left channel') : t('audioPanel.channelRight', 'right channel'));
@@ -131,6 +133,29 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
 
   // Only one row expanded at a time. Default: none expanded.
   const [expanded, setExpanded] = useState<ChannelKey | null>(null);
+  const [refreshingParticipantSources, setRefreshingParticipantSources] = useState(false);
+  const participantSourceRowVisible = (mode === 'participant' || (mode === 'both' && !beside)) && !isExtension();
+  const refreshParticipantSourceList = async () => {
+    if (refreshingParticipantSources) return;
+    setRefreshingParticipantSources(true);
+    try {
+      await refreshParticipantSources();
+    } finally {
+      setRefreshingParticipantSources(false);
+    }
+  };
+
+  // Opening the idle meeting picker is a natural point to discover apps that
+  // started after Sokuji. Never refresh under a running session: its capture
+  // graph is frozen at Start.
+  useEffect(() => {
+    if (open && !locked && participantSourceRowVisible && participantSources.length <= 1) {
+      void refreshParticipantSourceList();
+    }
+  // Refresh once per open/idle transition; source updates themselves must not
+  // retrigger the effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, locked, participantSourceRowVisible]);
 
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -246,13 +271,18 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
       // it gets a real picker like the mic and monitor rows. Without a per-app
       // helper the list holds only the whole-system entry and the old subtitle
       // is still the honest answer.
-      const canPickSource = !isExtension() && participantSources.length > 1;
+      // Keep the row expandable with the system-only sentinel so Windows
+      // users can refresh after starting meeting playback.
+      const canPickSource = !isExtension() && participantSources.length > 0;
       list.push({
         key: 'participant',
         icon: AudioLines,
         label: t('modePicker.deviceParticipantAudio', "Other's audio"),
-        devices: canPickSource ? participantSources : [],
-        selectedDevice: canPickSource ? selectedParticipantSource : null,
+        devices: canPickSource ? participantSources.map((source) => source.deviceId === 'auto-meeting-audio'
+          ? { ...source, label: t('settings.autoMeetingLabel', 'Auto (Meeting app)') } : source) : [],
+        selectedDevice: canPickSource && selectedParticipantSource?.deviceId === 'auto-meeting-audio'
+          ? { ...selectedParticipantSource, label: t('settings.autoMeetingLabel', 'Auto (Meeting app)') }
+          : canPickSource ? selectedParticipantSource : null,
         subtitle: canPickSource
           ? undefined
           : isExtension()
@@ -294,7 +324,7 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
     mode, beside, f2f.me, f2f.other, languageName, locked, speech, participantOffered, textOnly, outlets, defaultDevice, participantSpeech, heard, runSpeech,
     audioInputDevices, selectedInputDevice, isMicMuted,
     audioMonitorDevices, isMonitorMuted,
-    isParticipantMuted, participantSources, selectedParticipantSource,
+    isParticipantMuted, participantSources, selectedParticipantSource, autoResolvedSource, participantCaptureWidened,
     selectInputDevice, selectParticipantSource,
     setMicMuted, setMonitorMuted, setParticipantMuted,
     setOutletDevice, setOutletChannel, setParticipantSpeech,
@@ -310,6 +340,12 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
       : t('modePicker.popoverHeaderBoth', 'Both — devices');
 
   const summaryText = (row: ChannelRowSpec): { text: string; cls: string } => {
+    if (row.key === 'participant' && selectedParticipantSource?.deviceId === 'auto-meeting-audio') {
+      return { text: autoResolvedSource?.label || t('settings.autoMeetingWaitingShort', 'Auto (waiting for meeting audio)'), cls: '' };
+    }
+    if (row.key === 'participant' && participantCaptureWidened && !row.isMuted) {
+      return { text: t('popover.participantCaptureWidened', 'Capture fell back to all system audio'), cls: 'mode-device-popover__summary--warning' };
+    }
     // Participant: always show subtitle; status indicated by toggle icon
     if (row.subtitle) {
       return { text: row.subtitle, cls: row.isMuted ? 'mode-device-popover__summary--off' : '' };
@@ -396,6 +432,15 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
 
               {isExpanded && canExpand && (
                 <div className="mode-device-popover__device-list" role="listbox" aria-label={row.label}>
+                  {row.key === 'participant' && participantSourceRowVisible && !locked && (
+                    <>
+                      <div className="mode-device-popover__picker-hint">{t('popover.participantPickerHint', 'Start playing meeting audio, then refresh. WebView2 may appear as the process name.')}</div>
+                      <button type="button" className="mode-device-popover__refresh" onClick={() => { void refreshParticipantSourceList(); }} disabled={refreshingParticipantSources}>
+                        <RefreshCw size={12} className={refreshingParticipantSources ? 'mode-device-popover__refresh-icon--spinning' : undefined} />
+                        {t('audioPanel.refreshDevices', 'Refresh devices')}
+                      </button>
+                    </>
+                  )}
                   {row.devices.map((d) => {
                     const selected = row.selectedDevice?.deviceId === d.deviceId;
                     return (

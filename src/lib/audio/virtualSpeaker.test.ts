@@ -24,6 +24,22 @@ describe('findVirtualSpeaker', () => {
   it('finds none among ordinary devices', () => {
     expect(findVirtualSpeaker([device('speakers', 'Speakers'), device('hdmi', 'HDMI Output')])).toBeUndefined();
   });
+
+  it('selects the standard VB-CABLE input regardless of where the 16-channel device is listed', () => {
+    const standard = device('standard', 'CABLE Input (VB-Audio Virtual Cable)');
+    const sixteenChannel = device('cable-16ch', 'CABLE In 16ch (VB-Audio Virtual Cable)');
+    expect(findVirtualSpeaker([sixteenChannel, standard])).toBe('standard');
+    expect(findVirtualSpeaker([standard, sixteenChannel])).toBe('standard');
+    expect(findVirtualSpeaker([device('numbered', ' CABLE Input (2- VB-Audio Virtual Cable) ')])).toBe('numbered');
+  });
+
+  it('leaves the virtual output unset if only other cables are available', () => {
+    expect(findVirtualSpeaker([
+      device('cable-16ch', 'CABLE In 16ch (VB-Audio Virtual Cable)'),
+      device('cable-a', 'CABLE-A Input (VB-Audio Cable A)'),
+      device('other', 'CABLE Input (Audio Interface)'),
+    ])).toBeUndefined();
+  });
 });
 
 describe('virtualMicrophoneName', () => {
