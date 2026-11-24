@@ -1,5 +1,16 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, shell, session, systemPreferences, desktopCapturer, nativeTheme, powerMonitor, protocol } = require('electron');
 const path = require('path');
+const { mkdirSync } = require('node:fs');
+
+// Product branding changes what Electron otherwise uses for the Windows profile.
+// Set both paths before the auth store and Chromium can cache their defaults.
+if (process.platform === 'win32' && !app.commandLine.hasSwitch('user-data-dir')) {
+  const profile = path.join(app.getPath('appData'), 'Sokuji');
+  mkdirSync(profile, { recursive: true });
+  app.setPath('userData', profile);
+  app.setPath('sessionData', profile);
+}
+
 const { pathToFileURL } = require('url');
 const { betterAuthAdapter, PACKAGED_ORIGIN } = require('./better-auth-adapter');
 const { setupSubtitleHandlers } = require('./subtitle-window.js');
@@ -20,6 +31,7 @@ const { createWsHeaderRules } = require('./ws-header-rules.js');
 const { registerSessionNetworkDiagnostics } = require('./session-network-diagnostics.js');
 const { startAgentControl } = require('./agent-control.js');
 const { createNotesHttp } = require('./notes-http.js');
+const { registerQwenVoiceIpc } = require('./qwen-voice-ipc.js');
 const { applyLinuxGpuFlags } = require('./linux-gpu-flags');
 const { captureSourceMode, listCaptureSources, screenRecordingState, reaskScreenRecording, MAC_BUNDLE_ID } = require('./capture-sources');
 const { windowStateOf, watchWindowState } = require('./window-state');
@@ -60,6 +72,11 @@ if (IS_E2E) process.env.SOKUJI_E2E_BUILD = '1';
 const mainPageUrl = () => (isDevBuild() ? 'http://localhost:5173' : pathToFileURL(path.join(app.getAppPath(), 'build/index.html')).href);
 // An IPC call from the main window's own page: the webContents alone would also pass a page the window was taken to.
 const isMainPageSender = (sender) => sender === mainWindow?.webContents && isAppPage(sender.getURL(), mainPageUrl());
+
+// Qwen voice enrollment runs in main because the renderer is on file:// in
+// packaged Electron and DashScope/OSS do not provide renderer CORS access.
+// The renderer calls this only after the user confirms the recording review.
+registerQwenVoiceIpc({ ipcMain, isTrustedSender: isMainPageSender });
 
 const notesHttp = createNotesHttp();
 ipcMain.handle('notes-http:complete', (event, args) => {
@@ -147,7 +164,10 @@ const {
   console.log('[Sokuji] [Main] electron-audio-loopback initialized for', process.platform);
 }
 
-// Set application name for PulseAudio
+const PRODUCT_NAME = 'AED Translator';
+const iconAsset = (name) => path.join(app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..'), 'assets', name);
+
+// Keep the installed profile and audio process identity for in-place updates.
 app.setName('sokuji');
 app.commandLine.appendSwitch('application-name', 'sokuji');
 app.commandLine.appendSwitch('jack-name', 'sokuji');
@@ -274,6 +294,37 @@ function resetAgentPage() {
 }
 
 function dispatchAgentCommand(command, args) {
+  if (command === 'voice.benchmark') {
+    return dispatchAudioFixture(command, args, 'voice-benchmark-pcm', 8, 'benchmark');
+  }
+  if (command === 'face-to-face.replay') {
+    return dispatchAudioFixture(command, args, 'face-replay-pcm', 30, 'face_replay');
+  }
+  return dispatchToAgentPage(command, args);
+}
+
+async function dispatchAudioFixture(command, args, switchName, maxSeconds, errorPrefix) {
+  const fixture = app.commandLine.getSwitchValue(switchName);
+  if (!fixture) return agentError(`${errorPrefix}_fixture_required`, `Launch with --${switchName} pointing to a synthetic 24 kHz mono s16le PCM sample.`);
+  let file;
+  try {
+    file = await require('node:fs/promises').open(fixture, 'r');
+    const info = await file.stat();
+    if (!info.isFile() || info.size < 48_000 || info.size > 48_000 * maxSeconds || info.size % 2 !== 0) {
+      return agentError(`${errorPrefix}_bad_fixture`, `Use 1–${maxSeconds} seconds of 24 kHz mono s16le PCM.`);
+    }
+    const audio = Buffer.alloc(info.size);
+    const { bytesRead } = await file.read(audio, 0, audio.length, 0);
+    if (bytesRead !== audio.length) return agentError(`${errorPrefix}_bad_fixture`, 'The audio sample changed while it was being read.');
+    return dispatchToAgentPage(command, { ...args, pcm: audio.toString('base64') });
+  } catch {
+    return agentError(`${errorPrefix}_fixture_unavailable`, 'Unable to read the audio sample.');
+  } finally {
+    await file?.close().catch(() => {});
+  }
+}
+
+function dispatchToAgentPage(command, args) {
   if (!agentPage || agentPage.isDestroyed() || !isMainPageSender(agentPage)) {
     return agentError('renderer_unavailable', 'The main Sokuji window is not ready yet.');
   }
@@ -383,18 +434,18 @@ function createApplicationMenu() {
   const menuTemplate = [
     // App menu (macOS only)
     ...(isMac ? [{
-      label: app.getName(),
+      label: PRODUCT_NAME,
       submenu: [
         {
-          label: `About ${app.getName()}`,
+          label: `About ${PRODUCT_NAME}`,
           click: () => {
             dialog.showMessageBox({
               type: 'info',
-              title: `About ${app.getName()}`,
-              message: 'Sokuji - Real-time AI Translation',
+              title: `About ${PRODUCT_NAME}`,
+              message: PRODUCT_NAME,
               detail: `Version: ${app.getVersion()}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
               buttons: ['OK'],
-              icon: path.join(__dirname, '../assets/icon.png')
+              icon: iconAsset('icon.png')
             });
           }
         },
@@ -483,15 +534,15 @@ function createApplicationMenu() {
       role: 'help',
       submenu: [
         ...(isMac ? [] : [{
-          label: `About ${app.getName()}`,
+          label: `About ${PRODUCT_NAME}`,
           click: () => {
             dialog.showMessageBox({
               type: 'info',
-              title: `About ${app.getName()}`,
-              message: 'Sokuji - Real-time AI Translation',
+              title: `About ${PRODUCT_NAME}`,
+              message: PRODUCT_NAME,
               detail: `Version: ${app.getVersion()}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
               buttons: ['OK'],
-              icon: path.join(__dirname, '../assets/icon.png')
+              icon: iconAsset('icon.png')
             });
           }
         },
@@ -533,9 +584,7 @@ function createApplicationMenu() {
 
 function createWindow() {
   // Determine the correct icon path based on platform
-  const iconPath = process.platform === 'win32'
-    ? path.join(__dirname, '../assets/icon.ico')
-    : path.join(__dirname, '../assets/icon.png');
+  const iconPath = iconAsset(process.platform === 'win32' ? 'icon.ico' : 'icon.png');
 
   // Create the browser window
   const isDev = isDevBuild();
@@ -550,7 +599,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: 'Sokuji',
+    title: PRODUCT_NAME,
     icon: iconPath,
     frame: false,
     transparent: true,
@@ -1176,7 +1225,7 @@ ipcMain.handle('repair-virtual-audio', async (_event, data) => {
   if (process.platform !== 'darwin' || !audioUtils.repairVirtualDevice) {
     return { ok: false, cancelled: false, error: 'Only the macOS driver can be repaired' };
   }
-  const prompt = typeof data?.prompt === 'string' && data.prompt ? data.prompt.slice(0, 300) : 'Sokuji wants to repair its virtual microphone.';
+  const prompt = typeof data?.prompt === 'string' && data.prompt ? data.prompt.slice(0, 300) : 'AED Translator wants to repair its virtual microphone.';
   const result = await audioUtils.repairVirtualDevice({ prompt });
   // The repair's last probe found the device (and put its gain back to unity),
   // so the status follows from that same check: a second one could disagree
@@ -1419,12 +1468,12 @@ const PRIVACY_PANES = {
  * entry that does not exist.
  */
 ipcMain.handle('get-tcc-display-name', async () => {
-  if (process.platform !== 'darwin') return { name: app.getName(), isDev: false };
+  if (process.platform !== 'darwin') return { name: PRODUCT_NAME, isDev: false };
   // app.getName() is overridden to 'sokuji' at startup, so read the bundle the
   // OS actually launched instead of what the app calls itself.
   const exe = app.getPath('exe');
   const isDev = exe.includes('node_modules/electron/dist/');
-  return { name: isDev ? 'Electron' : app.getName(), isDev };
+  return { name: isDev ? 'Electron' : PRODUCT_NAME, isDev };
 });
 
 /**

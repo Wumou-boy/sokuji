@@ -161,7 +161,8 @@ function betterAuthAdapter(opts) {
       ...filterPatterns,
       'wss://maas.qwencloudapi.com/*',
       'wss://maas.qianwenaiapi.com/*',
-      'wss://dashscope.aliyuncs.com/api-ws/v1/realtime*'
+      'wss://dashscope.aliyuncs.com/api-ws/v1/realtime*',
+      'wss://*.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime*'
     ]
   };
 

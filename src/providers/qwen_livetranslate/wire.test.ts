@@ -62,6 +62,14 @@ describe("Qwen LiveTranslate's wire (spec §6)", () => {
     });
   });
 
+  it('uses a pre-created voice ID with clone extraction disabled', () => {
+    expect(sessionUpdate({ ...preset, voice: { kind: 'fixed', id: 'qwen-translate-vc-own-123', ownerHash: 'a'.repeat(64) } }, { video: false }).session).toMatchObject({
+      audio: { output: { voice: 'qwen-translate-vc-own-123' } },
+      enable_voice_clone: true,
+      voice_clone_options: { frequency: 'never' },
+    });
+  });
+
   it('sends the hotwords as the corpus, and no corpus without them', () => {
     expect(sessionUpdate({ ...preset, phrases: { '实时翻译': 'LiveTranslate' } }, { video: false }).session.translation).toEqual({ language: 'en', corpus: { phrases: { '实时翻译': 'LiveTranslate' } } });
     expect(sessionUpdate(preset, { video: false }).session.translation).toEqual({ language: 'en' });
@@ -73,7 +81,7 @@ describe("Qwen LiveTranslate's wire (spec §6)", () => {
   });
 
   it('asks a leg that does not speak for text alone: no output, no cloning, whatever voice is chosen', () => {
-    for (const voice of [preset.voice, { kind: 'clone' as const, frequency: 'always' as const }, { kind: 'clone' as const, frequency: 'once' as const }]) {
+    for (const voice of [preset.voice, { kind: 'clone' as const, frequency: 'always' as const }, { kind: 'clone' as const, frequency: 'once' as const }, { kind: 'fixed' as const, id: 'qwen-translate-vc-own-123', ownerHash: 'a'.repeat(64) }]) {
       expect(sessionUpdate({ ...preset, speech: false, voice }, { video: false }).session).toEqual({ output_modalities: ['text'], translation: { language: 'en' }, audio: { input: INPUT } });
     }
     expect(sessionUpdate({ ...preset, speech: false, manual: true }, { video: false }).session.audio).toEqual({ input: { ...INPUT, turn_detection: null } });

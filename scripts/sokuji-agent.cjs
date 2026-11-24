@@ -3,13 +3,22 @@
 
 const path = require('node:path');
 const { parseArgs } = require('node:util');
-const { agentControlCommunicate } = require('../electron/agent-control.js');
+const { agentControlCommunicate, normalizeWorkspaceId, isWorkspaceKey } = require('../electron/agent-control.js');
 
 const HELP = `Usage: sokuji-agent [--profile <userData>] [--json] <command>
 
   doctor                  Check the Windows connection and session status
   status                  Read the selected provider, input mode and session status
-  credentials status      Check whether OpenAI and Qwen keys are configured
+  mode meeting            Show Online Meeting while idle
+  mode face-to-face       Show Face to Face while idle
+  face start              Start Face to Face with the selected microphone
+  face replay             Test Face to Face with synthetic audio supplied at launch
+  face stop               Stop Face to Face and release its microphone
+  audio inputs            Read microphone selection and Windows default input
+  audio system-check      Open and release the selected participant audio locally
+  voice benchmark --round N
+                          Compare three Qwen voices with the synthetic audio supplied at launch
+  credentials status      Check whether OpenAI, Qwen and workspace keys are configured
   notes check bailian     Test Bailian with a built-in sample transcript
   notes check compatible  Test the configured compatible endpoint with the same sample
   start                   Start an incoming-audio, subtitles-only session
@@ -19,7 +28,10 @@ const HELP = `Usage: sokuji-agent [--profile <userData>] [--json] <command>
   captions [--limit N]    Read recent paired caption metadata
            [--include-text]  Include the actual source and translation text
   configure qwen-beijing --stdin
-                          Save one Bailian API Key without switching providers
+                          Configure the shared Bailian Beijing endpoint
+  configure qwen-workspace --workspace <id> --stdin
+                          Configure a Beijing workspace with its own key
+  configure qwen-defaults Select Qwen LiveTranslate and Bailian notes
 
 Start Sokuji with --agent-control first. The path defaults to the installed
 Windows profile. Set SOKUJI_AGENT_PROFILE or pass --profile for a test profile.
@@ -28,6 +40,14 @@ Commands return JSON. Limits range from 1 to 100, with 20 as the default.`;
 const commands = {
   doctor: 'status',
   status: 'status',
+  'mode meeting': 'view.set-mode',
+  'mode face-to-face': 'view.set-mode',
+  'face start': 'face-to-face.start',
+  'face replay': 'face-to-face.replay',
+  'face stop': 'face-to-face.stop',
+  'audio inputs': 'audio.inputs',
+  'audio system-check': 'audio.system-check',
+  'voice benchmark': 'voice.benchmark',
   'credentials status': 'credentials.status',
   'notes check bailian': 'notes.check',
   'notes check compatible': 'notes.check',
@@ -37,22 +57,25 @@ const commands = {
   'logs list': 'logs.list',
   captions: 'captions.list',
   'configure qwen-beijing': 'provider.configure-qwen-beijing',
+  'configure qwen-workspace': 'provider.configure-qwen-workspace',
+  'configure qwen-defaults': 'provider.configure-qwen-defaults',
 };
 
 function failure(code, message) {
   return { ok: false, error: { code, message } };
 }
 
-async function apiKeyFromPipe() {
+async function apiKeyFromPipe(workspace) {
   if (process.stdin.isTTY) return undefined;
   process.stdin.setEncoding('utf8');
   let input = '';
   for await (const chunk of process.stdin) {
     input += chunk;
-    if (input.length > 300) return undefined;
+    if (input.length > (workspace ? 4_096 : 300)) return undefined;
   }
   const key = input.trim();
-  return /^sk-[A-Za-z0-9._-]{20,250}$/.test(key) ? key : undefined;
+  const valid = workspace ? isWorkspaceKey(key) : /^sk-[A-Za-z0-9._-]{20,250}$/.test(key);
+  return valid ? key : undefined;
 }
 
 async function run(argv) {
@@ -63,6 +86,8 @@ async function run(argv) {
       limit: { type: 'string' },
       'include-text': { type: 'boolean' },
       stdin: { type: 'boolean' },
+      workspace: { type: 'string' },
+      round: { type: 'string' },
       json: { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
     } });
@@ -90,16 +115,32 @@ async function run(argv) {
     || (process.env.APPDATA ? path.join(process.env.APPDATA, 'sokuji') : '');
   if (!profileDir) return failure('profile_required', 'Pass the Sokuji user-data path with --profile.');
   const args = {};
+  if (command === 'voice.benchmark') {
+    if (!/^[1-9]$/.test(parsed.values.round ?? '')) return failure('invalid_round', 'Use --round 1 through 9.');
+    args.round = Number(parsed.values.round);
+  } else if (parsed.values.round !== undefined) {
+    return failure('invalid_arguments', '--round is available for voice benchmark.');
+  }
+  if (command === 'view.set-mode') args.mode = requested === 'mode meeting' ? 'meeting' : 'face-to-face';
   if (command === 'notes.check') args.service = requested === 'notes check bailian' ? 'bailian_notes' : 'compatible_notes';
   if (limit !== undefined) args.limit = Number(limit);
   if (includeText) args.includeText = true;
-  if (command === 'provider.configure-qwen-beijing') {
-    if (!parsed.values.stdin) return failure('stdin_required', 'Pipe the key into configure qwen-beijing --stdin.');
-    const key = await apiKeyFromPipe();
+  const workspace = command === 'provider.configure-qwen-workspace';
+  if (parsed.values.workspace !== undefined && !workspace) {
+    return failure('invalid_arguments', '--workspace is available for configure qwen-workspace.');
+  }
+  if (workspace) {
+    const id = normalizeWorkspaceId(parsed.values.workspace);
+    if (!id) return failure('invalid_workspace', 'Pass a Beijing workspace ID with --workspace.');
+    args.workspaceId = id;
+  }
+  if (workspace || command === 'provider.configure-qwen-beijing') {
+    if (!parsed.values.stdin) return failure('stdin_required', 'Pipe the selected Bailian API key into the command with --stdin.');
+    const key = await apiKeyFromPipe(workspace);
     if (!key) return failure('invalid_key_input', 'Standard input must contain one Bailian API key.');
     args.apiKey = key;
   } else if (parsed.values.stdin) {
-    return failure('invalid_arguments', '--stdin is available for configure qwen-beijing.');
+    return failure('invalid_arguments', '--stdin is available for Bailian configuration commands.');
   }
   try {
     const result = await agentControlCommunicate({ profileDir: path.resolve(profileDir), command, args, timeoutMs: 45_000 });

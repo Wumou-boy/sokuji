@@ -45,6 +45,12 @@ describe('the notes service', () => {
     expect(notesServiceOf(null, d(false, false, false))).toBe('openai');
   });
 
+  it('defaults an unchosen Qwen desktop line-up to Bailian notes while preserving explicit and non-Qwen choices', () => {
+    expect(notesServiceOf({ translation: 'qwen_livetranslate', summarisation: null }, d(true, true, true))).toBe(BAILIAN_NOTES);
+    expect(notesServiceOf({ translation: 'qwen_livetranslate', summarisation: 'openai' }, d(true, true, true))).toBe(OPENAI_NOTES);
+    expect(notesServiceOf({ translation: 'soniox', summarisation: null }, d(true, true, true))).toBe(KIZUNA_NOTES);
+  });
+
   // Text models, part C: the notes can be written by OpenAI's, Gemini's or a compatible service's text model. The
   // stored id 'openai' is kept, served by OpenAI's text model.
   it('knows Kizuna AI, OpenAI, Gemini and a compatible service, each served by its provider', () => {

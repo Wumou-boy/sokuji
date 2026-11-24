@@ -74,10 +74,7 @@ const row = (name: string) => screen.getByText(name).closest('.model-row') as HT
 // A session model, as a library card (B-20).
 const card = (name: string) => screen.getByText(name, { selector: '.model-card__name' }).closest('.model-card') as HTMLElement;
 
-// The session models in three small groups, one per stage (owner 2026-11-15): each shows what is on disk and the
-// recommended ones this computer can run; the rest, other languages' last, in "N more" at the group's end.
 const stageGroup = (name: string) => screen.getByRole('group', { name });
-const more = (name: string) => fireEvent.click(within(stageGroup(name)).getByRole('button', { name: /more/ }));
 
 describe('Models and storage — the session models', () => {
   it('splits the models this pair can use into recognition, translation and speech', () => {
@@ -94,33 +91,35 @@ describe('Models and storage — the session models', () => {
     expect(document.getElementById('models-tts-section')).toBe(stageGroup('Speech'));
   });
 
-  it('shows what is on disk and the recommended ones it can run; the rest wait under "N more"', () => {
+  it('shows a small catalog for the three working languages', () => {
     mount();
-    const asr = stageGroup('Recognition');
-    expect(within(asr).getByText('SenseVoice (int8)')).toBeInTheDocument();
-    expect(within(asr).getByText('NeMo Parakeet TDT 0.6B (int8, 25 EU langs)')).toBeInTheDocument();
-    expect(within(asr).queryByText('Moonshine Tiny EN (quantized)')).toBeNull();
-    expect(within(asr).queryByText('Cohere Transcribe (WebGPU)')).toBeNull();
-    more('Recognition');
-    expect(within(asr).getByText('Moonshine Tiny EN (quantized)')).toBeInTheDocument();
-    expect(within(asr).getByText('Cohere Transcribe (WebGPU)')).toBeInTheDocument();
-  });
-
-  it("puts the other languages' models last in the fold, under their own caption", () => {
-    mount();
+    expect(within(stageGroup('Recognition')).getByText('SenseVoice (int8)')).toBeInTheDocument();
+    expect(within(stageGroup('Recognition')).getByText('Laptop · CPU')).toBeInTheDocument();
+    expect(screen.queryByText('Moonshine Tiny EN (quantized)')).toBeNull();
     expect(screen.queryByText('Opus-MT (en → de)')).toBeNull();
-    more('Translation');
-    const caption = within(stageGroup('Translation')).getByText(/Models for other languages/);
-    const rows = [...stageGroup('Translation').querySelectorAll('.model-card__name')].map((n) => n.textContent);
-    expect(rows).toContain('Opus-MT (en → de)');
-    expect(caption.compareDocumentPosition(card('Opus-MT (en → de)')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(card('Opus-MT (en → zh)')).toBeInTheDocument();
+    expect(card('Opus-MT (ja → en)')).toBeInTheDocument();
   });
 
-  it('shows the best one it can run when nothing on disk or recommended would be shown', () => {
-    useModelStore.setState({ modelStatuses: {} } as never);
+  it('shows a small PGX-class WebGPU shortlist from the built-in model library', () => {
     mount();
-    // Every recommended translation model needs WebGPU, which this computer lacks: one it can run stands in.
-    expect(stageGroup('Translation').querySelectorAll('.models-stage__shown .model-card')).toHaveLength(1);
+    const pgx = screen.getByRole('region', { name: 'PGX WebGPU models' });
+    expect(pgx).toHaveTextContent('128 GB unified-memory profile');
+    expect(within(pgx).getByText('Qwen3-ASR 1.7B (WebGPU)')).toBeInTheDocument();
+    expect(within(pgx).getByText('TranslateGemma 4B (51 languages, WebGPU)')).toBeInTheDocument();
+    expect(within(pgx).getAllByText('PGX profile pick · WebGPU')).toHaveLength(2);
+    expect(within(pgx).getAllByText("This computer can't run it")).toHaveLength(2);
+    expect(within(pgx).queryByRole('button', { name: /^Download/ })).toBeNull();
+    expect(within(pgx).queryByText(/Ollama|inventory|endpoint/i)).toBeNull();
+  });
+
+  it('offers procurement for PGX profile models only when this app has WebGPU', () => {
+    useModelStore.setState({ webgpuAvailable: true } as never);
+    mount();
+    const pgx = screen.getByRole('region', { name: 'PGX WebGPU models' });
+    const qwen = within(pgx).getByRole('button', { name: 'Download: Qwen3-ASR 1.7B (WebGPU)' });
+    fireEvent.click(qwen);
+    expect(store.downloadModel).toHaveBeenCalledWith('qwen3-asr-1.7b-webgpu');
   });
 
   // B-20: the model library's card — its size, its languages, Recommended, and In use for what a session runs now.
@@ -136,7 +135,7 @@ describe('Models and storage — the session models', () => {
     expect(within(sense).getByText('Active')).toBeInTheDocument();
     expect(within(card('Opus-MT (en → ja)')).getByText('Active')).toBeInTheDocument();
     expect(card('SenseVoice (int8)')).toHaveClass('model-card--selected');
-    expect(within(card('NeMo Parakeet TDT 0.6B (int8, 25 EU langs)')).getByText('Recommended')).toBeInTheDocument();
+    expect(within(card('Hunyuan MT 1.5 1.8B (36 languages, WebGPU)')).getByText('Recommended')).toBeInTheDocument();
     // The stage is the group's title; the cards carry no tag of their own.
     expect(stageGroup('Recognition').querySelector('.model-row__tag')).toBeNull();
   });
@@ -150,25 +149,24 @@ describe('Models and storage — the session models', () => {
 
   it('offers Download and Import side by side for a model not on disk', () => {
     mount();
-    const parakeet = card('NeMo Parakeet TDT 0.6B (int8, 25 EU langs)');
-    const download = within(parakeet).getByRole('button', { name: 'Download: NeMo Parakeet TDT 0.6B (int8, 25 EU langs)' });
-    const importer = within(parakeet).getByRole('button', { name: 'Import: NeMo Parakeet TDT 0.6B (int8, 25 EU langs)' });
+    const model = card('Piper Lessac Low (English, male)');
+    const download = within(model).getByRole('button', { name: 'Download: Piper Lessac Low (English, male)' });
+    const importer = within(model).getByRole('button', { name: 'Import: Piper Lessac Low (English, male)' });
     expect(download.parentElement).toBe(importer.parentElement);
     fireEvent.click(importer);
-    expect(screen.getByTestId('import-modal')).toHaveTextContent('NeMo Parakeet TDT 0.6B (int8, 25 EU langs)');
+    expect(screen.getByTestId('import-modal')).toHaveTextContent('Piper Lessac Low (English, male)');
   });
 
   it('downloads a model from its row, and cancels a download in progress', () => {
     useModelStore.setState({ downloads: { 'moonshine-tiny-ja-quant': { downloadedBytes: 1, totalBytes: 4, currentFile: 'a', percent: 25 } } } as never);
     mount();
-    // A download in progress is shown without opening anything.
+    // An existing download remains cancellable.
     const busy = card('Moonshine Tiny JA (quantized)');
     expect(busy.querySelector('.model-card__progress-percent')).toHaveTextContent('25%');
     fireEvent.click(within(busy).getByRole('button', { name: 'Cancel: Moonshine Tiny JA (quantized)' }));
     expect(store.cancelDownload).toHaveBeenCalledWith('moonshine-tiny-ja-quant');
-    more('Recognition');
-    fireEvent.click(within(card('Moonshine Tiny EN (quantized)')).getByRole('button', { name: /^Download/ }));
-    expect(store.downloadModel).toHaveBeenCalledWith('moonshine-tiny-en-quant');
+    fireEvent.click(within(card('Piper Lessac Low (English, male)')).getByRole('button', { name: /^Download/ }));
+    expect(store.downloadModel).toHaveBeenCalledWith('piper-en-lessac-low');
   });
 
   it('says what deleting the last model of a stage a session runs on this computer does', () => {
@@ -199,13 +197,12 @@ describe('Models and storage — the session models', () => {
   });
 
   it('says a download failed, and offers it again', () => {
-    useModelStore.setState({ modelStatuses: { 'sensevoice-int8': 'downloaded', 'opus-mt-en-jap': 'downloaded', 'moonshine-tiny-ja-quant': 'error' }, downloadErrors: { 'moonshine-tiny-ja-quant': 'network down' } } as never);
+    useModelStore.setState({ modelStatuses: { 'sensevoice-int8': 'downloaded', 'opus-mt-en-jap': 'downloaded', 'piper-en-lessac-low': 'error' }, downloadErrors: { 'piper-en-lessac-low': 'network down' } } as never);
     mount();
-    more('Recognition');
-    const failed = card('Moonshine Tiny JA (quantized)');
+    const failed = card('Piper Lessac Low (English, male)');
     expect(within(failed).getByText('network down')).toBeInTheDocument();
-    fireEvent.click(within(failed).getByRole('button', { name: 'Retry: Moonshine Tiny JA (quantized)' }));
-    expect(store.downloadModel).toHaveBeenCalledWith('moonshine-tiny-ja-quant');
+    fireEvent.click(within(failed).getByRole('button', { name: 'Retry: Piper Lessac Low (English, male)' }));
+    expect(store.downloadModel).toHaveBeenCalledWith('piper-en-lessac-low');
   });
 
   // The store has already put the failure on the card when its promise rejects; the page has nothing more to do
@@ -219,9 +216,8 @@ describe('Models and storage — the session models', () => {
       const downloadModel = (id: string) => { asked.push(id); return Promise.reject(new TypeError('Failed to fetch')); };
       useModelStore.setState({ downloadModel } as never);
       mount();
-      more('Recognition');
-      fireEvent.click(within(card('Moonshine Tiny EN (quantized)')).getByRole('button', { name: /^Download/ }));
-      expect(asked).toEqual(['moonshine-tiny-en-quant']);
+        fireEvent.click(within(card('Piper Lessac Low (English, male)')).getByRole('button', { name: /^Download/ }));
+      expect(asked).toEqual(['piper-en-lessac-low']);
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(unhandled).not.toHaveBeenCalled();
     } finally {
@@ -231,8 +227,7 @@ describe('Models and storage — the session models', () => {
 
   it('says a model this computer cannot run, and offers no download for it', () => {
     mount();
-    more('Recognition');
-    const gpu = card('Cohere Transcribe (WebGPU)');
+    const gpu = card('Hunyuan MT 1.5 1.8B (36 languages, WebGPU)');
     expect(within(gpu).getByText("This computer can't run it")).toBeInTheDocument();
     expect(within(gpu).queryByRole('button', { name: /^Download/ })).toBeNull();
     expect(within(gpu).queryByRole('button', { name: /^Import/ })).toBeNull();
@@ -240,8 +235,8 @@ describe('Models and storage — the session models', () => {
 
   it('takes no download or delete during a session', () => {
     mount(true);
-    expect(within(card('NeMo Parakeet TDT 0.6B (int8, 25 EU langs)')).getByRole('button', { name: /^Download/ })).toBeDisabled();
-    expect(within(card('NeMo Parakeet TDT 0.6B (int8, 25 EU langs)')).getByRole('button', { name: /^Import/ })).toBeDisabled();
+    expect(within(card('Piper Lessac Low (English, male)')).getByRole('button', { name: /^Download/ })).toBeDisabled();
+    expect(within(card('Piper Lessac Low (English, male)')).getByRole('button', { name: /^Import/ })).toBeDisabled();
     expect(within(card('SenseVoice (int8)')).getByRole('button', { name: /^Delete/ })).toBeDisabled();
   });
 });
@@ -312,19 +307,18 @@ describe('Models and storage — imported voices and the summary', () => {
     expect(screen.queryByRole('button', { name: 'Clear all' })).toBeNull();
   });
 
-  it('lists what is on disk first, then what this computer can run, then what it cannot', () => {
+  it('groups already downloaded legacy models beneath the catalog without offering them for new downloads', () => {
     useModelStore.setState({ modelStatuses: { 'moonshine-tiny-ja-quant': 'downloaded' } } as never);
     mount();
-    more('Recognition');
-    const names = [...stageGroup('Recognition').querySelectorAll('.model-card__name')].map((n) => n.textContent);
-    expect(names[0]).toBe('Moonshine Tiny JA (quantized)');
-    expect(names.indexOf('SenseVoice (int8)')).toBeLessThan(names.indexOf('Cohere Transcribe (WebGPU)'));
+    const legacy = card('Moonshine Tiny JA (quantized)');
+    expect(legacy.closest('details')).toHaveTextContent('Other local model files (1)');
+    expect(within(legacy).getByRole('button', { name: /^Delete/ })).toBeEnabled();
+    expect(screen.queryByText('Moonshine Tiny EN (quantized)')).toBeNull();
   });
 
   it('writes a size in the unit that reads best', () => {
     mount();
-    more('Recognition');
-    expect(within(card('Cohere Transcribe (WebGPU)')).getByText(/\d\.\d GB/)).toBeInTheDocument();
+    expect(within(card('Hunyuan MT 1.5 1.8B (36 languages, WebGPU)')).getByText(/\d\.\d GB/)).toBeInTheDocument();
   });
 
   it('clears everything after asking, and tells the helper models\' own stores', async () => {
@@ -341,9 +335,8 @@ describe('Models and storage — imported voices and the summary', () => {
     mount();
     expect(screen.queryByRole('button', { name: 'Import a model from files' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Choose a model to import' })).toBeNull();
-    more('Translation');
-    fireEvent.click(within(card('Opus-MT (en → de)')).getByRole('button', { name: 'Import: Opus-MT (en → de)' }));
-    expect(screen.getByTestId('import-modal')).toHaveTextContent('Opus-MT (en → de)');
+    fireEvent.click(within(card('Opus-MT (en → zh)')).getByRole('button', { name: 'Import: Opus-MT (en → zh)' }));
+    expect(screen.getByTestId('import-modal')).toHaveTextContent('Opus-MT (en → zh)');
   });
 });
 
@@ -353,8 +346,8 @@ describe('Models and storage — buttons named by their model', () => {
     useModelStore.setState({ downloads: { 'moonshine-tiny-ja-quant': { downloadedBytes: 1, totalBytes: 4, currentFile: 'a', percent: 25 } } } as never);
     mount();
     expect(screen.getByRole('button', { name: 'Delete: SenseVoice (int8)' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Download: NeMo Parakeet TDT 0.6B (int8, 25 EU langs)' })).toHaveTextContent('Download');
-    expect(screen.getByRole('button', { name: 'Import: NeMo Parakeet TDT 0.6B (int8, 25 EU langs)' })).toHaveTextContent('Import');
+    expect(screen.getByRole('button', { name: 'Download: Piper Lessac Low (English, male)' })).toHaveTextContent('Download');
+    expect(screen.getByRole('button', { name: 'Import: Piper Lessac Low (English, male)' })).toHaveTextContent('Import');
     expect(screen.getByRole('button', { name: 'Cancel: Moonshine Tiny JA (quantized)' })).toBeInTheDocument();
   });
 });

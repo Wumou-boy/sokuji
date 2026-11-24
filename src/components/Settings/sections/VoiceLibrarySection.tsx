@@ -69,6 +69,8 @@ export interface VoiceLibrarySectionProps {
    *  includes `record`. `transcript` is only ever passed when
    *  `capability.transcriptRequired` is set. */
   onRecord?: (clip: Float32Array, sampleRate: number, transcript?: string) => Promise<void>;
+  recordingPrompt?: { title: string; text: string };
+  useMeetingMicrophone?: boolean;
   /** Called when the user renames a removable voice. Optional — when absent,
    *  removable voices cannot be renamed and no rename affordance renders
    *  (providers without a rename API, e.g. Soniox clones). */
@@ -136,6 +138,8 @@ const VoiceLibrarySection: React.FC<VoiceLibrarySectionProps> = ({
   onSelect,
   onImport,
   onRecord,
+  recordingPrompt,
+  useMeetingMicrophone,
   onRename,
   onDelete,
   createReview,
@@ -357,6 +361,8 @@ const VoiceLibrarySection: React.FC<VoiceLibrarySectionProps> = ({
         onClose={() => setCreating(false)}
         onImport={onImport}
         onRecord={onRecord}
+        recordingPrompt={recordingPrompt}
+        useMeetingMicrophone={useMeetingMicrophone}
         capability={capability}
         note={canCreate ? manageNote : undefined}
         review={createReview}

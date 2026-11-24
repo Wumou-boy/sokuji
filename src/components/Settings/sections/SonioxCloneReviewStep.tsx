@@ -28,6 +28,8 @@ export interface SonioxCloneReviewStepProps {
    *  say where the recording goes, since it leaves the device for a service
    *  the user did not hand a key to themselves. */
   notice?: string;
+  /** Optional caller-owned public HTTPS reference URL; nothing is uploaded by this field. */
+  referenceUrl?: { value: string; onChange(value: string): void; label: string; placeholder: string };
   /** False hides the name field entirely. The managed backend names voices
    *  itself, so offering a name the user cannot influence would be a lie. */
   showName?: boolean;
@@ -35,8 +37,8 @@ export interface SonioxCloneReviewStepProps {
    *  (Palabra). Absent, nothing is asked — every caller before Palabra.
    *  An empty `value` keeps Confirm disabled until one is chosen. */
   language?: VoiceReviewLanguage;
-  onConfirm: (name: string) => void;
-  onClose: () => void;
+  onConfirm: (name: string, referenceUrl?: string) => void;
+  onClose?: () => void;
 }
 
 export interface VoiceReviewLanguage {
@@ -89,6 +91,7 @@ const SonioxCloneReviewStep: React.FC<SonioxCloneReviewStepProps> = ({
   error,
   busy,
   notice,
+  referenceUrl,
   showName = true,
   language,
   onConfirm,
@@ -226,6 +229,20 @@ const SonioxCloneReviewStep: React.FC<SonioxCloneReviewStepProps> = ({
           disabled={busy}
         />
       )}
+      {referenceUrl && (
+        <label className="voice-review__reference-url">
+          <span>{referenceUrl.label}</span>
+          <input
+            type="url"
+            className="text-input"
+            value={referenceUrl.value}
+            maxLength={2048}
+            placeholder={referenceUrl.placeholder}
+            onChange={(e) => referenceUrl.onChange(e.target.value)}
+            disabled={busy}
+          />
+        </label>
+      )}
       <label className="voice-review__consent">
         {/* Native input kept for semantics/a11y but visually replaced by the
             drawn box below — a raw OS checkbox clashes with the design
@@ -247,18 +264,20 @@ const SonioxCloneReviewStep: React.FC<SonioxCloneReviewStepProps> = ({
         <div className="voice-capture-error voice-create-modal__error" role="alert">{error}</div>
       )}
       <div className="voice-review__actions">
-        <button
-          type="button"
-          className="voice-review__cancel"
-          onClick={onClose}
-          disabled={busy}
-        >
-          {t('common.cancel', 'Cancel')}
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            className="voice-review__cancel"
+            onClick={onClose}
+            disabled={busy}
+          >
+            {t('common.cancel', 'Cancel')}
+          </button>
+        )}
         <button
           type="button"
           className="voice-review__accept"
-          onClick={() => onConfirm(name)}
+          onClick={() => onConfirm(name, referenceUrl?.value)}
           disabled={busy || !consent || (language !== undefined && !language.value)}
         >
           {busy && (

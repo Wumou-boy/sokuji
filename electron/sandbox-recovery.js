@@ -447,12 +447,12 @@ function showConfirmedDialog(dialog, confirmed) {
   const dirs = confirmed.map((r) => r.dir).join('\n');
   return dialog.showMessageBoxSync({
     type: 'warning',
-    title: 'Sokuji — Sandbox Startup Problem',
+    title: 'AED Translator — Sandbox Startup Problem',
     message:
-      "Another program corrupted Windows permissions, preventing Sokuji's security sandbox from starting.",
+      "Another program corrupted Windows permissions, preventing AED Translator's security sandbox from starting.",
     detail:
       'This is a known problem caused by leftover sandbox permissions from tools such as ' +
-      'OpenAI Codex CLI or Google Antigravity. Sokuji can repair it without administrator ' +
+      'OpenAI Codex CLI or Google Antigravity. AED Translator can repair it without administrator ' +
       'rights — only the orphaned permission entries are removed; nothing else is touched.\n\n' +
       `Affected locations:\n${dirs}\n\n` +
       `More details: ${ISSUE_URL}`,
@@ -466,8 +466,8 @@ function showConfirmedDialog(dialog, confirmed) {
 function showUnconfirmedDialog(dialog) {
   return dialog.showMessageBoxSync({
     type: 'warning',
-    title: 'Sokuji — Sandbox Startup Problem',
-    message: "Sokuji's security sandbox process repeatedly failed to start.",
+    title: 'AED Translator — Sandbox Startup Problem',
+    message: "AED Translator's security sandbox process repeatedly failed to start.",
     detail:
       'The cause could not be confirmed automatically. It is often corrupted Windows ' +
       'permissions or antivirus injection. You can continue with the sandbox disabled ' +
@@ -487,7 +487,7 @@ function showRepairFailedDialog(dialog, repairResult) {
     : '';
   return dialog.showMessageBoxSync({
     type: 'error',
-    title: 'Sokuji — Repair Incomplete',
+    title: 'AED Translator — Repair Incomplete',
     message: 'The permission repair did not fully succeed.',
     detail:
       'Some orphaned entries could not be removed (they may require different ownership).\n' +

@@ -74,6 +74,9 @@ export const INVOKE_CHANNELS = [
   'agent-control:response',
   'notes-http:complete',
   'notes-http:abort',
+  // Explicitly confirmed Qwen LiveTranslate fixed voice enrollment/deletion.
+  'qwen-voice:create',
+  'qwen-voice:delete',
   // WebSocket header injection (renderer → main)
   'ws-headers-set',
   'ws-headers-clear',

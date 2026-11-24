@@ -103,6 +103,16 @@ beforeEach(() => {
 });
 
 describe('the line-up store', () => {
+  it('uses Qwen LiveTranslate for a fresh desktop profile', async () => {
+    const userAgent = vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Electron');
+    try {
+      await useLineUpStore.getState().load();
+      expect(stored.get(LINEUP_KEY)).toMatchObject({ version: 2, stages: { translation: 'qwen_livetranslate' } });
+    } finally {
+      userAgent.mockRestore();
+    }
+  });
+
   it('migrates once: writes the line-up and nothing else', async () => {
     stored.set(PROVIDER_KEY, 'soniox');
     await useLineUpStore.getState().load();

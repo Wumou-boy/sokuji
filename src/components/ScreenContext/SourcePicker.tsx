@@ -78,13 +78,13 @@ export function SourcePicker(p: SourcePickerProps) {
               <p className="source-picker__denied-title">{t('screenContext.picker.deniedTitle', 'Screen Recording permission needed')}</p>
               <p className="source-picker__text">
                 {p.asked
-                  ? t('screenContext.picker.askedText', 'Allow Sokuji when macOS asks, or switch it on in System Settings. macOS applies the permission only after Sokuji restarts.')
-                  : t('screenContext.picker.deniedText', 'macOS is not letting Sokuji see the screen. This also happens when Sokuji is switched on in System Settings, if that permission was given to an older version.')}
+                  ? t('screenContext.picker.askedText', 'Allow AED Translator when macOS asks, or switch it on in System Settings. macOS applies the permission only after AED Translator restarts.')
+                  : t('screenContext.picker.deniedText', 'macOS is not letting AED Translator see the screen. This also happens when AED Translator is switched on in System Settings, if that permission was given to an older version.')}
               </p>
               <div className="source-picker__denied-actions">
                 {p.asked ? (
                   <button type="button" className="source-picker__primary" onClick={p.onRestart} disabled={p.restarting}>
-                    {t('screenContext.picker.restart', 'Restart Sokuji')}
+                    {t('screenContext.picker.restart', 'Restart AED Translator')}
                   </button>
                 ) : (
                   <button type="button" className="source-picker__primary" onClick={p.onReask} disabled={p.reasking}>

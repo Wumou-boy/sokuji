@@ -21,10 +21,15 @@ import LiveNotesPanel from '../LiveNotes/LiveNotesPanel';
 import { useShowSettings, useSetShowSettings, useSetupWizardOpen, useSetSetupWizardOpen, useHistoryOpen, useSetHistoryOpen } from '../../stores/layoutStore';
 import { SubtitleTakeover } from '../Subtitle/SubtitleTakeover';
 import { useSetupLoaded, useSetupComplete } from '../../stores/setupStore';
+import FaceToFaceMode from '../FaceToFace/FaceToFaceMode';
+import { getAppSession } from '../../app/session';
+import { stopFaceToFaceRuntime } from '../../lib/faceToFace/runtime';
+import { useFaceToFaceStore } from '../../stores/faceToFaceStore';
 
 type PanelName = 'settings' | 'logs' | 'main';
 
 const MainLayout: React.FC = () => {
+  const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
   const diagnosticLogs = useDiagnosticLogs();
   const settingsNavigationTarget = useSettingsNavigationTarget();
@@ -45,7 +50,13 @@ const MainLayout: React.FC = () => {
   // History left any way (its own close, the title bar, the logs, the settings) opens at its list next time.
   useEffect(() => { if (!historyOpen) setHistoryRecord(null); }, [historyOpen]);
   const setShowSettings = useSetShowSettings();
+  const workspaceMode = useFaceToFaceStore((s) => s.mode === 'face-to-face' ? 'faceToFace' : 'meeting');
+  const setWorkspaceMode = useFaceToFaceStore((s) => s.setMode);
+  const [switchingMode, setSwitchingMode] = useState(false);
   const [panelWidth, setPanelWidth] = useState(() => clampPanelWidth(readPanelWidth(), window.innerWidth));
+  const electronSubtitleTakeover = subtitleActive && isElectron();
+  const pageInPlace = showSettings && !isExtension();
+  const historyInPlace = historyOpen && isElectron();
 
   // Track panel view times
   const panelOpenTimeRef = useRef<number | null>(null);
@@ -154,6 +165,28 @@ const MainLayout: React.FC = () => {
     savePanelWidth(clamped);
   }, []);
 
+  const switchWorkspaceMode = async (next: 'meeting' | 'faceToFace') => {
+    if (next === workspaceMode || switchingMode || (next === 'faceToFace' && subtitleActive)) return;
+    setSwitchingMode(true);
+    try {
+      if (next === 'faceToFace') {
+        const runner = getAppSession().runner;
+        if (runner.state.getState().phase !== 'idle') await runner.stop('button');
+      } else if (workspaceMode === 'faceToFace') await stopFaceToFaceRuntime();
+      setWorkspaceMode(next === 'faceToFace' ? 'face-to-face' : 'meeting');
+    } finally {
+      setSwitchingMode(false);
+    }
+  };
+
+  // The compact Electron subtitle takeover is a meeting surface. If another
+  // control turns it on while the standalone face-to-face mode is selected,
+  // leave that mode so its one-mic session closes before the takeover mounts.
+  useEffect(() => {
+    if (workspaceMode !== 'faceToFace' || !(subtitleActive || pageInPlace || historyInPlace)) return;
+    void stopFaceToFaceRuntime().finally(() => setWorkspaceMode('meeting'));
+  }, [workspaceMode, subtitleActive, pageInPlace, historyInPlace, setWorkspaceMode]);
+
   // Listen for navigation requests from settings context
   useEffect(() => {
     if (settingsNavigationTarget) {
@@ -176,12 +209,6 @@ const MainLayout: React.FC = () => {
   // the takeover in their place: the same app session's view and runner, so
   // the run carries on untouched. Extension subtitle mode is handled inside
   // an injected iframe — sidepanel chrome stays visible.
-  const electronSubtitleTakeover = subtitleActive && isElectron();
-  // On the desktop the settings page takes the place of the conversation (which stays mounted underneath); in the
-  // extension it sits in the side panel next to the conversation, as the old settings did.
-  const pageInPlace = showSettings && !isExtension();
-  // History (desktop) takes the place of the conversation and of the side panels; the conversation stays mounted.
-  const historyInPlace = historyOpen && isElectron();
   const sidePanelOpen = !historyInPlace && (logsVisible || (showSettings && !pageInPlace));
 
   return (
@@ -203,9 +230,14 @@ const MainLayout: React.FC = () => {
         className={`main-content ${sidePanelOpen ? 'with-panel' : 'full-width'}`}
         style={pageInPlace || historyInPlace ? { display: 'none' } : undefined}
       >
-        {/* The conversation, with the live notes in its area (owner, 2026-11-18; MainPanel). */}
+        <nav className="main-layout__workspace-modes" aria-label={t('faceToFace.modeGroup', 'Translation mode')}>
+          <button type="button" aria-pressed={workspaceMode === 'meeting'} disabled={switchingMode} onClick={() => void switchWorkspaceMode('meeting')}>{t('faceToFace.onlineMeeting', 'Online meeting')}</button>
+          <button type="button" aria-pressed={workspaceMode === 'faceToFace'} disabled={switchingMode} onClick={() => void switchWorkspaceMode('faceToFace')}>{t('faceToFace.title', 'Face to Face')}</button>
+        </nav>
         <div className="main-panel-container">
-          <MainPanel liveNotes={<LiveNotesPanel onOpenHistory={(id) => { setHistoryRecord(id); setHistoryOpen(true); }} />} />
+          {workspaceMode === 'meeting'
+            ? <MainPanel liveNotes={<LiveNotesPanel onOpenHistory={(id) => { setHistoryRecord(id); setHistoryOpen(true); }} />} />
+            : (subtitleActive || pageInPlace || historyInPlace) ? null : <FaceToFaceMode onExit={() => void switchWorkspaceMode('meeting')} />}
         </div>
       </div>
       {/* Kept mounted behind an <Activity> boundary, like the side panels, so its open category and scroll survive a close. */}

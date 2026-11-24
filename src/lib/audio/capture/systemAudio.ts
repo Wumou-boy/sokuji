@@ -29,6 +29,7 @@ export interface SystemAudioSettings {
   audioSeen(): void;
   /** The capture widened to the whole system although an application was chosen (true), or is no longer widened: it closed, or a switch landed on what was chosen (false). While on, the other's translation played on the real device would be recaptured. */
   widened(on: boolean): void;
+  captureStarted?(backend: Connection['mode']): void;
 }
 
 /** The part of a participant recorder this source drives. */
@@ -52,6 +53,8 @@ export interface SystemAudioDeps {
   app(): ParticipantCapture;
   device(): ParticipantCapture;
   loopback(): ParticipantCapture;
+  /** Windows-only shared-mode loopback on the same default render endpoint. */
+  nativeLoopback?(): ParticipantCapture;
   /** Hears the main process say the application a PipeWire tap follows has quit; returns the unsubscribe. */
   appLost(listener: () => void): () => void;
   /** The OS's Screen Recording permission as the main process reports it (`granted`, `denied`, `not-determined`, `unknown`); outside macOS always `granted`. */
@@ -65,6 +68,7 @@ export const electronSystemAudio = (): SystemAudioDeps => ({
   app: () => new AppAudioRecorder(SAMPLE_RATE),
   device: () => new DeviceCaptureRecorder(SAMPLE_RATE),
   loopback: () => new LoopbackRecorder(SAMPLE_RATE),
+  ...(window.electron?.osInfo?.platform === 'win32' ? { nativeLoopback: () => new AppAudioRecorder(SAMPLE_RATE) } : {}),
   appLost: (listener) => {
     const handler = () => listener();
     window.electron.receive('system-audio:lost', handler);
@@ -82,7 +86,7 @@ export const electronSystemAudio = (): SystemAudioDeps => ({
   },
 });
 
-type Connection = { mode: 'app' } | { mode: 'device'; monitorId: string } | { mode: 'loopback' };
+type Connection = { mode: 'app' } | { mode: 'device'; monitorId: string } | { mode: 'loopback' } | { mode: 'native-loopback'; makeRecorder(): ParticipantCapture };
 
 interface ConnectAnswer {
   success?: boolean;
@@ -93,6 +97,12 @@ interface ConnectAnswer {
 
 const SILENT_MESSAGE =
   'No audio has come through from the selected source yet: it may be silent, or Sokuji may lack permission to record it.';
+
+/** A capture endpoint can briefly reject an open while Windows is settling a tap. */
+function isTransientCaptureOpenFailure(error: unknown): boolean {
+  return typeof error === 'object' && error !== null &&
+    'name' in error && error.name === 'NotReadableError';
+}
 
 export async function openSystemAudio(
   settings: SystemAudioSettings,
@@ -170,7 +180,7 @@ export async function openSystemAudio(
     return { mode: 'loopback' };
   };
 
-  const record = async (connection: Connection) => {
+  const record = async (connection: Connection): Promise<void> => {
     // Today's `requestLoopbackAudioStream` denial (MainPanel's Screen Recording
     // modal): the start fails (D22) with a code the idle surface puts into
     // words and plan 1e-3b's modal deep-links from. Asked only before a
@@ -179,7 +189,8 @@ export async function openSystemAudio(
     if (connection.mode === 'loopback' && (await deps.screenRecording()) === 'denied') {
       throw new SourceOpenError('Screen Recording permission is denied, so the whole system cannot be captured.', LOOPBACK_DENIED);
     }
-    const next = connection.mode === 'app' ? deps.app() : connection.mode === 'device' ? deps.device() : deps.loopback();
+    const next = connection.mode === 'app' ? deps.app() : connection.mode === 'device' ? deps.device()
+      : connection.mode === 'native-loopback' ? connection.makeRecorder() : deps.loopback();
     const lose = () => {
       // Captured now: by the time this runs, a queued switch may have already
       // made `recorder` point elsewhere, and this death is then stale (M1).
@@ -191,12 +202,24 @@ export async function openSystemAudio(
       next.onAudioSeen = () => settings.audioSeen();
       next.onLost = lose;
     }
+    if (connection.mode === 'native-loopback') {
+      next.onLost = () => core.end('Windows system audio capture stopped.');
+    }
     // A PipeWire tap's monitor device outlives the application it follows (its
     // sink is Sokuji's), so the main process says when the application quit (#617).
     if (connection.mode === 'device') unlisten = deps.appLost(lose);
     recorder = next;
-    const options = connection.mode === 'app' ? { deviceId: sourceId } : connection.mode === 'device' ? { deviceId: connection.monitorId } : undefined;
-    const begun = await next.begin(options);
+    const options = connection.mode === 'app' ? { deviceId: sourceId } : connection.mode === 'device' ? { deviceId: connection.monitorId }
+      : connection.mode === 'native-loopback' ? { deviceId: 'desktop-audio-loopback' } : undefined;
+    let begun = await next.begin(options);
+    if (!begun && isTransientCaptureOpenFailure(next.beginFailure) && !signal.aborted && !core.stopped && !core.ended) {
+      // Retry the exact same selected capture once. In particular, an
+      // application tap stays attached to its chosen monitor; a failed open
+      // must never silently turn into whole-system loopback.
+      reportWarning('SystemAudio', 'The selected audio capture could not be opened temporarily; retrying once with the same source.');
+      await deps.wait(250);
+      if (recorder === next && !signal.aborted && !core.stopped && !core.ended) begun = await next.begin(options);
+    }
     // The capture was lost while this started, and the fallback has replaced
     // it: its end() came before there was anything to end, so end it now, or
     // it would record alongside the fallback; a failed start is the fallback's
@@ -207,6 +230,12 @@ export async function openSystemAudio(
     }
     if (!begun) {
       recorder = null;
+      if (connection.mode === 'loopback' && sourceId === 'desktop-audio-loopback' && deps.nativeLoopback
+        && isTransientCaptureOpenFailure(next.beginFailure) && !signal.aborted && !core.stopped && !core.ended) {
+        reportWarning('SystemAudio', 'Switching system audio to the Windows shared-mode capture backend.');
+        await record({ mode: 'native-loopback', makeRecorder: deps.nativeLoopback });
+        return;
+      }
       // The recorder's own reason (a DOMException's kind and words, or the
       // helper's answer) is the only clue to why; without it the start
       // failure and its telemetry say nothing about the cause.
@@ -215,6 +244,7 @@ export async function openSystemAudio(
     }
     unwatch = core.watch(next.getStream?.() ?? null);
     await next.record((data) => core.deliver(data.mono));
+    settings.captureStarted?.(connection.mode);
   };
 
   /**

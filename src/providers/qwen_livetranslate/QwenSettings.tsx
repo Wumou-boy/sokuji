@@ -16,19 +16,19 @@ import {
 } from '@floating-ui/react';
 import { ScreenContextPicture } from '../../components/MainPanel/panel/ScreenContextChip';
 import { useAnalytics } from '../../lib/analytics';
-import { PresetVoiceField, presetVoice } from '../../components/providers/fields/PresetVoiceField';
-import type { VoiceEntry } from '../../components/Settings/sections/VoiceLibrarySection';
 import SettingRow from '../../components/Settings/shared/SettingRow';
 import Tooltip from '../../components/Tooltip/Tooltip';
 import type { SettingsProps, VoiceSummaryProps } from '../../lib/provider/types';
 import type { CaptureSourceInfo } from '../../lib/screen/desktopFrames';
 import { useScreenContextStore, type PickedSource } from '../../stores/screenContextStore';
 import { isElectron } from '../../utils/environment';
-import { BAILIAN_ENDPOINT_ID, ENDPOINTS, isEndpointId } from './endpoints';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, ENDPOINTS, isEndpointId } from './endpoints';
+import { isBailianWorkspaceAvailable } from './workspace';
 import { regionOptionLabel, useRegionLatencies } from '../../components/Region/regionLatency';
 import { requestRegionChange } from '../../lib/region/regionChange';
 import { QWEN_REGION_LABELS, QWEN_REGIONS } from './regions';
-import { QWEN_VOICES, qwenParticipantVoice, qwenSpeakerVoice, SPEAKER_CLONE, SPEAKER_CLONE_ONCE, type QwenSettings as S } from './settings';
+import { QWEN_VOICES, SPEAKER_CLONE, SPEAKER_CLONE_ONCE, qwenParticipantVoice, qwenSpeakerVoice, QWEN_FIXED_VOICE_PREFIX, type QwenSettings as S } from './settings';
+import QwenVoiceField from './QwenVoiceField';
 import { ALL_STAGES, SP, TR, TR_TL } from '../../lib/lineup/types';
 import { StagePart } from '../../components/providers/stageParts';
 
@@ -40,6 +40,9 @@ export function QwenVoiceSummary({ settings, leg }: VoiceSummaryProps<S>) {
     return <>{leg === 'participant'
       ? t('providers.qwen_livetranslate.voiceSummaryCloneTheirs', 'Their own voice (cloned)')
       : t('providers.qwen_livetranslate.voiceSummaryCloneMine', 'Your own voice (cloned)')}</>;
+  }
+  if (id.startsWith(QWEN_FIXED_VOICE_PREFIX) || id.startsWith('qwen-translate-vc-')) {
+    return <>{t('providers.qwen_livetranslate.voiceSummaryFixed', 'Your own voice (fixed)')}</>;
   }
   return <>{QWEN_VOICES.find((v) => v.value === id)?.name ?? id}</>;
 }
@@ -55,33 +58,48 @@ export function QwenVoiceSummary({ settings, leg }: VoiceSummaryProps<S>) {
  * has none. No region picker either: an own key's region is the one it was
  * made in; the picker is the managed twin's (`KizunaQwenSettingsView`).
  */
-export function QwenSettingsView({ settings, update, disabled = false, participantSpeaks = false, models = [], preview, legs }: SettingsProps<S>) {
+export function QwenSettingsView({ settings, update, disabled = false, participantSpeaks = false, models = [], account, legs, managed = false }: SettingsProps<S> & { managed?: boolean }) {
   const { t } = useTranslation();
-  const cloning = t('providers.qwen_livetranslate.voiceGroupClone', 'Voice cloning');
-  const voices: VoiceEntry[] = [
-    { id: SPEAKER_CLONE, label: t('providers.qwen_livetranslate.voiceClone', "Clone the speaker's voice"), group: 'builtin', removable: false, section: cloning },
-    { id: SPEAKER_CLONE_ONCE, label: t('providers.qwen_livetranslate.voiceCloneOnce', "Clone the first speaker's voice"), group: 'builtin', removable: false, section: cloning },
-    ...QWEN_VOICES.map((v) => presetVoice(v)),
-  ];
   const endpoint = models[0]?.id;
   const bailianSelected = settings.connection === BAILIAN_ENDPOINT_ID || endpoint === BAILIAN_ENDPOINT_ID;
+  const workspaceSelected = settings.connection === BAILIAN_WORKSPACE_CONNECTION;
+  const workspaceAvailable = isBailianWorkspaceAvailable();
   return (
     <>
       <StagePart stages={TR}>
-      {(bailianSelected || isEndpointId(endpoint)) && (
+      {(workspaceSelected || bailianSelected || isEndpointId(endpoint)) && (
         <div className="settings-section">
           <div className="models-info">
-            {bailianSelected
-              ? t('providers.qwen_livetranslate.bailianEndpoint', 'Endpoint: Alibaba Bailian (Beijing shared)')
+            {workspaceSelected
+              ? t('providers.qwen_livetranslate.bailianWorkspaceEndpoint', 'Endpoint: Alibaba Bailian (dedicated Beijing workspace)')
+              : bailianSelected
+                ? t('providers.qwen_livetranslate.bailianEndpoint', 'Endpoint: Alibaba Bailian (Beijing shared)')
               : t('providers.qwen_livetranslate.keyRegion', 'Key region: {{region}}', { region: QWEN_REGION_LABELS[ENDPOINTS[endpoint as keyof typeof ENDPOINTS].region] })}
           </div>
+          {workspaceSelected && (
+            <div className="qwen-workspace-settings" data-testid="qwen-workspace-settings">
+              <label htmlFor="qwen-workspace-id">{t('providers.qwen_livetranslate.workspaceId', 'Bailian workspace ID')}</label>
+              <input
+                id="qwen-workspace-id"
+                className="api-key-input"
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                value={settings.workspaceId}
+                onChange={(event) => update({ workspaceId: event.target.value })}
+                disabled={disabled}
+              />
+              <p>{t('providers.qwen_livetranslate.workspaceKeyNote', 'Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.')}</p>
+              {!workspaceAvailable && <p role="status">{t('providers.qwen_livetranslate.workspaceDesktopOnly', 'Dedicated workspace connections are available in the Windows desktop app only.')}</p>}
+            </div>
+          )}
         </div>
       )}
       </StagePart>
       <StagePart stages={SP}>
-      <PresetVoiceField
-        voices={voices} value={settings.voice} onChange={(voice) => update({ voice })} preview={preview} disabled={disabled}
-        participant={participantSpeaks ? { value: settings.participantVoice, effective: qwenParticipantVoice(settings), onChange: (participantVoice) => update({ participantVoice }) } : undefined}
+      <QwenVoiceField
+        settings={settings} update={update} account={account} endpoint={endpoint} managed={managed}
+        disabled={disabled} participantSpeaks={participantSpeaks}
       />
       </StagePart>
       <StagePart stages={TR_TL}>
@@ -302,7 +320,7 @@ export function KizunaQwenSettingsView(props: SettingsProps<S>) {
         </div>
       </div>
       </StagePart>
-      <QwenSettingsView {...props} />
+      <QwenSettingsView {...props} managed />
     </>
   );
 }

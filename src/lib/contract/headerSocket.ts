@@ -44,6 +44,8 @@ import { getEnvironment } from '../../utils/environment';
 export interface UpgradeHeaders {
   set: Readonly<Record<string, string>>;
   remove?: readonly string[];
+  /** Match one complete pathname rather than every path under its directory. */
+  exactPath?: true;
 }
 
 /** `onRequestId` is called once, after the socket has resolved, with the 101's `x-request-id` when the platform read one and `undefined` when it did not (or its answer was late); never when the socket did not open. */
@@ -55,6 +57,7 @@ export interface HeaderRule {
   path: string;
   set: Readonly<Record<string, string>>;
   remove: readonly string[];
+  exactPath?: true;
 }
 
 /** A platform's way to install a rule and take it away. */
@@ -62,7 +65,7 @@ export interface HeaderRegistrar {
   /** Resolves once the rule is installed; rejects when the platform would not. */
   set(rule: HeaderRule): Promise<void>;
   /** Removes the rule if it is still installed; may answer the upgrade's `x-request-id`, which the seam reads only after the socket's first open. */
-  clear(rule: Pick<HeaderRule, 'host' | 'path'>): Promise<{ requestId?: string } | void>;
+  clear(rule: Pick<HeaderRule, 'host' | 'path' | 'exactPath'>): Promise<{ requestId?: string } | void>;
 }
 
 /** How long registration and upgrade may take once the gate is held: the old client's cap, now counting the registration too. */
@@ -84,7 +87,7 @@ export class HeaderSocketError extends Error {
 /** The rule a URL's upgrade takes: its host, and its path up to the last `/`, which the endpoint's own paths share (`/v1/live/sessions` → `/v1/live/`). */
 export function ruleFor(url: string, headers: UpgradeHeaders): HeaderRule {
   const u = new URL(url);
-  return { host: u.host, path: u.pathname.slice(0, u.pathname.lastIndexOf('/') + 1), set: { ...headers.set }, remove: [...(headers.remove ?? [])] };
+  return { host: u.host, path: headers.exactPath ? u.pathname : u.pathname.slice(0, u.pathname.lastIndexOf('/') + 1), set: { ...headers.set }, remove: [...(headers.remove ?? [])], ...(headers.exactPath ? { exactPath: true } : {}) };
 }
 
 export function createHeaderSocket(registrar: () => HeaderRegistrar | null, openSocket: (url: string) => WebSocket = nativeSocket): OpenHeaderSocket {
@@ -151,7 +154,7 @@ export function createHeaderSocket(registrar: () => HeaderRegistrar | null, open
     }
 
     void (async () => {
-      const letGo = await acquire(`${rule.host}${rule.path}`);
+      const letGo = await acquire(`${rule.host}${rule.path}${rule.exactPath ? '\u0000exact' : ''}`);
       /** The rule went to the platform: however the attempt ends, it is cleared — a refused one too, since a refusal may follow a rule the platform installed. */
       let sent = false;
       let cleared = false;
@@ -217,11 +220,11 @@ interface ChromeRuntime { sendMessage(message: unknown, callback?: (response: un
 export function electronRegistrar(electron: ElectronInvoke): HeaderRegistrar {
   return {
     async set(rule) {
-      const answer = (await electron.invoke('ws-headers-set', { host: rule.host, path: rule.path, headers: rule.set, removeHeaders: rule.remove })) as { success?: boolean; error?: unknown } | undefined;
+      const answer = (await electron.invoke('ws-headers-set', { host: rule.host, path: rule.path, headers: rule.set, removeHeaders: rule.remove, ...(rule.exactPath ? { exactPath: true } : {}) })) as { success?: boolean; error?: unknown } | undefined;
       if (!answer?.success) throw new Error(`ws-headers-set: ${typeof answer?.error === 'string' ? answer.error : 'no answer'}`);
     },
     async clear(rule) {
-      return (await electron.invoke('ws-headers-clear', { host: rule.host, path: rule.path })) as { requestId?: string } | void;
+      return (await electron.invoke('ws-headers-clear', { host: rule.host, path: rule.path, ...(rule.exactPath ? { exactPath: true } : {}) })) as { requestId?: string } | void;
     },
   };
 }

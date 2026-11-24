@@ -44,6 +44,7 @@ function setup(o: {
   app?: ReturnType<typeof fakeCapture>;
   device?: ReturnType<typeof fakeCapture>;
   loopback?: ReturnType<typeof fakeCapture>;
+  nativeLoopback?: ReturnType<typeof fakeCapture>;
   sourceId?: string;
   screenRecording?: string;
 } = {}) {
@@ -65,6 +66,7 @@ function setup(o: {
     app: () => app,
     device: () => device,
     loopback: () => loopback,
+    ...(o.nativeLoopback ? { nativeLoopback: () => o.nativeLoopback! } : {}),
     appLost: (listener) => {
       appLostListeners.add(listener);
       return () => { appLostListeners.delete(listener); };
@@ -101,6 +103,33 @@ const settle = async () => {
 const live = () => new AbortController().signal;
 
 describe('openSystemAudio — opening', () => {
+  it('tries Windows shared-mode capture for the same system source after repeated NotReadableError', async () => {
+    const failure = new DOMException('Could not start audio source', 'NotReadableError');
+    const nativeLoopback = fakeCapture();
+    const s = setup({ loopback: fakeCapture({ begins: false, failure }), nativeLoopback });
+    const captureStarted = vi.fn();
+    const source = await openSystemAudio({ ...s.settings, captureStarted }, live(), s.deps);
+    const heard = vi.fn();
+    source.onPcm(heard);
+    nativeLoopback.push();
+    expect(s.loopback.begun).toHaveLength(2);
+    expect(nativeLoopback.begun).toEqual([{ deviceId: 'desktop-audio-loopback' }]);
+    expect(s.widened).not.toHaveBeenCalledWith(true);
+    expect(captureStarted).toHaveBeenCalledWith('native-loopback');
+    expect(heard).toHaveBeenCalledOnce();
+    await source.stop();
+    expect(nativeLoopback.ended).toBe(1);
+  });
+
+  it('keeps the chosen application scope when a capture cannot open', async () => {
+    const failure = new DOMException('Could not start audio source', 'NotReadableError');
+    const nativeLoopback = fakeCapture();
+    const s = setup({ sourceId: 'app:pid:42', answer: { success: true, capture: 'app' }, app: fakeCapture({ begins: false, failure }), nativeLoopback });
+    await expect(openSystemAudio(s.settings, live(), s.deps)).rejects.toThrow('NotReadableError');
+    expect(nativeLoopback.begun).toHaveLength(0);
+    expect(s.widened).not.toHaveBeenCalledWith(true);
+  });
+
   it('records an application through the helper when the main process asks for it', async () => {
     const s = setup({ sourceId: 'app:42', answer: { success: true, capture: 'app' } });
     const source = await openSystemAudio(s.settings, live(), s.deps);
@@ -178,6 +207,70 @@ describe('openSystemAudio — opening', () => {
     await expect(openSystemAudio(s.settings, live(), s.deps)).rejects.toThrow(
       'The system audio capture did not start (NotReadableError: Could not start audio source).',
     );
+  });
+
+  it('retries one transient monitor open on the same selected application tap', async () => {
+    const failure = new DOMException('Could not start audio source', 'NotReadableError');
+    const device = fakeCapture({ failure });
+    let attempts = 0;
+    device.begin = async (options) => {
+      device.begun.push(options);
+      return ++attempts === 2;
+    };
+    const s = setup({
+      sourceId: 'app:pid:7',
+      answer: { success: true, monitorLabel: 'Sokuji Capture' },
+      devices: [{ kind: 'audioinput', label: 'Monitor of Sokuji Capture', deviceId: 'monitor-7' }],
+      device,
+    });
+
+    await openSystemAudio(s.settings, live(), s.deps);
+
+    expect(device.begun).toEqual([{ deviceId: 'monitor-7' }, { deviceId: 'monitor-7' }]);
+    expect(s.loopback.begun).toEqual([]);
+    expect(s.widened).not.toHaveBeenCalledWith(true);
+    expect(s.wait).toHaveBeenCalledWith(250);
+  });
+
+  it('retries a transient whole-system loopback open once without changing its capture scope', async () => {
+    const failure = new DOMException('Could not start audio source', 'NotReadableError');
+    const loopback = fakeCapture({ failure });
+    let attempts = 0;
+    loopback.begin = async (options) => {
+      loopback.begun.push(options);
+      return ++attempts === 2;
+    };
+    const s = setup({ loopback });
+
+    await openSystemAudio(s.settings, live(), s.deps);
+
+    expect(loopback.begun).toEqual([undefined, undefined]);
+    expect(s.device.begun).toEqual([]);
+    expect(s.widened).not.toHaveBeenCalledWith(true);
+    expect(s.wait).toHaveBeenCalledWith(250);
+  });
+
+  it('does not retry non-transient permission failures', async () => {
+    const failure = new DOMException('Permission denied', 'NotAllowedError');
+    const loopback = fakeCapture({ begins: false, failure });
+    const s = setup({ loopback });
+
+    await expect(openSystemAudio(s.settings, live(), s.deps)).rejects.toThrow('Permission denied');
+
+    expect(loopback.begun).toEqual([undefined]);
+    expect(s.wait).not.toHaveBeenCalled();
+  });
+
+  it('stops after one retry when a NotReadableError persists', async () => {
+    const failure = new DOMException('Could not start audio source', 'NotReadableError');
+    const loopback = fakeCapture({ begins: false, failure });
+    const s = setup({ loopback });
+
+    await expect(openSystemAudio(s.settings, live(), s.deps)).rejects.toThrow('NotReadableError');
+
+    expect(loopback.begun).toEqual([undefined, undefined]);
+    expect(s.widened).not.toHaveBeenCalledWith(true);
+    expect(s.wait).toHaveBeenCalledTimes(1);
   });
 
   it('says only that it did not start when the recorder gives no reason', async () => {

@@ -24,8 +24,8 @@ export function socketUrl(endpoint: EndpointId, model: string): string {
  * reads the key: what it returns goes to the header seam alone, never a
  * frame, a word or a log. `Origin` is never checked, so nothing is removed.
  */
-export function qwenHeaders(k: QwenCredentials): UpgradeHeaders {
-  return { set: { Authorization: `Bearer ${k.apiKey}` } };
+export function qwenHeaders(k: QwenCredentials, exactPath = false): UpgradeHeaders {
+  return { set: { Authorization: `Bearer ${k.apiKey}` }, ...(exactPath ? { exactPath: true as const } : {}) };
 }
 
 /** The session's one update (a second is refused, close 1007): `translation.language` is required, the voice sits under `audio.output`. */
@@ -44,7 +44,7 @@ export interface SessionUpdate {
       output?: { voice: string };
     };
     enable_voice_clone?: true;
-    voice_clone_options?: { frequency: 'always' | 'once' };
+    voice_clone_options?: { frequency: 'always' | 'once' | 'never' };
   };
 }
 
@@ -64,10 +64,11 @@ export function sessionUpdate(c: Pick<QwenConfig, 'target' | 'speech' | 'voice' 
         input: c.manual ? { format, turn_detection: null }
           : c.silenceMs !== null ? { format, turn_detection: { type: 'speaker_detection', silence_duration_ms: c.silenceMs } }
             : { format },
-        ...(c.speech ? { output: { voice: voice.kind === 'clone' ? 'default' : voice.name } } : {}),
+      ...(c.speech ? { output: { voice: voice.kind === 'clone' ? 'default' : voice.kind === 'fixed' ? voice.id : voice.name } } : {}),
       },
       // `always` re-clones each turn, so each voice follows whoever is speaking; `once` keeps the first speaker's (probe 2026-10-13). No extra tokens either way.
-      ...(c.speech && voice.kind === 'clone' ? { enable_voice_clone: true as const, voice_clone_options: { frequency: voice.frequency } } : {}),
+      ...(c.speech && voice.kind === 'clone' ? { enable_voice_clone: true as const, voice_clone_options: { frequency: voice.frequency } }
+        : c.speech && voice.kind === 'fixed' ? { enable_voice_clone: true as const, voice_clone_options: { frequency: 'never' as const } } : {}),
     },
   };
 }

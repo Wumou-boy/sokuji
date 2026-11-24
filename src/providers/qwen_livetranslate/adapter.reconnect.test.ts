@@ -138,6 +138,39 @@ describe('qwenDropAction: what a live socket\'s close means (spec §4.1; open po
 });
 
 describe('the Qwen adapter reconnects: own key', () => {
+  it('a company workspace reconnect stays on the exact pinned route and resumes screen frames normally', async () => {
+    const frames = fakeFrameSource({ inHand: JPEG_A });
+    const h = await qwenSession({
+      shared: NO_STOREFRONT,
+      patch: { connection: 'bailian-workspace', workspaceId: 'LLM-Team123' },
+      frames,
+      workspaceSupported: () => true,
+    });
+    const first = h.socket();
+    expect(first.url).toBe('wss://llm-team123.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime?model=qwen3.8-livetranslate-flash-realtime');
+    expect(frames.subscribers).toBe(1);
+    first.serverClose(1011, 'Internal error');
+    await flush();
+    expect(h.socket().url).toBe(first.url);
+    expect(h.seam.registrations.map((r) => ({ host: r.host, path: r.path, exactPath: r.exactPath }))).toEqual([
+      { host: 'llm-team123.cn-beijing.maas.aliyuncs.com', path: '/api-ws/v1/realtime', exactPath: true },
+      { host: 'llm-team123.cn-beijing.maas.aliyuncs.com', path: '/api-ws/v1/realtime', exactPath: true },
+    ]);
+    expect(bearers(h)).toEqual([`Bearer ${KEY.apiKey}`, `Bearer ${KEY.apiKey}`]);
+    expect(frames.subscribers).toBe(1);
+    await comeBack(h);
+    const reconnectUpdate = h.socket().sentJson<{ session: Record<string, unknown> }>()[0];
+    expect(reconnectUpdate.session).toHaveProperty('input_modalities', ['audio', 'video']);
+    expect(types(h.socket())).toEqual(['session.update']);
+    h.session.appendAudio(chunk());
+    expect(types(h.socket()).slice(1)).toEqual(['input_audio_buffer.append', 'input_image_buffer.append']);
+    frames.emit(JPEG_B);
+    expect(types(h.socket()).slice(-1)).toEqual(['input_image_buffer.append']);
+    expect(frames.subscribers).toBe(1);
+    await h.session.stop();
+    expect(frames.subscribers).toBe(0);
+  });
+
   it('own key: a 1011 after live reconnects and the leg stays live', async () => {
     const h = await live();
     expect(h.detected).toEqual([KEY.apiKey]);

@@ -143,7 +143,7 @@ export function turn(n: number, o: { source: string; translation: string; speake
  * each liveness probe (`answeringSockets`) unless `answerProbes` is false; a
  * test may bring its own tracked clock.
  */
-export function startQwen(o: { context?: SessionContext; patch?: Partial<QwenSettings>; credentials?: QwenCredentials; shared?: SharedSettings; detect?: DetectEndpoint; requestIds?: string[]; holdClear?: boolean; frames?: FrameSource; answerProbes?: boolean; clock?: ReturnType<typeof trackedClock> } = {}) {
+export function startQwen(o: { context?: SessionContext; patch?: Partial<QwenSettings>; credentials?: QwenCredentials; shared?: SharedSettings; detect?: DetectEndpoint; requestIds?: string[]; holdClear?: boolean; frames?: FrameSource; answerProbes?: boolean; clock?: ReturnType<typeof trackedClock>; workspaceSupported?: () => boolean } = {}) {
   const seam = fakeHeaderSockets(o.answerProbes === false ? undefined : answeringSockets(), { requestIds: o.requestIds });
   /** Releases the first clear's answer, when the leg was started holding it. */
   const releaseClear = o.holdClear ? seam.holdNextClear() : () => {};
@@ -154,7 +154,7 @@ export function startQwen(o: { context?: SessionContext; patch?: Partial<QwenSet
   const config = configFor(context, o.patch, o.shared);
   const detected: string[] = [];
   const detect: DetectEndpoint = o.detect ?? (async (apiKey) => { detected.push(apiKey); return { endpoint: 'intl' }; });
-  const starting = createQwenAdapter({ openHeaderSocket: seam.open, detect }).start({ context, config, credentials: o.credentials ?? KEY, clock, signal: controller.signal, ...(o.frames ? { frames: o.frames } : {}) }, events);
+  const starting = createQwenAdapter({ openHeaderSocket: seam.open, detect, ...(o.workspaceSupported ? { workspaceSupported: o.workspaceSupported } : {}) }).start({ context, config, credentials: o.credentials ?? KEY, clock, signal: controller.signal, ...(o.frames ? { frames: o.frames } : {}) }, events);
   const socket = () => seam.sockets.last();
   const of = <K extends AdapterEvent['kind']>(kind: K) => log.filter((e): e is Extract<AdapterEvent, { kind: K }> => e.kind === kind);
   /** The payloads of the frames of one type, in order. */

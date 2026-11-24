@@ -62,12 +62,12 @@
     },
     "echoCancellation": "Ekoeliminering",
     "echoCancellationTooltip": {
-      "app": "Bara Sokuji — Tar bort Sokujis översatta tal om mikrofonen fångar upp det. Välj detta när mikrofonen är en virtuell kabel som BlackHole.",
+      "app": "Bara AED Translator — Tar bort Sokujis översatta tal om mikrofonen fångar upp det. Välj detta när mikrofonen är en virtuell kabel som BlackHole.",
       "browser": "Bara webbläsaren — Tar bort det som den här webbläsaren spelar upp, mötesflikar inräknade, om mikrofonen fångar upp det. Välj detta när mikrofonen är en virtuell kabel som BlackHole som bär ljud från en annan app.",
       "all": "Alla ljud — Tar även bort det som andra appar spelar upp i högtalarna, till exempel en mötesapp. En virtuell kabel som används som mikrofon bär just det ljudet och skulle bli tyst."
     },
     "echoCancellationMode": {
-      "app": "Bara Sokuji",
+      "app": "Bara AED Translator",
       "browser": "Bara webbläsaren",
       "all": "Alla ljud"
     },
@@ -370,9 +370,9 @@
     "virtualMicrophone": "Virtuell mikrofon",
     "virtualMicrophoneNotice": "Meddelande om virtuell mikrofon",
     "iUnderstand": "Jag förstår",
-    "virtualMicWarningTitle": "Detta är en virtuell mikrofon skapad av Sokuji.",
+    "virtualMicWarningTitle": "Detta är en virtuell mikrofon skapad av AED Translator.",
     "virtualMicWarningText1": "Välj inte den här enheten här. Använd istället denna virtuella mikrofon i dina videokonferensapplikationer (som Google Meet, Zoom, Microsoft Teams osv.) för att ta emot den direktöversatta talutmatningen.",
-    "virtualMicWarningText2": "För att Sokuji ska fungera korrekt, välj din faktiska fysiska mikrofon från listan.",
+    "virtualMicWarningText2": "För att AED Translator ska fungera korrekt, välj din faktiska fysiska mikrofon från listan.",
     "realVoicePassthrough": "Genomslussning",
     "passthroughManagedByPushToTranslate": "I läget Push-to-Translate hanteras genomsläppet automatiskt: det spelas upp med 100 % volym när du inte håller ner tangenten och stoppas (ljudet skickas till översättning) medan du håller ner den.",
     "speechTitle": "Tal",
@@ -412,7 +412,7 @@
     "screenRecordingDeniedNotice": "Behörighet krävs",
     "screenRecordingDeniedTitle": "Behörighet för skärminspelning nekad",
     "screenRecordingDeniedText1": "Den andras ljud kräver behörighet för skärminspelning för att fånga systemljud.",
-    "screenRecordingDeniedText2": "Gå till Systeminställningar > Integritet och säkerhet > Skärminspelning och aktivera Sokuji.",
+    "screenRecordingDeniedText2": "Gå till Systeminställningar > Integritet och säkerhet > Skärminspelning och aktivera AED Translator.",
     "screenRecordingDeniedText3": "Starta om appen när du har aktiverat behörigheten.",
     "turnOnMicrophone": "Slå på mikrofon",
     "turnOffMicrophone": "Stäng av mikrofon",
@@ -429,9 +429,9 @@
     "participantFellBackToSystemAudio": "Insamlingen av den valda applikationen stoppades, så nu översätts allt systemljud i stället. Välj applikationen igen för att begränsa omfattningen.",
     "loopbackMicNotice": "Loopback-ingångsnotis",
     "loopbackMicWarningTitle": "Den här ingången fångar igen det som datorn spelar upp.",
-    "loopbackMicWarningText1": "Loopback-ingångar som \"Stereo Mix\" eller en \"Monitor of ...\"-enhet spelar in systemets egen ljudutgång. I en session med Sokujis översatta tal skulle Sokuji höra och översätta sig själv i en slinga.",
+    "loopbackMicWarningText1": "Loopback-ingångar som \"Stereo Mix\" eller en \"Monitor of ...\"-enhet spelar in systemets egen ljudutgång. I en session med Sokujis översatta tal skulle AED Translator höra och översätta sig själv i en slinga.",
     "loopbackMicWarningText2": "Enheten förblir vald om denna routning är avsiktlig, men välj en fysisk mikrofon för normal användning.",
-    "participantNoAudioYet": "Inget ljud har kommit från den valda källan ännu. Om den spelar upp och inget översätts, tillåt Sokuji under Systeminställningar > Integritet och säkerhet > Endast inspelning av systemljud (macOS) och starta sessionen igen.",
+    "participantNoAudioYet": "Inget ljud har kommit från den valda källan ännu. Om den spelar upp och inget översätts, tillåt AED Translator under Systeminställningar > Integritet och säkerhet > Endast inspelning av systemljud (macOS) och starta sessionen igen.",
     "audioCaptureUnprovenNotice": "Inget har fångats ännu",
     "audioCaptureUnprovenTitle": "Inget ljud har kommit från den valda källan ännu",
     "audioCaptureUnprovenText1": "Om källan spelar upp och inget översätts levererar macOS troligen tystnad: att fånga en app kräver behörigheten \"Endast inspelning av systemljud\", och utan den uppstår inget fel, bara tystnad.",
@@ -475,7 +475,7 @@
     "verificationEmailFailed": "Kunde inte skicka verifieringsmail. Försök igen",
     "alreadyVerified": "Din e-post är redan verifierad!",
     "cooldownMessage": "Vänta {{seconds}} sekunder",
-    "checkYourEmail": "Verifieringsmail skickat. Slutför det i din inkorg och kom tillbaka — Sokuji upptäcker det automatiskt.",
+    "checkYourEmail": "Verifieringsmail skickat. Slutför det i din inkorg och kom tillbaka — AED Translator upptäcker det automatiskt.",
     "emailVerifiedToast": "E-post verifierad",
     "sessionExpired": "Din session har gått ut. Logga in igen.",
     "forgotPassword": "Glömt lösenord?",
@@ -508,7 +508,7 @@
     "signInRequired": "Registrera dig för att använda Sokujis inbyggda översättningstjänst — ingen API-nyckel behövs. Du kan också fortsätta använda din egen leverantör och nyckel.",
     "targetLanguage": "Den andras språk",
     "microphone": "Mikrofon",
-    "microphoneDesc": "Välj mikrofon för att fånga ditt tal. Tala ditt språk i denna mikrofon, och Sokuji kommer att översätta allt den hör i realtid.",
+    "microphoneDesc": "Välj mikrofon för att fånga ditt tal. Tala ditt språk i denna mikrofon, och AED Translator kommer att översätta allt den hör i realtid.",
     "swapLanguages": "Byt språk",
     "swapNotSpoken": "Taltjänsten läser inte upp de här språken åt andra hållet.",
     "textOnly": "Endast text",
@@ -717,7 +717,7 @@
       "scopeLabel": "Inkludera",
       "scopeItemAria": "{{scope}} — {{line}}",
       "scopeEmpty": "Inget valt",
-      "headerTitle": "Sokuji konversationsexport",
+      "headerTitle": "AED Translator konversationsexport",
       "headerSessionStarted": "Sessionen startade",
       "headerExported": "Exporterad",
       "headerProvider": "Leverantör",
@@ -961,7 +961,7 @@
     "gpuSoftwareOnly": "GPU-acceleration är inte tillgänglig — körs på processorn",
     "gpuUnavailable": "GPU-acceleration är inte tillgänglig",
     "gpuSlowWarning": "Lokala modeller fungerar fortfarande, men transkribering och översättning blir märkbart långsammare.",
-    "gpuWaylandRemedy": "I en Wayland-session kan Chromium inte använda GPU:n för detta. Att starta Sokuji med --ozone-platform=x11 återställer accelerationen.",
+    "gpuWaylandRemedy": "I en Wayland-session kan Chromium inte använda GPU:n för detta. Att starta AED Translator med --ozone-platform=x11 återställer accelerationen.",
     "othersGroup": "Övriga modeller",
     "requiresGpu": "Kräver en GPU",
     "licenseConsent": {
@@ -972,7 +972,7 @@
       "viewLicense": "Visa den fullständiga licenstexten",
       "nonCommercial": "Denna licens tillåter endast icke-kommersiell användning — använd inte modellen i kommersiella produkter eller tjänster.",
       "restrictedTerms": "Detta är inte en öppen källkodslicens. Den ställer villkor för hur modellen och dess utdata får användas — läs hela texten innan du förlitar dig på den.",
-      "disclaimer": "Sokuji är inte anslutet till modellens upphovspersoner och har ingen relation till dem. Denna integration är inofficiell och tillhandahålls i befintligt skick utan någon garanti.",
+      "disclaimer": "AED Translator är inte anslutet till modellens upphovspersoner och har ingen relation till dem. Denna integration är inofficiell och tillhandahålls i befintligt skick utan någon garanti.",
       "attribution": "Erkännande: {{attribution}}",
       "cancel": "Avbryt",
       "accept": "Jag förstår — endast icke-kommersiellt",
@@ -1054,25 +1054,25 @@
     "linuxMigrateTitle": "Ny version v{{version}} tillgänglig"
   },
   "audioSystem": {
-    "pactlMissingBody": "pactl (PulseAudios kommandoradsverktyg) hittades inte, så Sokuji kunde inte konfigurera sin virtuella mikrofon/högtalare. Installera det och försök igen:",
+    "pactlMissingBody": "pactl (PulseAudios kommandoradsverktyg) hittades inte, så AED Translator kunde inte konfigurera sin virtuella mikrofon/högtalare. Installera det och försök igen:",
     "installCommand": "sudo apt install pulseaudio-utils",
-    "unavailableBody": "Sokuji kunde inte konfigurera sin virtuella mikrofon/högtalare. Kontrollera att PulseAudio eller PipeWire körs.",
+    "unavailableBody": "AED Translator kunde inte konfigurera sin virtuella mikrofon/högtalare. Kontrollera att PulseAudio eller PipeWire körs.",
     "retry": "Försök igen",
     "retrying": "Försöker igen...",
     "macDriverNotLoadedBody": "Sokujis virtuella mikrofon är installerad, men macOS har inte läst in den, så mötesappar hör inte din översättning. Reparera den; macOS ber om ditt administratörslösenord.",
-    "macRepairFailedBody": "Reparationen fick inte tillbaka den virtuella mikrofonen. Starta om din Mac eller installera om Sokuji med .pkg-installationsprogrammet.",
+    "macRepairFailedBody": "Reparationen fick inte tillbaka den virtuella mikrofonen. Starta om din Mac eller installera om AED Translator med .pkg-installationsprogrammet.",
     "repair": "Reparera",
     "repairing": "Reparerar...",
-    "macRepairPrompt": "Sokuji vill reparera sin virtuella mikrofon."
+    "macRepairPrompt": "AED Translator vill reparera sin virtuella mikrofon."
   },
   "vbCable": {
     "title": "Låt motparten höra översättningen",
-    "body": "Mötesappar tar emot den talade översättningen via en virtuell mikrofon. I Windows är det VB-CABLE, en kostnadsfri drivrutin från VB-Audio. Allt annat i Sokuji fungerar utan den.",
+    "body": "Mötesappar tar emot den talade översättningen via en virtuell mikrofon. I Windows är det VB-CABLE, en kostnadsfri drivrutin från VB-Audio. Allt annat i AED Translator fungerar utan den.",
     "install": "Installera VB-CABLE",
     "about": "Om VB-CABLE",
     "adminOnce": "Windows ber om administratörsbehörighet en gång.",
     "installingTitle": "Installerar VB-CABLE…",
-    "installingBody": "Godkänn Windows-frågan och klicka sedan på \"Install Driver\" i VB-CABLE-fönstret. Sokuji hittar den så snart den är installerad.",
+    "installingBody": "Godkänn Windows-frågan och klicka sedan på \"Install Driver\" i VB-CABLE-fönstret. AED Translator hittar den så snart den är installerad.",
     "installingBusy": "Installerar…",
     "failedTitle": "VB-CABLE installerades inte",
     "failedBody": "Installationen avbröts eller slutfördes inte. Försök igen, eller installera den själv från VB-Audios webbplats.",
@@ -1085,7 +1085,7 @@
     "storeStep3": "Klicka på \"Install Driver\" och starta sedan om datorn.",
     "openWebsite": "Öppna VB-Audios webbplats",
     "checkAgain": "Kontrollera igen",
-    "picksUp": "Sokuji hittar den automatiskt när den är installerad.",
+    "picksUp": "AED Translator hittar den automatiskt när den är installerad.",
     "notNow": "Inte nu"
   },
   "subtitle": {
@@ -1184,7 +1184,7 @@
     "previewChargedToBalance": "Att lyssna på en förhandsgranskning syntetiserar ett kort ljudklipp och debiteras ditt kontosaldo.",
     "previewFailed": "Det gick inte att skapa en förhandsgranskning för den här rösten.",
     "renameFailed": "Det gick inte att byta namn på den här rösten.",
-    "recordStartFailed": "Inspelningen kunde inte starta. Kontrollera att en mikrofon är ansluten och att Sokuji får använda den.",
+    "recordStartFailed": "Inspelningen kunde inte starta. Kontrollera att en mikrofon är ansluten och att AED Translator får använda den.",
     "previewLanguageUnsupported": "Den här modellen har ingen exempelmening på ett språk den talar.",
     "previewNeedsBalance": "Fyll på ditt saldo för att lyssna på en förhandsgranskning av den här rösten.",
     "previewNeedsSessionStopped": "Avsluta sessionen för att lyssna på en förhandsgranskning av den här rösten.",
@@ -1317,7 +1317,7 @@
     "clearAllKeepsPicks": "Dina val sparas och återställs när modellerna laddas ner igen."
   },
   "setup": {
-    "title": "Konfigurera Sokuji",
+    "title": "Konfigurera AED Translator",
     "stepOf": "Steg {{current}} av {{total}}",
     "back": "Tillbaka",
     "next": "Nästa",
@@ -1327,7 +1327,7 @@
     "rerun": "Kör konfigurationen igen",
     "steps": {
       "language": {
-        "title": "Vilket språk ska Sokuji tala till dig på?",
+        "title": "Vilket språk ska AED Translator tala till dig på?",
         "desc": "Detta är språket för menyer och knappar. Du väljer vilka språk som ska översättas mellan senare.",
         "label": "Gränssnittsspråk"
       },
@@ -1444,7 +1444,7 @@
       "guide": "Så här skaffar du den här nyckeln",
       "verifyEmail": "Inloggad. Öppna länken vi skickade via e-post för att verifiera din adress — provkrediten läggs till så snart du gör det.",
       "onFile": "En nyckel är redan sparad — lämna detta tomt för att behålla den.",
-      "offlineHardware": "Sokuji fungerar bra med en GPU och tillräckligt med VRAM; med bara CPU är det märkbart långsammare.",
+      "offlineHardware": "AED Translator fungerar bra med en GPU och tillräckligt med VRAM; med bara CPU är det märkbart långsammare.",
       "openaiOneKey": "Den här enda nyckeln gäller för OpenAI Realtime, Translate och Live.",
       "baseUrl": "Adress",
       "baseUrlPlaceholder": "Adress, till exempel https://openrouter.ai/api/v1",
@@ -1474,7 +1474,7 @@
     "steps": {
       "welcome": {
         "title": "Du är klar",
-        "content": "Sokuji är konfigurerat för ditt scenario. Här är en kort rundtur — den tar mindre än en minut."
+        "content": "AED Translator är konfigurerat för ditt scenario. Här är en kort rundtur — den tar mindre än en minut."
       },
       "mode-picker": {
         "title": "Översättningsläge",
@@ -1494,15 +1494,15 @@
       "output-routing": {
         "title": "Hur den andra sidan hör dig",
         "content": "Din översatta röst går till en virtuell mikrofon; välj den som mikrofon i din mötesapplikation.",
-        "content_extension": "I Google Meet, Zoom eller Teams, välj \"Sokuji Virtual Microphone\" som din mikrofon. Sokuji lägger till den automatiskt på webbplatser för möten som stöds.",
-        "content_electronLinux": "Sokuji skapade en virtuell mikrofon på det här systemet. Välj den som mikrofon i din mötesapplikation.",
+        "content_extension": "I Google Meet, Zoom eller Teams, välj \"Sokuji Virtual Microphone\" som din mikrofon. AED Translator lägger till den automatiskt på webbplatser för möten som stöds.",
+        "content_electronLinux": "AED Translator skapade en virtuell mikrofon på det här systemet. Välj den som mikrofon i din mötesapplikation.",
         "content_electronOther": "Du behöver en virtuell ljudkabel (till exempel VB-Cable). Skicka Sokujis utmatning till den, och välj den som mikrofon i din mötesapplikation."
       },
       "participant-source": {
         "title": "Den andra sidans röst",
-        "content": "Sokuji lyssnar på den andra sidan här.",
+        "content": "AED Translator lyssnar på den andra sidan här.",
         "content_electron": "Välj appen som ska översättas, eller allt systemljud. Deras ursprungliga röst fortsätter att spelas upp som vanligt.",
-        "content_extension": "Sokuji översätter ljudet från den aktiva webbläsarfliken. Deras ursprungliga röst fortsätter att spelas upp som vanligt."
+        "content_extension": "AED Translator översätter ljudet från den aktiva webbläsarfliken. Deras ursprungliga röst fortsätter att spelas upp som vanligt."
       },
       "subtitle": {
         "title": "Undertextläge",
@@ -1564,7 +1564,7 @@
     "lineup_source_not_fixed": "{{provider}} behöver veta vilket språk som talas. Välj det i stället för ”Automatisk Detektion”, eller välj en annan översättningstjänst.",
     "lineup_pair_not_translated": "{{provider}} översätter inte {{source}} → {{target}}. Välj andra språk, eller en annan översättningstjänst.",
     "lineup_face_to_face_apart": "”På plats” behöver en tjänst som både transkriberar och översätter. Välj {{provider}} även för översättningen, eller ställ in ”Var finns den andra” på ”På ett möte”.",
-    "session_in_use": "Ett annat fönster eller en annan enhet använder det här kontot. Stoppa sessionen där, eller försök igen om en minut om Sokuji just stängdes oväntat.",
+    "session_in_use": "Ett annat fönster eller en annan enhet använder det här kontot. Stoppa sessionen där, eller försök igen om en minut om AED Translator just stängdes oväntat.",
     "previous_session_ending": "Din föregående session håller fortfarande på att avslutas. Försök igen om en minut.",
     "app_capture_lost_using_system_audio": "Appinsamlingen stoppades, så nu översätts allt systemljud i stället.",
     "app_capture_monitor_missing": "Appinsamlingen startade inte, så nu översätts allt systemljud i stället.",
@@ -1586,14 +1586,14 @@
     "translation_unavailable": "Ingen översättningsmodell för den här riktningen: talet transkriberas bara.",
     "local_models_missing": "Ladda ner de nödvändiga modellerna i Inställningar för att börja.",
     "no_microphone": "Konfigurera enheter för detta läge för att börja.",
-    "silent_no_permission": "Inget ljud har kommit från den valda källan ännu. Om den spelar upp och inget översätts, tillåt Sokuji under Systeminställningar > Integritet och säkerhet > Endast inspelning av systemljud (macOS) och starta sessionen igen.",
+    "silent_no_permission": "Inget ljud har kommit från den valda källan ännu. Om den spelar upp och inget översätts, tillåt AED Translator under Systeminställningar > Integritet och säkerhet > Endast inspelning av systemljud (macOS) och starta sessionen igen.",
     "loopback_denied": "Den andras ljud kräver behörighet för skärminspelning för att fånga systemljud.",
     "mic_lost_using_other": "Mikrofonen ”{{lost}}” kopplades från, så ”{{device}}” används i stället.",
     "mic_lost_waiting": "Mikrofonen kopplades från. Översättningen av ditt tal fortsätter när en mikrofon ansluts.",
     "mic_now_using": "Nu används mikrofonen ”{{device}}”.",
     "mic_in_use": "Mikrofonen ”{{device}}” används av {{apps}}. Stäng {{apps}} och starta igen, eller välj en annan mikrofon.",
     "mic_unreadable": "Windows kunde inte öppna mikrofonen ”{{device}}”. En annan app kanske använder den, eller så svarar inte dess drivrutin. Stäng appar som använder den eller anslut den igen och starta sedan igen.",
-    "mic_blocked": "Windows låter inte Sokuji använda mikrofonen. Aktivera mikrofonåtkomst för skrivbordsappar under Inställningar › Sekretess och säkerhet › Mikrofon och starta sedan igen.",
+    "mic_blocked": "Windows låter inte AED Translator använda mikrofonen. Aktivera mikrofonåtkomst för skrivbordsappar under Inställningar › Sekretess och säkerhet › Mikrofon och starta sedan igen.",
     "speaker_tts_missing": "Översättning som motparten hör visas bara som text: ingen talmodell talar {{target}}.",
     "participant_tts_missing": "Översättning som jag hör visas bara som text: ingen talmodell talar {{target}}.",
     "participant_tts_over_budget": "Översättning som jag hör visas bara som text: inte tillräckligt med minne för att även läsa in motpartens talmodell.",
@@ -1615,7 +1615,7 @@
     "address_invalid": "Den kompatibla tjänstens adress kan inte användas: {{detail}}"
   },
   "viewer": {
-    "title": "Sokuji-undertexter",
+    "title": "AED Translator-undertexter",
     "connecting": "Ansluter…",
     "original": "Original",
     "enter": {
@@ -1673,7 +1673,7 @@
     },
     "shortcuts": "+ − textstorlek · B båda språken · F helskärm · End tillbaka till live",
     "transcript": {
-      "header": "Sokuji-undertexter, sparade {{time}}"
+      "header": "AED Translator-undertexter, sparade {{time}}"
     },
     "present": {
       "title": "Läs undertexterna i din telefon eller dator",
@@ -1695,7 +1695,7 @@
     "buttonActive": "Delar undertexter: {{count}} tittare",
     "intro": "Låt personer i samma nätverk läsa undertexterna och översättningarna härifrån i sin telefon eller dator.",
     "enable": "Dela undertexter",
-    "firewallNote": "Windows kan fråga om Sokuji får använda nätverket. Välj ”Privata nätverk”.",
+    "firewallNote": "Windows kan fråga om AED Translator får använda nätverket. Välj ”Privata nätverk”.",
     "address": "Adress",
     "copy": "Kopiera",
     "copied": "Kopierat",
@@ -1718,7 +1718,7 @@
     "openPresent": "Öppna projektorsidan",
     "stop": "Sluta dela",
     "stopNote": "Tittarnas sidor visar då att delningen har avslutats.",
-    "warnNoViewers": "Två minuter har gått och ingen enhet har anslutit. Nätverket kanske hindrar enheter från att nå varandra (det gör gäst-Wi‑Fi och en del företagsnätverk), eller så blockerar en brandvägg Sokuji. Kontrollera att alla är på samma nätverk som den här datorn, tillåt Sokuji på privata nätverk i Windows, eller använd en mobil hotspot eller en egen router.",
+    "warnNoViewers": "Två minuter har gått och ingen enhet har anslutit. Nätverket kanske hindrar enheter från att nå varandra (det gör gäst-Wi‑Fi och en del företagsnätverk), eller så blockerar en brandvägg AED Translator. Kontrollera att alla är på samma nätverk som den här datorn, tillåt AED Translator på privata nätverk i Windows, eller använd en mobil hotspot eller en egen router.",
     "warnAddressChanged": "Nätverket har ändrats. Adressen är nu {{address}}: skicka länken igen eller öppna projektorsidan på nytt.",
     "errorPortsBusy": "Det gick inte att börja dela: portarna 7788–7797 är alla upptagna.",
     "errorListen": "Det gick inte att börja dela: {{reason}}"
@@ -1746,11 +1746,11 @@
       "none": "Inget fönster eller ingen skärm att dela hittades.",
       "minimizedHint": "Ett minimerat fönster kan inte delas: återställ fönstret och tryck på Uppdatera.",
       "deniedTitle": "Behörighet för skärminspelning krävs",
-      "deniedText": "macOS låter inte Sokuji se skärmen. Det händer också när Sokuji är påslaget i Systeminställningar, om behörigheten gavs till en äldre version.",
+      "deniedText": "macOS låter inte AED Translator se skärmen. Det händer också när AED Translator är påslaget i Systeminställningar, om behörigheten gavs till en äldre version.",
       "openSettings": "Öppna Systeminställningar",
       "reask": "Fråga macOS igen",
-      "askedText": "Tillåt Sokuji när macOS frågar, eller slå på det i Systeminställningar. macOS tillämpar behörigheten först när Sokuji har startats om.",
-      "restart": "Starta om Sokuji",
+      "askedText": "Tillåt AED Translator när macOS frågar, eller slå på det i Systeminställningar. macOS tillämpar behörigheten först när AED Translator har startats om.",
+      "restart": "Starta om AED Translator",
       "refresh": "Uppdatera",
       "cancel": "Starta utan skärmkontext",
       "nothingVisible": "Området du valde visar ingenting just nu. Välj ett annat, eller starta utan skärmkontext.",
@@ -1906,8 +1906,8 @@
         "key": "Tangent",
         "held": "När den hålls ned",
         "notHeld": "När den inte hålls ned",
-        "talkHeld": "Sokuji lyssnar; när du släpper tangenten översätts det stycket och motparten hör översättningen. När ”Genomslussning” är på hör motparten även din egen röst, på låg volym.",
-        "talkNotHeld": "Sokuji lyssnar inte; inget du säger översätts eller når motparten.",
+        "talkHeld": "AED Translator lyssnar; när du släpper tangenten översätts det stycket och motparten hör översättningen. När ”Genomslussning” är på hör motparten även din egen röst, på låg volym.",
+        "talkNotHeld": "AED Translator lyssnar inte; inget du säger översätts eller når motparten.",
         "translateHeld": "Det du säger översätts; motparten hör bara översättningen, inte din egen röst.",
         "translateNotHeld": "Din egen röst går direkt till motparten, oöversatt.",
         "change": "Ändra",
@@ -2065,7 +2065,7 @@
     "foundInNotes": "Hittades i anteckningarna",
     "foundInTitle": "Hittades i titeln",
     "unavailable": "Historiken kunde inte öppnas.",
-    "unavailableNewer": "Den här historiken skrevs av en nyare version av Sokuji. Uppdatera Sokuji för att öppna den.",
+    "unavailableNewer": "Den här historiken skrevs av en nyare version av AED Translator. Uppdatera AED Translator för att öppna den.",
     "failed": "Det fungerade inte. Försök igen.",
     "me": "Jag",
     "other": "Den andra",
@@ -2179,7 +2179,7 @@
       "wallet-frozen": "Din plånbok hos Kizuna AI är spärrad.",
       "not-member": "Du är inte längre medlem i organisationen som betalar för Kizuna AI.",
       "too-large": "Den här inspelningen är för lång för att Kizuna AI ska kunna skriva anteckningar från den.",
-      "update-required": "Uppdatera Sokuji för att skriva anteckningar med Kizuna AI.",
+      "update-required": "Uppdatera AED Translator för att skriva anteckningar med Kizuna AI.",
       "other": "Anteckningstjänsten avvisade begäran."
     },
     "notesLatestFailed": "Det senaste försöket kunde inte skrivas: {{reason}}",

@@ -86,7 +86,7 @@ const CaptionSharePanel: React.FC = () => {
         <p className="caption-share-panel__intro">{t('captionShare.intro', 'Let people on the same network read the captions and translations here on their phones or computers.')}</p>
         <ToggleSwitch checked={false} onChange={() => void start()} label={t('captionShare.enable', 'Share captions')} disabled={busy} />
         {platform() === 'win32' && !firewallNoteSeen && (
-          <p className="caption-share-panel__note">{t('captionShare.firewallNote', 'Windows may ask whether Sokuji can use the network. Choose Private networks.')}</p>
+          <p className="caption-share-panel__note">{t('captionShare.firewallNote', 'Windows may ask whether AED Translator can use the network. Choose Private networks.')}</p>
         )}
         {error && (
           <StatusMessage variant="error">

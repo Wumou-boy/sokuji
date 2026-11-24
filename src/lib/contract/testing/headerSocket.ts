@@ -40,7 +40,7 @@ export function fakeHeaderSockets(sockets: FakeSockets = fakeSockets(), o: { req
   const open = createHeaderSocket(
     () => ({
       set(rule) {
-        const registration: Registration = { host: rule.host, path: rule.path, set: { ...rule.set }, remove: [...rule.remove], cleared: false };
+        const registration: Registration = { host: rule.host, path: rule.path, set: { ...rule.set }, remove: [...rule.remove], ...(rule.exactPath ? { exactPath: true } : {}), cleared: false };
         registrations.push(registration);
         const reason = refusal;
         refusal = null;
@@ -55,7 +55,7 @@ export function fakeHeaderSockets(sockets: FakeSockets = fakeSockets(), o: { req
         await wait;
         for (let i = registrations.length - 1; i >= 0; i--) {
           const r = registrations[i];
-          if (r.host === rule.host && r.path === rule.path && !r.cleared) {
+          if (r.host === rule.host && r.path === rule.path && r.exactPath === rule.exactPath && !r.cleared) {
             r.cleared = true;
             // Only a clear that follows an open consumes an id: a refused, dropped or aborted attempt leaves the next one's.
             const afterOpen = opens > answered;

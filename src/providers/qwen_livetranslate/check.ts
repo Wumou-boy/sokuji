@@ -18,6 +18,8 @@ import { BAILIAN_ENDPOINT_ID, ENDPOINT_ORDER, ENDPOINTS, type EndpointId } from 
 import { QWEN_REGION_LABELS } from './regions';
 import { qwenHeaders } from './wire';
 import { QWEN_MODEL, type QwenCredentials, type QwenSettings } from './settings';
+import { BAILIAN_WORKSPACE_CONNECTION, bailianWorkspaceSocketUrl, normalizeBailianWorkspaceId } from './endpoints';
+import { isBailianWorkspaceAvailable } from './workspace';
 
 /** As long as the other checks wait, per endpoint. */
 export const DETECT_TIMEOUT_MS = 15_000;
@@ -27,6 +29,7 @@ export interface DetectDeps {
   clock?: Pick<Clock, 'setTimeout'>;
   signal?: AbortSignal;
   openHeaderSocket?: OpenHeaderSocket;
+  workspaceSupported?: () => boolean;
 }
 
 export type Detection = { endpoint: EndpointId } | { refused: string; code: string };
@@ -34,11 +37,24 @@ export type DetectEndpoint = (apiKey: string, o: DetectDeps) => Promise<Detectio
 
 /** Readiness probe for a Bailian key: authenticate the real Realtime host and validate a zero-audio, text-only session update. */
 export async function checkBailianEndpoint(apiKey: string, o: DetectDeps): Promise<Detection> {
-  if (!o.openHeaderSocket) return { refused: 'Bailian Realtime checks require the desktop app or browser extension.', code: 'client' };
+  return checkBailianSocket(apiKey, `${ENDPOINTS[BAILIAN_ENDPOINT_ID].socket}?model=${encodeURIComponent(QWEN_MODEL)}`, false, o);
+}
+
+export async function checkBailianWorkspaceEndpoint(apiKey: string, workspaceId: string, o: DetectDeps): Promise<Detection> {
+  const normalized = normalizeBailianWorkspaceId(workspaceId);
+  if (!normalized) return { refused: 'Enter a valid Bailian workspace ID.', code: 'client' };
+  if (!(o.workspaceSupported ?? isBailianWorkspaceAvailable)()) {
+    return { refused: 'Bailian workspace connections are available in the Windows desktop app only.', code: 'client' };
+  }
+  return checkBailianSocket(apiKey, bailianWorkspaceSocketUrl(normalized, QWEN_MODEL), true, o);
+}
+
+async function checkBailianSocket(apiKey: string, url: string, exactPath: boolean, o: DetectDeps): Promise<Detection> {
+  const openHeaderSocket = o.openHeaderSocket;
+  if (!openHeaderSocket) return { refused: 'Bailian Realtime checks require the desktop app or browser extension.', code: 'client' };
   const clock = o.clock ?? realClock;
   const controller = new AbortController();
   const signal = o.signal ? AbortSignal.any([o.signal, controller.signal]) : controller.signal;
-  const endpoint = ENDPOINTS[BAILIAN_ENDPOINT_ID];
   let socket: WebSocket | null = null;
   let cancelTimeout = () => {};
   let settled = false;
@@ -68,7 +84,7 @@ export async function checkBailianEndpoint(apiKey: string, o: DetectDeps): Promi
     }
     onAbort = () => finish({ refused: 'Bailian Realtime readiness check was cancelled.', code: 'network' });
     signal.addEventListener('abort', onAbort, { once: true });
-    void o.openHeaderSocket(`${endpoint.socket}?model=${encodeURIComponent(QWEN_MODEL)}`, qwenHeaders({ apiKey }), { signal, clock })
+    void openHeaderSocket(url, qwenHeaders({ apiKey }, exactPath), { signal, clock })
       .then((opened) => {
         socket = opened;
         if (settled) {
@@ -125,6 +141,10 @@ export const detectEndpoint: DetectEndpoint = async (apiKey, o) => {
 
 export function createQwenCheck(deps: Omit<DetectDeps, 'signal'> = {}) {
   return async (k: QwenCredentials, s: QwenSettings, ctx: CheckContext): Promise<CheckResult> => {
+    if (s.connection === BAILIAN_WORKSPACE_CONNECTION) {
+      const found = await checkBailianWorkspaceEndpoint(k.apiKey, s.workspaceId, { ...deps, signal: ctx.signal });
+      return 'endpoint' in found ? { ok: true, models: [{ id: BAILIAN_WORKSPACE_CONNECTION }] } : { ok: false, reason: found.refused, code: found.code };
+    }
     if (s.connection === BAILIAN_ENDPOINT_ID) {
       const found = await checkBailianEndpoint(k.apiKey, { ...deps, signal: ctx.signal });
       return 'endpoint' in found ? { ok: true, models: [{ id: found.endpoint }] } : { ok: false, reason: found.refused, code: found.code };

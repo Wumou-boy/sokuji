@@ -62,12 +62,12 @@
     },
     "echoCancellation": "Echo-onderdrukking",
     "echoCancellationTooltip": {
-      "app": "Alleen Sokuji — Verwijdert de vertaalde spraak van Sokuji als de microfoon die opvangt. Kies dit als de microfoon een virtuele kabel zoals BlackHole is.",
+      "app": "Alleen AED Translator — Verwijdert de vertaalde spraak van AED Translator als de microfoon die opvangt. Kies dit als de microfoon een virtuele kabel zoals BlackHole is.",
       "browser": "Alleen browser — Verwijdert wat deze browser afspeelt, vergadertabbladen inbegrepen, als de microfoon het opvangt. Kies dit als de microfoon een virtuele kabel zoals BlackHole is die het geluid van een andere app draagt.",
       "all": "Alle geluiden — Verwijdert ook wat andere apps via de luidsprekers afspelen, zoals een vergaderapp. Een virtuele kabel als microfoon draagt precies dat geluid en zou stil worden."
     },
     "echoCancellationMode": {
-      "app": "Alleen Sokuji",
+      "app": "Alleen AED Translator",
       "browser": "Alleen browser",
       "all": "Alle geluiden"
     },
@@ -370,9 +370,9 @@
     "virtualMicrophone": "Virtuele microfoon",
     "virtualMicrophoneNotice": "Virtuele microfoon kennisgeving",
     "iUnderstand": "Ik begrijp het",
-    "virtualMicWarningTitle": "Dit is een virtuele microfoon gemaakt door Sokuji.",
+    "virtualMicWarningTitle": "Dit is een virtuele microfoon gemaakt door AED Translator.",
     "virtualMicWarningText1": "Selecteer dit apparaat hier niet. Gebruik in plaats daarvan deze virtuele microfoon in uw videoconferentie-applicaties (zoals Google Meet, Zoom, Microsoft Teams, enz.) om realtime spraakvertaling output te ontvangen.",
-    "virtualMicWarningText2": "Voor een juiste werking van Sokuji, selecteer uw echte fysieke microfoon uit de lijst.",
+    "virtualMicWarningText2": "Voor een juiste werking van AED Translator, selecteer uw echte fysieke microfoon uit de lijst.",
     "realVoicePassthrough": "Doorvoer",
     "passthroughManagedByPushToTranslate": "In de Push-to-Translate-modus wordt passthrough automatisch beheerd: hij speelt op 100% volume wanneer je de toets niet ingedrukt houdt en stopt (audio gaat naar de vertaling) terwijl je de toets ingedrukt houdt.",
     "speechTitle": "Spraak",
@@ -412,7 +412,7 @@
     "screenRecordingDeniedNotice": "Toestemming vereist",
     "screenRecordingDeniedTitle": "Toestemming voor schermopname geweigerd",
     "screenRecordingDeniedText1": "Audio van de ander vereist toestemming voor schermopname om systeemaudio vast te leggen.",
-    "screenRecordingDeniedText2": "Ga naar Systeemvoorkeuren > Privacy en beveiliging > Schermopname en schakel Sokuji in.",
+    "screenRecordingDeniedText2": "Ga naar Systeemvoorkeuren > Privacy en beveiliging > Schermopname en schakel AED Translator in.",
     "screenRecordingDeniedText3": "Start de app opnieuw op nadat u de toestemming hebt ingeschakeld.",
     "turnOnMicrophone": "Microfoon inschakelen",
     "turnOffMicrophone": "Microfoon uitschakelen",
@@ -429,9 +429,9 @@
     "participantFellBackToSystemAudio": "Het vastleggen van de geselecteerde applicatie is gestopt, dus wordt nu alle systeemaudio vertaald. Kies de applicatie opnieuw om het bereik weer te beperken.",
     "loopbackMicNotice": "Melding loopback-invoer",
     "loopbackMicWarningTitle": "Deze invoer neemt opnieuw op wat deze computer afspeelt.",
-    "loopbackMicWarningText1": "Loopback-invoer zoals \"Stereo Mix\" of een \"Monitor of ...\"-apparaat neemt de audio-uitvoer van het systeem zelf op. Tijdens een sessie met Sokuji's vertaalde spraak zou Sokuji zichzelf horen en in een lus vertalen.",
+    "loopbackMicWarningText1": "Loopback-invoer zoals \"Stereo Mix\" of een \"Monitor of ...\"-apparaat neemt de audio-uitvoer van het systeem zelf op. Tijdens een sessie met AED Translator's vertaalde spraak zou AED Translator zichzelf horen en in een lus vertalen.",
     "loopbackMicWarningText2": "Het apparaat blijft geselecteerd voor het geval deze routering opzettelijk is, maar kies voor normaal gebruik een fysieke microfoon.",
-    "participantNoAudioYet": "Er is nog geen audio van de geselecteerde bron binnengekomen. Speelt die af en wordt er niets vertaald, sta Sokuji dan toe onder Systeeminstellingen > Privacy en beveiliging > Alleen systeemaudio-opname (macOS) en start de sessie opnieuw.",
+    "participantNoAudioYet": "Er is nog geen audio van de geselecteerde bron binnengekomen. Speelt die af en wordt er niets vertaald, sta AED Translator dan toe onder Systeeminstellingen > Privacy en beveiliging > Alleen systeemaudio-opname (macOS) en start de sessie opnieuw.",
     "audioCaptureUnprovenNotice": "Nog niets vastgelegd",
     "audioCaptureUnprovenTitle": "Er is nog geen audio van de geselecteerde bron binnengekomen",
     "audioCaptureUnprovenText1": "Speelt de bron af en wordt er niets vertaald, dan levert macOS waarschijnlijk stilte: het vastleggen van een app vereist de toestemming 'Alleen systeemaudio-opname', en zonder die toestemming is er geen fout, alleen stilte.",
@@ -475,7 +475,7 @@
     "verificationEmailFailed": "Kon verificatie-e-mail niet verzenden. Probeer het opnieuw",
     "alreadyVerified": "Je e-mail is al geverifieerd!",
     "cooldownMessage": "Wacht {{seconds}} seconden",
-    "checkYourEmail": "Verificatie-e-mail verzonden. Rond het af in je inbox en kom terug — Sokuji pikt het automatisch op.",
+    "checkYourEmail": "Verificatie-e-mail verzonden. Rond het af in je inbox en kom terug — AED Translator pikt het automatisch op.",
     "emailVerifiedToast": "E-mail geverifieerd",
     "sessionExpired": "Je sessie is verlopen. Log opnieuw in.",
     "forgotPassword": "Wachtwoord vergeten?",
@@ -499,16 +499,16 @@
   },
   "simpleConfig": {
     "interfaceLanguage": "Interface Taal",
-    "interfaceLanguageDesc": "Dit verandert de taal van Sokuji's menu's en knoppen. Dit heeft GEEN invloed op de talen waartussen je kunt vertalen.",
+    "interfaceLanguageDesc": "Dit verandert de taal van AED Translator's menu's en knoppen. Dit heeft GEEN invloed op de talen waartussen je kunt vertalen.",
     "translationLanguages": "Vertaaltalen",
     "translationLanguagesDesc": "Kies welke taal je spreekt (Mijn taal) en in welke taal je de vertaling wilt horen (Taal van de ander). Selecteer 'Automatische Detectie' als je niet zeker weet welke taal je gaat spreken.",
     "yourLanguage": "Mijn taal",
     "userAccount": "Gebruikersaccount",
     "userAccountTooltip": "Technische gebruikers kunnen hun eigen API-sleutels gebruiken. Gebruikersaccount is ontworpen voor vereenvoudigde setup.",
-    "signInRequired": "Registreer om de ingebouwde vertaalservice van Sokuji te gebruiken — geen API-sleutel nodig. U kunt ook gewoon uw eigen provider en sleutel blijven gebruiken.",
+    "signInRequired": "Registreer om de ingebouwde vertaalservice van AED Translator te gebruiken — geen API-sleutel nodig. U kunt ook gewoon uw eigen provider en sleutel blijven gebruiken.",
     "targetLanguage": "Taal van de ander",
     "microphone": "Microfoon",
-    "microphoneDesc": "Selecteer de microfoon om uw spraak op te vangen. Spreek uw taal in deze microfoon, en Sokuji zal alles wat het hoort in realtime vertalen.",
+    "microphoneDesc": "Selecteer de microfoon om uw spraak op te vangen. Spreek uw taal in deze microfoon, en AED Translator zal alles wat het hoort in realtime vertalen.",
     "swapLanguages": "Talen wisselen",
     "swapNotSpoken": "De spraakdienst leest deze talen niet voor in omgekeerde richting.",
     "textOnly": "Alleen tekst",
@@ -717,7 +717,7 @@
       "scopeLabel": "Opnemen",
       "scopeItemAria": "{{scope}} — {{line}}",
       "scopeEmpty": "Niets geselecteerd",
-      "headerTitle": "Sokuji gespreksexport",
+      "headerTitle": "AED Translator gespreksexport",
       "headerSessionStarted": "Sessie gestart",
       "headerExported": "Geëxporteerd",
       "headerProvider": "Aanbieder",
@@ -961,7 +961,7 @@
     "gpuSoftwareOnly": "GPU-versnelling niet beschikbaar — draait op de CPU",
     "gpuUnavailable": "GPU-versnelling niet beschikbaar",
     "gpuSlowWarning": "Lokale modellen blijven werken, maar transcriptie en vertaling worden merkbaar trager.",
-    "gpuWaylandRemedy": "In een Wayland-sessie kan Chromium de GPU hiervoor niet gebruiken. Sokuji starten met --ozone-platform=x11 herstelt de versnelling.",
+    "gpuWaylandRemedy": "In een Wayland-sessie kan Chromium de GPU hiervoor niet gebruiken. AED Translator starten met --ozone-platform=x11 herstelt de versnelling.",
     "othersGroup": "Overige modellen",
     "requiresGpu": "Vereist een GPU",
     "licenseConsent": {
@@ -972,7 +972,7 @@
       "viewLicense": "Bekijk de volledige licentietekst",
       "nonCommercial": "Deze licentie staat alleen niet-commercieel gebruik toe — gebruik dit model niet in commerciële producten of diensten.",
       "restrictedTerms": "Dit is geen opensourcelicentie. Ze stelt voorwaarden aan het gebruik van het model en de uitvoer ervan — lees de volledige tekst voordat u erop vertrouwt.",
-      "disclaimer": "Sokuji is niet gelieerd aan de auteurs van het model en heeft geen relatie met hen. Deze integratie is onofficieel en wordt geleverd zoals ze is, zonder enige garantie.",
+      "disclaimer": "AED Translator is niet gelieerd aan de auteurs van het model en heeft geen relatie met hen. Deze integratie is onofficieel en wordt geleverd zoals ze is, zonder enige garantie.",
       "attribution": "Naamsvermelding: {{attribution}}",
       "cancel": "Annuleren",
       "accept": "Begrepen — alleen niet-commercieel",
@@ -1054,25 +1054,25 @@
     "linuxMigrateTitle": "Nieuwe versie v{{version}} beschikbaar"
   },
   "audioSystem": {
-    "pactlMissingBody": "pactl (PulseAudio-opdrachtregelprogramma's) is niet gevonden, waardoor Sokuji de virtuele microfoon/luidspreker niet kon instellen. Installeer het en probeer het opnieuw:",
+    "pactlMissingBody": "pactl (PulseAudio-opdrachtregelprogramma's) is niet gevonden, waardoor AED Translator de virtuele microfoon/luidspreker niet kon instellen. Installeer het en probeer het opnieuw:",
     "installCommand": "sudo apt install pulseaudio-utils",
-    "unavailableBody": "Sokuji kon de virtuele microfoon/luidspreker niet instellen. Zorg dat PulseAudio of PipeWire actief is.",
+    "unavailableBody": "AED Translator kon de virtuele microfoon/luidspreker niet instellen. Zorg dat PulseAudio of PipeWire actief is.",
     "retry": "Opnieuw proberen",
     "retrying": "Opnieuw proberen...",
-    "macDriverNotLoadedBody": "De virtuele microfoon van Sokuji is geïnstalleerd, maar macOS heeft hem niet geladen, dus vergaderapps horen je vertaling niet. Repareer hem; macOS vraagt om je beheerderswachtwoord.",
-    "macRepairFailedBody": "Na de reparatie is de virtuele microfoon nog steeds niet terug. Start je Mac opnieuw op of installeer Sokuji opnieuw met het .pkg-installatieprogramma.",
+    "macDriverNotLoadedBody": "De virtuele microfoon van AED Translator is geïnstalleerd, maar macOS heeft hem niet geladen, dus vergaderapps horen je vertaling niet. Repareer hem; macOS vraagt om je beheerderswachtwoord.",
+    "macRepairFailedBody": "Na de reparatie is de virtuele microfoon nog steeds niet terug. Start je Mac opnieuw op of installeer AED Translator opnieuw met het .pkg-installatieprogramma.",
     "repair": "Repareren",
     "repairing": "Bezig met repareren...",
-    "macRepairPrompt": "Sokuji wil zijn virtuele microfoon repareren."
+    "macRepairPrompt": "AED Translator wil zijn virtuele microfoon repareren."
   },
   "vbCable": {
     "title": "Laat de ander de vertaling horen",
-    "body": "Vergaderapps ontvangen de gesproken vertaling via een virtuele microfoon. Op Windows is dat VB-CABLE, een gratis stuurprogramma van VB-Audio. Al het andere in Sokuji werkt ook zonder.",
+    "body": "Vergaderapps ontvangen de gesproken vertaling via een virtuele microfoon. Op Windows is dat VB-CABLE, een gratis stuurprogramma van VB-Audio. Al het andere in AED Translator werkt ook zonder.",
     "install": "VB-CABLE installeren",
     "about": "Over VB-CABLE",
     "adminOnce": "Windows vraagt één keer om beheerdersrechten.",
     "installingTitle": "VB-CABLE wordt geïnstalleerd…",
-    "installingBody": "Keur de melding van Windows goed en klik daarna in het venster van VB-CABLE op \"Install Driver\". Sokuji herkent het zodra het is geïnstalleerd.",
+    "installingBody": "Keur de melding van Windows goed en klik daarna in het venster van VB-CABLE op \"Install Driver\". AED Translator herkent het zodra het is geïnstalleerd.",
     "installingBusy": "Bezig met installeren…",
     "failedTitle": "VB-CABLE is niet geïnstalleerd",
     "failedBody": "De installatie is geannuleerd of niet voltooid. Probeer het opnieuw, of installeer het zelf via de website van VB-Audio.",
@@ -1085,7 +1085,7 @@
     "storeStep3": "Klik op \"Install Driver\" en start daarna je pc opnieuw op.",
     "openWebsite": "Website van VB-Audio openen",
     "checkAgain": "Opnieuw controleren",
-    "picksUp": "Sokuji herkent het automatisch zodra het is geïnstalleerd.",
+    "picksUp": "AED Translator herkent het automatisch zodra het is geïnstalleerd.",
     "notNow": "Niet nu"
   },
   "subtitle": {
@@ -1184,7 +1184,7 @@
     "previewChargedToBalance": "Het beluisteren van een voorbeeld synthetiseert een kort fragment en wordt van uw accountsaldo afgeschreven.",
     "previewFailed": "Kon geen voorbeeld genereren voor deze stem.",
     "renameFailed": "Kon deze stem niet hernoemen.",
-    "recordStartFailed": "Opnemen kon niet starten. Controleer of er een microfoon is aangesloten en of Sokuji die mag gebruiken.",
+    "recordStartFailed": "Opnemen kon niet starten. Controleer of er een microfoon is aangesloten en of AED Translator die mag gebruiken.",
     "previewLanguageUnsupported": "Dit model heeft geen voorbeeldzin in een taal die het spreekt.",
     "previewNeedsBalance": "Laad uw saldo op om deze stem te beluisteren.",
     "previewNeedsSessionStopped": "Beëindig de sessie om deze stem te beluisteren.",
@@ -1292,10 +1292,10 @@
     }
   },
   "echoNotice": {
-    "ttsEcho": "Uw luidsprekers voeren Sokuji's vertaalde spraak terug in de microfoon.",
+    "ttsEcho": "Uw luidsprekers voeren AED Translator's vertaalde spraak terug in de microfoon.",
     "meetingEcho": "Vergaderaudio uit uw luidsprekers bereikt de microfoon.",
     "farEndEcho": "Het apparaat van een deelnemer echoot uw vertaling terug de vergadering in.",
-    "selfCapture": "De audiobron van de ander neemt Sokuji's eigen audio op.",
+    "selfCapture": "De audiobron van de ander neemt AED Translator's eigen audio op.",
     "routingLoop": "Het geselecteerde invoerapparaat neemt de weergave van deze computer rechtstreeks op.",
     "actionHeadphones": "Een koptelefoon verbreekt de lus.",
     "actionAskRemote": "Vraag die deelnemer een koptelefoon te gebruiken.",
@@ -1317,7 +1317,7 @@
     "clearAllKeepsPicks": "Je keuzes worden onthouden en keren terug zodra modellen opnieuw worden gedownload."
   },
   "setup": {
-    "title": "Sokuji instellen",
+    "title": "AED Translator instellen",
     "stepOf": "Stap {{current}} van {{total}}",
     "back": "Terug",
     "next": "Volgende",
@@ -1327,7 +1327,7 @@
     "rerun": "Setup opnieuw uitvoeren",
     "steps": {
       "language": {
-        "title": "In welke taal moet Sokuji tegen u spreken?",
+        "title": "In welke taal moet AED Translator tegen u spreken?",
         "desc": "Dit is de taal van menu's en knoppen. De talen waartussen u vertaalt, kiest u later.",
         "label": "Interface Taal"
       },
@@ -1444,7 +1444,7 @@
       "guide": "Hoe u deze sleutel verkrijgt",
       "verifyEmail": "Ingelogd. Open de link die we u per e-mail hebben gestuurd om uw adres te verifiëren — het proeftegoed wordt bijgeschreven zodra u dat doet.",
       "onFile": "Er is al een sleutel opgeslagen — laat dit veld leeg om deze te behouden.",
-      "offlineHardware": "Sokuji werkt goed met een GPU en genoeg VRAM; met alleen een CPU is het merkbaar trager.",
+      "offlineHardware": "AED Translator werkt goed met een GPU en genoeg VRAM; met alleen een CPU is het merkbaar trager.",
       "openaiOneKey": "Deze ene sleutel geldt voor OpenAI Realtime, Translate en Live.",
       "baseUrl": "Adres",
       "baseUrlPlaceholder": "Adres, zoals https://openrouter.ai/api/v1",
@@ -1474,7 +1474,7 @@
     "steps": {
       "welcome": {
         "title": "Setup voltooid",
-        "content": "Sokuji is ingesteld voor uw scenario. Hier volgt een korte rondleiding — dit duurt minder dan een minuut."
+        "content": "AED Translator is ingesteld voor uw scenario. Hier volgt een korte rondleiding — dit duurt minder dan een minuut."
       },
       "mode-picker": {
         "title": "Vertaalmodus",
@@ -1485,7 +1485,7 @@
       },
       "microphone": {
         "title": "Uw microfoon",
-        "content": "Hier komt uw spraak binnen. De systeemstandaard is al geselecteerd. Kies niet de virtuele microfoon van Sokuji — die is voor uw vergader-app."
+        "content": "Hier komt uw spraak binnen. De systeemstandaard is al geselecteerd. Kies niet de virtuele microfoon van AED Translator — die is voor uw vergader-app."
       },
       "monitor": {
         "title": "Uzelf vertaald horen",
@@ -1494,15 +1494,15 @@
       "output-routing": {
         "title": "Hoe de ander u hoort",
         "content": "Uw vertaalde stem gaat naar een virtuele microfoon; kies deze als microfoon in uw vergader-app.",
-        "content_extension": "Kies in Google Meet, Zoom of Teams \"Sokuji Virtual Microphone\" als uw microfoon. Sokuji voegt dit automatisch toe aan ondersteunde vergadersites.",
-        "content_electronLinux": "Sokuji heeft een virtuele microfoon aangemaakt op dit systeem. Kies deze als microfoon in uw vergader-app.",
-        "content_electronOther": "U heeft een virtuele audiokabel nodig (bijvoorbeeld VB-Cable). Stuur Sokuji's uitvoer hiernaartoe en kies deze als microfoon in uw vergader-app."
+        "content_extension": "Kies in Google Meet, Zoom of Teams \"Sokuji Virtual Microphone\" als uw microfoon. AED Translator voegt dit automatisch toe aan ondersteunde vergadersites.",
+        "content_electronLinux": "AED Translator heeft een virtuele microfoon aangemaakt op dit systeem. Kies deze als microfoon in uw vergader-app.",
+        "content_electronOther": "U heeft een virtuele audiokabel nodig (bijvoorbeeld VB-Cable). Stuur AED Translator's uitvoer hiernaartoe en kies deze als microfoon in uw vergader-app."
       },
       "participant-source": {
         "title": "De stem van de ander",
-        "content": "Hier luistert Sokuji naar de ander.",
+        "content": "Hier luistert AED Translator naar de ander.",
         "content_electron": "Kies de app om te vertalen, of alle systeemaudio. Hun originele stem blijft gewoon afspelen.",
-        "content_extension": "Sokuji vertaalt de audio van het huidige tabblad. Hun originele stem blijft gewoon afspelen."
+        "content_extension": "AED Translator vertaalt de audio van het huidige tabblad. Hun originele stem blijft gewoon afspelen."
       },
       "subtitle": {
         "title": "Ondertitelmodus",
@@ -1564,7 +1564,7 @@
     "lineup_source_not_fixed": "{{provider}} moet weten welke taal er gesproken wordt. Kies die in plaats van ‘Automatische Detectie’, of kies een andere vertaaldienst.",
     "lineup_pair_not_translated": "{{provider}} vertaalt niet {{source}} → {{target}}. Kies andere talen, of een andere vertaaldienst.",
     "lineup_face_to_face_apart": "‘Face-to-face’ heeft één dienst nodig die transcribeert en vertaalt. Kies {{provider}} ook voor de vertaling, of zet ‘Waar is de ander’ op ‘In een vergadering’.",
-    "session_in_use": "Een ander venster of apparaat gebruikt dit account. Stop de sessie daar, of probeer het over een minuut opnieuw als Sokuji net onverwacht is afgesloten.",
+    "session_in_use": "Een ander venster of apparaat gebruikt dit account. Stop de sessie daar, of probeer het over een minuut opnieuw als AED Translator net onverwacht is afgesloten.",
     "previous_session_ending": "Uw vorige sessie wordt nog beëindigd. Probeer het over een minuut opnieuw.",
     "app_capture_lost_using_system_audio": "Het vastleggen van de app is gestopt, dus wordt nu alle systeemaudio vertaald.",
     "app_capture_monitor_missing": "Het vastleggen van de app is niet gestart, dus wordt nu alle systeemaudio vertaald.",
@@ -1586,14 +1586,14 @@
     "translation_unavailable": "Geen vertaalmodel voor deze richting: de spraak wordt alleen getranscribeerd.",
     "local_models_missing": "Download de vereiste modellen in Instellingen om te beginnen.",
     "no_microphone": "Configureer apparaten voor deze modus om te starten.",
-    "silent_no_permission": "Er is nog geen audio van de geselecteerde bron binnengekomen. Speelt die af en wordt er niets vertaald, sta Sokuji dan toe onder Systeeminstellingen > Privacy en beveiliging > Alleen systeemaudio-opname (macOS) en start de sessie opnieuw.",
+    "silent_no_permission": "Er is nog geen audio van de geselecteerde bron binnengekomen. Speelt die af en wordt er niets vertaald, sta AED Translator dan toe onder Systeeminstellingen > Privacy en beveiliging > Alleen systeemaudio-opname (macOS) en start de sessie opnieuw.",
     "loopback_denied": "Audio van de ander vereist toestemming voor schermopname om systeemaudio vast te leggen.",
     "mic_lost_using_other": "De microfoon “{{lost}}” is losgekoppeld, dus wordt nu “{{device}}” gebruikt.",
     "mic_lost_waiting": "De microfoon is losgekoppeld. De vertaling van je spraak gaat verder zodra er een microfoon is aangesloten.",
     "mic_now_using": "Nu wordt de microfoon “{{device}}” gebruikt.",
     "mic_in_use": "De microfoon “{{device}}” wordt gebruikt door {{apps}}. Sluit {{apps}} en start opnieuw, of kies een andere microfoon.",
     "mic_unreadable": "Windows kon de microfoon “{{device}}” niet openen. Mogelijk gebruikt een andere app hem, of reageert het stuurprogramma niet meer. Sluit apps die hem gebruiken of sluit hem opnieuw aan, en start dan opnieuw.",
-    "mic_blocked": "Windows staat niet toe dat Sokuji de microfoon gebruikt. Zet microfoontoegang voor bureaublad-apps aan via Instellingen › Privacy en beveiliging › Microfoon, en start dan opnieuw.",
+    "mic_blocked": "Windows staat niet toe dat AED Translator de microfoon gebruikt. Zet microfoontoegang voor bureaublad-apps aan via Instellingen › Privacy en beveiliging › Microfoon, en start dan opnieuw.",
     "speaker_tts_missing": "De vertaling die de ander hoort, is alleen tekst: geen spraakmodel spreekt {{target}}.",
     "participant_tts_missing": "De vertaling die ik hoor, is alleen tekst: geen spraakmodel spreekt {{target}}.",
     "participant_tts_over_budget": "De vertaling die ik hoor, is alleen tekst: niet genoeg geheugen om ook het spraakmodel van de ander te laden.",
@@ -1606,8 +1606,8 @@
     "not_org_member_unnamed": "Je maakt geen deel meer uit van je organisatie.",
     "org_wallet_frozen": "Het account van {{organization}} is gepauzeerd. Neem contact op met de eigenaar of gebruik je eigen saldo.",
     "org_wallet_frozen_unnamed": "Het account van de organisatie is gepauzeerd. Neem contact op met de eigenaar of gebruik je eigen saldo.",
-    "org_wallet_frozen_owner": "Het account van {{organization}} is gepauzeerd. Neem contact op met Sokuji-support of gebruik je eigen saldo.",
-    "org_wallet_frozen_owner_unnamed": "Het account van de organisatie is gepauzeerd. Neem contact op met Sokuji-support of gebruik je eigen saldo.",
+    "org_wallet_frozen_owner": "Het account van {{organization}} is gepauzeerd. Neem contact op met AED Translator-support of gebruik je eigen saldo.",
+    "org_wallet_frozen_owner_unnamed": "Het account van de organisatie is gepauzeerd. Neem contact op met AED Translator-support of gebruik je eigen saldo.",
     "model_missing": "De dienst biedt dit model niet aan: {{detail}}",
     "quota": "Het account bij de dienst heeft geen tegoed meer: {{detail}}",
     "text_model_unset": "Kies een model voor de vertaling, of typ de naam ervan, bij ‘Talen en opstelling’.",
@@ -1615,7 +1615,7 @@
     "address_invalid": "Het adres van de compatibele dienst is niet bruikbaar: {{detail}}"
   },
   "viewer": {
-    "title": "Sokuji-ondertiteling",
+    "title": "AED Translator-ondertiteling",
     "connecting": "Verbinden…",
     "original": "Origineel",
     "enter": {
@@ -1673,7 +1673,7 @@
     },
     "shortcuts": "+ − lettergrootte · B beide talen · F volledig scherm · End terug naar live",
     "transcript": {
-      "header": "Sokuji-ondertiteling, opgeslagen op {{time}}"
+      "header": "AED Translator-ondertiteling, opgeslagen op {{time}}"
     },
     "present": {
       "title": "Lees de ondertiteling op uw telefoon of computer",
@@ -1686,7 +1686,7 @@
       "androidChrome": "Opent Chrome op Android de pagina niet? Sta het toe via Instellingen → Apps → Chrome → Rechten → Apparaten in de buurt.",
       "watching": "Kijkers: {{count}}",
       "fullscreen": "Volledig scherm",
-      "windowTitle": "Sokuji-projectiepagina",
+      "windowTitle": "AED Translator-projectiepagina",
       "ended": "Het delen is gestopt"
     }
   },
@@ -1695,7 +1695,7 @@
     "buttonActive": "Ondertiteling wordt gedeeld · kijkers: {{count}}",
     "intro": "Laat mensen op hetzelfde netwerk de ondertiteling en vertalingen van hier lezen op hun telefoon of computer.",
     "enable": "Ondertiteling delen",
-    "firewallNote": "Windows vraagt mogelijk of Sokuji het netwerk mag gebruiken. Kies 'Particuliere netwerken'.",
+    "firewallNote": "Windows vraagt mogelijk of AED Translator het netwerk mag gebruiken. Kies 'Particuliere netwerken'.",
     "address": "Adres",
     "copy": "Kopiëren",
     "copied": "Gekopieerd",
@@ -1718,7 +1718,7 @@
     "openPresent": "Projectiepagina openen",
     "stop": "Delen stoppen",
     "stopNote": "Op de pagina's van de kijkers verschijnt dan dat het delen is gestopt.",
-    "warnNoViewers": "Na twee minuten is er nog geen apparaat verbonden. Mogelijk laat dit netwerk apparaten elkaar niet bereiken (dat doen gast-Wi‑Fi en sommige bedrijfsnetwerken), of blokkeert een firewall Sokuji. Controleer of iedereen op hetzelfde netwerk zit als deze computer, sta Sokuji in Windows toe op particuliere netwerken, of gebruik een hotspot van een telefoon of uw eigen router.",
+    "warnNoViewers": "Na twee minuten is er nog geen apparaat verbonden. Mogelijk laat dit netwerk apparaten elkaar niet bereiken (dat doen gast-Wi‑Fi en sommige bedrijfsnetwerken), of blokkeert een firewall AED Translator. Controleer of iedereen op hetzelfde netwerk zit als deze computer, sta AED Translator in Windows toe op particuliere netwerken, of gebruik een hotspot van een telefoon of uw eigen router.",
     "warnAddressChanged": "Het netwerk is gewijzigd. Het adres is nu {{address}}: stuur de link opnieuw of open de projectiepagina opnieuw.",
     "errorPortsBusy": "Delen kon niet starten: de poorten 7788–7797 zijn allemaal in gebruik.",
     "errorListen": "Delen kon niet starten: {{reason}}"
@@ -1746,11 +1746,11 @@
       "none": "Er is geen venster of scherm gevonden om te delen.",
       "minimizedHint": "Een geminimaliseerd venster kan niet worden gedeeld: herstel het venster en klik op Vernieuwen.",
       "deniedTitle": "Toestemming voor schermopname nodig",
-      "deniedText": "macOS laat Sokuji het scherm niet zien. Dat gebeurt ook als Sokuji in Systeeminstellingen is ingeschakeld, maar die toestemming aan een oudere versie is gegeven.",
+      "deniedText": "macOS laat AED Translator het scherm niet zien. Dat gebeurt ook als AED Translator in Systeeminstellingen is ingeschakeld, maar die toestemming aan een oudere versie is gegeven.",
       "openSettings": "Systeeminstellingen openen",
       "reask": "macOS opnieuw vragen",
-      "askedText": "Sta Sokuji toe wanneer macOS erom vraagt, of schakel het in via Systeeminstellingen. macOS past de toestemming pas toe nadat Sokuji opnieuw is gestart.",
-      "restart": "Sokuji opnieuw starten",
+      "askedText": "Sta AED Translator toe wanneer macOS erom vraagt, of schakel het in via Systeeminstellingen. macOS past de toestemming pas toe nadat AED Translator opnieuw is gestart.",
+      "restart": "AED Translator opnieuw starten",
       "refresh": "Vernieuwen",
       "cancel": "Starten zonder schermcontext",
       "nothingVisible": "Het gekozen gebied laat op dit moment niets zien. Kies een ander gebied of start zonder schermcontext.",
@@ -1906,8 +1906,8 @@
         "key": "Toets",
         "held": "Zolang ingedrukt",
         "notHeld": "Zolang niet ingedrukt",
-        "talkHeld": "Sokuji luistert; als u loslaat, wordt dat stuk vertaald en hoort de andere kant de vertaling. Met Doorvoer aan hoort de andere kant ook zachtjes uw eigen stem.",
-        "talkNotHeld": "Sokuji luistert niet; niets wat u zegt wordt vertaald of bereikt de andere kant.",
+        "talkHeld": "AED Translator luistert; als u loslaat, wordt dat stuk vertaald en hoort de andere kant de vertaling. Met Doorvoer aan hoort de andere kant ook zachtjes uw eigen stem.",
+        "talkNotHeld": "AED Translator luistert niet; niets wat u zegt wordt vertaald of bereikt de andere kant.",
         "translateHeld": "Wat u zegt wordt vertaald; de andere kant hoort alleen de vertaling, niet uw eigen stem.",
         "translateNotHeld": "Uw eigen stem gaat onvertaald rechtstreeks naar de andere kant.",
         "change": "Wijzigen",
@@ -2065,7 +2065,7 @@
     "foundInNotes": "Gevonden in de notities",
     "foundInTitle": "Gevonden in de titel",
     "unavailable": "De geschiedenis kon niet worden geopend.",
-    "unavailableNewer": "Deze geschiedenis is geschreven door een nieuwere versie van Sokuji. Werk Sokuji bij om haar te openen.",
+    "unavailableNewer": "Deze geschiedenis is geschreven door een nieuwere versie van AED Translator. Werk AED Translator bij om haar te openen.",
     "failed": "Dat is niet gelukt. Probeer het opnieuw.",
     "me": "Ik",
     "other": "Ander",
@@ -2179,7 +2179,7 @@
       "wallet-frozen": "Je Kizuna AI-portemonnee is bevroren.",
       "not-member": "Je bent geen lid meer van de organisatie die voor Kizuna AI betaalt.",
       "too-large": "Deze opname is te lang voor Kizuna AI om er notities van te schrijven.",
-      "update-required": "Werk Sokuji bij om notities te schrijven met Kizuna AI.",
+      "update-required": "Werk AED Translator bij om notities te schrijven met Kizuna AI.",
       "other": "De notitiedienst heeft het verzoek geweigerd."
     },
     "notesLatestFailed": "De laatste poging kon niet worden geschreven: {{reason}}",

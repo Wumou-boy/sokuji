@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createVirtualClock } from '../../lib/contract/clock';
 import type { CheckContext } from '../../lib/provider/types';
-import { createQwenCheck, checkBailianEndpoint, DETECT_TIMEOUT_MS, detectEndpoint } from './check';
-import { BAILIAN_ENDPOINT_ID, ENDPOINTS, isEndpointId } from './endpoints';
+import { createQwenCheck, DETECT_TIMEOUT_MS, detectEndpoint } from './check';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, bailianWorkspaceSocketUrl, ENDPOINTS, isEndpointId } from './endpoints';
 import { QWEN_DEFAULTS } from './settings';
 import { FakeSocket } from '../../lib/contract/testing/fakeSocket';
 
@@ -50,6 +50,38 @@ describe("Qwen LiveTranslate's endpoints", () => {
     await expect(pending).resolves.toEqual({ ok: true, models: [{ id: 'bailian-cn' }] });
     expect(fetch).not.toHaveBeenCalled();
     expect(socket.closedByClient).toEqual({ code: 1000, reason: undefined });
+  });
+
+  it('builds only the fixed dedicated Beijing workspace URL and checks it with exact-path auth', async () => {
+    expect(bailianWorkspaceSocketUrl('LLM-ABC123', 'fixed model')).toBe('wss://llm-abc123.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime?model=fixed%20model');
+    expect(() => bailianWorkspaceSocketUrl('trial', QWEN_DEFAULTS.voice)).toThrow('Enter a valid Bailian workspace ID.');
+
+    const socket = new FakeSocket('wss://llm-team123.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime?model=qwen3.8-livetranslate-flash-realtime', undefined);
+    socket.open();
+    const openHeaderSocket = vi.fn(async () => socket as unknown as WebSocket);
+    const fetch = vi.fn(async () => { throw new Error('workspace checks must not use QwenCloud token endpoints'); });
+    const settings = { ...QWEN_DEFAULTS, connection: BAILIAN_WORKSPACE_CONNECTION, workspaceId: 'LLM-Team123' };
+    const pending = createQwenCheck({ fetch, openHeaderSocket, workspaceSupported: () => true })({ apiKey: 'company-key' }, settings, ctx);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(openHeaderSocket).toHaveBeenCalledWith(
+      'wss://llm-team123.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime?model=qwen3.8-livetranslate-flash-realtime',
+      { set: { Authorization: 'Bearer company-key' }, exactPath: true },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    socket.receive(JSON.stringify({ type: 'session.created' }));
+    socket.receive(JSON.stringify({ type: 'session.updated' }));
+    await expect(pending).resolves.toEqual({ ok: true, models: [{ id: BAILIAN_WORKSPACE_CONNECTION }] });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(socket.closedByClient).toEqual({ code: 1000, reason: undefined });
+  });
+
+  it('refuses invalid IDs and unsupported platforms before opening a workspace socket', async () => {
+    const openHeaderSocket = vi.fn();
+    const workspace = { ...QWEN_DEFAULTS, connection: BAILIAN_WORKSPACE_CONNECTION, workspaceId: 'trial' };
+    await expect(createQwenCheck({ openHeaderSocket, workspaceSupported: () => true })({ apiKey: 'company-key' }, workspace, ctx)).resolves.toMatchObject({ ok: false, code: 'client' });
+    await expect(createQwenCheck({ openHeaderSocket, workspaceSupported: () => false })({ apiKey: 'company-key' }, { ...workspace, workspaceId: 'llm-valid123' }, ctx)).resolves.toMatchObject({ ok: false, code: 'client' });
+    expect(openHeaderSocket).not.toHaveBeenCalled();
   });
 
   it('keeps auto connection checks on the legacy QwenCloud token endpoints', async () => {

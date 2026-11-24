@@ -98,11 +98,10 @@ export async function notesChatFromStores(
   o: { onBalance?(microUsd: number): void } = {},
 ): Promise<NotesChat | null> {
   const lineUp = useLineUpStore.getState().lineUp;
-  // With no service chosen the default may depend on whether OpenAI or Gemini has a key: their keys are read first,
-  // loaded if they are not yet, but only then (review): where Kizuna AI can write the notes it is the default whatever
-  // the keys hold, and a failed read of their settings must not keep its notes from being written.
+  // Read keys only when OpenAI or Gemini could affect the default choice.
   const defaults = notesDefaultsNow();
-  const keyMatters = !lineUp?.summarisation && !(defaults.hostedOffered && defaults.signedIn);
+  const initialService = notesServiceOf(lineUp, defaults);
+  const keyMatters = !lineUp?.summarisation && initialService !== BAILIAN_NOTES && !(defaults.hostedOffered && defaults.signedIn);
   if (keyMatters) {
     if (!OPENAI_KEY_HOLDERS.some((id) => useProviderStore.getState().entries[id])) await loaded(openaiTextProvider as AnyProvider);
     if (defaults.textModelsOffered && !GEMINI_KEY_HOLDERS.some((id) => useProviderStore.getState().entries[id])) await loaded(geminiTextProvider as AnyProvider);

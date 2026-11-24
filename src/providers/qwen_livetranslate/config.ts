@@ -8,17 +8,22 @@
  */
 import { wordsFor } from '../../lib/words/forService';
 import type { SessionContext } from '../../lib/contract/adapter';
+import type { QwenTurnAudioBuffer } from '../../lib/faceToFace/audioBuffer';
 import type { ProviderRefusal, SharedSettings } from '../../lib/run/types';
-import { BAILIAN_ENDPOINT_ID, isEndpointId, type EndpointId } from './endpoints';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, isEndpointId, normalizeBailianWorkspaceId, type EndpointId } from './endpoints';
 import {
-  QWEN_LANGUAGES, QWEN_MODEL, QWEN_PAUSE, QWEN_SPOKEN, qwenParticipantVoice, qwenSpeakerVoice, SPEAKER_CLONE, SPEAKER_CLONE_ONCE, type QwenSettings,
+  QWEN_LANGUAGES, QWEN_MODEL, QWEN_PAUSE, QWEN_SPOKEN, qwenParticipantVoice, qwenSpeakerVoice, SPEAKER_CLONE, SPEAKER_CLONE_ONCE, QWEN_FIXED_VOICE_PREFIX, type QwenSettings,
 } from './settings';
 
 /** A preset by name, or the speaker cloned on every turn (`always`) or once at the start (`once`). */
-export type QwenVoiceChoice = { kind: 'preset'; name: string } | { kind: 'clone'; frequency: 'always' | 'once' };
+export type QwenVoiceChoice = { kind: 'preset'; name: string } | { kind: 'clone'; frequency: 'always' | 'once' } | { kind: 'fixed'; id: string; ownerHash: string };
 
 export interface QwenConfig {
   model: typeof QWEN_MODEL;
+  /** Kept with the run so workspace sessions can be recognized without inspecting a secret. */
+  connection: QwenSettings['connection'];
+  /** A validated DNS label only for `bailian-workspace`; never a base URL. */
+  workspaceId: string | null;
   /** The key's endpoint as the check found it; null: the adapter finds it before it opens. */
   endpoint: EndpointId | null;
   /** A Qwen code, which is the app code. */
@@ -32,6 +37,8 @@ export interface QwenConfig {
   person: boolean;
   /** Locally labels incoming EN/JA/ZH source transcript text where unambiguous. */
   detectIncomingLanguage: boolean;
+  /** Optional face-to-face replay source; populated only by the face-to-face runtime. */
+  turnAudio?: QwenTurnAudioBuffer;
   /** Suppresses a same-language Chinese translation in incoming text-only captions. */
   skipSameLanguageText: boolean;
   /** Preferred translations, source term → its translation (`translation.corpus.phrases`); empty sends none. */
@@ -46,21 +53,28 @@ export function buildQwen(context: SessionContext, s: QwenSettings, shared: Shar
   const { target } = context.direction;
   // A guard: the languages offer the 60 only (never `AUTO` as a target), so the runner never builds another.
   if (!QWEN_LANGUAGES.some((o) => o.value === target)) return { refused: `Qwen LiveTranslate does not translate into ${target}.` };
+  if (s.connection === BAILIAN_WORKSPACE_CONNECTION && !normalizeBailianWorkspaceId(s.workspaceId)) {
+    return { refused: 'Enter a valid Bailian workspace ID before starting Qwen LiveTranslate.' };
+  }
   // A stale pair can still name a text-only target on a leg that speaks: the server would refuse the update.
   if (context.speech && !QWEN_SPOKEN.some((o) => o.value === target)) return { refused: `Qwen LiveTranslate writes ${target} but does not speak it: turn speech off for this leg.` };
   const participant = shared.reversed(context.direction);
   const chosen = participant ? qwenParticipantVoice(s) : qwenSpeakerVoice(s);
-  const endpoint = s.connection === BAILIAN_ENDPOINT_ID ? BAILIAN_ENDPOINT_ID : shared.models[0]?.id;
+  const workspace = s.connection === BAILIAN_WORKSPACE_CONNECTION;
+  const endpoint = workspace ? null : s.connection === BAILIAN_ENDPOINT_ID ? BAILIAN_ENDPOINT_ID : shared.models[0]?.id;
   const incomingTextOnlyZh = participant && !context.speech && target === 'zh';
   const manual = context.turns === 'manual';
   // The pause field is not in 3.8's documented update: it goes on the wire only when it changes something.
   const pause = Number.isFinite(s.pauseMs) ? Math.min(QWEN_PAUSE.max, Math.max(QWEN_PAUSE.min, Math.round(s.pauseMs))) : QWEN_PAUSE.default;
   return {
     model: QWEN_MODEL,
+    connection: s.connection,
+    workspaceId: workspace ? normalizeBailianWorkspaceId(s.workspaceId) : null,
     endpoint: isEndpointId(endpoint) ? endpoint : null,
     target,
     speech: context.speech,
-    voice: chosen === SPEAKER_CLONE ? { kind: 'clone', frequency: 'always' }
+    voice: chosen.startsWith(QWEN_FIXED_VOICE_PREFIX) || chosen.startsWith('qwen-translate-vc-') ? { kind: 'fixed', id: chosen, ownerHash: s.voiceOwnerHash }
+      : chosen === SPEAKER_CLONE ? { kind: 'clone', frequency: 'always' }
       : chosen === SPEAKER_CLONE_ONCE ? { kind: 'clone', frequency: 'once' }
         : { kind: 'preset', name: chosen },
     manual,

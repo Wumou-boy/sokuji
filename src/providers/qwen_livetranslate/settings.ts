@@ -10,7 +10,7 @@ import { AUTO } from '../../lib/provider/languages';
 import type { CredentialsMissing, LanguageContext, LanguageOption, Provider } from '../../lib/provider/types';
 import { distinctVoice } from '../../lib/provider/voices';
 import type { EndpointId } from './endpoints';
-import { BAILIAN_ENDPOINT_ID } from './endpoints';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, normalizeBailianWorkspaceId } from './endpoints';
 import { asQwenRegion, DEFAULT_QWEN_REGION, type QwenRegion } from './regions';
 
 /** The one model (D1): the check finds the endpoint, nothing chooses a model. */
@@ -20,6 +20,8 @@ export const QWEN_MODEL = 'qwen3.8-livetranslate-flash-realtime';
 export const SPEAKER_CLONE = 'clone';
 /** The first speaker's voice, cloned once at the start and kept (frequency `once`): one presenter stays one voice. */
 export const SPEAKER_CLONE_ONCE = 'clone-once';
+/** Any profile created for Qwen LiveTranslate and selected from the account's voice enrollment list. */
+export const QWEN_FIXED_VOICE_PREFIX = 'qwen3.8-livetranslate-flash-realtime-';
 
 /** The pause that ends a turn, in ms: the server's own default (2500), within a range the server does not enforce itself (it accepts 100 and 10 000 alike; probe 2026-10-13). */
 export const QWEN_PAUSE = { min: 500, max: 6000, step: 100, default: 2500 } as const;
@@ -89,10 +91,14 @@ export const QWEN_VOICES: readonly QwenVoice[] = [
 ];
 
 export interface QwenSettings {
-  /** Which own-key endpoint to check/use. `auto` preserves QwenCloud region detection. */
-  connection: 'auto' | typeof BAILIAN_ENDPOINT_ID;
+  /** Which key and route to use. `auto` preserves personal QwenCloud region detection. */
+  connection: 'auto' | typeof BAILIAN_ENDPOINT_ID | typeof BAILIAN_WORKSPACE_CONNECTION;
+  /** Required only for the dedicated Bailian company route. A single DNS label, never a URL. */
+  workspaceId: string;
   /** My leg's voice: one of `QWEN_VOICES`, `SPEAKER_CLONE` or `SPEAKER_CLONE_ONCE`. */
   voice: string;
+  /** Non-reversible identity of the Bailian key that owns `voice` when it is a fixed clone. */
+  voiceOwnerHash: string;
   /** The voice that reads the other person's words to me: the same choices. */
   participantVoice: string;
   /** The pause that ends a turn under automatic turns, in ms (`QWEN_PAUSE`). */
@@ -109,24 +115,29 @@ export const QWEN_DEFAULT_VOICE = 'Tina';
 /** A male preset beside Tina, so the two people never sound alike by default. */
 export const QWEN_PARTICIPANT_DEFAULT_VOICE = 'Ethan';
 export const QWEN_DEFAULTS: QwenSettings = {
-  connection: 'auto', voice: QWEN_DEFAULT_VOICE, participantVoice: QWEN_PARTICIPANT_DEFAULT_VOICE, pauseMs: QWEN_PAUSE.default, region: DEFAULT_QWEN_REGION, screenContext: false, speakerLabels: true,
+  connection: 'auto', workspaceId: '', voice: QWEN_DEFAULT_VOICE, voiceOwnerHash: '', participantVoice: QWEN_PARTICIPANT_DEFAULT_VOICE, pauseMs: QWEN_PAUSE.default, region: DEFAULT_QWEN_REGION, screenContext: false, speakerLabels: true,
 };
 
 /** What was stored, made valid field by field: the region narrowed, the rest as typed or defaulted. Nothing is written back. */
 export function migrateQwenSettings(stored: Readonly<Record<string, unknown>>): QwenSettings {
-  const connection = stored.connection === BAILIAN_ENDPOINT_ID ? BAILIAN_ENDPOINT_ID : 'auto';
+  const connection = stored.connection === BAILIAN_ENDPOINT_ID || stored.connection === BAILIAN_WORKSPACE_CONNECTION ? stored.connection : 'auto';
+  const workspaceId = normalizeBailianWorkspaceId(stored.workspaceId) ?? '';
   const str = (k: 'voice' | 'participantVoice') => (typeof stored[k] === 'string' ? (stored[k] as string) : QWEN_DEFAULTS[k]);
   const pauseMs = typeof stored.pauseMs === 'number' && Number.isFinite(stored.pauseMs) ? stored.pauseMs : QWEN_DEFAULTS.pauseMs;
   const screenContext = typeof stored.screenContext === 'boolean' ? stored.screenContext : false;
   const speakerLabels = typeof stored.speakerLabels === 'boolean' ? stored.speakerLabels : QWEN_DEFAULTS.speakerLabels;
-  return { connection, voice: str('voice'), participantVoice: str('participantVoice'), pauseMs, region: asQwenRegion(stored.region), screenContext, speakerLabels };
+  const voiceOwnerHash = typeof stored.voiceOwnerHash === 'string' && /^[a-f0-9]{64}$/.test(stored.voiceOwnerHash) ? stored.voiceOwnerHash : '';
+  return { connection, workspaceId, voice: str('voice'), voiceOwnerHash, participantVoice: str('participantVoice'), pauseMs, region: asQwenRegion(stored.region), screenContext, speakerLabels };
 }
 
 /** Either clone: each leg clones its own speaker, so neither is ever "my" voice to keep off the other leg. */
 const cloned = (v: string) => v === SPEAKER_CLONE || v === SPEAKER_CLONE_ONCE;
 
-/** A choice the list offers: the list is the only check, since the server refuses an unknown voice only at the first speech (probe 2026-10-13). */
-const listed = (v: string) => cloned(v) || QWEN_VOICES.some((o) => o.value === v);
+/** Fixed profile IDs are accepted only in the vendor's Qwen LiveTranslate namespace. */
+const fixed = (v: string) => v.startsWith(QWEN_FIXED_VOICE_PREFIX) || v.startsWith('qwen-translate-vc-');
+
+/** A choice the list offers: the list is the only check for presets; custom voice IDs are opaque vendor IDs. */
+const listed = (v: string) => cloned(v) || fixed(v) || QWEN_VOICES.some((o) => o.value === v);
 
 /** My voice for a run: the choice while the list has it, else Tina. */
 export function qwenSpeakerVoice(s: Pick<QwenSettings, 'voice'>): string {
@@ -199,12 +210,22 @@ export interface QwenCredentials {
 }
 
 export const qwenCredentials: Provider<QwenSettings, QwenCredentials, never>['credentials'] = {
-  keys: ['apiKey'],
-  fields: () => [{ key: 'apiKey', labelKey: 'setup.credentials.apiKey', secret: true, placeholderKey: 'simpleSettings.apiKeyPlaceholder' }],
+  keys: ['apiKey', 'workspaceApiKey'],
+  fields: (s) => s.connection === BAILIAN_WORKSPACE_CONNECTION
+    ? [{ key: 'workspaceApiKey', labelKey: 'providers.qwen_livetranslate.workspaceApiKey', secret: true, placeholderKey: 'simpleSettings.apiKeyPlaceholder' }]
+    : [{ key: 'apiKey', labelKey: 'setup.credentials.apiKey', secret: true, placeholderKey: 'simpleSettings.apiKeyPlaceholder' }],
+  choice: {
+    setting: 'connection',
+    options: [
+      { value: 'auto', labelKey: 'providers.qwen_livetranslate.connectionPersonal' },
+      { value: BAILIAN_ENDPOINT_ID, labelKey: 'providers.qwen_livetranslate.connectionBailianShared' },
+      { value: BAILIAN_WORKSPACE_CONNECTION, labelKey: 'providers.qwen_livetranslate.connectionBailianWorkspace' },
+    ],
+  },
   read: (values): QwenCredentials | CredentialsMissing => {
     // Trimmed: the key rides in a header, where a pasted trailing newline or space is no valid token.
-    const apiKey = (values.apiKey ?? '').trim();
+    const apiKey = (values.workspaceApiKey ?? values.apiKey ?? '').trim();
     // No code: the runner words it `credentials_missing`.
-    return apiKey ? { apiKey } : { missing: 'Enter your Qwen API key.' };
+    return apiKey ? { apiKey } : { missing: values.workspaceApiKey !== undefined ? 'Enter your Bailian workspace API key.' : 'Enter your Qwen API key.' };
   },
 };

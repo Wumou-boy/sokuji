@@ -35,7 +35,8 @@ module.exports = {
     icon: process.platform === 'win32' ? 'assets/icon.ico' : 'assets/icon',
     appId: 'ai.kizunaai.sokuji',
     executableName: 'sokuji',
-    name: 'Sokuji',
+    name: 'AED Translator',
+    win32metadata: { ProductName: 'AED Translator', FileDescription: 'AED Translator' },
     // Whitelist-based ignore: only include package.json, dist-electron/,
     // build/ (minus wasm/), and node_modules/ (pruned by Forge).
     // Everything else (src/, public/, model-packs/, extension/, etc.) is excluded.
