@@ -351,7 +351,13 @@
     "voiceIHearSame": "È la stessa voce che sente l'altra parte, quindi legge {{voice}} al suo posto.",
     "voiceCustom": "Voce personalizzata",
     "translateDetectParticipantLanguage": "Rileva automaticamente il cinese, il giapponese e l’inglese dell’interlocutore",
-    "translateDetectParticipantLanguageHelp": "Se la lingua dell’interlocutore è cinese, giapponese o inglese, la lingua di ogni sottotitolo viene rilevata dal testo originale. La lingua di destinazione resta quella selezionata."
+    "translateDetectParticipantLanguageHelp": "Se la lingua dell’interlocutore è cinese, giapponese o inglese, la lingua di ogni sottotitolo viene rilevata dal testo originale. La lingua di destinazione resta quella selezionata.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "Autenticato automaticamente tramite il tuo account",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "In attesa che la sessione precedente termini. Clicca per annullare.",
     "clickToCancel": "Clicca per annullare",
     "whatIHear": "Cosa sento",
-    "audioSettings": "Impostazioni audio"
+    "audioSettings": "Impostazioni audio",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "Io",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "In una riunione",
     "otherSideMeetingHint": "Cattura l'audio di sistema o di un'app",
     "otherSideBeside": "Accanto a me",
-    "otherSideBesideHint": "Due persone con un solo microfono"
+    "otherSideBesideHint": "Due persone con un solo microfono",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "Clicca per configurare le lingue",
@@ -1652,7 +1663,10 @@
     "quota": "L'account del servizio non ha più credito: {{detail}}",
     "text_model_unset": "Scegli un modello per la traduzione, o scrivine il nome, in «Lingue e composizione».",
     "address_missing": "Inserisci l'indirizzo del servizio compatibile in «Account e chiavi» prima di iniziare.",
-    "address_invalid": "L'indirizzo del servizio compatibile non è utilizzabile: {{detail}}"
+    "address_invalid": "L'indirizzo del servizio compatibile non è utilizzabile: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "Sottotitoli AED Translator",

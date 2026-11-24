@@ -351,7 +351,13 @@
     "voiceIHearSame": "همان صدایی است که طرف مقابل می‌شنود، پس به‌جای آن {{voice}} می‌خواند.",
     "voiceCustom": "صدای سفارشی",
     "translateDetectParticipantLanguage": "تشخیص خودکار چینی، ژاپنی و انگلیسی طرف مقابل",
-    "translateDetectParticipantLanguageHelp": "اگر زبان طرف مقابل چینی، ژاپنی یا انگلیسی باشد، زبان هر زیرنویس از متن اصلی تشخیص داده می‌شود. زبان مقصد ترجمه همان زبان انتخاب‌شده می‌ماند."
+    "translateDetectParticipantLanguageHelp": "اگر زبان طرف مقابل چینی، ژاپنی یا انگلیسی باشد، زبان هر زیرنویس از متن اصلی تشخیص داده می‌شود. زبان مقصد ترجمه همان زبان انتخاب‌شده می‌ماند.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "به طور خودکار از طریق حساب کاربری شما احراز هویت شده",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "در انتظار پایان نشست قبلی. برای لغو کلیک کنید.",
     "clickToCancel": "برای لغو کلیک کنید",
     "whatIHear": "آنچه می‌شنوم",
-    "audioSettings": "تنظیمات صدا"
+    "audioSettings": "تنظیمات صدا",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "من",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "در یک جلسه",
     "otherSideMeetingHint": "صدای سیستم یا یک برنامه را دریافت می‌کند",
     "otherSideBeside": "کنار من",
-    "otherSideBesideHint": "دو نفر پشت یک میکروفون"
+    "otherSideBesideHint": "دو نفر پشت یک میکروفون",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "برای پیکربندی زبان‌ها کلیک کنید",
@@ -1652,7 +1663,10 @@
     "quota": "حساب سرویس اعتباری ندارد: {{detail}}",
     "text_model_unset": "در «زبان‌ها و ترکیب» مدلی برای ترجمه انتخاب کنید یا نام آن را بنویسید.",
     "address_missing": "پیش از شروع، نشانی سرویس سازگار را در «حساب‌ها و کلیدها» وارد کنید.",
-    "address_invalid": "نشانی سرویس سازگار قابل استفاده نیست: {{detail}}"
+    "address_invalid": "نشانی سرویس سازگار قابل استفاده نیست: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "زیرنویس AED Translator",

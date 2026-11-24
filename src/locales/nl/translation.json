@@ -351,7 +351,13 @@
     "voiceIHearSame": "Dezelfde stem als die de ander hoort, dus leest {{voice}} in plaats daarvan.",
     "voiceCustom": "Aangepaste stem",
     "translateDetectParticipantLanguage": "Detecteer automatisch Chinees, Japans en Engels van de gesprekspartner",
-    "translateDetectParticipantLanguageHelp": "Als de taal van de gesprekspartner Chinees, Japans of Engels is, wordt de taal van elke ondertitel bepaald aan de hand van het origineel. De gekozen doeltaal blijft behouden."
+    "translateDetectParticipantLanguageHelp": "Als de taal van de gesprekspartner Chinees, Japans of Engels is, wordt de taal van elke ondertitel bepaald aan de hand van het origineel. De gekozen doeltaal blijft behouden.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatisch geauthenticeerd via uw account",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "Wachten tot de vorige sessie is beëindigd. Klik om te annuleren.",
     "clickToCancel": "Klik om te annuleren",
     "whatIHear": "Wat ik hoor",
-    "audioSettings": "Audio-instellingen"
+    "audioSettings": "Audio-instellingen",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "Ik",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "In een vergadering",
     "otherSideMeetingHint": "Legt systeemaudio of een app vast",
     "otherSideBeside": "Naast mij",
-    "otherSideBesideHint": "Twee personen bij één microfoon"
+    "otherSideBesideHint": "Twee personen bij één microfoon",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "Klik om talen te configureren",
@@ -1652,7 +1663,10 @@
     "quota": "Het account bij de dienst heeft geen tegoed meer: {{detail}}",
     "text_model_unset": "Kies een model voor de vertaling, of typ de naam ervan, bij ‘Talen en opstelling’.",
     "address_missing": "Voer het adres van de compatibele dienst in bij ‘Accounts en sleutels’ voordat je begint.",
-    "address_invalid": "Het adres van de compatibele dienst is niet bruikbaar: {{detail}}"
+    "address_invalid": "Het adres van de compatibele dienst is niet bruikbaar: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "AED Translator-ondertiteling",

@@ -351,7 +351,13 @@
     "voiceIHearSame": "Trùng với giọng bên kia nghe, nên {{voice}} sẽ đọc thay.",
     "voiceCustom": "Giọng tùy chỉnh",
     "translateDetectParticipantLanguage": "Tự động nhận diện tiếng Trung, tiếng Nhật và tiếng Anh của người đối thoại",
-    "translateDetectParticipantLanguageHelp": "Nếu người đối thoại dùng tiếng Trung, tiếng Nhật hoặc tiếng Anh, ngôn ngữ của từng phụ đề sẽ được nhận diện từ bản gốc. Ngôn ngữ đích đã chọn vẫn được giữ nguyên."
+    "translateDetectParticipantLanguageHelp": "Nếu người đối thoại dùng tiếng Trung, tiếng Nhật hoặc tiếng Anh, ngôn ngữ của từng phụ đề sẽ được nhận diện từ bản gốc. Ngôn ngữ đích đã chọn vẫn được giữ nguyên.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "Tự động xác thực qua tài khoản của bạn",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "Đang chờ phiên trước kết thúc. Nhấp để hủy.",
     "clickToCancel": "Nhấp để hủy",
     "whatIHear": "Những gì tôi nghe",
-    "audioSettings": "Cài đặt âm thanh"
+    "audioSettings": "Cài đặt âm thanh",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "Tôi",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "Trong cuộc họp",
     "otherSideMeetingHint": "Thu âm thanh hệ thống hoặc một ứng dụng",
     "otherSideBeside": "Ngay bên cạnh tôi",
-    "otherSideBesideHint": "Hai người dùng chung một micro"
+    "otherSideBesideHint": "Hai người dùng chung một micro",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "Nhấp để cấu hình ngôn ngữ",
@@ -1652,7 +1663,10 @@
     "quota": "Tài khoản dịch vụ đã hết tín dụng: {{detail}}",
     "text_model_unset": "Chọn mô hình cho bản dịch, hoặc nhập tên mô hình, trong “Ngôn ngữ và cách phối hợp”.",
     "address_missing": "Nhập địa chỉ của dịch vụ tương thích trong “Tài khoản và khóa” trước khi bắt đầu.",
-    "address_invalid": "Không thể dùng địa chỉ của dịch vụ tương thích: {{detail}}"
+    "address_invalid": "Không thể dùng địa chỉ của dịch vụ tương thích: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "Phụ đề AED Translator",

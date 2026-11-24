@@ -355,7 +355,9 @@
     "voiceIHearSame": "與對方聽到的聲音相同，朗讀時改用 {{voice}}。",
     "voiceCustom": "自訂聲音",
     "translateDetectParticipantLanguage": "自動標示對方的中文、日文和英文",
-    "translateDetectParticipantLanguageHelp": "對方的語言設為中文、日文或英文時，會從原文判定每段字幕的語言。翻譯目標仍維持所選語言。"
+    "translateDetectParticipantLanguageHelp": "對方的語言設為中文、日文或英文時，會從原文判定每段字幕的語言。翻譯目標仍維持所選語言。",
+    "incomingLanguage": "對方說的語言",
+    "languageAuto": "自動偵測"
   },
   "simpleSettings": {
     "autoAuthenticated": "已通過您的帳戶自動認證",
@@ -819,7 +821,9 @@
     "otherSideMeeting": "線上會議",
     "otherSideMeetingHint": "擷取系統音訊或某個應用程式的音訊",
     "otherSideBeside": "就在身邊",
-    "otherSideBesideHint": "兩個人共用一支麥克風"
+    "otherSideBesideHint": "兩個人共用一支麥克風",
+    "participantPickerHint": "請先播放會議音訊，再重新整理清單。程序名稱可能會顯示為 WebView2。",
+    "participantCaptureWidened": "已改為擷取所有系統音訊"
   },
   "simplePanel": {
     "clickToConfigLanguages": "點擊配置語言",
@@ -1661,7 +1665,8 @@
     "quota": "此服務的帳號已沒有餘額：{{detail}}",
     "text_model_unset": "請在「語言與工作階段組成」中為翻譯選擇模型，或輸入模型名稱。",
     "address_missing": "開始前請在「帳號與金鑰」中填寫相容服務的位址。",
-    "address_invalid": "相容服務的位址無法使用：{{detail}}"
+    "address_invalid": "相容服務的位址無法使用：{{detail}}",
+    "loopback_meeting_output": "Windows 目前使用會議用的虛擬麥克風線路作為預設播放裝置。請將播放裝置改為耳機或喇叭，或選擇會議應用程式作為對方音訊來源。"
   },
   "viewer": {
     "title": "AED Translator 字幕",

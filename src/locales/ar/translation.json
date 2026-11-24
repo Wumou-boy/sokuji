@@ -351,7 +351,13 @@
     "voiceIHearSame": "هو نفس الصوت الذي يسمعه الطرف الآخر، لذا يقرأ {{voice}} بدلًا منه.",
     "voiceCustom": "صوت مخصص",
     "translateDetectParticipantLanguage": "اكتشاف الصينية واليابانية والإنجليزية لدى الطرف الآخر تلقائيًا",
-    "translateDetectParticipantLanguageHelp": "عندما تكون لغة الطرف الآخر الصينية أو اليابانية أو الإنجليزية، حدّد لغة كل تسمية توضيحية من النص الأصلي. تظل لغة الترجمة هي اللغة المختارة."
+    "translateDetectParticipantLanguageHelp": "عندما تكون لغة الطرف الآخر الصينية أو اليابانية أو الإنجليزية، حدّد لغة كل تسمية توضيحية من النص الأصلي. تظل لغة الترجمة هي اللغة المختارة.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "تمت المصادقة تلقائيًا عبر حسابك",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "في انتظار انتهاء الجلسة السابقة. انقر للإلغاء.",
     "clickToCancel": "انقر للإلغاء",
     "whatIHear": "ما أسمعه",
-    "audioSettings": "إعدادات الصوت"
+    "audioSettings": "إعدادات الصوت",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "أنا",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "في اجتماع",
     "otherSideMeetingHint": "يلتقط صوت النظام أو تطبيقًا",
     "otherSideBeside": "بجانبي",
-    "otherSideBesideHint": "شخصان على ميكروفون واحد"
+    "otherSideBesideHint": "شخصان على ميكروفون واحد",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "انقر لتكوين اللغات",
@@ -1652,7 +1663,10 @@
     "quota": "لم يتبقَّ رصيد في حساب الخدمة: {{detail}}",
     "text_model_unset": "اختر نموذجًا للترجمة، أو اكتب اسمه، في «اللغات والتشكيلة».",
     "address_missing": "أدخل عنوان الخدمة المتوافقة في «الحسابات والمفاتيح» قبل البدء.",
-    "address_invalid": "لا يمكن استخدام عنوان الخدمة المتوافقة: {{detail}}"
+    "address_invalid": "لا يمكن استخدام عنوان الخدمة المتوافقة: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "ترجمة AED Translator",

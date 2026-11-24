@@ -351,7 +351,13 @@
     "voiceIHearSame": "எதிர்த்தரப்பு கேட்கும் குரலே இது, எனவே அதற்குப் பதிலாக {{voice}} வாசிக்கும்.",
     "voiceCustom": "தனிப்பயன் குரல்",
     "translateDetectParticipantLanguage": "மறுபுறம் பேசுபவரின் சீனம், ஜப்பானியம், ஆங்கிலம் ஆகியவற்றைத் தானாகக் கண்டறி",
-    "translateDetectParticipantLanguageHelp": "மறுபுறம் பேசுபவரின் மொழி சீனம், ஜப்பானியம் அல்லது ஆங்கிலமாக இருந்தால், ஒவ்வொரு வசன வரியின் மொழியையும் மூல உரையிலிருந்து கண்டறியும். தேர்ந்தெடுத்த மொழிபெயர்ப்பு இலக்கு மாறாது."
+    "translateDetectParticipantLanguageHelp": "மறுபுறம் பேசுபவரின் மொழி சீனம், ஜப்பானியம் அல்லது ஆங்கிலமாக இருந்தால், ஒவ்வொரு வசன வரியின் மொழியையும் மூல உரையிலிருந்து கண்டறியும். தேர்ந்தெடுத்த மொழிபெயர்ப்பு இலக்கு மாறாது.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "உங்கள் கணக்கு மூலம் தானாக அங்கீகரிக்கப்பட்டது",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "முந்தைய அமர்வு முடிவடையக் காத்திருக்கிறது. ரத்து செய்ய கிளிக் செய்யவும்.",
     "clickToCancel": "ரத்து செய்ய கிளிக் செய்யவும்",
     "whatIHear": "நான் கேட்பது",
-    "audioSettings": "ஒலி அமைப்புகள்"
+    "audioSettings": "ஒலி அமைப்புகள்",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "நான்",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "கூட்டத்தில்",
     "otherSideMeetingHint": "கணினி ஆடியோவை அல்லது ஒரு பயன்பாட்டைப் பதிவு செய்கிறது",
     "otherSideBeside": "என் அருகில்",
-    "otherSideBesideHint": "ஒரே மைக்ரோஃபோனில் இருவர்"
+    "otherSideBesideHint": "ஒரே மைக்ரோஃபோனில் இருவர்",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "மொழிகளை உள்ளமைக்க கிளிக் செய்யவும்",
@@ -1652,7 +1663,10 @@
     "quota": "சேவைக் கணக்கில் கடன் இருப்பு இல்லை: {{detail}}",
     "text_model_unset": "“மொழிகளும் வரிசையும்” என்பதில் மொழிபெயர்ப்புக்கு ஒரு மாதிரியைத் தேர்வுசெய்யவும், அல்லது அதன் பெயரைத் தட்டச்சு செய்யவும்.",
     "address_missing": "தொடங்குவதற்கு முன் “கணக்குகளும் விசைகளும்” என்பதில் இணக்கமான சேவையின் முகவரியை உள்ளிடவும்.",
-    "address_invalid": "இணக்கமான சேவையின் முகவரியைப் பயன்படுத்த முடியாது: {{detail}}"
+    "address_invalid": "இணக்கமான சேவையின் முகவரியைப் பயன்படுத்த முடியாது: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "AED Translator துணைத்தலைப்புகள்",

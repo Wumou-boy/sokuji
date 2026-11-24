@@ -55,7 +55,7 @@ describe('electron main-process sources', () => {
       .map((name) => join(__dirname, name));
     expect(files.length).toBeGreaterThan(0);
 
-    const program = ts.createProgram(files, {
+    const program = ts.createProgram([...files, join(__dirname, '../src/vite-env.d.ts')], {
       allowJs: true,
       checkJs: true,
       noEmit: true,

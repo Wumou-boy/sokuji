@@ -355,7 +355,9 @@
     "voiceIHearSame": "相手に聞こえる音声と同じため、代わりに {{voice}} が読み上げます。",
     "voiceCustom": "カスタム音声",
     "translateDetectParticipantLanguage": "相手の中国語・日本語・英語を自動判定",
-    "translateDetectParticipantLanguageHelp": "相手の言語が中国語、日本語、英語の場合、原文から字幕ごとの言語を判定します。翻訳先は選択した言語のままです。"
+    "translateDetectParticipantLanguageHelp": "相手の言語が中国語、日本語、英語の場合、原文から字幕ごとの言語を判定します。翻訳先は選択した言語のままです。",
+    "incomingLanguage": "相手が話す言語",
+    "languageAuto": "自動判定"
   },
   "simpleSettings": {
     "autoAuthenticated": "アカウントで自動的に認証されました",
@@ -819,7 +821,9 @@
     "otherSideMeeting": "オンライン会議",
     "otherSideMeetingHint": "システム音声またはアプリの音声を取り込みます",
     "otherSideBeside": "隣にいる",
-    "otherSideBesideHint": "1 台のマイクを 2 人で使います"
+    "otherSideBesideHint": "1 台のマイクを 2 人で使います",
+    "participantPickerHint": "会議の音声を再生してから、一覧を更新してください。プロセス名が WebView2 と表示される場合があります。",
+    "participantCaptureWidened": "システム全体の音声を取り込んでいます"
   },
   "simplePanel": {
     "clickToConfigLanguages": "言語を設定するにはクリック",
@@ -1661,7 +1665,8 @@
     "quota": "サービスのアカウントにクレジットが残っていません: {{detail}}",
     "text_model_unset": "「言語と構成」で翻訳のモデルを選ぶか、モデル名を入力してください。",
     "address_missing": "開始する前に「アカウントとキー」で互換サービスのアドレスを入力してください。",
-    "address_invalid": "互換サービスのアドレスは使えません: {{detail}}"
+    "address_invalid": "互換サービスのアドレスは使えません: {{detail}}",
+    "loopback_meeting_output": "Windows の既定の再生先が会議用の仮想マイクケーブルになっています。再生先をヘッドホンまたはスピーカーに変更するか、相手の音声ソースに会議アプリを選んでください。"
   },
   "viewer": {
     "title": "AED Translator 字幕",

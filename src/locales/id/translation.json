@@ -351,7 +351,13 @@
     "voiceIHearSame": "Sama dengan suara yang didengar pihak lain, jadi {{voice}} yang membacakan.",
     "voiceCustom": "Suara kustom",
     "translateDetectParticipantLanguage": "Deteksi otomatis bahasa Mandarin, Jepang, dan Inggris lawan bicara",
-    "translateDetectParticipantLanguageHelp": "Jika bahasa lawan bicara adalah Mandarin, Jepang, atau Inggris, bahasa setiap takarir dikenali dari teks asli. Bahasa target terjemahan tetap sesuai pilihan."
+    "translateDetectParticipantLanguageHelp": "Jika bahasa lawan bicara adalah Mandarin, Jepang, atau Inggris, bahasa setiap takarir dikenali dari teks asli. Bahasa target terjemahan tetap sesuai pilihan.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "Otomatis terautentikasi melalui akun Anda",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "Menunggu sesi sebelumnya berakhir. Klik untuk membatalkan.",
     "clickToCancel": "Klik untuk membatalkan",
     "whatIHear": "Yang saya dengar",
-    "audioSettings": "Pengaturan audio"
+    "audioSettings": "Pengaturan audio",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "Saya",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "Dalam rapat",
     "otherSideMeetingHint": "Menangkap audio sistem atau aplikasi",
     "otherSideBeside": "Di samping saya",
-    "otherSideBesideHint": "Dua orang, satu mikrofon"
+    "otherSideBesideHint": "Dua orang, satu mikrofon",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "Klik untuk mengonfigurasi bahasa",
@@ -1652,7 +1663,10 @@
     "quota": "Akun layanan sudah tidak punya saldo: {{detail}}",
     "text_model_unset": "Pilih model untuk terjemahan, atau ketik namanya, di “Bahasa dan susunan”.",
     "address_missing": "Masukkan alamat layanan yang kompatibel di “Akun dan kunci” sebelum memulai.",
-    "address_invalid": "Alamat layanan yang kompatibel tidak dapat digunakan: {{detail}}"
+    "address_invalid": "Alamat layanan yang kompatibel tidak dapat digunakan: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "Subtitle AED Translator",

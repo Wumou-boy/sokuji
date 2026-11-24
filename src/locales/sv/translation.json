@@ -351,7 +351,13 @@
     "voiceIHearSame": "Samma röst som motparten hör, så {{voice}} läser i stället.",
     "voiceCustom": "Anpassad röst",
     "translateDetectParticipantLanguage": "Identifiera automatiskt motpartens kinesiska, japanska och engelska",
-    "translateDetectParticipantLanguageHelp": "Om motpartens språk är kinesiska, japanska eller engelska identifieras varje undertextspråk från originalet. Det valda målspråket för översättningen förblir oförändrat."
+    "translateDetectParticipantLanguageHelp": "Om motpartens språk är kinesiska, japanska eller engelska identifieras varje undertextspråk från originalet. Det valda målspråket för översättningen förblir oförändrat.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "Automatiskt autentiserad via ditt konto",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "Väntar på att den föregående sessionen ska avslutas. Klicka för att avbryta.",
     "clickToCancel": "Klicka för att avbryta",
     "whatIHear": "Det jag hör",
-    "audioSettings": "Ljudinställningar"
+    "audioSettings": "Ljudinställningar",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "Jag",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "På ett möte",
     "otherSideMeetingHint": "Fångar systemljud eller en app",
     "otherSideBeside": "Bredvid mig",
-    "otherSideBesideHint": "Två personer vid en mikrofon"
+    "otherSideBesideHint": "Två personer vid en mikrofon",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "Klicka för att konfigurera språk",
@@ -1652,7 +1663,10 @@
     "quota": "Kontot hos tjänsten har inget saldo kvar: {{detail}}",
     "text_model_unset": "Välj en modell för översättningen, eller skriv dess namn, under ”Språk och uppsättning”.",
     "address_missing": "Ange den kompatibla tjänstens adress under ”Konton och nycklar” innan du startar.",
-    "address_invalid": "Den kompatibla tjänstens adress kan inte användas: {{detail}}"
+    "address_invalid": "Den kompatibla tjänstens adress kan inte användas: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "AED Translator-undertexter",
