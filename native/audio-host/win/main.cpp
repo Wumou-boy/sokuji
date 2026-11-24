@@ -245,6 +245,28 @@ static DWORD AppRootPid(DWORD pid, const ProcessTable& table) {
         if (!SameImage(ImageOf(up, table), image)) break;
         root = up;
     }
+
+    // New Teams renders through a WebView2 audio service. Its session PID is
+    // an msedgewebview2.exe child, while the process-loopback target needs the
+    // Teams root so it survives WebView2 utility-process replacement. Only
+    // promote WebView2 roots whose live parent chain reaches a known Teams
+    // executable; never promote ordinary Edge/Chrome trees or arbitrary apps.
+    if (SameImage(ImageOf(root, table), "msedgewebview2.exe")) {
+        DWORD ancestor = root;
+        for (int hop = 0; hop < kMaxParentHops; hop++) {
+            auto parent = table.parent.find(ancestor);
+            if (parent == table.parent.end()) break;
+            const DWORD up = parent->second;
+            if (up <= 4 || up == ancestor) break;
+            const std::string parentImage = ImageOf(up, table);
+            if (SameImage(parentImage, "ms-teams.exe")
+                || SameImage(parentImage, "msteams.exe")
+                || SameImage(parentImage, "teams.exe")) {
+                return up;
+            }
+            ancestor = up;
+        }
+    }
     return root;
 }
 
@@ -294,9 +316,10 @@ struct Entry {
     std::vector<std::string> windows;
 };
 
-// Enumerate processes that hold an audio session on the default render endpoint.
-// Chosen over window enumeration because it yields a short, relevant list and
-// tells us which app is actually playing. Note this only sees the *current*
+// Enumerate processes with sessions on any active render endpoint. Meeting
+// apps can select a communications headset distinct from the default console
+// endpoint; process-loopback capture is process-scoped, so the endpoint is
+// needed only to discover session owners. Note this only sees the *current*
 // Windows session, which is correct: Sokuji runs in the user's session.
 static int ListSources() {
     IMMDeviceEnumerator* en = nullptr;
@@ -308,17 +331,9 @@ static int ListSources() {
         return 0;
     }
 
-    IMMDevice* dev = nullptr;
-    if (FAILED(en->GetDefaultAudioEndpoint(eRender, eConsole, &dev))) {
+    IMMDeviceCollection* devices = nullptr;
+    if (FAILED(en->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &devices))) {
         printf("[]");
-        en->Release();
-        return 0;
-    }
-
-    IAudioSessionManager2* mgr = nullptr;
-    if (FAILED(dev->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, nullptr, (void**)&mgr))) {
-        printf("[]");
-        dev->Release();
         en->Release();
         return 0;
     }
@@ -339,50 +354,51 @@ static int ListSources() {
     }
 
     std::vector<Entry> entries;
-    IAudioSessionEnumerator* sessions = nullptr;
-    int count = 0;
-    if (SUCCEEDED(mgr->GetSessionEnumerator(&sessions))) {
-        sessions->GetCount(&count);
-    }
-
     DWORD self = GetCurrentProcessId();
-    for (int i = 0; i < count; i++) {
-        IAudioSessionControl* ctl = nullptr;
-        if (FAILED(sessions->GetSession(i, &ctl))) continue;
-
-        IAudioSessionControl2* ctl2 = nullptr;
-        if (SUCCEEDED(ctl->QueryInterface(__uuidof(IAudioSessionControl2), (void**)&ctl2))) {
-            DWORD pid = 0;
-            ctl2->GetProcessId(&pid);
-            // pid 0 is the system-wide session; capturing ourselves would loop.
-            if (pid != 0 && pid != self && ctl2->IsSystemSoundsSession() != S_OK) {
-                AudioSessionState st = AudioSessionStateInactive;
-                ctl->GetState(&st);
-
-                // Report the application, not the process that opened the
-                // stream: see AppRootPid. This also collapses an app that holds
-                // several sessions into the one row a user expects.
-                const DWORD root = AppRootPid(pid, procs);
-
-                Entry e{};
-                e.pid = root;
-                e.exe = ImageOf(root, procs);
-                e.active = (st == AudioSessionStateActive);
-                e.label = FriendlyName(root, procs);
-                auto windows = windowsByRoot.find(root);
-                if (windows != windowsByRoot.end()) e.windows = windows->second;
-
-                bool dup = false;
-                for (auto& x : entries) {
-                    // Merged rows are active when any of their sessions is, or
-                    // an app playing through its second session reads as idle.
-                    if (x.pid == root) { x.active = x.active || e.active; dup = true; break; }
+    UINT deviceCount = 0;
+    devices->GetCount(&deviceCount);
+    for (UINT d = 0; d < deviceCount; d++) {
+        IMMDevice* dev = nullptr;
+        if (FAILED(devices->Item(d, &dev))) continue;
+        IAudioSessionManager2* mgr = nullptr;
+        if (SUCCEEDED(dev->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, nullptr, (void**)&mgr))) {
+            IAudioSessionEnumerator* sessions = nullptr;
+            int count = 0;
+            if (SUCCEEDED(mgr->GetSessionEnumerator(&sessions))) sessions->GetCount(&count);
+            for (int i = 0; i < count; i++) {
+                IAudioSessionControl* ctl = nullptr;
+                if (FAILED(sessions->GetSession(i, &ctl))) continue;
+                IAudioSessionControl2* ctl2 = nullptr;
+                if (SUCCEEDED(ctl->QueryInterface(__uuidof(IAudioSessionControl2), (void**)&ctl2))) {
+                    DWORD pid = 0;
+                    ctl2->GetProcessId(&pid);
+                    // pid 0 is the system-wide session; capturing ourselves would loop.
+                    if (pid != 0 && pid != self && ctl2->IsSystemSoundsSession() != S_OK) {
+                        AudioSessionState st = AudioSessionStateInactive;
+                        ctl->GetState(&st);
+                        const DWORD root = AppRootPid(pid, procs);
+                        Entry e{};
+                        e.pid = root;
+                        e.exe = ImageOf(root, procs);
+                        e.active = (st == AudioSessionStateActive);
+                        e.label = FriendlyName(root, procs);
+                        auto windows = windowsByRoot.find(root);
+                        if (windows != windowsByRoot.end()) e.windows = windows->second;
+                        bool dup = false;
+                        for (auto& x : entries) {
+                            // Sessions on multiple endpoints still produce one row.
+                            if (x.pid == root) { x.active = x.active || e.active; dup = true; break; }
+                        }
+                        if (!dup) entries.push_back(e);
+                    }
+                    ctl2->Release();
                 }
-                if (!dup) entries.push_back(e);
+                ctl->Release();
             }
-            ctl2->Release();
+            if (sessions) sessions->Release();
+            mgr->Release();
         }
-        ctl->Release();
+        dev->Release();
     }
 
     // Two instances of one application - a second Chrome profile, or Chrome
@@ -407,9 +423,7 @@ static int ListSources() {
     printf("]");
     fflush(stdout);
 
-    if (sessions) sessions->Release();
-    mgr->Release();
-    dev->Release();
+    devices->Release();
     en->Release();
     return 0;
 }

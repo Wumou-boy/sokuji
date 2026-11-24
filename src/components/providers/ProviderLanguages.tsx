@@ -1,4 +1,4 @@
-import { useRunParticipantSpeech } from '../../app/useRun';
+import { useRunOutgoingTarget, useRunParticipantSpeech, setRunOutgoingTarget } from '../../app/useRun';
 import { useMemo } from 'react';
 import { useAnalytics } from '../../lib/analytics';
 import { usePlan, useStageUnit } from '../../lib/plan/fromStores';
@@ -47,6 +47,7 @@ export function ProviderLanguages({ providers, disabled, sentence, heading, rece
   const speechUnit = useStageUnit('speech');
   const transcribing = useStageProvider(providers, 'transcription');
   const selection = useProviderEntry(transcription?.provider ?? transcribing);
+  const incomingLanguage = useProviderStore((st) => st.incomingLanguage);
   const legs = useProviderStore((st) => st.legs);
   const speech = useProviderStore((st) => st.speech);
   // What `speechFromStores` reads for Translation I hear, subscribed so "I hear" follows the switch, the mode and the source.
@@ -57,6 +58,7 @@ export function ProviderLanguages({ providers, disabled, sentence, heading, rece
   useAudioStore((st) => st.participantCaptureWidened);
   // As the Speech block reads it: a run that speaks the other side follows the switch live (#595), one that does not stays off.
   const runSpeech = useRunParticipantSpeech();
+  const liveOutgoingTarget = useRunOutgoingTarget();
   const found = usePlan();
   // The plan's languages, each list from the provider that answers it.
   const offer = useMemo(() => (found.state === 'ready' ? planLanguages(found) : null), [found]);
@@ -76,10 +78,10 @@ export function ProviderLanguages({ providers, disabled, sentence, heading, rece
     () => (shownProvider && offer ? ({ ...shownProvider, ...offer } as typeof shownProvider) : shownProvider),
     [shownProvider, offer],
   );
+  const { setPair } = useProviderStore.getState();
   if (!transcription || !speechUnit || !selection?.entry || !shown) return null;
   const { provider, entry } = selection;
   const speaking = speechUnit.capabilities;
-  const { setPair } = useProviderStore.getState();
 
   return (
     <LanguagePairSection
@@ -88,6 +90,10 @@ export function ProviderLanguages({ providers, disabled, sentence, heading, rece
       speech={speaking.speech}
       spoken={spoken}
       pair={entry.pair}
+      incomingLanguage={incomingLanguage ?? entry.pair.target}
+      onIncomingLanguageChange={(language) => useProviderStore.getState().setIncomingLanguage(language)}
+      liveOutgoingTarget={liveOutgoingTarget}
+      onLiveOutgoingTargetChange={setRunOutgoingTarget}
       disabled={disabled}
       heading={heading}
       receive={receive}

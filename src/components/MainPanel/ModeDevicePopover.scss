@@ -106,6 +106,7 @@
 
     &--off { color: vars.$text-muted; font-style: italic; }
     &--missing { color: tk.$color-recommended; font-style: italic; }
+    &--warning { color: tk.$color-recommended; }
   }
 
   // Per-row mute toggle button — sits to the right of the expand region.
@@ -171,6 +172,32 @@
     padding: 4px 0 6px;
     border-top: 1px solid vars.$border-subtle;
   }
+
+  &__picker-hint {
+    padding: 5px 14px 4px 36px;
+    color: vars.$text-muted;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  &__refresh {
+    width: 100%;
+    padding: 6px 14px 6px 36px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    background: transparent;
+    color: tk.$color-primary;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: color-mix(in srgb, vars.$overlay-fg 5%, transparent); }
+    &:disabled { opacity: 0.65; cursor: default; }
+  }
+
+  &__refresh-icon--spinning { animation: mode-device-refresh-spin 0.8s linear infinite; }
 
   &__device-row {
     width: 100%;
@@ -239,3 +266,5 @@
     }
   }
 }
+
+@keyframes mode-device-refresh-spin { to { transform: rotate(360deg); } }

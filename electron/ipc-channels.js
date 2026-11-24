@@ -47,6 +47,7 @@ export const INVOKE_CHANNELS = [
   // System audio capture
   'supports-system-audio-capture',
   'list-system-audio-sources',
+  'resolve-auto-system-audio-source',
   'connect-system-audio-source',
   'disconnect-system-audio-source',
   // Per-application capture (Windows): start/stop the capture helper

@@ -3,6 +3,7 @@ import { isLoopbackPlatform, isMacOS } from '../../utils/environment';
 
 /** Whole-system capture - the participant source used when nothing else is chosen. */
 export const SYSTEM_PARTICIPANT_SOURCE_ID = 'desktop-audio-loopback';
+export const AUTO_MEETING_PARTICIPANT_SOURCE_ID = 'auto-meeting-audio';
 
 /**
  * Resolve the participant source id from a stored device selection, the way
@@ -28,7 +29,8 @@ export function resolveParticipantSourceId(
  * on Linux.
  */
 export function isApplicationSource(deviceId: string | null | undefined): boolean {
-  return typeof deviceId === 'string' && deviceId.startsWith('app:');
+  return typeof deviceId === 'string'
+    && (deviceId.startsWith('app:') || deviceId === AUTO_MEETING_PARTICIPANT_SOURCE_ID);
 }
 
 /**

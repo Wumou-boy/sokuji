@@ -18,10 +18,19 @@ import useLogStore from '../stores/logStore';
 import { presentProviders } from '../providers/registry';
 import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, normalizeBailianWorkspaceId } from '../providers/qwen_livetranslate/endpoints';
 import { QWEN_MODEL, type QwenSettings } from '../providers/qwen_livetranslate/settings';
-import { isLoopbackInput, isVirtualMic } from '../utils/audioDevices';
-import { openSystemAudio } from '../lib/audio/capture/systemAudio';
+import { isLoopbackInput, isVirtualMic, isVirtualSpeaker } from '../utils/audioDevices';
+import { getEnvironment } from '../utils/environment';
+import { getAppVersion } from '../utils/conversationExport';
+import { createAppRouting } from '../lib/audio/appAudio';
+import { systemAudioSettings } from '../lib/audio/appCapture';
+import { routesFor } from '../lib/audio/routes';
+import { AUTO_MEETING_SOURCE, openSystemAudio } from '../lib/audio/capture/systemAudio';
+import { createLevelMeter } from '../lib/audio/levelMeter';
 import { base64ToPcm } from '../lib/contract/pcm64';
 import { SAMPLE_RATE } from '../lib/contract/adapter';
+import { openMic } from '../lib/audio/capture/mic';
+import { micSettings } from '../lib/audio/appCapture';
+import { createMeetingEchoReduction } from '../lib/audio/capture/meetingEcho';
 import type { OpenSource } from '../lib/session/source';
 import { loadQwenVoiceProfiles } from '../providers/qwen_livetranslate/voiceProfileStorage';
 import { runQwenVoiceBenchmark } from '../providers/qwen_livetranslate/voiceBenchmark';
@@ -30,17 +39,34 @@ import { billingMonth, remainingQuota, useUsageStore } from '../lib/usage/ledger
 import { useSessionTokenStore } from '../lib/usage/sessionTokens';
 
 type ElectronBridge = Pick<Window['electron'], 'invoke' | 'receive' | 'removeListener'>;
-type Command = 'status' | 'view.set-mode' | 'audio.inputs' | 'audio.system-check' | 'session.start' | 'session.stop' | 'logs.enable' | 'logs.list' | 'captions.list'
+type Command = 'status' | 'view.set-mode' | 'audio.inputs' | 'audio.system-check' | 'audio.echo-check' | 'session.start' | 'session.stop' | 'logs.enable' | 'logs.list' | 'captions.list'
   | 'provider.configure-qwen-beijing' | 'provider.configure-qwen-workspace' | 'provider.configure-qwen-defaults' | 'credentials.status' | 'notes.check'
   | 'voice.benchmark' | 'face-to-face.start' | 'face-to-face.stop' | 'face-to-face.replay' | 'usage.summary';
 type Request = { id: string; command: Command; args?: unknown };
 type Reply = { id: string; result: { ok: true; data: unknown } | { ok: false; error: { code: string; message: string } } };
+
+const AUDIO_LOG_FIELDS: Record<string, readonly string[]> = {
+  'audio.echo.warning': ['cause', 'lagMs', 'rho'],
+  'audio.capture.mic': ['requested', 'applied'],
+  'audio.capture.participant': ['backend'],
+};
+
+const STREAM_LOG_EVENTS = new Set([
+  'input_audio_buffer.speech_started',
+  'input_audio_buffer.speech_stopped',
+  'conversation.item.input_audio_transcription.delta',
+  'conversation.item.input_audio_transcription.completed',
+  'response.text.delta',
+  'response.audio_transcript.delta',
+]);
 
 const LOG_EVENTS = new Set([
   'caption.translation.request',
   'caption.translation.response',
   'caption.translation.completed',
   'caption.translation.failed',
+  ...Object.keys(AUDIO_LOG_FIELDS),
+  ...STREAM_LOG_EVENTS,
 ]);
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -56,7 +82,7 @@ function boundedLimit(value: unknown, fallback = 20): number {
 function requestOf(value: unknown): Request | null {
   if (!isObject(value) || typeof value.id !== 'string' || value.id.length < 1 || value.id.length > 128) return null;
   const command = value.command;
-  if (command !== 'status' && command !== 'view.set-mode' && command !== 'audio.inputs' && command !== 'audio.system-check' && command !== 'session.start' && command !== 'session.stop'
+  if (command !== 'status' && command !== 'view.set-mode' && command !== 'audio.inputs' && command !== 'audio.system-check' && command !== 'audio.echo-check' && command !== 'session.start' && command !== 'session.stop'
     && command !== 'logs.enable' && command !== 'logs.list' && command !== 'captions.list'
     && command !== 'provider.configure-qwen-beijing' && command !== 'provider.configure-qwen-workspace'
     && command !== 'provider.configure-qwen-defaults' && command !== 'credentials.status' && command !== 'notes.check'
@@ -131,10 +157,12 @@ function captionsOf(legs: readonly Leg[], limit: number, includeText: boolean): 
 function safeLogData(type: string, raw: unknown): Record<string, unknown> {
   const source = isObject(raw) ? raw : {};
   const safe: Record<string, unknown> = {};
-  for (const key of ['request', 'elapsedMs', 'status', 'processingMs', 'kind', 'sourceLanguage', 'model', 'deadlineMs']) {
+  const keys = AUDIO_LOG_FIELDS[type] ?? ['request', 'elapsedMs', 'status', 'processingMs', 'kind', 'sourceLanguage', 'model', 'deadlineMs'];
+  for (const key of keys) {
     const value = source[key];
     if (typeof value === 'string' && value.length <= 80) safe[key] = value;
     else if (typeof value === 'number' && Number.isFinite(value)) safe[key] = value;
+    else if (key === 'applied' && typeof value === 'boolean') safe[key] = value;
   }
   return { type, data: safe };
 }
@@ -148,7 +176,13 @@ function logsOf(limit: number): unknown[] {
     result.push({
       timestamp: entry.timestamp,
       ...(entry.clientId ? { leg: entry.clientId } : {}),
-      events: entry.events.filter((event) => LOG_EVENTS.has(event.type)).map((event) => safeLogData(event.type, event.data)),
+      events: entry.events.filter((event) => LOG_EVENTS.has(event.type)).map((event) => {
+        if (STREAM_LOG_EVENTS.has(event.type)) {
+          // Match the service's event sequence without exposing a caption, an item ID or PCM.
+          return { type: event.type, data: typeof event.atMs === 'number' ? { atMs: event.atMs } : {} };
+        }
+        return safeLogData(event.type, event.data);
+      }),
     });
   }
   return result;
@@ -169,6 +203,7 @@ export function attachAgentControl(
     const notesService = notesServiceOf(useLineUpStore.getState().lineUp);
     const readiness = provider ? useProviderStore.getState().readiness[provider] : undefined;
     const audioMode = useAudioStore.getState().mode;
+    const run = session.runner.state.getState();
     const subtitle = session.subtitle.get();
     const { mode: appMode, phase: faceToFacePhase, languages: faceToFaceLanguages } = useFaceToFaceStore.getState();
     const { settingsLoaded, notesBailianModel } = useSettingsStore.getState();
@@ -185,6 +220,7 @@ export function attachAgentControl(
       ? (subtitle.idle.code ?? 'provider_unready')
       : subtitle.idle.kind === 'failed' ? subtitle.idle.notice.code : 'session_not_startable';
     return {
+      appVersion: getAppVersion(),
       appReady,
       appMode,
       faceToFacePhase,
@@ -197,6 +233,7 @@ export function attachAgentControl(
       notesService,
       ...(notesService === BAILIAN_NOTES ? { notesModel: notesBailianModel } : {}),
       audioMode,
+      ...(run.phase === 'running' && run.outgoingTarget ? { outgoingTarget: run.outgoingTarget } : {}),
       incomingOnly,
       translatedSpeechOutputEnabled: !speechOutputOff,
       readiness: readiness?.state ?? 'unknown',
@@ -244,10 +281,20 @@ export function attachAgentControl(
             return;
           }
           case 'audio.inputs': {
-            const { audioInputDevices, selectedInputDevice, selectedParticipantSource, devicesLoaded, isMicMuted } = useAudioStore.getState();
-            const browserDevices = await navigator.mediaDevices?.enumerateDevices().catch(() => []) ?? [];
+            const [browserDevices, available] = await Promise.all([
+              navigator.mediaDevices?.enumerateDevices().catch(() => []) ?? [],
+              electron.invoke('list-system-audio-sources').catch(() => null),
+            ]);
+            const {
+              audioInputDevices, audioMonitorDevices, selectedInputDevice, selectedParticipantSource,
+              autoMeetingResolvedSource, participantSources, participantCaptureWidened, devicesLoaded, isMicMuted, echoCancellationMode,
+            } = useAudioStore.getState();
+            const candidates: unknown[] = Array.isArray(available) ? available : participantSources;
             const systemDefault = browserDevices.find((device) => device.kind === 'audioinput' && device.deviceId === 'default');
             const systemOutput = browserDevices.find((device) => device.kind === 'audiooutput' && device.deviceId === 'default');
+            const routing = createAppRouting(getEnvironment()).get();
+            const routes = routesFor(routing, false);
+            const virtualOutput = audioMonitorDevices.find((device) => device.deviceId === routing.sinks.virtual);
             const describe = (device: { label: string; isVirtual?: boolean }) => ({
               label: device.label.slice(0, 180),
               virtual: Boolean(device.isVirtual || isVirtualMic(device) || isLoopbackInput(device)),
@@ -255,12 +302,25 @@ export function attachAgentControl(
             reply(request.id, { ok: true, data: {
               devicesLoaded,
               meetingMicMuted: isMicMuted,
+              microphoneEchoMode: echoCancellationMode,
               meetingInput: selectedInputDevice ? describe(selectedInputDevice) : null,
               systemDefault: systemDefault?.label ? describe(systemDefault) : null,
-              systemOutput: systemOutput?.label ? describe(systemOutput) : null,
-              participantSource: selectedParticipantSource
+              systemOutput: systemOutput?.label ? { label: systemOutput.label.slice(0, 180), virtual: isVirtualSpeaker(systemOutput) } : null,
+              virtualOutput: virtualOutput ? { label: virtualOutput.label.slice(0, 180) } : null,
+              participantSource: selectedParticipantSource?.deviceId === AUTO_MEETING_SOURCE
+                ? { scope: 'auto', label: selectedParticipantSource.label.slice(0, 180), resolvedApp: autoMeetingResolvedSource?.label.slice(0, 180) ?? null }
+                : selectedParticipantSource
                 ? { scope: selectedParticipantSource.deviceId.startsWith('app:') ? 'application' : 'system', label: selectedParticipantSource.label.slice(0, 180) }
                 : { scope: 'system' },
+              participantApplications: candidates.flatMap((candidate) => isObject(candidate)
+                && typeof candidate.deviceId === 'string' && candidate.deviceId.startsWith('app:') && typeof candidate.label === 'string'
+                ? [candidate.label.slice(0, 180)] : []),
+              participantCaptureWidened,
+              speechRoutes: {
+                outgoingToMeeting: routes.some(({ from, to }) => from === 'speaker' && to === 'virtual'),
+                outgoingToLocalMonitor: routes.some(({ from, to }) => from === 'speaker' && to === 'me'),
+                incomingToLocalPlayback: routes.some(({ from, to }) => from === 'participant' && to === 'them'),
+              },
               inputs: audioInputDevices.map(describe),
             } });
             return;
@@ -271,24 +331,161 @@ export function attachAgentControl(
               reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Run this check while Online Meeting is idle.' } });
               return;
             }
-            const selected = useAudioStore.getState().selectedParticipantSource?.deviceId ?? 'desktop-audio-loopback';
+            const auto = isObject(request.args) && request.args.auto === true;
+            const selected = auto ? AUTO_MEETING_SOURCE : (useAudioStore.getState().selectedParticipantSource?.deviceId ?? 'desktop-audio-loopback');
             checkingSystemAudio = true;
             try {
               let backend: string | undefined;
+              let resolvedApp: string | undefined;
+              let captureStarted = () => {};
+              const ready = new Promise<void>((resolve) => { captureStarted = resolve; });
+              const signal = AbortSignal.timeout(12_000);
+              const level = auto ? createLevelMeter() : null;
+              let peakLevel = 0;
               const source = await openSystemAudio({
                 sourceId: () => selected,
-                muted: () => true,
+                muted: () => level === null,
                 subscribe: () => () => {},
                 audioSeen: () => {},
                 widened: () => {},
-                captureStarted: (started) => { backend = started; },
-              }, AbortSignal.timeout(12_000));
-              await source.stop();
-              reply(request.id, { ok: true, data: { captureOpened: true, ...(backend ? { backend } : {}) } });
+                meetingOutput: systemAudioSettings().meetingOutput,
+                captureStarted: (started) => { backend = started; captureStarted(); },
+                autoResolved: (source) => { if (source) resolvedApp = source.label.slice(0, 180); },
+              }, signal);
+              const offLevel = level ? source.onPcm((pcm) => {
+                level.push(pcm);
+                peakLevel = Math.max(peakLevel, level.readPeak());
+              }) : undefined;
+              try {
+                if (selected === AUTO_MEETING_SOURCE) {
+                  await new Promise<void>((resolve, reject) => {
+                    signal.throwIfAborted();
+                    const timeout = () => reject(new Error('No audible meeting application was detected within the audio check window.'));
+                    signal.addEventListener('abort', timeout, { once: true });
+                    void ready.then(() => {
+                      signal.removeEventListener('abort', timeout);
+                      resolve();
+                    });
+                  });
+                }
+                if (level) await new Promise((resolve) => setTimeout(resolve, 300));
+              } finally {
+                offLevel?.();
+                await source.stop();
+              }
+              reply(request.id, { ok: true, data: { captureOpened: true, ...(backend ? { backend } : {}), ...(resolvedApp ? { resolvedApp } : {}), ...(level ? { peakLevel } : {}) } });
             } catch (error) {
               const message = error instanceof Error ? error.message.slice(0, 300) : 'The participant audio source could not be opened.';
               reply(request.id, { ok: false, error: { code: 'system_audio_check_failed', message } });
             } finally {
+              checkingSystemAudio = false;
+            }
+            return;
+          }
+          case 'audio.echo-check': {
+            const { mode, phase } = useFaceToFaceStore.getState();
+            if (checkingSystemAudio || mode !== 'meeting' || phase !== 'idle' || session.runner.state.getState().phase !== 'idle') {
+              reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Run this check while Online Meeting is idle.' } });
+              return;
+            }
+            const requestedLabel = isObject(request.args) && typeof request.args.micLabel === 'string' ? request.args.micLabel : undefined;
+            const audioState = useAudioStore.getState();
+            const chosenMic = requestedLabel
+              ? audioState.audioInputDevices.find((device) => device.label === requestedLabel)
+              : audioState.selectedInputDevice;
+            if (!chosenMic) {
+              reply(request.id, { ok: false, error: { code: 'mic_not_found', message: requestedLabel ? 'The exact microphone label is not available.' : 'No configured microphone is available.' } });
+              return;
+            }
+            checkingSystemAudio = true;
+            let micSource: Awaited<ReturnType<typeof openMic>> | undefined;
+            let systemSource: Awaited<ReturnType<typeof openSystemAudio>> | undefined;
+            try {
+              const signal = AbortSignal.timeout(20_000);
+              const baseSettings = micSettings();
+              let configuredEchoCancellation: unknown;
+              let appliedEchoCancellation: unknown;
+              const mic = await openMic({
+                ...baseSettings,
+                deviceId: () => chosenMic.deviceId,
+                deviceLabel: () => chosenMic.label,
+                // This one-shot diagnostic must never silently move to another mic.
+                markUnusable: () => { throw new Error('The selected microphone could not be opened; no fallback microphone was used.'); },
+                muted: () => false,
+                captureStarted: (requested, applied) => {
+                  configuredEchoCancellation = requested;
+                  appliedEchoCancellation = applied;
+                },
+              }, signal);
+              micSource = mic;
+              let rejectMicEnded!: (error: Error) => void;
+              const micEnded = new Promise<never>((_, reject) => { rejectMicEnded = reject; });
+              const offMicEnded = mic.onEnded((reason) => rejectMicEnded(new Error(reason || 'The selected microphone stopped.')));
+              let resolvedApp: string | undefined;
+              let captureStarted!: () => void;
+              const ready = new Promise<void>((resolve) => { captureStarted = resolve; });
+              systemSource = await openSystemAudio({
+                sourceId: () => AUTO_MEETING_SOURCE,
+                muted: () => false,
+                subscribe: () => () => {},
+                audioSeen: () => {},
+                widened: () => {},
+                meetingOutput: systemAudioSettings().meetingOutput,
+                captureStarted: () => captureStarted(),
+                autoResolved: (source) => { if (source) resolvedApp = source.label.slice(0, 180); },
+              }, signal);
+              await Promise.race([ready, new Promise<never>((_, reject) => {
+                signal.addEventListener('abort', () => reject(new Error('No audible meeting application was detected within the echo-check window.')), { once: true });
+              })]);
+
+              const reduction = createMeetingEchoReduction();
+              let referenceEnergy = 0;
+              let referenceSamples = 0;
+              let beforeEnergy = 0;
+              let afterEnergy = 0;
+              let micSamples = 0;
+              let correlatedChunks = 0;
+              const offReference = systemSource.onPcm((pcm) => {
+                reduction.pushReference(pcm);
+                for (const sample of pcm) referenceEnergy += sample * sample;
+                referenceSamples += pcm.length;
+              });
+              const offMic = mic.onPcm((pcm) => {
+                const reduced = reduction.reduce(pcm);
+                if (reduced !== pcm) correlatedChunks += 1;
+                for (let i = 0; i < pcm.length; i += 1) {
+                  beforeEnergy += pcm[i] * pcm[i];
+                  afterEnergy += reduced[i] * reduced[i];
+                }
+                micSamples += pcm.length;
+              });
+              try {
+                await Promise.race([new Promise<void>((resolve, reject) => {
+                  const timer = setTimeout(resolve, 5_500);
+                  signal.addEventListener('abort', () => { clearTimeout(timer); reject(new Error('Echo check exceeded its time limit.')); }, { once: true });
+                }), micEnded]);
+              } finally {
+                offReference();
+                offMic();
+                offMicEnded();
+              }
+              const rms = (energy: number, count: number) => count ? Math.sqrt(energy / count) / 32768 : 0;
+              reply(request.id, { ok: true, data: {
+                selectedApp: resolvedApp ?? null,
+                microphone: chosenMic.label.slice(0, 180),
+                configuredAec: configuredEchoCancellation ?? audioState.echoCancellationMode,
+                appliedAec: appliedEchoCancellation ?? null,
+                referenceRms: rms(referenceEnergy, referenceSamples),
+                micRmsBeforeReduction: rms(beforeEnergy, micSamples),
+                micRmsAfterReduction: rms(afterEnergy, micSamples),
+                correlatedChunks,
+                durationMs: 5_500,
+              } });
+            } catch (error) {
+              const message = error instanceof Error ? error.message.slice(0, 240) : 'The local acoustic echo check failed.';
+              reply(request.id, { ok: false, error: { code: 'echo_check_failed', message } });
+            } finally {
+              await Promise.allSettled([micSource?.stop(), systemSource?.stop()].filter(Boolean) as Promise<unknown>[]);
               checkingSystemAudio = false;
             }
             return;

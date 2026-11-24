@@ -50,6 +50,7 @@ export const NOTICE_WORDS: Readonly<Record<string, string>> = {
   no_legs: 'Choose what to translate before starting.',
   turn_mode_unsupported: "This provider doesn't offer the chosen talk mode.",
   participant_source_unavailable: "Translating other participants isn't available here.",
+  auto_meeting_not_detected: 'Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.',
   participant_unsupported: "This provider can't translate the other participants for this language pair.",
   credentials_missing: 'Enter your API key in Settings before starting.',
   not_ready: 'The provider is not ready: {{detail}}',
@@ -60,6 +61,7 @@ export const NOTICE_WORDS: Readonly<Record<string, string>> = {
   leg_closed: 'The provider ended the session.',
   source_ended: 'The audio source went away (unplugged, closed or stopped).',
   still_stopping: 'The last session is still stopping; try again in a moment.',
+  outgoing_language_switch_failed: 'Could not change the outgoing language. The previous language is still selected.',
   connection_restored: 'Connection lost and restored',
   // A line-up that cannot run (the composer's refusals): the stage and the service by the line-up page's names.
   lineup_incomplete: 'Choose a service for {{stage}} first.',
@@ -97,6 +99,7 @@ export const NOTICE_WORDS: Readonly<Record<string, string>> = {
   app_capture_monitor_missing: "The app capture didn't start, so all system audio is being translated instead.",
   silent_no_permission: 'No audio has come through from the selected source yet. If it is playing and nothing is translated, allow AED Translator under System Settings > Privacy & Security > System Audio Recording Only (macOS), then start the session again.',
   loopback_denied: "Other's audio requires Screen Recording permission to capture system audio.",
+  loopback_meeting_output: 'Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source.',
   // The microphone's device changing under it (#593).
   mic_lost_using_other: 'The microphone “{{lost}}” went away, so “{{device}}” is being used instead.',
   mic_lost_waiting: 'The microphone went away. Translation of your speech resumes when a microphone is connected.',

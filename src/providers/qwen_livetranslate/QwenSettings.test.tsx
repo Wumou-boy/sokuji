@@ -94,9 +94,22 @@ describe('QwenSettingsView (spec §4, §7)', () => {
     });
     expect(library[0].recordingPrompt?.text).toContain('The first samples should arrive on Wednesday.');
     expect(library[0].useMeetingMicrophone).toBe(true);
+    expect(library[0].createAction).toEqual({ title: 'Your own voice (fixed)', buttonLabel: 'Record voice…' });
     expect(library[1].recordingPrompt).toBeUndefined();
     await act(async () => { await library[0].onRecord!(new Float32Array(16_000 * 10), 16_000); });
     expect(library[0].createReview?.explicitClose).toBe(true);
+  });
+
+  it.each(['auto', BAILIAN_WORKSPACE_CONNECTION] as const)('shows fixed voice guidance for %s without enabling enrollment', (connection) => {
+    env.electron = true;
+    render(<QwenSettingsView {...props({
+      settings: { ...QWEN_DEFAULTS, connection },
+      models: [{ id: 'cn' }],
+      account: { credentials: { apiKey: 'example-key' }, auth: { signedIn: false, getToken: async () => null } },
+    })} />);
+    expect(library[0].createAction?.title).toBe('Your own voice (fixed)');
+    expect(library[0].capability.importModes).toEqual([]);
+    expect(library[0].manageNote).toMatch(/Bailian shared Beijing connection/);
   });
 
   it("has no vocabulary of its own: the preferred translations are the app's word list now", () => {

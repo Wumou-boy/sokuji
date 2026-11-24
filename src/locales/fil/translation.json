@@ -351,7 +351,13 @@
     "voiceIHearSame": "Kapareho ng boses na naririnig ng kabilang panig, kaya {{voice}} ang babasa sa halip.",
     "voiceCustom": "Custom na boses",
     "translateDetectParticipantLanguage": "Awtomatikong tukuyin ang Chinese, Japanese, at English ng kausap",
-    "translateDetectParticipantLanguageHelp": "Kapag Chinese, Japanese, o English ang wika ng kausap, tukuyin mula sa orihinal ang wika ng bawat caption. Mananatili ang napiling target na wika ng salin."
+    "translateDetectParticipantLanguageHelp": "Kapag Chinese, Japanese, o English ang wika ng kausap, tukuyin mula sa orihinal ang wika ng bawat caption. Mananatili ang napiling target na wika ng salin.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "Awtomatikong na-authenticate sa pamamagitan ng iyong account",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "Hinihintay na matapos ang nakaraang session. I-click upang kanselahin.",
     "clickToCancel": "I-click upang kanselahin",
     "whatIHear": "Ang naririnig ko",
-    "audioSettings": "Mga setting ng audio"
+    "audioSettings": "Mga setting ng audio",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "Ako",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "Nasa meeting",
     "otherSideMeetingHint": "Kinukuha ang audio ng system o ng isang app",
     "otherSideBeside": "Katabi ko",
-    "otherSideBesideHint": "Dalawang tao, iisang mikropono"
+    "otherSideBesideHint": "Dalawang tao, iisang mikropono",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "I-click upang i-configure ang mga wika",
@@ -1652,7 +1663,10 @@
     "quota": "Wala nang credit ang account sa serbisyo: {{detail}}",
     "text_model_unset": "Pumili ng modelo para sa pagsasalin, o i-type ang pangalan nito, sa “Mga wika at line-up”.",
     "address_missing": "Ilagay ang address ng compatible na serbisyo sa “Mga account at key” bago magsimula.",
-    "address_invalid": "Hindi magagamit ang address ng compatible na serbisyo: {{detail}}"
+    "address_invalid": "Hindi magagamit ang address ng compatible na serbisyo: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "Mga subtitle ng AED Translator",

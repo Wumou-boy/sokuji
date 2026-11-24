@@ -110,6 +110,10 @@ describe('agent control transport', () => {
       .resolves.toEqual({ ok: true, data: { command: 'captions.list', args: { limit: 100, includeText: true } } });
     await expect(agentControlCommunicate({ profileDir, command: 'usage.summary', args: { month: '2026-11' } }))
       .resolves.toEqual({ ok: true, data: { command: 'usage.summary', args: { month: '2026-11' } } });
+    await expect(agentControlCommunicate({ profileDir, command: 'audio.echo-check', args: { micLabel: 'Realtek Microphone' } }))
+      .resolves.toEqual({ ok: true, data: { command: 'audio.echo-check', args: { micLabel: 'Realtek Microphone' } } });
+    await expect(agentControlCommunicate({ profileDir, command: 'audio.echo-check', args: { micLabel: 'Realtek Microphone', deviceId: 'other' } }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
   });
 
   it.skipIf(!isWindows)('allows one credential only for the explicit Bailian configuration command', async () => {

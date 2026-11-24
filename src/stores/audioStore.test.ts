@@ -351,6 +351,20 @@ describe('audioStore - participant source selection', () => {
 
     expect(useAudioStore.getState().participantSources).toEqual([]);
   });
+
+  it('refreshParticipantSources updates only the participant source list', async () => {
+    const system = { ...DEFAULT_PARTICIPANT_SOURCE };
+    const app: AudioDevice = { deviceId: 'app:pid:205', label: 'Meeting app', appKey: 'meeting.exe' };
+    useAudioStore.setState({ isMicMuted: true, isMonitorMuted: false, isParticipantMuted: true });
+    mockListSystemAudioSources.mockResolvedValueOnce([system, app]);
+
+    await useAudioStore.getState().refreshParticipantSources();
+
+    expect(mockListAudioDevices).not.toHaveBeenCalled();
+    expect(useAudioStore.getState().participantSources.map((source) => source.deviceId))
+      .toEqual([system.deviceId, app.deviceId]);
+    expect(useAudioStore.getState()).toMatchObject({ isMicMuted: true, isMonitorMuted: false, isParticipantMuted: true });
+  });
 });
 
 // Regression guard (issue #335): after restarting the app the participant
@@ -387,6 +401,13 @@ describe('audioStore - participant source survives a restart', () => {
     useAudioStore.setState({ persistedParticipantAppKey: 'com.google.Chrome' });
     useAudioStore.getState().setParticipantSources([DEFAULT_PARTICIPANT_SOURCE, CHROME_RUN_2]);
     expect(useAudioStore.getState().selectedParticipantSource?.deviceId).toBe('app:pid:8271');
+  });
+
+  it('does not choose an arbitrary process when multiple instances share the saved key', () => {
+    useAudioStore.setState({ persistedParticipantAppKey: 'com.google.Chrome' });
+    const second: AudioDevice = { deviceId: 'app:pid:8271', label: 'Google Chrome', appKey: 'com.google.Chrome' };
+    useAudioStore.getState().setParticipantSources([DEFAULT_PARTICIPANT_SOURCE, CHROME_RUN_2, second]);
+    expect(useAudioStore.getState().selectedParticipantSource?.deviceId).toBe(DEFAULT_PARTICIPANT_SOURCE.deviceId);
   });
 
   it('falls back to whole-system capture when the application is gone', () => {

@@ -8,14 +8,19 @@ import type { LegName } from '../conversation/types';
 import type { Platform } from '../provider/types';
 import type { OpenSource, Source } from '../session/source';
 import useAudioStore from '../../stores/audioStore';
+import useLogStore from '../../stores/logStore';
 import { useScreenContextStore } from '../../stores/screenContextStore';
 import { getEnvironment } from '../../utils/environment';
+import { isLoopbackInput, isVirtualMic } from '../../utils/audioDevices';
 import { createEchoWatch, type EchoWatch } from './capture/echoWatch';
+import { createSourceCore } from './capture/core';
+import { createMeetingEchoReduction } from './capture/meetingEcho';
 import { openMic, type MicSettings } from './capture/mic';
 import { silentSource } from './capture/silent';
 import { openSystemAudio, type SystemAudioSettings } from './capture/systemAudio';
 import { openTab, type TabSettings } from './capture/tab';
 import { createLevelMeter, type LevelMeter } from './levelMeter';
+import { createAppRouting } from './appAudio';
 import type { Playback } from './playback';
 import { targetTabIdFromSearch } from './tabMicrophone';
 
@@ -29,6 +34,7 @@ export interface AppCapture {
 
 const audio = () => useAudioStore.getState();
 const onAudioChange = (listener: () => void) => useAudioStore.subscribe(() => listener());
+const windowsDesktop = () => (window as { electron?: { osInfo?: { platform?: unknown } } }).electron?.osInfo?.platform === 'win32';
 
 /** Asks the main process which applications are using a microphone (spec 2026-10-13 §1); null when it cannot tell. */
 async function appsUsing(label: string): Promise<string[] | null> {
@@ -43,7 +49,6 @@ async function appsUsing(label: string): Promise<string[] | null> {
 
 export function micSettings(): MicSettings {
   // Windows desktop: the preload's `osInfo` says so (it is absent in the extension and on the web).
-  const windowsDesktop = (window as { electron?: { osInfo?: { platform?: unknown } } }).electron?.osInfo?.platform === 'win32';
   return {
     deviceId: () => audio().selectedInputDevice?.deviceId,
     deviceLabel: () => audio().selectedInputDevice?.label,
@@ -52,9 +57,14 @@ export function micSettings(): MicSettings {
     markUnusable: (id) => audio().markInputUnusable(id),
     noiseSuppression: () => audio().noiseSuppressionMode,
     echoCancellation: () => audio().echoCancellationMode,
+    captureStarted: (requested, applied) => {
+      const type = 'audio.capture.mic';
+      const echoCancellation = applied === 'all' || applied === 'remote-only' || typeof applied === 'boolean' ? applied : 'unknown';
+      useLogStore.getState().addRealtimeEvent({ type, data: { requested, applied: echoCancellation } }, 'client', type);
+    },
     muted: () => audio().isMicMuted,
     subscribe: onAudioChange,
-    ...(windowsDesktop ? { appsUsing } : {}),
+    ...(windowsDesktop() ? { appsUsing } : {}),
   };
 }
 
@@ -65,6 +75,19 @@ export function systemAudioSettings(): SystemAudioSettings {
     subscribe: onAudioChange,
     audioSeen: () => audio().markParticipantTapAudioSeen(),
     widened: (on) => audio().setParticipantCaptureWidened(on),
+    captureStarted: (backend) => {
+      const type = 'audio.capture.participant';
+      useLogStore.getState().addRealtimeEvent({ type, data: { backend } }, 'client', type);
+    },
+    autoResolved: (source) => audio().setAutoMeetingResolvedSource(source ? {
+      deviceId: source.deviceId,
+      label: source.label,
+      appKey: source.appKey ?? null,
+    } : null),
+    meetingOutput: () => {
+      const route = createAppRouting('electron').get();
+      return audio().mode === 'both' && route.meeting && route.speak.other ? route.sinks.virtual : undefined;
+    },
   };
 }
 
@@ -108,6 +131,21 @@ export function createAppCapture(playback: Playback, platform: Platform = getEnv
   const { meterGate, participantBeside } = options;
   const echo = createEchoWatch(playback.ttsTap);
   const levels: Record<LegName, LevelMeter> = { speaker: createLevelMeter(), participant: createLevelMeter() };
+  const meetingEcho = platform === 'electron' && windowsDesktop() ? createMeetingEchoReduction() : null;
+
+  const micWithEchoReduction = (source: Source, reduction: NonNullable<typeof meetingEcho>): Source => {
+    const core = createSourceCore({
+      muted: () => false,
+      release: async () => { off(); await source.stop(); },
+    });
+    const off = source.onPcm((pcm) => {
+      const { mode, echoCancellationMode, selectedInputDevice } = audio();
+      const input = selectedInputDevice;
+      const physical = input && !input.isVirtual && !isVirtualMic(input) && !isLoopbackInput(input);
+      core.deliver(mode === 'both' && echoCancellationMode === 'all' && physical ? reduction.reduce(pcm) : pcm);
+    });
+    return { ...source, onPcm: core.onPcm, stop: core.stop };
+  };
 
   const open = (leg: LegName, signal: AbortSignal): Promise<Source> => {
     if (leg === 'speaker') return openMic(micSettings(), signal);
@@ -121,7 +159,9 @@ export function createAppCapture(playback: Playback, platform: Platform = getEnv
     echo,
     levels,
     async openSource(leg, signal) {
-      const source = await open(leg, signal);
+      const raw = await open(leg, signal);
+      const source = leg === 'speaker' && meetingEcho ? micWithEchoReduction(raw, meetingEcho) : raw;
+      const offReference = leg === 'participant' && meetingEcho ? source.onPcm(meetingEcho.pushReference) : undefined;
       // The processed microphone is the original voice under the translation.
       const offPassthrough = leg === 'speaker' ? source.onPcm((pcm) => playback.passthrough(pcm)) : () => {};
       // A gate that shuts flattens the meter at its next chunk, not a stale
@@ -138,6 +178,8 @@ export function createAppCapture(playback: Playback, platform: Platform = getEnv
       });
       const detach = echo.attach(leg, source);
       return withCleanup(source, () => {
+        offReference?.();
+        if (leg === 'participant') meetingEcho?.reset();
         offPassthrough();
         offLevel();
         levels[leg].reset();

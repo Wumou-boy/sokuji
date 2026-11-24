@@ -148,8 +148,9 @@ export function planLanguages(shape: Pick<RunShape, 'plan' | 'accounts'>): Pick<
  * participant leg runs the reverse — the provider's own where it states one
  * (Stage 2 Palabra, ruling 9) — always with automatic turns.
  */
-export function contextsFor(shape: Pick<RunShape, 'plan' | 'accounts' | 'pair' | 'legs' | 'turnMode' | 'textOnly' | 'participantSpeech'>): Partial<Record<LegName, SessionContext>> {
+export function contextsFor(shape: Pick<RunShape, 'plan' | 'accounts' | 'pair' | 'legs' | 'turnMode' | 'textOnly' | 'participantSpeech'> & Partial<Pick<RunShape, 'incomingLanguage'>>): Partial<Record<LegName, SessionContext>> {
   const { pair } = shape;
+  const incomingSource = transcriptionProvider(shape.plan).id === 'qwen_livetranslate' ? shape.incomingLanguage : undefined;
   const speaking = capabilitiesOf(shape, 'speech');
   const contexts: Partial<Record<LegName, SessionContext>> = {};
   if (shape.legs.includes('speaker')) {
@@ -162,7 +163,7 @@ export function contextsFor(shape: Pick<RunShape, 'plan' | 'accounts' | 'pair' |
   if (shape.legs.includes('participant')) {
     contexts.participant = {
       // The gate refused a pair with no reverse before anything asks (D20); the plain swap only answers a shape nothing gated.
-      direction: reversedPair(planLanguages(shape), undefined, pair) ?? { source: pair.target, target: pair.source },
+      direction: { ...(reversedPair(planLanguages(shape), undefined, pair) ?? { source: pair.target, target: pair.source }), ...(incomingSource ? { source: incomingSource } : {}) },
       speech: legSpeaks(speaking, 'participant', shape),
       turns: 'auto',
     };
@@ -171,7 +172,7 @@ export function contextsFor(shape: Pick<RunShape, 'plan' | 'accounts' | 'pair' |
 }
 
 /** What the start gate reads (F7): a run's frozen shape satisfies it, and so do the stores as they stand. `textOnly`, `participantSpeech` and `account` feed a managed provider's balance floor (Stage 2 Kizuna Soniox); absent, nothing is gated on a balance. `lineUp` names the option a refusal of the plan is about. */
-export type GateInput = Pick<RunShape, 'plan' | 'accounts' | 'pair' | 'legs' | 'turnMode'> & Partial<Pick<RunShape, 'textOnly' | 'participantSpeech' | 'faceToFace' | 'faceToFaceAsked' | 'account' | 'payer' | 'lineUp'>>;
+export type GateInput = Pick<RunShape, 'plan' | 'accounts' | 'pair' | 'legs' | 'turnMode'> & Partial<Pick<RunShape, 'textOnly' | 'participantSpeech' | 'incomingLanguage' | 'faceToFace' | 'faceToFaceAsked' | 'account' | 'payer' | 'lineUp'>>;
 
 /**
  * What the plan cannot do for this run (`checkPlan`): face-to-face with the translation apart, a pair the

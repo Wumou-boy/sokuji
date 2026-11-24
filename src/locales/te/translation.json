@@ -351,7 +351,13 @@
     "voiceIHearSame": "అవతలి వైపు వినే వాయిస్ ఇదే, కాబట్టి దీనికి బదులుగా {{voice}} చదువుతుంది.",
     "voiceCustom": "అనుకూల వాయిస్",
     "translateDetectParticipantLanguage": "ఎదుటివారి చైనీస్, జపనీస్, ఇంగ్లీష్‌ను స్వయంచాలకంగా గుర్తించండి",
-    "translateDetectParticipantLanguageHelp": "ఎదుటివారి భాష చైనీస్, జపనీస్ లేదా ఇంగ్లీష్ అయితే, ప్రతి శీర్షిక భాషను అసలు మాటల నుంచి గుర్తిస్తుంది. అనువాద లక్ష్య భాష ఎంచుకున్నదే ఉంటుంది."
+    "translateDetectParticipantLanguageHelp": "ఎదుటివారి భాష చైనీస్, జపనీస్ లేదా ఇంగ్లీష్ అయితే, ప్రతి శీర్షిక భాషను అసలు మాటల నుంచి గుర్తిస్తుంది. అనువాద లక్ష్య భాష ఎంచుకున్నదే ఉంటుంది.",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "మీ ఖాతా ద్వారా స్వయంచాలకంగా ప్రామాణీకరించబడింది",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "మునుపటి సెషన్ ముగిసే వరకు వేచి ఉంది. రద్దు చేయడానికి క్లిక్ చేయండి.",
     "clickToCancel": "రద్దు చేయడానికి క్లిక్ చేయండి",
     "whatIHear": "నేను వినేది",
-    "audioSettings": "ఆడియో సెట్టింగ్‌లు"
+    "audioSettings": "ఆడియో సెట్టింగ్‌లు",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "నేను",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "మీటింగ్‌లో",
     "otherSideMeetingHint": "సిస్టమ్ ఆడియోను లేదా ఒక యాప్‌ను క్యాప్చర్ చేస్తుంది",
     "otherSideBeside": "నా పక్కన",
-    "otherSideBesideHint": "ఒకే మైక్రోఫోన్‌లో ఇద్దరు"
+    "otherSideBesideHint": "ఒకే మైక్రోఫోన్‌లో ఇద్దరు",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "భాషలను కాన్ఫిగర్ చేయడానికి క్లిక్ చేయండి",
@@ -1652,7 +1663,10 @@
     "quota": "సేవ ఖాతాలో క్రెడిట్ మిగలలేదు: {{detail}}",
     "text_model_unset": "“భాషలు, లైన్-అప్”లో అనువాదం కోసం ఒక మోడల్‌ను ఎంచుకోండి, లేదా దాని పేరు టైప్ చేయండి.",
     "address_missing": "ప్రారంభించే ముందు “ఖాతాలు, కీలు”లో అనుకూల సేవ చిరునామాను నమోదు చేయండి.",
-    "address_invalid": "అనుకూల సేవ చిరునామాను ఉపయోగించలేము: {{detail}}"
+    "address_invalid": "అనుకూల సేవ చిరునామాను ఉపయోగించలేము: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "AED Translator సబ్‌టైటిల్స్",

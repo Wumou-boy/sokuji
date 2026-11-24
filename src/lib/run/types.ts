@@ -207,6 +207,8 @@ export interface RunShapeOf<P> {
   lineUpStored?: boolean;
   /** The speaker's pair; the participant leg runs its reverse. */
   pair: LanguagePair;
+  /** Incoming participant source language; `auto` lets a supporting provider detect it. */
+  incomingLanguage?: string;
   /** The legs asked for, speaker first. */
   legs: readonly LegName[];
   turnMode: TurnMode;

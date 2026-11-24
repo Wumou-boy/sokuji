@@ -70,6 +70,8 @@ export interface VoiceLibrarySectionProps {
    *  `capability.transcriptRequired` is set. */
   onRecord?: (clip: Float32Array, sampleRate: number, transcript?: string) => Promise<void>;
   recordingPrompt?: { title: string; text: string };
+  /** Also open voice creation directly from the settings row. */
+  createAction?: { title: string; buttonLabel: string };
   useMeetingMicrophone?: boolean;
   /** Called when the user renames a removable voice. Optional — when absent,
    *  removable voices cannot be renamed and no rename affordance renders
@@ -139,6 +141,7 @@ const VoiceLibrarySection: React.FC<VoiceLibrarySectionProps> = ({
   onImport,
   onRecord,
   recordingPrompt,
+  createAction,
   useMeetingMicrophone,
   onRename,
   onDelete,
@@ -156,6 +159,7 @@ const VoiceLibrarySection: React.FC<VoiceLibrarySectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const labelId = useId();
+  const createLabelId = useId();
 
   // ---- local playback (listen back to a voice's sample) -------------------
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -346,7 +350,19 @@ const VoiceLibrarySection: React.FC<VoiceLibrarySectionProps> = ({
           reachable here when the create path is NOT (no add row), so this
           and the modal's own rendering of the same node are mutually
           exclusive by construction, never both at once. */}
-      {!canCreate && manageNote && (
+      {createAction ? (
+        <div className="setting-item" role="group" aria-labelledby={createLabelId}>
+          <div className="setting-label"><span id={createLabelId}>{createAction.title}</span></div>
+          {canCreate ? (
+            <button type="button" className="inline-action-button" disabled={isSessionActive}
+              onClick={() => setCreating(true)}>
+              {createAction.buttonLabel}
+            </button>
+          ) : manageNote && (
+            <div className="setting-description">{manageNote}</div>
+          )}
+        </div>
+      ) : !canCreate && manageNote && (
         <div className="voice-library-info">{manageNote}</div>
       )}
 

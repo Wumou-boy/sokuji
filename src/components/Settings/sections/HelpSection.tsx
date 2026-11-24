@@ -45,7 +45,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({ toggleSettings, isSessionActi
       <h3>
         <HelpCircle size={18} />
         <span>{t('settings.help', 'Help')}</span>
-        <span className="version-label">v{__APP_VERSION__}</span>
+        <span className="version-label">{__APP_RELEASE__}</span>
       </h3>
       <div className="help-links">
         <button
@@ -62,7 +62,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({ toggleSettings, isSessionActi
           <HelpCircle size={13} />
           <span>{t('tour.restart', 'Restart Setup Guide')}</span>
         </button>
-        {isElectron() && (
+        {isElectron() && !__AED_PORTABLE__ && (
           <button
             type="button"
             className={[

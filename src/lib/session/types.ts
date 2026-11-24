@@ -33,10 +33,15 @@ export interface LoadingProgress {
   total: number;
 }
 
+export interface OutgoingTarget {
+  language: string;
+  pending: boolean;
+}
+
 /** `payer`: the one the run was started with (`RunShape.payer`), absent for a run with none; the payer line shows it while the run lasts. */
 export type RunState =
   | { phase: 'idle'; lastEnd?: RunEnd }
   | { phase: 'starting'; participantSpeech: boolean; payer?: Payer; step: 'checking' | 'preparing' | 'opening' | 'waiting'; loading?: LoadingProgress }
   /** `reconnect`: the reconnecting legs whose adapter reports attempts (the status line's); absent when there are none. */
-  | { phase: 'running'; participantSpeech: boolean; payer?: Payer; since: number; legs: Partial<Record<LegName, LegState>>; budget?: Budget; reconnect?: Partial<Record<LegName, ReconnectProgress>> }
+  | { phase: 'running'; participantSpeech: boolean; payer?: Payer; since: number; legs: Partial<Record<LegName, LegState>>; budget?: Budget; reconnect?: Partial<Record<LegName, ReconnectProgress>>; outgoingTarget?: OutgoingTarget }
   | { phase: 'stopping'; participantSpeech: boolean; payer?: Payer };

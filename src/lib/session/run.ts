@@ -600,6 +600,15 @@ export class Run {
     this.sessions.get('participant')?.setSpeech?.(on);
   }
 
+  get canSetOutgoingTarget(): boolean {
+    return this.sessions.get('speaker')?.setTargetLanguage !== undefined;
+  }
+
+  setOutgoingTarget(language: string): Promise<boolean> {
+    const session = this.sessions.get('speaker');
+    return !this.ending && session?.setTargetLanguage ? session.setTargetLanguage(language) : Promise.resolve(false);
+  }
+
   /** Typed text for the speaker leg, when the transcribing unit takes text. Blank once trimmed: nothing to send, for any provider. */
   sendText(text: string): void {
     const session = this.sessions.get('speaker');

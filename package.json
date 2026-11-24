@@ -2,6 +2,7 @@
   "name": "sokuji",
   "productName": "AED Translator",
   "version": "0.51.2",
+  "aedVersion": "0.2.3",
   "sidecarVersion": "0.4.0",
   "private": true,
   "main": "dist-electron/main.js",

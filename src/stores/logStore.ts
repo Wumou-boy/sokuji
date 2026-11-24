@@ -29,6 +29,9 @@ export interface EventData {
     | 'session.network.transport'
     | 'participant.warning'
     | 'participant.info'
+    | 'audio.echo.warning'
+    | 'audio.capture.mic'
+    | 'audio.capture.participant'
     // OpenAI server events
     | 'session.created' | 'session.updated'
     | 'conversation.created'

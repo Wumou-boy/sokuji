@@ -9,6 +9,7 @@
 import { wordsFor } from '../../lib/words/forService';
 import type { SessionContext } from '../../lib/contract/adapter';
 import type { UsageDelta } from '../../lib/usage/ledger';
+import { AUTO } from '../../lib/provider/languages';
 import type { QwenTurnAudioBuffer } from '../../lib/faceToFace/audioBuffer';
 import type { ProviderRefusal, SharedSettings } from '../../lib/run/types';
 import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, isEndpointId, normalizeBailianWorkspaceId, type EndpointId } from './endpoints';
@@ -84,7 +85,7 @@ export function buildQwen(context: SessionContext, s: QwenSettings, shared: Shar
         : { kind: 'preset', name: chosen },
     manual,
     person: participant && s.speakerLabels,
-    detectIncomingLanguage: incomingTextOnlyZh,
+    detectIncomingLanguage: participant && (context.direction.source === AUTO || incomingTextOnlyZh),
     skipSameLanguageText: incomingTextOnlyZh,
     // The word list's translations (spec §9): the provider's own old hotwords are no longer read.
     phrases: Object.fromEntries(wordsFor('qwen_livetranslate', shared.words?.entries ?? [], '').translations ?? []),

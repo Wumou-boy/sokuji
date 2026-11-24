@@ -1,0 +1,33 @@
+@use '../Settings/shared/variables' as vars;
+
+.auto-audio-source-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  max-width: 220px;
+  flex: 0 1 auto;
+  color: vars.$text-muted;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+
+  &--ready, &--waiting { overflow: hidden; text-overflow: ellipsis; }
+  &__app { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  &__bar {
+    display: inline-flex;
+    width: 34px;
+    height: 5px;
+    flex: 0 0 34px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: vars.$bg-dim;
+  }
+  &__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: vars.$text-secondary;
+    transition: width 80ms linear;
+  }
+  &__db { color: vars.$text-secondary; font-variant-numeric: tabular-nums; }
+}

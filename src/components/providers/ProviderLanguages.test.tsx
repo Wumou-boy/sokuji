@@ -7,7 +7,7 @@ const { trackEvent } = vi.hoisted(() => ({ trackEvent: vi.fn() }));
 vi.mock('../../lib/analytics', () => ({ useAnalytics: () => ({ trackEvent }) }));
 // What a run froze at Start: null while idle.
 const run = vi.hoisted(() => ({ participantSpeech: null as boolean | null }));
-vi.mock('../../app/useRun', () => ({ useRunParticipantSpeech: () => run.participantSpeech }));
+vi.mock('../../app/useRun', () => ({ useRunParticipantSpeech: () => run.participantSpeech, useRunOutgoingTarget: () => null, setRunOutgoingTarget: vi.fn(async () => true) }));
 vi.mock('react-i18next', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-i18next')>();
   return { ...actual, useTranslation: () => ({ t: (key: string) => key }) };

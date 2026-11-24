@@ -18,6 +18,17 @@ export const APP_CAPTURE_LOST = 'app_capture_lost_using_system_audio';
 export const APP_MONITOR_MISSING = 'app_capture_monitor_missing';
 export const SILENT_NO_PERMISSION = 'silent_no_permission';
 export const LOOPBACK_DENIED = 'loopback_denied';
+export const LOOPBACK_MEETING_OUTPUT = 'loopback_meeting_output';
+export const AUTO_MEETING_SOURCE = 'auto-meeting-audio';
+const AUTO_PROBE_INTERVAL_MS = 1_500;
+
+const LOOPBACK_MEETING_OUTPUT_MESSAGE = 'Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source.';
+
+interface ResolvedApp {
+  deviceId: string;
+  label: string;
+  appKey?: string | null;
+}
 
 /** The settings a system-audio source follows, read live. */
 export interface SystemAudioSettings {
@@ -29,7 +40,10 @@ export interface SystemAudioSettings {
   audioSeen(): void;
   /** The capture widened to the whole system although an application was chosen (true), or is no longer widened: it closed, or a switch landed on what was chosen (false). While on, the other's translation played on the real device would be recaptured. */
   widened(on: boolean): void;
+  /** Windows playback device carrying our outgoing translation during this meeting, when enabled. */
+  meetingOutput?(): string | undefined;
   captureStarted?(backend: Connection['mode']): void;
+  autoResolved?(source: ResolvedApp | null): void;
 }
 
 /** The part of a participant recorder this source drives. */
@@ -109,13 +123,17 @@ export async function openSystemAudio(
   signal: AbortSignal,
   deps: SystemAudioDeps = electronSystemAudio(),
 ): Promise<Source> {
+  signal.throwIfAborted();
   let sourceId = settings.sourceId();
+  let captureSourceId = sourceId;
   let recorder: ParticipantCapture | null = null;
   let connected = false;
   let unwatch = () => {};
   let unlisten = () => {};
   let unsubscribe = () => {};
   let chain: Promise<void> = Promise.resolve();
+  let selection = 0;
+  let probeTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** Ends the recorder: its `onLost` detached first, since its own teardown kills the helper. */
   const stopRecorder = async () => {
@@ -135,6 +153,7 @@ export async function openSystemAudio(
   };
 
   const close = async () => {
+    settings.autoResolved?.(null);
     await stopRecorder();
     settings.widened(false);
     if (!connected) return;
@@ -149,11 +168,15 @@ export async function openSystemAudio(
   const core = createSourceCore({
     muted: () => settings.muted(),
     release: async () => {
+      clearTimeout(probeTimer);
+      signal.removeEventListener('abort', stop);
       unsubscribe();
       await chain;
       await close();
     },
   });
+  const stop = () => { void core.stop(); };
+  const current = (id: number) => id === selection && !signal.aborted && !core.stopped && !core.ended;
 
   /** A PipeWire tap's sink appears in the browser's device list a moment after it is created: retry briefly. */
   const findMonitor = async (label: string): Promise<string | undefined> => {
@@ -165,9 +188,11 @@ export async function openSystemAudio(
     return undefined;
   };
 
-  const connect = async (id: string): Promise<Connection> => {
+  const connect = async (id: string, requireApp = false): Promise<Connection> => {
+    captureSourceId = id;
     const answer = (await deps.invoke('connect-system-audio-source', id)) as ConnectAnswer | undefined;
     if (answer?.success === false) throw new Error(answer.error || 'The system audio source did not connect.');
+    if (requireApp && answer?.capture !== 'app') throw new Error('Auto requires application audio capture.');
     connected = true;
     if (answer?.capture === 'app') return { mode: 'app' };
     if (answer?.monitorLabel) {
@@ -180,7 +205,48 @@ export async function openSystemAudio(
     return { mode: 'loopback' };
   };
 
+  // Probe one round at a time. A silent or closed meeting app leaves this
+  // leg waiting, and a source change invalidates any probe already in flight.
+  const scheduleProbe = (id: number, delay = 0) => {
+    clearTimeout(probeTimer);
+    probeTimer = setTimeout(() => {
+      probeTimer = undefined;
+      chain = chain.then(() => probe(id));
+    }, delay);
+  };
+  const probe = async (id: number) => {
+    if (!current(id)) return;
+    try {
+      const resolution = await deps.invoke('resolve-auto-system-audio-source') as { success?: boolean; source?: ResolvedApp } | undefined;
+      if (!current(id)) return;
+      const source = resolution?.success === true ? resolution.source : undefined;
+      if (source?.deviceId?.startsWith('app:')) {
+        const connection = await connect(source.deviceId, true);
+        if (!current(id)) return;
+        await record(connection);
+        if (current(id)) settings.autoResolved?.(source);
+        return;
+      }
+    } catch (error) {
+      reportWarning('SystemAudio', 'Automatic meeting audio could not connect yet.', { cause: error, dedupeKey: 'system:auto-connect' });
+      await close();
+    }
+    if (current(id)) scheduleProbe(id, AUTO_PROBE_INTERVAL_MS);
+  };
+
   const record = async (connection: Connection): Promise<void> => {
+    const id = selection;
+    if (deps.nativeLoopback && (connection.mode === 'loopback' || connection.mode === 'native-loopback')) {
+      const meetingOutput = settings.meetingOutput?.();
+      if (meetingOutput) {
+        const outputs = (await deps.enumerateDevices().catch(() => [])).filter((d) => d.kind === 'audiooutput');
+        const defaultOutput = outputs.find((d) => d.deviceId === 'default');
+        const cable = outputs.find((d) => d.deviceId === meetingOutput);
+        if (defaultOutput?.groupId && defaultOutput.groupId === cable?.groupId && cable.label && defaultOutput.label.endsWith(cable.label)) {
+          throw new SourceOpenError(LOOPBACK_MEETING_OUTPUT_MESSAGE, LOOPBACK_MEETING_OUTPUT);
+        }
+      }
+    }
     // Today's `requestLoopbackAudioStream` denial (MainPanel's Screen Recording
     // modal): the start fails (D22) with a code the idle surface puts into
     // words and plan 1e-3b's modal deep-links from. Asked only before a
@@ -195,7 +261,9 @@ export async function openSystemAudio(
       // Captured now: by the time this runs, a queued switch may have already
       // made `recorder` point elsewhere, and this death is then stale (M1).
       const lost = next;
-      chain = chain.then(() => fallBack(lost)).catch((error: unknown) => core.end(`System audio stopped: ${describeCause(error)}`));
+      chain = chain.then(() => {
+        if (current(id)) return fallBack(lost);
+      }).catch((error: unknown) => core.end(`System audio stopped: ${describeCause(error)}`));
     };
     if (connection.mode === 'app') {
       next.onWarning = (code) => core.degrade({ code, message: code === SILENT_NO_PERMISSION ? SILENT_MESSAGE : `The application capture warned: ${code}` });
@@ -209,7 +277,7 @@ export async function openSystemAudio(
     // sink is Sokuji's), so the main process says when the application quit (#617).
     if (connection.mode === 'device') unlisten = deps.appLost(lose);
     recorder = next;
-    const options = connection.mode === 'app' ? { deviceId: sourceId } : connection.mode === 'device' ? { deviceId: connection.monitorId }
+    const options = connection.mode === 'app' ? { deviceId: captureSourceId } : connection.mode === 'device' ? { deviceId: connection.monitorId }
       : connection.mode === 'native-loopback' ? { deviceId: 'desktop-audio-loopback' } : undefined;
     let begun = await next.begin(options);
     if (!begun && isTransientCaptureOpenFailure(next.beginFailure) && !signal.aborted && !core.stopped && !core.ended) {
@@ -243,8 +311,8 @@ export async function openSystemAudio(
       throw new Error(`The system audio capture did not start${why}.`);
     }
     unwatch = core.watch(next.getStream?.() ?? null);
-    await next.record((data) => core.deliver(data.mono));
-    settings.captureStarted?.(connection.mode);
+    await next.record((data) => { if (current(id)) core.deliver(data.mono); });
+    if (current(id)) settings.captureStarted?.(connection.mode);
   };
 
   /**
@@ -255,17 +323,25 @@ export async function openSystemAudio(
    */
   const fallBack = async (lost: ParticipantCapture) => {
     if (core.stopped || core.ended || recorder !== lost) return;
-    core.degrade({ code: APP_CAPTURE_LOST, message: 'The application capture stopped, so all system audio is being translated instead.' });
+    if (sourceId === AUTO_MEETING_SOURCE) {
+      const id = selection;
+      await close();
+      if (current(id)) scheduleProbe(id);
+      return;
+    }
     settings.widened(true);
     await stopRecorder();
     await record({ mode: 'loopback' });
+    core.degrade({ code: APP_CAPTURE_LOST, message: 'The application capture stopped, so all system audio is being translated instead.' });
   };
 
-  try {
-    await record(await connect(sourceId));
-  } catch (error) {
-    await close();
-    throw error;
+  if (sourceId !== AUTO_MEETING_SOURCE) {
+    try {
+      await record(await connect(sourceId));
+    } catch (error) {
+      await close();
+      throw error;
+    }
   }
   if (signal.aborted) {
     await core.stop();
@@ -276,13 +352,25 @@ export async function openSystemAudio(
     const next = settings.sourceId();
     if (next === sourceId) return;
     sourceId = next;
+    const id = ++selection;
+    clearTimeout(probeTimer);
     chain = chain
       .then(async () => {
-        if (core.stopped || core.ended) return;
+        if (!current(id)) return;
         await close();
-        await record(await connect(sourceId));
+        if (!current(id)) return;
+        if (next === AUTO_MEETING_SOURCE) scheduleProbe(id);
+        else {
+          const connection = await connect(next);
+          if (current(id)) await record(connection);
+        }
       })
       .catch((error: unknown) => core.end(`The participant source could not switch: ${describeCause(error)}`));
   });
+  signal.addEventListener('abort', stop, { once: true });
+  if (sourceId === AUTO_MEETING_SOURCE) {
+    settings.autoResolved?.(null);
+    scheduleProbe(selection);
+  }
   return core;
 }

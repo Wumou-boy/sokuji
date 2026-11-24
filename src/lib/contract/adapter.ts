@@ -86,6 +86,8 @@ export interface AdapterSession {
    * still falls silent.
    */
   setSpeech?(on: boolean): void;
+  /** Changes the target of this leg while it runs. Resolves false if the existing target is retained. */
+  setTargetLanguage?(language: string): Promise<boolean>;
   /**
    * The network came back (the page's `online` event): a reconnect waiting out
    * its backoff may try now. Absent: the adapter does not reconnect, or does not wait.

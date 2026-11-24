@@ -9,6 +9,12 @@ import { dropDuplicateOrtWasm } from './vite.drop-duplicate-ort-wasm'
 import { reactGrabDev } from './vite.react-grab'
 import { workerManualChunks } from './vite.worker-chunks'
 
+const aedVersionDefines = {
+  __APP_VERSION__: JSON.stringify(pkg.aedVersion),
+  __APP_RELEASE__: JSON.stringify(`V${pkg.aedVersion.replace(/\.0$/, '')}`),
+  __AED_PORTABLE__: JSON.stringify(process.platform === 'win32' && process.env.AED_WINDOWS_PORTABLE === '1'),
+}
+
 /**
  * Dev-only plugin: serve model-packs/tts/ files at /model-packs/tts/ URLs.
  * TTS model .data and package-metadata.json files live in model-packs/tts/wasm-*
@@ -239,7 +245,8 @@ export default defineConfig(({ command, mode }) => {
               }
             },
             define: {
-              'import.meta.env.MODE': JSON.stringify(mode)
+              'import.meta.env.MODE': JSON.stringify(mode),
+              ...aedVersionDefines,
             }
           }
         },
@@ -323,7 +330,7 @@ export default defineConfig(({ command, mode }) => {
       global: 'globalThis',
       // Define build target for Electron
       'import.meta.env.BUILD_TARGET': JSON.stringify('electron'),
-      __APP_VERSION__: JSON.stringify(pkg.version)
+      ...aedVersionDefines,
     },
     css: {
       preprocessorOptions: {

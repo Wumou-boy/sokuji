@@ -351,7 +351,13 @@
     "voiceIHearSame": "यह वही आवाज़ है जो सामने वाले को सुनाई देती है, इसलिए इसकी जगह {{voice}} पढ़ेगी।",
     "voiceCustom": "कस्टम आवाज़",
     "translateDetectParticipantLanguage": "सामने वाले की चीनी, जापानी और अंग्रेज़ी भाषा अपने आप पहचानें",
-    "translateDetectParticipantLanguageHelp": "अगर सामने वाले की भाषा चीनी, जापानी या अंग्रेज़ी है, तो हर कैप्शन की भाषा मूल पाठ से पहचानी जाती है। अनुवाद की चुनी हुई लक्ष्य भाषा बनी रहती है।"
+    "translateDetectParticipantLanguageHelp": "अगर सामने वाले की भाषा चीनी, जापानी या अंग्रेज़ी है, तो हर कैप्शन की भाषा मूल पाठ से पहचानी जाती है। अनुवाद की चुनी हुई लक्ष्य भाषा बनी रहती है।",
+    "autoMeetingResolved": "Auto is listening to {{app}}",
+    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
+    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
+    "autoMeetingLabel": "Auto (Meeting app)",
+    "incomingLanguage": "Incoming language",
+    "languageAuto": "Auto detect"
   },
   "simpleSettings": {
     "autoAuthenticated": "आपके खाते के माध्यम से स्वचालित रूप से प्रमाणित",
@@ -779,7 +785,10 @@
     "waitingForPreviousSessionTitle": "पिछले सत्र के समाप्त होने की प्रतीक्षा की जा रही है। रद्द करने के लिए क्लिक करें।",
     "clickToCancel": "रद्द करने के लिए क्लिक करें",
     "whatIHear": "मैं क्या सुनता हूँ",
-    "audioSettings": "ऑडियो सेटिंग्स"
+    "audioSettings": "ऑडियो सेटिंग्स",
+    "autoAudioReady": "Auto audio",
+    "autoAudioWaiting": "Auto · waiting",
+    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
   },
   "modePicker": {
     "modeYou": "मैं",
@@ -812,7 +821,9 @@
     "otherSideMeeting": "मीटिंग में",
     "otherSideMeetingHint": "सिस्टम ऑडियो या किसी ऐप को कैप्चर करता है",
     "otherSideBeside": "मेरे बगल में",
-    "otherSideBesideHint": "एक माइक्रोफ़ोन पर दो लोग"
+    "otherSideBesideHint": "एक माइक्रोफ़ोन पर दो लोग",
+    "participantPickerHint": "Start playing meeting audio, then refresh. WebView2 may appear as the process name.",
+    "participantCaptureWidened": "Capture fell back to all system audio"
   },
   "simplePanel": {
     "clickToConfigLanguages": "भाषाओं को कॉन्फ़िगर करने के लिए क्लिक करें",
@@ -1652,7 +1663,10 @@
     "quota": "सेवा के खाते में क्रेडिट नहीं बचा: {{detail}}",
     "text_model_unset": "“भाषाएँ और लाइन-अप” में अनुवाद के लिए एक मॉडल चुनें, या उसका नाम लिखें।",
     "address_missing": "शुरू करने से पहले “खाते और कुंजियाँ” में संगत सेवा का पता दर्ज करें।",
-    "address_invalid": "संगत सेवा का पता इस्तेमाल नहीं किया जा सकता: {{detail}}"
+    "address_invalid": "संगत सेवा का पता इस्तेमाल नहीं किया जा सकता: {{detail}}",
+    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
+    "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
+    "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
   "viewer": {
     "title": "AED Translator सबटाइटल",

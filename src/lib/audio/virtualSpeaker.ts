@@ -1,16 +1,17 @@
 import { isLinux, isWindows } from '../../utils/environment';
 
+const STANDARD_VB_CABLE_INPUT = /^cable input(?: \((?:\d+-\s*)?vb-audio virtual cable\))?$/i;
+
 /**
  * The output device a meeting app hears as a microphone (Electron), found by
  * label in this order: Linux's PulseAudio sink, macOS's driver, Windows'
- * VB-CABLE — the same order the old
- * `ModernBrowserAudioService.detectAndSetVirtualSpeaker` used (deleted in
- * plan 1e-3c); `appAudio.ts` now calls this function directly.
+ * standard VB-CABLE input. CABLE In 16ch is a different endpoint from the
+ * one that feeds the standard CABLE Output microphone.
  */
 export function findVirtualSpeaker(outputs: readonly { deviceId: string; label: string }[]): string | undefined {
   const match = outputs.find((d) => d.label.includes('Sokuji_Virtual_Speaker'))
     ?? outputs.find((d) => d.label.includes('SokujiVirtualAudio'))
-    ?? outputs.find((d) => d.label.toUpperCase().includes('CABLE'));
+    ?? outputs.find((d) => STANDARD_VB_CABLE_INPUT.test(d.label.trim()));
   return match?.deviceId;
 }
 

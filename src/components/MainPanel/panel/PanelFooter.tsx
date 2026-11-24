@@ -15,6 +15,7 @@ import { LanguagePairText } from '../../LanguagePairText/LanguagePairText';
 import { parseCode } from '../../../lib/language/code';
 import type { SessionTokens } from '../../../lib/usage/sessionTokens';
 import { SessionTokenMeter } from '../SessionTokenMeter';
+import { AutoAudioSourceMeter, type AutoAudioSourceStatus } from '../AutoAudioSourceMeter';
 
 export interface PanelFooterProps {
   site: 'basic' | 'advanced';
@@ -30,6 +31,7 @@ export interface PanelFooterProps {
   pair: LanguagePair | null;
   duration: string | null;
   sessionTokens?: SessionTokens | null;
+  autoAudioSource?: AutoAudioSourceStatus;
   onStart(): void;
   onStop(): void;
   onPress(): void;
@@ -116,6 +118,7 @@ function ControlFooter(props: PanelFooterProps) {
     pair,
     duration,
     sessionTokens = null,
+    autoAudioSource,
     onStart,
     onStop,
     onPress,
@@ -173,6 +176,13 @@ function ControlFooter(props: PanelFooterProps) {
   }
   const handleActionClick = isIdle ? onStart : onStop;
   const actionDisabled = (isIdle && !canStart) || run.phase === 'stopping' || isChecking;
+  const tokens = <SessionTokenMeter session={sessionTokens} />;
+  const telemetry = autoAudioSource ? (
+    <div className="footer-telemetry">
+      {tokens}
+      <AutoAudioSourceMeter source={autoAudioSource} />
+    </div>
+  ) : tokens;
 
   if (site === 'basic') {
     return (
@@ -230,7 +240,7 @@ function ControlFooter(props: PanelFooterProps) {
           </button>
         </div>
 
-        <SessionTokenMeter session={sessionTokens} />
+        {telemetry}
 
         <span className="footer-spacer" />
 
@@ -320,7 +330,7 @@ function ControlFooter(props: PanelFooterProps) {
         )}
       </div>
 
-      <SessionTokenMeter session={sessionTokens} />
+      {telemetry}
 
       <span className="footer-spacer" />
 

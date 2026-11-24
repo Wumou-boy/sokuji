@@ -21,13 +21,14 @@ vi.mock('../Settings/sections/helpActions', () => ({
   openExternalUrl: help.open,
 }));
 
-vi.stubGlobal('__APP_VERSION__', '0.50.2');
+vi.stubGlobal('__APP_RELEASE__', 'V0.2.3');
 
 import { GeneralCategory } from './GeneralCategory';
 import { useLayoutStore } from '../../stores/layoutStore';
 import useSettingsStore from '../../stores/settingsStore';
 
 beforeEach(() => {
+  vi.stubGlobal('__AED_PORTABLE__', false);
   env.electron = true;
   env.extension = false;
   help.status = 'idle';
@@ -70,13 +71,20 @@ describe('general', () => {
 
   it('on the desktop, checks for updates and says how the check went', () => {
     const first = render(<GeneralCategory locked={false} />);
-    expect(within(row('Updates')).getByText(/^You have v/)).toBeInTheDocument();
+    expect(within(row('Updates')).getByText('You have V0.2.3.')).toBeInTheDocument();
     fireEvent.click(within(row('Updates')).getByRole('button'));
     expect(help.check).toHaveBeenCalled();
     first.unmount();
     help.result = 'not-available';
     render(<GeneralCategory locked={false} />);
     expect(within(row('Updates')).getByRole('button')).toHaveTextContent('Up to date');
+  });
+
+  it('shows the AED release version in the portable build', () => {
+    vi.stubGlobal('__AED_PORTABLE__', true);
+    render(<GeneralCategory locked={false} />);
+    expect(within(row('Version')).getByText('V0.2.3')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Check for Updates' })).toBeNull();
   });
 
   it('in the extension, shows the version only: the store keeps it up to date', () => {

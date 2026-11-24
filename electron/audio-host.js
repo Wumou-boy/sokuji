@@ -54,6 +54,35 @@ function pidOfId(id) {
   return match ? Number(match[1]) : null;
 }
 
+/** Briefly tap one app's own process-loopback stream and report its PCM peak. */
+function probeAppSource(deviceId, { spawn = nodeSpawn, resolvePath = resolveAudioHostPath, durationMs = 300 } = {}) {
+  const exe = resolvePath();
+  const target = String(deviceId).replace(/^app:/, '');
+  if (!exe || !/^pid:\d+$/.test(target)) return Promise.resolve(0);
+  return new Promise((resolve) => {
+    let peak = 0;
+    let child;
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { child?.kill(); } catch {}
+      resolve(peak);
+    };
+    try { child = spawn(exe, ['--target', target]); } catch { return resolve(0); }
+    const timer = setTimeout(finish, Math.max(100, Math.min(1000, durationMs)));
+    child.stdout.on('data', (chunk) => {
+      for (let i = 0; i + 1 < chunk.length; i += 2) {
+        const value = Math.abs(chunk.readInt16LE(i)) / 32768;
+        if (value > peak) peak = value;
+      }
+    });
+    child.on('error', finish);
+    child.on('close', finish);
+  });
+}
+
 /**
  * List applications the helper can capture.
  * Always resolves; an unavailable or misbehaving helper yields [] so the picker
@@ -65,6 +94,8 @@ async function listAppSources({
   spawn = nodeSpawn,
   resolvePath = resolveAudioHostPath,
   selfIdentity = currentSelfIdentity(),
+  activeOnly = false,
+  timeoutMs = 3_000,
 } = {}) {
   const exe = resolvePath();
   if (!exe) {
@@ -89,15 +120,24 @@ async function listAppSources({
       return resolve([]);
     }
 
+    const finish = (sources) => {
+      clearTimeout(timer);
+      resolve(sources);
+    };
+    const timer = setTimeout(() => {
+      try { child.kill(); } catch {}
+      finish([]);
+    }, timeoutMs);
     child.stdout.on('data', (d) => { out += d.toString('utf8'); });
-    child.on('error', () => resolve([]));
-    child.on('close', () => {
+    child.once('error', () => finish([]));
+    child.once('close', () => {
       try {
         const rows = JSON.parse(out);
-        if (!Array.isArray(rows)) return resolve([]);
-        resolve(
+        if (!Array.isArray(rows)) return finish([]);
+        finish(
           rows
             .filter((r) => r && typeof r.id === 'string')
+            .filter((r) => !activeOnly || r.active !== false)
             // The helper excludes its own short-lived process but cannot know
             // which app spawned it. A Sokuji row here would let the user pick
             // Sokuji as the participant source and translate its own TTS in a
@@ -116,8 +156,9 @@ async function listAppSources({
               // helper so Windows and macOS cannot drift apart; Linux taps
               // PipeWire nodes rather than processes and does not come through
               // this module at all.
-              label: withPid(r.label || r.exe || r.id, r.id),
+              label: withPid((typeof r.label === 'string' && r.label.trim()) || r.exe || r.id, r.id),
               appKey: r.exe || r.label || null,
+              ...(Number.isFinite(r.peak) ? { peak: Math.max(0, Math.min(1, r.peak)) } : {}),
               // A source is a process tree, and one tree can own several
               // windows that no OS here can capture separately. The row is
               // therefore named after the application, and its window titles
@@ -130,7 +171,7 @@ async function listAppSources({
             }))
         );
       } catch {
-        resolve([]);
+        finish([]);
       }
     });
   });
@@ -296,4 +337,4 @@ async function ensureUnityGain(deviceName, { spawn = nodeSpawn, resolvePath = re
   });
 }
 
-module.exports = { listAppSources, startCapture, stopCapture, ensureUnityGain };
+module.exports = { listAppSources, probeAppSource, startCapture, stopCapture, ensureUnityGain };

@@ -2,6 +2,9 @@ const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 const fs = require('fs');
 const path = require('path');
+const { aedVersion } = require('./package.json');
+const PRODUCT_NAME = 'AED Translator';
+const portableWindows = process.platform === 'win32' && process.env.AED_WINDOWS_PORTABLE === '1';
 
 // Sokuji localizes its product UI through i18next. Electron's locale packs
 // only cover Chromium-native UI, which intentionally falls back to English.
@@ -34,9 +37,11 @@ module.exports = {
     extraResource: ['assets', 'resources'],
     icon: process.platform === 'win32' ? 'assets/icon.ico' : 'assets/icon',
     appId: 'ai.kizunaai.sokuji',
-    executableName: 'sokuji',
-    name: 'AED Translator',
-    win32metadata: { ProductName: 'AED Translator', FileDescription: 'AED Translator' },
+    // The standalone trial ZIP uses the product name for its launcher.
+    executableName: portableWindows ? PRODUCT_NAME : 'sokuji',
+    ...(portableWindows ? { appVersion: aedVersion } : {}),
+    name: PRODUCT_NAME,
+    win32metadata: { ProductName: PRODUCT_NAME, FileDescription: PRODUCT_NAME },
     // Whitelist-based ignore: only include package.json, dist-electron/,
     // build/ (minus wasm/), and node_modules/ (pruned by Forge).
     // Everything else (src/, public/, model-packs/, extension/, etc.) is excluded.

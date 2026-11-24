@@ -75,7 +75,8 @@ vi.mock('../../Tooltip/Tooltip', () => ({
 }));
 
 // Injected by vite's `define` at build time, so it does not exist here.
-vi.stubGlobal('__APP_VERSION__', '0.0.0-test');
+vi.stubGlobal('__APP_RELEASE__', 'V0.2.3');
+vi.stubGlobal('__AED_PORTABLE__', false);
 
 const { default: HelpSection } = await import('./HelpSection');
 const { INTERFACE_LANGUAGES } = await import('./interfaceLanguages');

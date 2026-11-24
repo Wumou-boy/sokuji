@@ -66,8 +66,8 @@ const capture = vi.hoisted(() => ({
   openSource: async () => { throw new Error('no capture in tests'); },
   echo: { attach: () => () => {}, onNotice: vi.fn(), setDiagnostics: () => {} },
   levels: {
-    speaker: { push() {}, read: () => new Float32Array(32), reset() {} },
-    participant: { push() {}, read: () => new Float32Array(32), reset() {} },
+    speaker: { push() {}, read: () => new Float32Array(32), readPeak: () => 0, reset() {} },
+    participant: { push() {}, read: () => new Float32Array(32), readPeak: () => 0.5, reset() {} },
   },
 }));
 vi.mock('../../lib/audio/appCapture', () => ({ createAppCapture: () => capture }));
@@ -143,7 +143,7 @@ import { VIEW_INTERVAL_MS } from '../../lib/view/conversationView';
 import { TRANSIENT_NOTICE_MS } from '../../lib/view/filter';
 import { FAKE_WHOLE, fakeProvider } from '../../providers/fake/provider';
 import { createFakeSource } from '../../providers/fake/source';
-import useAudioStore from '../../stores/audioStore';
+import useAudioStore, { AUTO_MEETING_PARTICIPANT_SOURCE } from '../../stores/audioStore';
 import { useProviderStore } from '../../stores/providerStore';
 import { runsOn } from '../../stores/lineUpStore.testing';
 import { useRoutingStore } from '../../stores/routingStore';
@@ -246,7 +246,7 @@ beforeEach(async () => {
   useProviderStore.getState().updateSettings(fakeProvider, { checkFails: false });
   useTurnModeStore.setState({ turnMode: 'auto' });
   useSettingsStore.setState({ uiMode: 'basic', keepReplayAudio: false, subtitleModeActive: false });
-  useAudioStore.setState({ mode: 'speaker', participantSources: [], selectedParticipantSource: useAudioStore.getInitialState().selectedParticipantSource });
+  useAudioStore.setState({ mode: 'speaker', participantSources: [], selectedParticipantSource: useAudioStore.getInitialState().selectedParticipantSource, autoMeetingResolvedSource: null });
   env.extension = false;
   env.electron = false;
   usePanelNotesStore.setState({ notes: [] });
@@ -293,6 +293,30 @@ describe('MainPanel', () => {
     expect(meter.textContent).toContain('0');
     act(() => useSessionTokenStore.setState({ meeting: { inputTokens: 20, outputTokens: 7, totalTokens: 27, billableTokens: 24, reported: true } }));
     expect(meter.textContent).toContain('27');
+  });
+
+  it('shows the selected Auto app and participant level beside the token meter', async () => {
+    env.electron = true;
+    useAudioStore.setState({ mode: 'both', selectedParticipantSource: AUTO_MEETING_PARTICIPANT_SOURCE });
+    const { container } = await renderPanel();
+    const telemetry = container.querySelector('.control-footer .footer-telemetry')!;
+    expect(telemetry.querySelector('.session-token-meter')).toBeInTheDocument();
+    expect(telemetry.querySelector('.auto-audio-source-meter--ready')).toBeInTheDocument();
+
+    act(() => { runner().state.setState({ phase: 'running', participantSpeech: false, since: 0, legs: { speaker: 'live', participant: 'live' } }, true); });
+    expect(telemetry.querySelector('.auto-audio-source-meter--waiting')).toBeInTheDocument();
+    act(() => { useAudioStore.setState({ autoMeetingResolvedSource: { deviceId: 'app:pid:42', label: 'Microsoft Teams' } }); });
+    expect(telemetry.querySelector('.auto-audio-source-meter__app')).toHaveTextContent('Microsoft Teams');
+    expect(telemetry.querySelector('.auto-audio-source-meter__db')).toHaveTextContent('-6 dBFS');
+    expect(container.querySelector('.waveform-strip--system')).toBeNull();
+
+    act(() => { useAudioStore.setState({ autoMeetingResolvedSource: null }); });
+    expect(telemetry.querySelector('.auto-audio-source-meter--waiting')).toBeInTheDocument();
+    act(() => { runner().state.setState({ phase: 'idle' }, true); });
+    expect(telemetry.querySelector('.auto-audio-source-meter--ready')).toBeInTheDocument();
+    act(() => { useAudioStore.setState({ selectedParticipantSource: { deviceId: 'app:pid:42', label: 'Microsoft Teams' } }); });
+    expect(container.querySelector('.auto-audio-source-meter')).toBeNull();
+    expect(container.querySelector('.waveform-strip--system')).toBeInTheDocument();
   });
 
   it('draws the empty state and a Start before anything has happened', async () => {

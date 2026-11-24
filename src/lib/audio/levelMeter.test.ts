@@ -25,6 +25,22 @@ const TONE_HZ = 3000;
 const TONE_BIN = 8;
 
 describe('createLevelMeter', () => {
+  it('reads the PCM peak independently of the spectrum, and flattens stale or reset audio', () => {
+    const clock = createVirtualClock(0);
+    const meter = createLevelMeter(clock);
+    expect(meter.readPeak()).toBe(0);
+    meter.push(Int16Array.of(640, -16384, 256));
+    expect(meter.readPeak()).toBe(0.5);
+    meter.read();
+    expect(meter.readPeak()).toBe(0.5);
+    clock.advance(LEVEL_STALE_MS + 1);
+    expect(meter.readPeak()).toBe(0);
+    meter.push(Int16Array.of(-32768));
+    expect(meter.readPeak()).toBe(1);
+    meter.reset();
+    expect(meter.readPeak()).toBe(0);
+  });
+
   it(`reads ${LEVEL_BARS} zeros before any chunk`, () => {
     const meter = createLevelMeter(createVirtualClock(0));
     expect([...meter.read()]).toEqual(zeros());

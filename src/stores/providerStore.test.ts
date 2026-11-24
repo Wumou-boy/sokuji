@@ -62,7 +62,7 @@ beforeEach(() => {
   stored.clear();
   getSetting.mockClear();
   setSetting.mockClear();
-  useProviderStore.setState({ entries: {}, intent: undefined });
+  useProviderStore.setState({ entries: {}, intent: undefined, incomingLanguage: undefined });
 });
 
 describe('load', () => {
@@ -98,6 +98,17 @@ describe('load', () => {
     await useProviderStore.getState().load(probe);
     expect(entry().pair).toEqual({ source: 'ja', target: 'en' });
     expect(getSetting).not.toHaveBeenCalledWith('settings.probe.sourceLanguage', expect.anything());
+  });
+
+  it('persists incoming language independently from the shared outgoing pair', async () => {
+    stored.set('settings.common.sourceLanguage', 'ja');
+    stored.set('settings.common.targetLanguage', 'en');
+    stored.set('settings.common.incomingLanguage', 'auto');
+    await useProviderStore.getState().load(probe);
+    expect(useProviderStore.getState().incomingLanguage).toBe('auto');
+    useProviderStore.getState().setIncomingLanguage('zh');
+    expect(useProviderStore.getState().intent).toEqual({ source: 'ja', target: 'en' });
+    expect(stored.get('settings.common.incomingLanguage')).toBe('zh');
   });
 
   it("starts from the provider's initial, then its first options, when nothing was picked", async () => {

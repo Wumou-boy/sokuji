@@ -443,7 +443,7 @@ function createApplicationMenu() {
               type: 'info',
               title: `About ${PRODUCT_NAME}`,
               message: PRODUCT_NAME,
-              detail: `Version: ${app.getVersion()}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
+              detail: `Version: ${__APP_RELEASE__}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
               buttons: ['OK'],
               icon: iconAsset('icon.png')
             });
@@ -540,14 +540,14 @@ function createApplicationMenu() {
               type: 'info',
               title: `About ${PRODUCT_NAME}`,
               message: PRODUCT_NAME,
-              detail: `Version: ${app.getVersion()}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
+              detail: `Version: ${__APP_RELEASE__}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
               buttons: ['OK'],
               icon: iconAsset('icon.png')
             });
           }
         },
         { type: 'separator' }]),
-        {
+        ...(__AED_PORTABLE__ ? [] : [{
           label: 'Check for Updates...',
           click: () => {
             if (global.updateManager) {
@@ -555,7 +555,7 @@ function createApplicationMenu() {
             }
           }
         },
-        { type: 'separator' },
+        { type: 'separator' }]),
         {
           label: 'Official Website',
           click: async () => {
@@ -850,11 +850,13 @@ app.whenReady().then(async () => {
   // Initialize auto-update manager. An install ends a running session first:
   // the updater quits the app itself, and holding that quit for the session
   // keeps this instance alive while the new one starts.
-  global.updateManager = new UpdateManager(mainWindow, {
-    beforeInstall: (fn) => closeHandshake.endSessionThen(fn),
-  });
-  // An E2E run never asks the release feed anything.
-  if (!IS_E2E) global.updateManager.checkAfterDelay(5000);
+  // The internal portable ZIP has its own version series and release packages.
+  if (!__AED_PORTABLE__) {
+    global.updateManager = new UpdateManager(mainWindow, {
+      beforeInstall: (fn) => closeHandshake.endSessionThen(fn),
+    });
+    if (!IS_E2E) global.updateManager.checkAfterDelay(5000);
+  }
 
   // electron-audio-loopback handles setDisplayMediaRequestHandler automatically via initMain()
 });
@@ -1247,6 +1249,15 @@ ipcMain.handle('list-system-audio-sources', async () => {
     return await listSystemAudioSources();
   }
   return [];
+});
+
+ipcMain.handle('resolve-auto-system-audio-source', async () => {
+  if (process.platform !== 'win32') return { success: false, error: 'Automatic meeting audio selection is available on Windows only.' };
+  try {
+    return await require('./windows-audio-utils').resolveAutoSystemAudioSource();
+  } catch (error) {
+    return { success: false, error: error?.message || 'Could not inspect active application audio.' };
+  }
 });
 
 ipcMain.handle('connect-system-audio-source', async (event, sinkName) => {

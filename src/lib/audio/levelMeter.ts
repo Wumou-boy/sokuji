@@ -69,6 +69,8 @@ export interface LevelMeter {
   push(pcm: Int16Array): void;
   /** The bars, 0..1, lowest frequency first; a new array each call, so a caller may keep it. */
   read(): Float32Array;
+  /** The latest chunk's peak, as a fraction of full scale. Zero after the source goes quiet. */
+  readPeak(): number;
   reset(): void;
 }
 
@@ -124,6 +126,13 @@ export function createLevelMeter(clock: Pick<Clock, 'now'> = realClock): LevelMe
         levels[k] = Math.min(1, Math.max(0, (db - MIN_DB) / (MAX_DB - MIN_DB)));
       }
       return levels;
+    },
+
+    readPeak() {
+      if (clock.now() - lastAt > LEVEL_STALE_MS) return 0;
+      let peak = 0;
+      for (const sample of latest) peak = Math.max(peak, Math.abs(sample));
+      return peak / 32768;
     },
 
     reset() {

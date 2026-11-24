@@ -98,14 +98,16 @@ describe("Qwen LiveTranslate's segments (spec §6)", () => {
     translated.s.answer('t-ja', 'h-ja');
     translated.s.text('h-ja', 'source', '今日は会議の資料を確認します。');
     translated.s.text('t-ja', 'translation', '今天我会检查会议资料。');
-    translated.s.done('t-ja', 'translation', '今天我会检查会议资料。');
-    expect(translated.log.filter((e) => e.kind === 'segmentOpened')).toHaveLength(1);
-    translated.s.done('h-ja', 'source', '今日は会議の資料を確認します。');
-    expect(translated.seen().slice(-5)).toEqual([
-      ['segmentText', { ref: 1, text: '今日は会議の資料を確認します。', language: 'ja' }],
-      ['segmentClosed', { ref: 1 }],
+    expect(translated.seen().slice(-2)).toEqual([
       ['segmentOpened', { ref: 2, side: 'translation', origin: 'h-ja' }],
       ['segmentText', { ref: 2, text: '今天我会检查会议资料。' }],
+    ]);
+    translated.s.done('t-ja', 'translation', '今天我会检查会议资料。');
+    expect(translated.log.filter((e) => e.kind === 'segmentClosed')).toHaveLength(0);
+    translated.s.done('h-ja', 'source', '今日は会議の資料を確認します。');
+    expect(translated.seen().slice(-3)).toEqual([
+      ['segmentText', { ref: 1, text: '今日は会議の資料を確認します。', language: 'ja' }],
+      ['segmentClosed', { ref: 1 }],
       ['segmentClosed', { ref: 2 }],
     ]);
 
@@ -118,6 +120,22 @@ describe("Qwen LiveTranslate's segments (spec §6)", () => {
     same.s.done('h-zh', 'source', '今天我们讨论会议安排和测试结果。');
     expect(same.log.filter((e) => e.kind === 'segmentOpened')).toEqual([{ kind: 'segmentOpened', payload: { ref: 1, side: 'source', origin: 'h-zh' } }]);
     expect(same.log.some((e) => e.kind === 'segmentText' && 'language' in e.payload && e.payload.language === 'zh')).toBe(true);
+  });
+
+  it('releases buffered translation on a foreign partial and clears it if the final ASR is Chinese', () => {
+    const { s, seen } = segments(false, undefined, { detectIncomingLanguage: true, skipSameLanguageText: true, targetLanguage: 'zh' });
+    s.heard('source');
+    s.answer('translation', 'source');
+    s.text('translation', 'translation', '今天我们会讨论会议安排。');
+    expect(seen()).toEqual([]);
+    s.text('source', 'source', 'Today we will discuss the schedule.');
+    expect(seen().at(-1)).toEqual(['segmentText', { ref: 2, text: '今天我们会讨论会议安排。' }]);
+    s.done('translation', 'translation', '今天我们会讨论会议安排。');
+    s.done('source', 'source', '今天我们讨论会议安排和测试结果。');
+    expect(seen().slice(-2)).toEqual([
+      ['segmentText', { ref: 2, text: '' }],
+      ['segmentClosed', { ref: 2 }],
+    ]);
   });
 
   it('states the origin when the translation closes, when its link came after it opened', () => {

@@ -1,5 +1,5 @@
 import { ArrowLeftRight, Languages } from 'lucide-react';
-import { useCallback, useId, useMemo } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '../Tooltip/Tooltip';
 import { pairSentence } from '../SetupWizard/languageSentence';
@@ -86,6 +86,10 @@ interface LanguagePairSectionProps {
   settings: unknown;
   pair: LanguagePair;
   onChange(pair: LanguagePair): void;
+  incomingLanguage?: string;
+  onIncomingLanguageChange?(language: string): void;
+  liveOutgoingTarget?: { language: string; pending: boolean } | null;
+  onLiveOutgoingTargetChange?(language: string): Promise<boolean>;
   disabled?: boolean;
   /**
    * Today's sentence (ruling 4): "I speak / they hear", or the mode-aware
@@ -133,8 +137,9 @@ export interface SpokenBy {
  * allowed whenever the provider supports the reversed pair. Markup is
  * LanguageSection's translation-languages block.
  */
-export function LanguagePairSection({ provider, settings, pair, onChange, disabled, sentence, context, reverseContext = context, heading = true, receive, speech = capabilitiesAlone(provider, 'speech').speech, spoken }: LanguagePairSectionProps) {
+export function LanguagePairSection({ provider, settings, pair, onChange, incomingLanguage, onIncomingLanguageChange, liveOutgoingTarget, onLiveOutgoingTargetChange, disabled, sentence, context, reverseContext = context, heading = true, receive, speech = capabilitiesAlone(provider, 'speech').speech, spoken }: LanguagePairSectionProps) {
   const { t, i18n } = useTranslation();
+  const [liveTargetError, setLiveTargetError] = useState(false);
   const id = useId();
   const label = useLanguageLabel();
   // The other side's leg runs the pair's reverse as the provider states it (`reversedPair`: Palabra's is its own codes,
@@ -227,6 +232,7 @@ export function LanguagePairSection({ provider, settings, pair, onChange, disabl
   const targetLabel = resolved ? t(resolved.their.key, resolved.their.fallback) : t('settings.targetLanguage');
   const sourceLanguageName = label(pair.source);
   const targetLanguageName = label(pair.target);
+  const incomingOptions = useMemo(() => orderLanguages(sources, ctx), [sources, ctx]);
 
   // The choices this mode shows: the other side's on my leg, mine on theirs.
   const theirs = sentence && sentence.mode !== 'participant' ? receive?.theirs : undefined;
@@ -313,11 +319,15 @@ export function LanguagePairSection({ provider, settings, pair, onChange, disabl
       id={selectId}
       className="language-select"
       aria-label={ariaLabel}
-      value={pair.target}
-      onChange={(e) => chooseTarget(e.target.value)}
-      disabled={disabled}
+      value={liveOutgoingTarget?.language ?? pair.target}
+      onChange={(e) => {
+        if (!liveOutgoingTarget || !onLiveOutgoingTargetChange) return chooseTarget(e.target.value);
+        setLiveTargetError(false);
+        void onLiveOutgoingTargetChange(e.target.value).then((ok) => setLiveTargetError(!ok)).catch(() => setLiveTargetError(true));
+      }}
+      disabled={(disabled && !liveOutgoingTarget) || Boolean(liveOutgoingTarget?.pending)}
     >
-      {!targets.some((o) => o.value === pair.target) && <option value={pair.target} disabled>{label(pair.target)}</option>}
+      {!targets.some((o) => o.value === (liveOutgoingTarget?.language ?? pair.target)) && <option value={liveOutgoingTarget?.language ?? pair.target} disabled>{label(liveOutgoingTarget?.language ?? pair.target)}</option>}
       {options(targetOptions)}
     </select>
   );
@@ -379,6 +389,15 @@ export function LanguagePairSection({ provider, settings, pair, onChange, disabl
   // Both, with my word a choice (`theirRow` above): the other side's leg is a row of its own, drawn as the first (owner,
   // 2026-11-18): two legs of equal weight, each language shown where it comes from and where it goes.
   const theySpeakLabel = t('settings.langSentence.theySpeak', 'they speak');
+  const incomingSelect = (selectId: string) => (
+    <select id={selectId} className="language-select" aria-label={theySpeakLabel}
+      value={incomingLanguage ?? pair.target} disabled={disabled}
+      onChange={(e) => onIncomingLanguageChange?.(e.target.value)}>
+      <option value="auto">{t('settings.languageAuto', 'Auto detect')}</option>
+      {incomingOptions.filter((o) => o.value !== AUTO).map((o) => <option key={o.value} value={o.value}>{label(o.value)}</option>)}
+    </select>
+  );
+  const hasIncomingControl = provider.id === 'qwen_livetranslate' && Boolean(onIncomingLanguageChange);
 
   return (
     <div className="config-section" id="languages-section">
@@ -404,10 +423,13 @@ export function LanguagePairSection({ provider, settings, pair, onChange, disabl
         <div className="language-select-group">
           {theirs
             ? receiveSelect('theirs', theirs, words.theirs)
-            : <label htmlFor={`${id}-target`}>{targetLabel}</label>}
-          {targetSelect(`${id}-target`, theirs ? targetLabel : undefined)}
+            : <label htmlFor={`${id}-target`}>{sentence?.mode === 'participant' && hasIncomingControl ? theySpeakLabel : targetLabel}</label>}
+          {sentence?.mode === 'participant' && hasIncomingControl
+            ? incomingSelect(`${id}-target`)
+            : targetSelect(`${id}-target`, theirs ? targetLabel : undefined)}
         </div>
       </div>
+      {liveTargetError && <p role="status" className="language-receive-reason">{t('notices.outgoing_language_switch_failed', 'Could not change the outgoing language.')}</p>}
       {/* Each reason under the row its word is in: theirs in the first; mine there in Other, under its own row in Both. */}
       {reasonFor('theirs')}
       {mineLeads && reasonFor('mine')}
@@ -415,7 +437,9 @@ export function LanguagePairSection({ provider, settings, pair, onChange, disabl
         <div className="language-pair-row" data-testid="language-their-row">
           <div className="language-select-group">
             <label htmlFor={`${id}-their-target`}>{theySpeakLabel}</label>
-            {legSelect(`${id}-their-target`, theirChoices.theyCanSpeak, (target) => leg({ source: pair.source, target }).source, pair.target, chooseTarget)}
+            {hasIncomingControl
+              ? incomingSelect(`${id}-their-target`)
+              : legSelect(`${id}-their-target`, theirChoices.theyCanSpeak, (target) => leg({ source: pair.source, target }).source, pair.target, chooseTarget)}
           </div>
           {swap}
           <div className="language-select-group">

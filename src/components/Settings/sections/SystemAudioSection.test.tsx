@@ -41,6 +41,7 @@ vi.mock('../../../stores/audioStore', () => ({
   useSetParticipantMuted: () => store.setMuted,
   useParticipantSources: () => store.sources,
   useSelectedParticipantSource: () => store.selected,
+  useAutoMeetingResolvedSource: () => null,
   useSelectParticipantSource: () => store.select,
   useRefreshDevices: () => store.refresh,
   useIsAudioLoading: () => false,

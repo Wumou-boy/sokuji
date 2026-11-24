@@ -61,6 +61,69 @@ const disabledValues = (select: HTMLSelectElement) => [...select.options].filter
 const codesOf = (select: HTMLElement) => [...new Set(values(select).filter((v) => v !== PIN_SEPARATOR))].sort();
 
 describe('LanguagePairSection', () => {
+  it('offers persistent auto detection as a separate incoming language choice for Qwen', () => {
+    const onPair = vi.fn();
+    const onIncoming = vi.fn();
+    render(
+      <LanguagePairSection
+        provider={{ ...fakeProvider, id: 'qwen_livetranslate' } as typeof fakeProvider}
+        settings={FAKE_DEFAULTS}
+        pair={{ source: 'zh', target: 'en' }}
+        onChange={onPair}
+        incomingLanguage="en"
+        onIncomingLanguageChange={onIncoming}
+        sentence={{ mode: 'both', textOnly: false }}
+        receive={{ theirs: choice(true), mine: choice(false) }}
+      />,
+    );
+    const incoming = screen.getByLabelText('settings.langSentence.theySpeak') as HTMLSelectElement;
+    expect(screen.getByTestId('language-their-row').querySelectorAll('select.language-select')).toHaveLength(2);
+    expect(document.querySelectorAll('#languages-section select.language-select')).toHaveLength(4);
+    expect(values(incoming)).toContain('auto');
+    fireEvent.change(incoming, { target: { value: 'auto' } });
+    expect(onIncoming).toHaveBeenCalledWith('auto');
+    expect(onPair).not.toHaveBeenCalled();
+  });
+
+  it('uses the existing participant-only language control for incoming source selection', () => {
+    const onPair = vi.fn();
+    const onIncoming = vi.fn();
+    render(<LanguagePairSection
+      provider={{ ...fakeProvider, id: 'qwen_livetranslate' } as typeof fakeProvider}
+      settings={FAKE_DEFAULTS} pair={{ source: 'zh', target: 'en' }} onChange={onPair}
+      incomingLanguage="en" onIncomingLanguageChange={onIncoming}
+      sentence={{ mode: 'participant', textOnly: false }} receive={{ mine: choice(false) }}
+    />);
+    const incoming = screen.getByLabelText('settings.langSentence.theySpeak') as HTMLSelectElement;
+    expect(document.querySelectorAll('#languages-section select.language-select')).toHaveLength(2);
+    fireEvent.change(incoming, { target: { value: 'auto' } });
+    expect(onIncoming).toHaveBeenCalledWith('auto');
+    expect(onPair).not.toHaveBeenCalled();
+  });
+
+  it('routes a live outgoing target change to the run and leaves the stored pair edit path alone', async () => {
+    const onPair = vi.fn();
+    const onLiveTarget = vi.fn(async () => true);
+    render(
+      <LanguagePairSection
+        provider={fakeProvider}
+        settings={FAKE_DEFAULTS}
+        pair={{ source: 'en', target: 'ja' }}
+        onChange={onPair}
+        disabled
+        liveOutgoingTarget={{ language: 'ja', pending: false }}
+        onLiveOutgoingTargetChange={onLiveTarget}
+      />,
+    );
+    const target = screen.getByLabelText('settings.targetLanguage');
+    expect(target).toBeEnabled();
+    const next = values(target).find((value) => value !== 'ja' && value !== PIN_SEPARATOR);
+    expect(next).toBeDefined();
+    fireEvent.change(target, { target: { value: next } });
+    await vi.waitFor(() => expect(onLiveTarget).toHaveBeenCalledWith(next));
+    expect(onPair).not.toHaveBeenCalled();
+  });
+
   it('names each option from the code, not from the option (unified language codes)', () => {
     // The file's react-i18next mock carries no i18n object: names come out in English.
     const provider = {

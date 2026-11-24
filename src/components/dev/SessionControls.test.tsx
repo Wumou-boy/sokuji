@@ -39,6 +39,7 @@ function fakeRunner(initial: RunState = { phase: 'idle' }) {
     release: vi.fn(),
     speakerAudioInUse: vi.fn(() => false),
     sendText: vi.fn(),
+    setOutgoingTarget: vi.fn(async () => true),
     clear: vi.fn(),
   };
   return { runner, state };

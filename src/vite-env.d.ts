@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 declare const __APP_VERSION__: string;
+declare const __APP_RELEASE__: string;
+declare const __AED_PORTABLE__: boolean;
 
 interface ImportMetaEnv {
   readonly VITE_BACKEND_URL?: string;
@@ -14,4 +16,4 @@ interface ImportMetaEnv {
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
-} 
+}

@@ -18,10 +18,12 @@ import type { AudioMode } from '../../../stores/audioStore';
  * today's condition did — a hidden strip is unmounted, not merely styled
  * invisible, so it neither draws nor reads its meter.
  */
-export function InputWaveforms({ mode, levels }: { mode: AudioMode; levels: Readonly<Record<LegName, LevelMeter>> | null }) {
+export function InputWaveforms({ mode, levels, hideParticipant = false }: { mode: AudioMode; levels: Readonly<Record<LegName, LevelMeter>> | null; hideParticipant?: boolean }) {
   const { t } = useTranslation();
   const showMic = mode === 'speaker' || mode === 'both';
-  const showSystem = mode === 'participant' || mode === 'both';
+  const showSystem = !hideParticipant && (mode === 'participant' || mode === 'both');
+  if (!showMic && !showSystem) return null;
+  const width = showMic && showSystem ? 'half' : 'full';
 
   return (
     <div className="waveform-input-group">
@@ -30,7 +32,7 @@ export function InputWaveforms({ mode, levels }: { mode: AudioMode; levels: Read
           kind="mic"
           read={() => levels?.speaker.read() ?? null}
           colorToken="--sk-waveform-speaker"
-          width={mode === 'both' ? 'half' : 'full'}
+          width={width}
           title={t('mainPanel.waveformMicTooltip', 'Your microphone — your voice being captured for translation')}
         />
       )}
@@ -39,7 +41,7 @@ export function InputWaveforms({ mode, levels }: { mode: AudioMode; levels: Read
           kind="system"
           read={() => levels?.participant.read() ?? null}
           colorToken="--sk-waveform-participant"
-          width={mode === 'both' ? 'half' : 'full'}
+          width={width}
           title={t('mainPanel.waveformSystemTooltip', "Other's audio captured for translation (browser tab / system audio)")}
         />
       )}

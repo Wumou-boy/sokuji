@@ -1,9 +1,12 @@
 # Local agent control on Windows
 
-Start the desktop app with `sokuji.exe --agent-control`. The command interface
+Start the Windows portable app with `& '.\AED Translator.exe' --agent-control`. The command interface
 is disabled by default. It uses a Windows named pipe and a temporary credential
 in the app's current user-data directory. A normal launch does not accept agent
 commands.
+
+To package the Windows portable app, set `AED_WINDOWS_PORTABLE=1` when running
+`npm run package`. This gives the ZIP's launcher the name `AED Translator.exe`.
 
 Run `node scripts/sokuji-agent.cjs --help` from this checkout. From a different
 directory, use the absolute path to the script or install a local command shim.
@@ -41,11 +44,27 @@ synthetic 24 kHz mono PCM16LE fixture with the same translation runtime. Use
 `face stop` after the captions finish. The status reports how many source
 turns needed a second Qwen LiveTranslate direction and the submitted PCM sample
 count, alongside the recent subtitle and speaker metadata.
-Use `audio inputs` to read the selected microphone, participant audio source,
-and system default devices without opening an audio stream.
+Use `audio inputs` to read the selected microphone, Windows default devices,
+virtual microphone output, and configured speech routes without opening an
+audio stream. `participantApplications` lists the applications Windows discovered
+with audio sessions. `microphoneEchoMode` reports the configured echo mode.
+`participantCaptureWidened` reports whether application capture
+fell back to the system mix.
 `audio system-check` briefly opens the current participant source in idle
-Online Meeting and releases it. It runs locally with audio muted and does not
+Online Meeting and releases it. It runs locally and does not play audio or
 contact a translation provider.
+`audio system-check --auto` starts sampling meeting applications immediately
+and waits up to 12 seconds for audio to appear. It reports the app it opened
+and its local PCM peak (`peakLevel`, 0–1) without changing the saved source.
+`audio echo-check` runs a local 5.5-second comparison between automatically
+detected application audio and the configured microphone. It reports only the
+selected app, configured and applied browser AEC, reference and microphone RMS
+before and after Sokuji's software echo reduction, and the count of correlated
+microphone chunks. It stores no audio, starts no session, contacts no provider,
+and does not change saved devices. `--mic-label "Realtek Microphone"` captures
+an exact listed device for this check only; omit it to use the configured mic.
+If that microphone cannot open, the check fails instead of switching to another
+device. Both sources are released when the check ends or fails.
 
 `voice benchmark --round 1` compares a preset, the selected fixed Qwen
 voice, and per-turn voice cloning against the same synthetic sample.
@@ -57,7 +76,11 @@ Inspect `status` before starting. Start and stop only when the current request
 authorizes the corresponding action.
 
 `logs list` returns caption request metadata, including status, elapsed time
-and safe error categories. `captions` omits text unless `--include-text` is
+and safe error categories. It includes speech boundary and caption delta event
+times without the caption contents. Capture entries report the participant
+backend and the echo cancellation mode requested and applied to the microphone.
+Detected echo appears as `audio.echo.warning` with cause, delay, and correlation.
+`captions` omits text unless `--include-text` is
 present. Use that option only when the caller intends to read the caption
 content. Keep the endpoint credential files in the app profile.
 

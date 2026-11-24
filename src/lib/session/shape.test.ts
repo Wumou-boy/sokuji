@@ -13,6 +13,7 @@ import type { AnyProvider, LanguageContext } from '../provider/types';
 import { balanceRefusal, BALANCE_BELOW_FLOOR, contextsFor, gate, languageContext, microphoneMissing, participantSpeechInput, planLanguages, QUOTA_PENDING, QUOTA_UNKNOWN, speakFor } from './shape';
 import type { BalanceShape, RunShape } from './types';
 import { registerReleasedCatalog } from '../lineup/catalog.testing';
+import { qwenLiveTranslateProvider } from '../../providers/qwen_livetranslate/provider';
 
 registerReleasedCatalog();
 
@@ -38,6 +39,12 @@ const shape = ({ provider = fakeProvider, ...patch }: Patch = {}): RunShape => s
 });
 
 describe('contextsFor', () => {
+  it('uses the separately selected incoming source without changing the outgoing speaker pair', () => {
+    const contexts = contextsFor(shape({ provider: qwenLiveTranslateProvider, legs: ['speaker', 'participant'], incomingLanguage: 'auto' }));
+    expect(contexts.speaker?.direction).toEqual({ source: 'en', target: 'ja' });
+    expect(contexts.participant?.direction).toEqual({ source: 'auto', target: 'en' });
+  });
+
   it('gives the speaker the pair and the participant its reverse, always with automatic turns', () => {
     const contexts = contextsFor(shape({ legs: ['speaker', 'participant'], turnMode: 'push-to-talk' }));
     expect(contexts).toEqual({
