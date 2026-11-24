@@ -121,13 +121,15 @@ describe('search in the settings', () => {
 
   it('a provider name finds Accounts and keys, in any interface language', async () => {
     render(<SettingsPage onClose={vi.fn()} bodies={bodies} />);
-    for (const name of ['Soniox', 'KizunaAI', 'kizuna ai', 'Palabra AI', 'OpenAI Realtime', 'Google Gemini', 'Doubao AST']) {
+    for (const name of ['QwenLiveTranslate', 'Bailian', 'OpenAI-Compatible']) {
       fireEvent.change(search(), { target: { value: name } });
       expect(listed()).toEqual(['Accounts and keys']);
     }
     // Only names are matched without their spaces: a query does not run across the spaces of other words.
-    fireEvent.change(search(), { target: { value: 'sand' } });
-    expect(listed()).toEqual([]);
+    for (const name of ['sand', 'Soniox', 'Google Gemini', 'OpenAI Realtime']) {
+      fireEvent.change(search(), { target: { value: name } });
+      expect(listed()).toEqual([]);
+    }
     await changeLanguageWithLoad('zh_CN');
     fireEvent.change(search(), { target: { value: 'openai' } });
     expect(listed()).toEqual(['账号与密钥']);

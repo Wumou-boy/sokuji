@@ -29,7 +29,7 @@ describe('the Qwen LiveTranslate definition (spec §1)', () => {
       TurnDetection: { Summary: QwenTurnDetectionSummary, Controls: QwenTurnDetectionControls },
       credentials: qwenCredentials,
       check: checkQwen,
-      checkReads: ['connection'],
+      checkReads: ['connection', 'workspaceId'],
       languages: qwenLanguages,
     });
     expect(qwenLiveTranslateProvider.units.map((u) => u.id)).toEqual(['whole']);

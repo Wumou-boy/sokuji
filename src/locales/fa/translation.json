@@ -62,12 +62,12 @@
     },
     "echoCancellation": "حذف پژواک",
     "echoCancellationTooltip": {
-      "app": "فقط Sokuji — گفتار ترجمه‌شده Sokuji را اگر میکروفون آن را دریافت کند حذف می‌کند. اگر میکروفون یک کابل مجازی مانند BlackHole است این گزینه را انتخاب کنید.",
+      "app": "فقط AED Translator — گفتار ترجمه‌شده AED Translator را اگر میکروفون آن را دریافت کند حذف می‌کند. اگر میکروفون یک کابل مجازی مانند BlackHole است این گزینه را انتخاب کنید.",
       "browser": "فقط مرورگر — آنچه این مرورگر پخش می‌کند، از جمله زبانه‌های جلسه، را اگر میکروفون دریافت کند حذف می‌کند. اگر میکروفون یک کابل مجازی مانند BlackHole است که صدای برنامه دیگری را منتقل می‌کند، این گزینه را انتخاب کنید.",
       "all": "همه صداها — صدایی را که برنامه‌های دیگر از بلندگوها پخش می‌کنند، مانند برنامه جلسه، نیز حذف می‌کند. کابل مجازی‌ای که به‌عنوان میکروفون استفاده می‌شود دقیقاً همین صدا را منتقل می‌کند و بی‌صدا می‌شود."
     },
     "echoCancellationMode": {
-      "app": "فقط Sokuji",
+      "app": "فقط AED Translator",
       "browser": "فقط مرورگر",
       "all": "همه صداها"
     },
@@ -370,9 +370,9 @@
     "virtualMicrophone": "میکروفون مجازی",
     "virtualMicrophoneNotice": "اطلاعیه میکروفون مجازی",
     "iUnderstand": "متوجه شدم",
-    "virtualMicWarningTitle": "این یک میکروفون مجازی ایجاد شده توسط Sokuji است.",
+    "virtualMicWarningTitle": "این یک میکروفون مجازی ایجاد شده توسط AED Translator است.",
     "virtualMicWarningText1": "لطفاً این دستگاه را اینجا انتخاب نکنید. به جای آن، از این میکروفون مجازی در برنامه‌های ویدئو کنفرانس خود (مانند Google Meet، Zoom، Microsoft Teams و غیره) برای دریافت خروجی ترجمه صوتی بلادرنگ استفاده کنید.",
-    "virtualMicWarningText2": "برای عملکرد صحیح Sokuji، میکروفون فیزیکی واقعی خود را از فهرست انتخاب کنید.",
+    "virtualMicWarningText2": "برای عملکرد صحیح AED Translator، میکروفون فیزیکی واقعی خود را از فهرست انتخاب کنید.",
     "realVoicePassthrough": "عبور مستقیم",
     "passthroughManagedByPushToTranslate": "در حالت فشار و ترجمه، عبور صدا به‌طور خودکار مدیریت می‌شود: وقتی کلید را نگه نداشته‌اید با ۱۰۰٪ بلندی عبور می‌کند و هنگام نگه‌داشتن کلید، ضبط و ترجمه انجام می‌شود (بدون عبور).",
     "speechTitle": "گفتار",
@@ -412,7 +412,7 @@
     "screenRecordingDeniedNotice": "نیاز به مجوز",
     "screenRecordingDeniedTitle": "مجوز ضبط صفحه رد شد",
     "screenRecordingDeniedText1": "صدای طرف مقابل برای ضبط صدای سیستم به مجوز ضبط صفحه نیاز دارد.",
-    "screenRecordingDeniedText2": "لطفاً به System Preferences > Privacy & Security > Screen Recording بروید و Sokuji را فعال کنید.",
+    "screenRecordingDeniedText2": "لطفاً به System Preferences > Privacy & Security > Screen Recording بروید و AED Translator را فعال کنید.",
     "screenRecordingDeniedText3": "پس از فعال کردن مجوز، لطفاً برنامه را مجدداً راه‌اندازی کنید.",
     "turnOnMicrophone": "روشن کردن میکروفون",
     "turnOffMicrophone": "خاموش کردن میکروفون",
@@ -429,9 +429,9 @@
     "participantFellBackToSystemAudio": "ضبط برنامهٔ انتخاب‌شده متوقف شد، بنابراین اکنون کل صدای سیستم ترجمه می‌شود. برای محدود کردن دوباره، برنامه را دوباره انتخاب کنید.",
     "loopbackMicNotice": "هشدار ورودی لوپ‌بک",
     "loopbackMicWarningTitle": "این ورودی آنچه را این رایانه پخش می‌کند دوباره ضبط می‌کند.",
-    "loopbackMicWarningText1": "ورودی‌های لوپ‌بک مانند «Stereo Mix» یا دستگاه‌های «Monitor of ...» خروجی صوتی خود سیستم را ضبط می‌کنند. در جلسه‌ای که گفتار ترجمه‌شدهٔ Sokuji را شامل شود، Sokuji صدای خود را می‌شنود و در یک حلقه خود را ترجمه می‌کند.",
+    "loopbackMicWarningText1": "ورودی‌های لوپ‌بک مانند «Stereo Mix» یا دستگاه‌های «Monitor of ...» خروجی صوتی خود سیستم را ضبط می‌کنند. در جلسه‌ای که گفتار ترجمه‌شدهٔ AED Translator را شامل شود، AED Translator صدای خود را می‌شنود و در یک حلقه خود را ترجمه می‌کند.",
     "loopbackMicWarningText2": "اگر این مسیر عمدی است دستگاه انتخاب‌شده می‌ماند، اما برای استفادهٔ عادی لطفاً یک میکروفون فیزیکی انتخاب کنید.",
-    "participantNoAudioYet": "هنوز صدایی از منبع انتخاب‌شده دریافت نشده است. اگر در حال پخش است و چیزی ترجمه نمی‌شود، در System Settings > Privacy & Security > System Audio Recording Only به Sokuji اجازه دهید (macOS) و سپس جلسه را دوباره شروع کنید.",
+    "participantNoAudioYet": "هنوز صدایی از منبع انتخاب‌شده دریافت نشده است. اگر در حال پخش است و چیزی ترجمه نمی‌شود، در System Settings > Privacy & Security > System Audio Recording Only به AED Translator اجازه دهید (macOS) و سپس جلسه را دوباره شروع کنید.",
     "audioCaptureUnprovenNotice": "هنوز چیزی ضبط نشده است",
     "audioCaptureUnprovenTitle": "هنوز صدایی از منبع انتخاب‌شده دریافت نشده است",
     "audioCaptureUnprovenText1": "اگر منبع در حال پخش است و چیزی ترجمه نمی‌شود، احتمالاً macOS سکوت تحویل می‌دهد: ضبط صدای یک برنامه به مجوز «System Audio Recording Only» نیاز دارد و بدون آن خطایی رخ نمی‌دهد، فقط سکوت است.",
@@ -475,7 +475,7 @@
     "verificationEmailFailed": "ارسال ایمیل تأیید ناموفق بود. لطفاً دوباره امتحان کنید",
     "alreadyVerified": "ایمیل شما از قبل تأیید شده است!",
     "cooldownMessage": "لطفاً {{seconds}} ثانیه صبر کنید",
-    "checkYourEmail": "ایمیل تأیید ارسال شد. آن را در صندوق ورودی خود کامل کنید و برگردید — Sokuji به‌طور خودکار آن را تشخیص می‌دهد.",
+    "checkYourEmail": "ایمیل تأیید ارسال شد. آن را در صندوق ورودی خود کامل کنید و برگردید — AED Translator به‌طور خودکار آن را تشخیص می‌دهد.",
     "emailVerifiedToast": "ایمیل تأیید شد",
     "sessionExpired": "نشست شما منقضی شده است. لطفاً دوباره وارد شوید.",
     "forgotPassword": "رمز عبور را فراموش کردید؟",
@@ -499,16 +499,16 @@
   },
   "simpleConfig": {
     "interfaceLanguage": "زبان رابط کاربری",
-    "interfaceLanguageDesc": "این زبان منوها و دکمه‌های Sokuji را تغییر می‌دهد. بر زبان‌هایی که می‌توانید بین آن‌ها ترجمه کنید تأثیر نمی‌گذارد.",
+    "interfaceLanguageDesc": "این زبان منوها و دکمه‌های AED Translator را تغییر می‌دهد. بر زبان‌هایی که می‌توانید بین آن‌ها ترجمه کنید تأثیر نمی‌گذارد.",
     "translationLanguages": "زبان‌های ترجمه",
     "translationLanguagesDesc": "زبانی که صحبت می‌کنید (زبان من) و زبانی که می‌خواهید ترجمه را بشنوید (زبان طرف مقابل) را انتخاب کنید. اگر مطمئن نیستید به چه زبانی صحبت خواهید کرد \"تشخیص خودکار\" را انتخاب کنید.",
     "yourLanguage": "زبان من",
     "userAccount": "حساب کاربری",
     "userAccountTooltip": "کاربران فنی می‌توانند از کلیدهای API شخصی خود استفاده کنند. حساب کاربری برای راه‌اندازی آسان طراحی شده است.",
-    "signInRequired": "برای استفاده از سرویس ترجمه داخلی Sokuji ثبت‌نام کنید — بدون نیاز به کلید API. می‌توانید همچنان از ارائه‌دهنده و کلید خودتان هم استفاده کنید.",
+    "signInRequired": "برای استفاده از سرویس ترجمه داخلی AED Translator ثبت‌نام کنید — بدون نیاز به کلید API. می‌توانید همچنان از ارائه‌دهنده و کلید خودتان هم استفاده کنید.",
     "targetLanguage": "زبان طرف مقابل",
     "microphone": "میکروفون",
-    "microphoneDesc": "میکروفون را برای ضبط گفتار خود انتخاب کنید. به زبان خود در این میکروفون صحبت کنید، و Sokuji هر آنچه می‌شنود را به صورت زنده ترجمه خواهد کرد.",
+    "microphoneDesc": "میکروفون را برای ضبط گفتار خود انتخاب کنید. به زبان خود در این میکروفون صحبت کنید، و AED Translator هر آنچه می‌شنود را به صورت زنده ترجمه خواهد کرد.",
     "swapLanguages": "تعویض زبان‌ها",
     "swapNotSpoken": "سرویس گفتار این زبان‌ها را در جهت برعکس نمی‌خواند.",
     "textOnly": "فقط متن",
@@ -588,7 +588,27 @@
       "screenContextNone": "هنوز پنجره‌ای انتخاب نشده است: هنگام شروع جلسه از شما پرسیده می‌شود.",
       "screenContextChoose": "انتخاب…",
       "speakerLabels": "برچسب گوینده",
-      "speakerLabelsTooltip": "افراد طرف مقابل را شماره‌گذاری می‌کند — گوینده 1، گوینده 2… — وقتی بیش از یک صدا شنیده شود.\n\nممکن است یک نفر را چند نفر تشخیص دهد. غیرفعال: هیچ شماره‌ای نمایش داده نمی‌شود.\n\nاز جلسه بعدی اعمال می‌شود."
+      "speakerLabelsTooltip": "افراد طرف مقابل را شماره‌گذاری می‌کند — گوینده 1، گوینده 2… — وقتی بیش از یک صدا شنیده شود.\n\nممکن است یک نفر را چند نفر تشخیص دهد. غیرفعال: هیچ شماره‌ای نمایش داده نمی‌شود.\n\nاز جلسه بعدی اعمال می‌شود.",
+      "voiceSummaryFixed": "Your own voice (fixed)",
+      "voiceDefaultName": "My voice",
+      "voiceReadAloudTitle": "Read this aloud at your usual speaking pace",
+      "voiceReadAloudSample": "Let’s review the project schedule. The first samples should arrive on Wednesday. Please check the quantities and specifications when they arrive, and send me a photo if anything looks wrong.",
+      "voiceUploadNotice": "After you confirm, AED Translator uploads this 10–20 second recording to Alibaba Model Studio's private temporary storage (expires after 48 hours) to create a Qwen 3.8 voice. Voice creation may be billed; translation is billed by usage. The cloned voice stays in your Alibaba account until you delete it. AED Translator lists only profiles created on this device because LiveTranslate does not provide a voice-list API.",
+      "voiceConsent": "After you confirm, AED Translator uses Alibaba temporary private storage by default. The optional public HTTPS URL is sent to Alibaba as the reference source; AED Translator does not upload audio to that host. Cloned voices remain in your Alibaba account until deleted.",
+      "voiceReferenceUrlLabel": "Optional public HTTPS audio URL (fallback)",
+      "voiceReferenceUrlPlaceholder": "https://your-public-host.example/voice.wav",
+      "voiceBailianOnly": "Voice enrollment is currently supported only with a Bailian shared Beijing API key. Choose Bailian shared and save its API key. Company workspace, QwenCloud and managed connections are not supported for enrollment.",
+      "voiceDesktopOnly": "Recording and enrollment are available in the AED Translator Windows desktop app.",
+      "voiceListError": "Could not load voice profiles saved in this app profile.",
+      "voiceCreateFailed": "Could not create this voice. Check the Bailian connection and try again.",
+      "connectionPersonal": "Personal QwenCloud",
+      "connectionBailianShared": "Bailian shared",
+      "connectionBailianWorkspace": "Company workspace",
+      "workspaceApiKey": "Company workspace API key",
+      "workspaceId": "Bailian workspace ID",
+      "workspaceKeyNote": "Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.",
+      "workspaceDesktopOnly": "Dedicated workspace connections are available in the Windows desktop app only.",
+      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace)"
     },
     "local_inference": {
       "name": "این دستگاه",
@@ -717,7 +737,7 @@
       "scopeLabel": "شامل کردن",
       "scopeItemAria": "{{scope}} — {{line}}",
       "scopeEmpty": "چیزی انتخاب نشده است",
-      "headerTitle": "خروجی گفتگوی Sokuji",
+      "headerTitle": "خروجی گفتگوی AED Translator",
       "headerSessionStarted": "شروع جلسه",
       "headerExported": "زمان برون‌بری",
       "headerProvider": "ارائه‌دهنده",
@@ -961,7 +981,7 @@
     "gpuSoftwareOnly": "شتاب‌دهی GPU در دسترس نیست — اجرا روی CPU",
     "gpuUnavailable": "شتاب‌دهی GPU در دسترس نیست",
     "gpuSlowWarning": "مدل‌های محلی همچنان کار می‌کنند، اما رونویسی و ترجمه به‌طور محسوسی کندتر خواهند بود.",
-    "gpuWaylandRemedy": "در نشست Wayland، Chromium نمی‌تواند از GPU برای این کار استفاده کند. اجرای Sokuji با --ozone-platform=x11 شتاب‌دهی را بازمی‌گرداند.",
+    "gpuWaylandRemedy": "در نشست Wayland، Chromium نمی‌تواند از GPU برای این کار استفاده کند. اجرای AED Translator با --ozone-platform=x11 شتاب‌دهی را بازمی‌گرداند.",
     "othersGroup": "مدل‌های دیگر",
     "requiresGpu": "به GPU نیاز دارد",
     "licenseConsent": {
@@ -972,7 +992,7 @@
       "viewLicense": "مشاهده متن کامل مجوز",
       "nonCommercial": "این مجوز تنها استفاده غیرتجاری را مجاز می‌داند — از این مدل در هیچ محصول یا خدمت تجاری استفاده نکنید.",
       "restrictedTerms": "این یک مجوز متن‌باز نیست. برای نحوه استفاده از مدل و خروجی آن شرایطی تعیین می‌کند — پیش از تکیه بر آن، متن کامل را بخوانید.",
-      "disclaimer": "Sokuji با سازندگان مدل هیچ وابستگی یا ارتباطی ندارد. این یکپارچه‌سازی غیررسمی است و همان‌گونه که هست، بدون هیچ ضمانتی ارائه می‌شود.",
+      "disclaimer": "AED Translator با سازندگان مدل هیچ وابستگی یا ارتباطی ندارد. این یکپارچه‌سازی غیررسمی است و همان‌گونه که هست، بدون هیچ ضمانتی ارائه می‌شود.",
       "attribution": "انتساب: {{attribution}}",
       "cancel": "لغو",
       "accept": "متوجه شدم — فقط استفاده غیرتجاری",
@@ -1015,7 +1035,23 @@
       "engineHint": "موتور رومیزی که نسخه‌های قبلی برای اجرای مدل‌ها روی این رایانه دانلود کرده‌اند. سرویس «این دستگاه» دیگر از آن استفاده نمی‌کند؛ برای آزاد کردن فضا آن را حذف کنید.",
       "remove": "حذف",
       "engineConfirm": "موتور محلی حذف شود؟",
-      "engineFrees": "{{size}} آزاد می‌شود."
+      "engineFrees": "{{size}} آزاد می‌شود.",
+      "aedLocalHint": "CPU models cover Chinese ↔ English and Japanese ↔ English. For direct Chinese ↔ Japanese, use WebGPU or a company endpoint.",
+      "laptopCpu": "Laptop · CPU",
+      "laptopGpu": "Laptop · WebGPU required",
+      "otherInstalled": "Other local model files ({{count}})",
+      "pgxGuideTitle": "PGX WebGPU models",
+      "pgxGuideHint": "Built-in WebGPU picks sized for PGX’s GB10 GPU and 128 GB unified-memory profile. Recommendations use the hardware specification; downloading requires WebGPU, and the model variant follows this device’s features.",
+      "pgxWebGpuTag": "PGX profile pick · WebGPU",
+      "pgxTitle": "PGX and company network",
+      "pgxHint": "Models listed in the PGX Ollama inventory. To use its text model, configure an OpenAI-compatible endpoint reachable from this device and enter the exact model ID. Network access and capacity depend on the server.",
+      "pgxInstalled": "Listed in PGX Ollama inventory",
+      "pgxQwen": "Qwen3.6 35B A3B",
+      "pgxQwenMeta": "Text chat and translation · Ollama model ID: qwen3.6-35b-a3b:latest",
+      "pgxCandidate": "Benchmark candidate · not installed on PGX",
+      "pgxHyMeta": "Translation candidate for llama.cpp. Existing results are local RTX 5080 replay and synthetic stream proxies, not PGX measurements.",
+      "pgxSenseMeta": "Speech recognition candidate. Existing results are local benchmark runs, not PGX measurements; this is not exposed by the text endpoint.",
+      "pgxConfigure": "Configure OpenAI-compatible endpoint"
     }
   },
   "notes": {
@@ -1054,25 +1090,25 @@
     "linuxMigrateTitle": "نسخه جدید v{{version}} موجود است"
   },
   "audioSystem": {
-    "pactlMissingBody": "pactl (ابزارهای خط فرمان PulseAudio) یافت نشد، بنابراین Sokuji نتوانست میکروفون/بلندگوی مجازی خود را راه‌اندازی کند. آن را نصب کنید و سپس دوباره امتحان کنید:",
+    "pactlMissingBody": "pactl (ابزارهای خط فرمان PulseAudio) یافت نشد، بنابراین AED Translator نتوانست میکروفون/بلندگوی مجازی خود را راه‌اندازی کند. آن را نصب کنید و سپس دوباره امتحان کنید:",
     "installCommand": "sudo apt install pulseaudio-utils",
-    "unavailableBody": "Sokuji نتوانست میکروفون/بلندگوی مجازی خود را راه‌اندازی کند. مطمئن شوید PulseAudio یا PipeWire در حال اجراست.",
+    "unavailableBody": "AED Translator نتوانست میکروفون/بلندگوی مجازی خود را راه‌اندازی کند. مطمئن شوید PulseAudio یا PipeWire در حال اجراست.",
     "retry": "تلاش دوباره",
     "retrying": "در حال تلاش دوباره...",
-    "macDriverNotLoadedBody": "میکروفون مجازی Sokuji نصب شده است، اما macOS آن را بارگذاری نکرده است، بنابراین برنامه‌های جلسه ترجمهٔ شما را نمی‌شنوند. آن را تعمیر کنید؛ macOS گذرواژهٔ مدیر شما را می‌خواهد.",
-    "macRepairFailedBody": "تعمیر، میکروفون مجازی را برنگرداند. Mac خود را دوباره راه‌اندازی کنید یا Sokuji را با نصب‌کنندهٔ .pkg دوباره نصب کنید.",
+    "macDriverNotLoadedBody": "میکروفون مجازی AED Translator نصب شده است، اما macOS آن را بارگذاری نکرده است، بنابراین برنامه‌های جلسه ترجمهٔ شما را نمی‌شنوند. آن را تعمیر کنید؛ macOS گذرواژهٔ مدیر شما را می‌خواهد.",
+    "macRepairFailedBody": "تعمیر، میکروفون مجازی را برنگرداند. Mac خود را دوباره راه‌اندازی کنید یا AED Translator را با نصب‌کنندهٔ .pkg دوباره نصب کنید.",
     "repair": "تعمیر",
     "repairing": "در حال تعمیر...",
-    "macRepairPrompt": "Sokuji می‌خواهد میکروفون مجازی خود را تعمیر کند."
+    "macRepairPrompt": "AED Translator می‌خواهد میکروفون مجازی خود را تعمیر کند."
   },
   "vbCable": {
     "title": "بگذارید طرف مقابل ترجمه را بشنود",
-    "body": "برنامه‌های جلسه ترجمهٔ گفتاری را از طریق یک میکروفون مجازی دریافت می‌کنند. در Windows این میکروفون VB-CABLE است، یک درایور رایگان از VB-Audio. بقیهٔ امکانات Sokuji بدون آن هم کار می‌کنند.",
+    "body": "برنامه‌های جلسه ترجمهٔ گفتاری را از طریق یک میکروفون مجازی دریافت می‌کنند. در Windows این میکروفون VB-CABLE است، یک درایور رایگان از VB-Audio. بقیهٔ امکانات AED Translator بدون آن هم کار می‌کنند.",
     "install": "نصب VB-CABLE",
     "about": "دربارهٔ VB-CABLE",
     "adminOnce": "Windows یک بار اجازهٔ سرپرست را درخواست می‌کند.",
     "installingTitle": "در حال نصب VB-CABLE…",
-    "installingBody": "درخواست Windows را تأیید کنید، سپس در پنجرهٔ VB-CABLE روی «Install Driver» کلیک کنید. Sokuji به‌محض نصب آن را تشخیص می‌دهد.",
+    "installingBody": "درخواست Windows را تأیید کنید، سپس در پنجرهٔ VB-CABLE روی «Install Driver» کلیک کنید. AED Translator به‌محض نصب آن را تشخیص می‌دهد.",
     "installingBusy": "در حال نصب…",
     "failedTitle": "VB-CABLE نصب نشد",
     "failedBody": "نصب لغو شد یا کامل نشد. دوباره تلاش کنید، یا خودتان آن را از وب‌سایت VB-Audio نصب کنید.",
@@ -1085,7 +1121,7 @@
     "storeStep3": "روی «Install Driver» کلیک کنید، سپس رایانه را دوباره راه‌اندازی کنید.",
     "openWebsite": "باز کردن وب‌سایت VB-Audio",
     "checkAgain": "بررسی دوباره",
-    "picksUp": "پس از نصب، Sokuji آن را خودکار تشخیص می‌دهد.",
+    "picksUp": "پس از نصب، AED Translator آن را خودکار تشخیص می‌دهد.",
     "notNow": "اکنون نه"
   },
   "subtitle": {
@@ -1184,7 +1220,7 @@
     "previewChargedToBalance": "پیش‌نمایش یک نمونه کوتاه تولید می‌کند و هزینه آن از موجودی حساب شما کسر می‌شود.",
     "previewFailed": "پیش‌نمایش این صدا ساخته نشد.",
     "renameFailed": "تغییر نام این صدا انجام نشد.",
-    "recordStartFailed": "ضبط شروع نشد. بررسی کنید که میکروفون وصل باشد و Sokuji اجازهٔ استفاده از آن را داشته باشد.",
+    "recordStartFailed": "ضبط شروع نشد. بررسی کنید که میکروفون وصل باشد و AED Translator اجازهٔ استفاده از آن را داشته باشد.",
     "previewLanguageUnsupported": "این مدل هیچ جمله نمونه‌ای به زبانی که صحبت می‌کند ندارد.",
     "previewNeedsBalance": "برای گوش دادن به پیش‌نمایش این صدا، موجودی خود را شارژ کنید.",
     "previewNeedsSessionStopped": "برای گوش دادن به پیش‌نمایش این صدا، نشست را پایان دهید.",
@@ -1289,13 +1325,17 @@
       },
       "anyUseCase": "هر کاربردی",
       "anyStyle": "هر سبکی"
-    }
+    },
+    "recordNoSelectedMic": "Select a physical microphone in Audio settings before recording.",
+    "recordSilent": "No sound reached the recorder. Check the microphone and its input volume, then try again.",
+    "recordingMicrophone": "Microphone · {{name}}",
+    "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
-    "ttsEcho": "بلندگوهای شما گفتار ترجمه‌شدهٔ Sokuji را به میکروفون بازمی‌گردانند.",
+    "ttsEcho": "بلندگوهای شما گفتار ترجمه‌شدهٔ AED Translator را به میکروفون بازمی‌گردانند.",
     "meetingEcho": "صدای جلسه از بلندگوهای شما به میکروفون می‌رسد.",
     "farEndEcho": "دستگاه یکی از شرکت‌کنندگان ترجمهٔ شما را به‌صورت پژواک به جلسه بازمی‌گرداند.",
-    "selfCapture": "منبع صدای طرف مقابل در حال ضبط صدای خود Sokuji است.",
+    "selfCapture": "منبع صدای طرف مقابل در حال ضبط صدای خود AED Translator است.",
     "routingLoop": "دستگاه ورودی انتخاب‌شده مستقیماً پخش این رایانه را ضبط می‌کند.",
     "actionHeadphones": "استفاده از هدفون حلقه را می‌شکند.",
     "actionAskRemote": "از آن شرکت‌کننده بخواهید هدفون استفاده کند.",
@@ -1317,7 +1357,7 @@
     "clearAllKeepsPicks": "انتخاب‌های شما ذخیره می‌شوند و با دانلود دوباره مدل‌ها بازمی‌گردند."
   },
   "setup": {
-    "title": "راه‌اندازی Sokuji",
+    "title": "راه‌اندازی AED Translator",
     "stepOf": "مرحلهٔ {{current}} از {{total}}",
     "back": "بازگشت",
     "next": "بعدی",
@@ -1327,7 +1367,7 @@
     "rerun": "اجرای دوباره راه‌اندازی",
     "steps": {
       "language": {
-        "title": "Sokuji با شما به کدام زبان صحبت کند؟",
+        "title": "AED Translator با شما به کدام زبان صحبت کند؟",
         "desc": "این زبان منوها و دکمه‌هاست. زبان‌هایی را که بین آن‌ها ترجمه می‌کنید بعداً انتخاب می‌کنید.",
         "label": "زبان رابط کاربری"
       },
@@ -1444,7 +1484,7 @@
       "guide": "نحوهٔ دریافت این کلید",
       "verifyEmail": "وارد شدید. پیوندی را که برایتان ایمیل کرده‌ایم باز کنید تا آدرستان تأیید شود — اعتبار آزمایشی به محض تأیید واریز می‌شود.",
       "onFile": "کلیدی از قبل ذخیره شده — برای نگه داشتن آن، این فیلد را خالی بگذارید.",
-      "offlineHardware": "Sokuji با GPU و VRAM کافی خوب کار می‌کند؛ فقط با CPU به‌طور محسوسی کندتر است.",
+      "offlineHardware": "AED Translator با GPU و VRAM کافی خوب کار می‌کند؛ فقط با CPU به‌طور محسوسی کندتر است.",
       "openaiOneKey": "همین یک کلید برای OpenAI Realtime، Translate و Live کار می‌کند.",
       "baseUrl": "نشانی",
       "baseUrlPlaceholder": "نشانی، مانند https://openrouter.ai/api/v1",
@@ -1474,7 +1514,7 @@
     "steps": {
       "welcome": {
         "title": "راه‌اندازی شما تمام شد",
-        "content": "Sokuji برای سناریوی شما پیکربندی شده است. در ادامه نگاهی کوتاه به آن می‌اندازیم — کمتر از یک دقیقه طول می‌کشد."
+        "content": "AED Translator برای سناریوی شما پیکربندی شده است. در ادامه نگاهی کوتاه به آن می‌اندازیم — کمتر از یک دقیقه طول می‌کشد."
       },
       "mode-picker": {
         "title": "حالت ترجمه",
@@ -1485,7 +1525,7 @@
       },
       "microphone": {
         "title": "میکروفون شما",
-        "content": "صدای شما از اینجا وارد می‌شود. پیش‌فرض سیستم از قبل انتخاب شده است. میکروفون مجازی Sokuji را انتخاب نکنید — آن برای برنامهٔ جلسهٔ شماست."
+        "content": "صدای شما از اینجا وارد می‌شود. پیش‌فرض سیستم از قبل انتخاب شده است. میکروفون مجازی AED Translator را انتخاب نکنید — آن برای برنامهٔ جلسهٔ شماست."
       },
       "monitor": {
         "title": "صدای ترجمه‌شدهٔ خود را بشنوید",
@@ -1494,15 +1534,15 @@
       "output-routing": {
         "title": "طرف مقابل چگونه شما را می‌شنود",
         "content": "صدای ترجمه‌شدهٔ شما به یک میکروفون مجازی می‌رود؛ آن را به عنوان میکروفون در برنامهٔ جلسهٔ خود انتخاب کنید.",
-        "content_extension": "در Google Meet، Zoom یا Teams، «Sokuji Virtual Microphone» را به عنوان میکروفون خود انتخاب کنید. Sokuji آن را به‌طور خودکار به سایت‌های جلسهٔ پشتیبانی‌شده اضافه می‌کند.",
-        "content_electronLinux": "Sokuji یک میکروفون مجازی روی این سیستم ایجاد کرد. آن را به عنوان میکروفون در برنامهٔ جلسهٔ خود انتخاب کنید.",
-        "content_electronOther": "به یک کابل صوتی مجازی نیاز دارید (مثلاً VB-Cable). خروجی Sokuji را به آن بفرستید و آن را به عنوان میکروفون در برنامهٔ جلسهٔ خود انتخاب کنید."
+        "content_extension": "در Google Meet، Zoom یا Teams، «Sokuji Virtual Microphone» را به عنوان میکروفون خود انتخاب کنید. AED Translator آن را به‌طور خودکار به سایت‌های جلسهٔ پشتیبانی‌شده اضافه می‌کند.",
+        "content_electronLinux": "AED Translator یک میکروفون مجازی روی این سیستم ایجاد کرد. آن را به عنوان میکروفون در برنامهٔ جلسهٔ خود انتخاب کنید.",
+        "content_electronOther": "به یک کابل صوتی مجازی نیاز دارید (مثلاً VB-Cable). خروجی AED Translator را به آن بفرستید و آن را به عنوان میکروفون در برنامهٔ جلسهٔ خود انتخاب کنید."
       },
       "participant-source": {
         "title": "صدای طرف مقابل",
-        "content": "Sokuji از اینجا به طرف مقابل گوش می‌دهد.",
+        "content": "AED Translator از اینجا به طرف مقابل گوش می‌دهد.",
         "content_electron": "برنامه‌ای را که باید ترجمه شود انتخاب کنید، یا کل صدای سیستم را. صدای اصلی او طبق معمول همچنان پخش می‌شود.",
-        "content_extension": "Sokuji صدای زبانهٔ فعلی را ترجمه می‌کند. صدای اصلی او طبق معمول همچنان پخش می‌شود."
+        "content_extension": "AED Translator صدای زبانهٔ فعلی را ترجمه می‌کند. صدای اصلی او طبق معمول همچنان پخش می‌شود."
       },
       "subtitle": {
         "title": "حالت زیرنویس",
@@ -1564,7 +1604,7 @@
     "lineup_source_not_fixed": "{{provider}} باید زبان گفتار را بداند. آن را به‌جای «تشخیص خودکار» انتخاب کنید، یا سرویس ترجمهٔ دیگری انتخاب کنید.",
     "lineup_pair_not_translated": "{{provider}} از {{source}} به {{target}} ترجمه نمی‌کند. زبان‌های دیگری انتخاب کنید، یا سرویس ترجمهٔ دیگری.",
     "lineup_face_to_face_apart": "«رو در رو» به یک سرویس برای رونویسی و ترجمه نیاز دارد. {{provider}} را برای ترجمه هم انتخاب کنید، یا «طرف مقابل کجاست» را روی «در یک جلسه» بگذارید.",
-    "session_in_use": "پنجره یا دستگاه دیگری از این حساب استفاده می‌کند. نشست را در آنجا متوقف کنید، یا اگر Sokuji همین الان به‌طور غیرمنتظره بسته شد، یک دقیقه بعد دوباره تلاش کنید.",
+    "session_in_use": "پنجره یا دستگاه دیگری از این حساب استفاده می‌کند. نشست را در آنجا متوقف کنید، یا اگر AED Translator همین الان به‌طور غیرمنتظره بسته شد، یک دقیقه بعد دوباره تلاش کنید.",
     "previous_session_ending": "نشست قبلی شما هنوز در حال پایان است. لطفاً یک دقیقه بعد دوباره تلاش کنید.",
     "app_capture_lost_using_system_audio": "ضبط برنامه متوقف شد، بنابراین اکنون کل صدای سیستم ترجمه می‌شود.",
     "app_capture_monitor_missing": "ضبط برنامه شروع نشد، بنابراین اکنون کل صدای سیستم ترجمه می‌شود.",
@@ -1586,14 +1626,14 @@
     "translation_unavailable": "برای این جهت هیچ مدل ترجمه‌ای وجود ندارد: گفتار آن فقط به متن تبدیل می‌شود.",
     "local_models_missing": "لطفاً برای شروع مدل‌های مورد نیاز را از تنظیمات دانلود کنید.",
     "no_microphone": "برای شروع، دستگاه‌های این حالت را پیکربندی کنید.",
-    "silent_no_permission": "هنوز صدایی از منبع انتخاب‌شده دریافت نشده است. اگر در حال پخش است و چیزی ترجمه نمی‌شود، در System Settings > Privacy & Security > System Audio Recording Only به Sokuji اجازه دهید (macOS) و سپس جلسه را دوباره شروع کنید.",
+    "silent_no_permission": "هنوز صدایی از منبع انتخاب‌شده دریافت نشده است. اگر در حال پخش است و چیزی ترجمه نمی‌شود، در System Settings > Privacy & Security > System Audio Recording Only به AED Translator اجازه دهید (macOS) و سپس جلسه را دوباره شروع کنید.",
     "loopback_denied": "صدای طرف مقابل برای ضبط صدای سیستم به مجوز ضبط صفحه نیاز دارد.",
     "mic_lost_using_other": "میکروفون «{{lost}}» قطع شد، بنابراین اکنون به جای آن از «{{device}}» استفاده می‌شود.",
     "mic_lost_waiting": "میکروفون قطع شد. ترجمه صحبت شما پس از اتصال یک میکروفون ادامه می‌یابد.",
     "mic_now_using": "اکنون از میکروفون «{{device}}» استفاده می‌شود.",
     "mic_in_use": "میکروفون «{{device}}» در حال استفاده توسط {{apps}} است. {{apps}} را ببندید و دوباره شروع کنید، یا میکروفون دیگری انتخاب کنید.",
     "mic_unreadable": "Windows نتوانست میکروفون «{{device}}» را باز کند. ممکن است برنامه دیگری از آن استفاده کند یا درایور آن پاسخ ندهد. برنامه‌هایی را که از آن استفاده می‌کنند ببندید یا آن را دوباره وصل کنید، سپس دوباره شروع کنید.",
-    "mic_blocked": "Windows اجازه نمی‌دهد Sokuji از میکروفون استفاده کند. دسترسی برنامه‌های دسکتاپ به میکروفون را در تنظیمات › حریم خصوصی و امنیت › میکروفون روشن کنید، سپس دوباره شروع کنید.",
+    "mic_blocked": "Windows اجازه نمی‌دهد AED Translator از میکروفون استفاده کند. دسترسی برنامه‌های دسکتاپ به میکروفون را در تنظیمات › حریم خصوصی و امنیت › میکروفون روشن کنید، سپس دوباره شروع کنید.",
     "speaker_tts_missing": "ترجمه‌ای که طرف مقابل می‌شنود فقط به‌صورت متن است: هیچ مدل گفتاری به زبان {{target}} صحبت نمی‌کند.",
     "participant_tts_missing": "ترجمه‌ای که من می‌شنوم فقط به‌صورت متن است: هیچ مدل گفتاری به زبان {{target}} صحبت نمی‌کند.",
     "participant_tts_over_budget": "ترجمه‌ای که من می‌شنوم فقط به‌صورت متن است: حافظه برای بارگذاری مدل گفتاری طرف مقابل هم کافی نیست.",
@@ -1606,8 +1646,8 @@
     "not_org_member_unnamed": "شما دیگر عضو سازمان خود نیستید.",
     "org_wallet_frozen": "حساب {{organization}} متوقف شده است. با مالک آن تماس بگیرید یا از موجودی شخصی خود استفاده کنید.",
     "org_wallet_frozen_unnamed": "حساب سازمان متوقف شده است. با مالک آن تماس بگیرید یا از موجودی شخصی خود استفاده کنید.",
-    "org_wallet_frozen_owner": "حساب {{organization}} متوقف شده است. با پشتیبانی Sokuji تماس بگیرید یا از موجودی شخصی خود استفاده کنید.",
-    "org_wallet_frozen_owner_unnamed": "حساب سازمان متوقف شده است. با پشتیبانی Sokuji تماس بگیرید یا از موجودی شخصی خود استفاده کنید.",
+    "org_wallet_frozen_owner": "حساب {{organization}} متوقف شده است. با پشتیبانی AED Translator تماس بگیرید یا از موجودی شخصی خود استفاده کنید.",
+    "org_wallet_frozen_owner_unnamed": "حساب سازمان متوقف شده است. با پشتیبانی AED Translator تماس بگیرید یا از موجودی شخصی خود استفاده کنید.",
     "model_missing": "سرویس این مدل را ارائه نمی‌دهد: {{detail}}",
     "quota": "حساب سرویس اعتباری ندارد: {{detail}}",
     "text_model_unset": "در «زبان‌ها و ترکیب» مدلی برای ترجمه انتخاب کنید یا نام آن را بنویسید.",
@@ -1615,7 +1655,7 @@
     "address_invalid": "نشانی سرویس سازگار قابل استفاده نیست: {{detail}}"
   },
   "viewer": {
-    "title": "زیرنویس Sokuji",
+    "title": "زیرنویس AED Translator",
     "connecting": "در حال اتصال…",
     "original": "اصلی",
     "enter": {
@@ -1673,7 +1713,7 @@
     },
     "shortcuts": "+ − اندازهٔ متن · B هر دو زبان · F تمام‌صفحه · End بازگشت به پخش زنده",
     "transcript": {
-      "header": "زیرنویس Sokuji، ذخیره‌شده در {{time}}"
+      "header": "زیرنویس AED Translator، ذخیره‌شده در {{time}}"
     },
     "present": {
       "title": "زیرنویس را روی گوشی یا رایانهٔ خود بخوانید",
@@ -1686,7 +1726,7 @@
       "androidChrome": "Chrome در Android آن را باز نمی‌کند؟ در تنظیمات ← برنامه‌ها ← Chrome ← اجازه‌ها ← دستگاه‌های اطراف اجازه دهید.",
       "watching": "بینندگان: {{count}}",
       "fullscreen": "تمام‌صفحه",
-      "windowTitle": "صفحهٔ پروژکتور Sokuji",
+      "windowTitle": "صفحهٔ پروژکتور AED Translator",
       "ended": "اشتراک‌گذاری پایان یافت"
     }
   },
@@ -1695,7 +1735,7 @@
     "buttonActive": "در حال اشتراک‌گذاری زیرنویس: {{count}} بیننده",
     "intro": "اجازه دهید افرادی که به همین شبکه وصل‌اند، زیرنویس و ترجمه‌های اینجا را روی گوشی یا رایانهٔ خود بخوانند.",
     "enable": "اشتراک‌گذاری زیرنویس",
-    "firewallNote": "ممکن است Windows بپرسد که آیا Sokuji اجازهٔ استفاده از شبکه را دارد. «شبکه‌های خصوصی» را انتخاب کنید.",
+    "firewallNote": "ممکن است Windows بپرسد که آیا AED Translator اجازهٔ استفاده از شبکه را دارد. «شبکه‌های خصوصی» را انتخاب کنید.",
     "address": "آدرس",
     "copy": "کپی",
     "copied": "کپی شد",
@@ -1718,7 +1758,7 @@
     "openPresent": "باز کردن صفحهٔ پروژکتور",
     "stop": "توقف اشتراک‌گذاری",
     "stopNote": "در صفحهٔ بینندگان نشان داده می‌شود که اشتراک‌گذاری پایان یافته است.",
-    "warnNoViewers": "دو دقیقه گذشته و هنوز هیچ دستگاهی وصل نشده است. ممکن است این شبکه نگذارد دستگاه‌ها به یکدیگر دسترسی داشته باشند (Wi‑Fi مهمان و برخی شبکه‌های شرکتی چنین‌اند)، یا فایروالی جلوی Sokuji را گرفته باشد. مطمئن شوید همه به همان شبکه‌ای وصل‌اند که این رایانه به آن وصل است، در Windows به Sokuji اجازهٔ دسترسی به شبکه‌های خصوصی بدهید، یا از هات‌اسپات گوشی یا روتر خودتان استفاده کنید.",
+    "warnNoViewers": "دو دقیقه گذشته و هنوز هیچ دستگاهی وصل نشده است. ممکن است این شبکه نگذارد دستگاه‌ها به یکدیگر دسترسی داشته باشند (Wi‑Fi مهمان و برخی شبکه‌های شرکتی چنین‌اند)، یا فایروالی جلوی AED Translator را گرفته باشد. مطمئن شوید همه به همان شبکه‌ای وصل‌اند که این رایانه به آن وصل است، در Windows به AED Translator اجازهٔ دسترسی به شبکه‌های خصوصی بدهید، یا از هات‌اسپات گوشی یا روتر خودتان استفاده کنید.",
     "warnAddressChanged": "شبکه تغییر کرد و آدرس اکنون {{address}} است: پیوند را دوباره بفرستید یا صفحهٔ پروژکتور را دوباره باز کنید.",
     "errorPortsBusy": "اشتراک‌گذاری شروع نشد: پورت‌های 7788–7797 همه در حال استفاده‌اند.",
     "errorListen": "اشتراک‌گذاری شروع نشد: {{reason}}"
@@ -1733,7 +1773,42 @@
     "playedRight": "در گوش راست پخش شد",
     "notPlayed": "پخش نشد: این ترجمه به {{language}} است، نه {{target}}، پس برای کسی خوانده نمی‌شود.",
     "legendMe": "{{language}} · من",
-    "legendOther": "{{language}} · طرف مقابل"
+    "legendOther": "{{language}} · طرف مقابل",
+    "modeGroup": "Translation mode",
+    "onlineMeeting": "Online meeting",
+    "title": "Face to face",
+    "intro": "Choose two subtitle languages and take turns speaking into one microphone.",
+    "backToMeeting": "Online meeting",
+    "languageChoices": "Reading languages",
+    "firstLanguage": "First subtitle language",
+    "secondLanguage": "Second subtitle language",
+    "subtitleOnly": "Subtitles only. No speech is synthesized.",
+    "speakerNumber": "Speaker {{number}}",
+    "speaker": "Speaker",
+    "transcribing": "Listening…",
+    "translationPending": "Translating…",
+    "translationUnavailable": "Translation unavailable",
+    "waitingLive": "Listening for speech…",
+    "personA": "Person A",
+    "personB": "Person B",
+    "noSpeech": "Qwen provides realtime captions. The configured text service translates the other direction.",
+    "ready": "Choose two subtitle languages, then start listening.",
+    "starting": "Connecting to Qwen and opening the microphone…",
+    "stopping": "Releasing the microphone…",
+    "live": "Listening. Subtitles will appear as you speak.",
+    "failed": "Could not start face-to-face translation.",
+    "start": "Start listening",
+    "stop": "Stop listening",
+    "retry": "Retry",
+    "speakers": "Speaker assignments",
+    "assignSpeakers": "Who is speaking?",
+    "detectedSpeaker": "Detected speaker {{id}}",
+    "captions": "Conversation subtitles",
+    "waiting": "Subtitles will appear here as you speak.",
+    "speakerUnknown": "Speaker unassigned",
+    "languageUnknown": "Language unknown",
+    "textRoute": "Text translation",
+    "assignToTranslate": "Assign this speaker to choose the translation direction."
   },
   "screenContext": {
     "picker": {
@@ -1746,11 +1821,11 @@
       "none": "هیچ پنجره یا صفحه‌نمایشی برای اشتراک‌گذاری پیدا نشد.",
       "minimizedHint": "پنجرهٔ کوچک‌شده را نمی‌توان به اشتراک گذاشت: پنجره را بازگردانید و سپس تازه‌سازی کنید.",
       "deniedTitle": "به مجوز ضبط صفحه نیاز است",
-      "deniedText": "macOS اجازه نمی‌دهد Sokuji صفحه را ببیند. این وضعیت وقتی هم پیش می‌آید که Sokuji در System Settings روشن است، اگر آن مجوز به نسخه‌ای قدیمی‌تر داده شده باشد.",
+      "deniedText": "macOS اجازه نمی‌دهد AED Translator صفحه را ببیند. این وضعیت وقتی هم پیش می‌آید که AED Translator در System Settings روشن است، اگر آن مجوز به نسخه‌ای قدیمی‌تر داده شده باشد.",
       "openSettings": "باز کردن تنظیمات سیستم",
       "reask": "دوباره از macOS بپرسید",
-      "askedText": "وقتی macOS پرسید به Sokuji اجازه دهید، یا آن را در System Settings روشن کنید. macOS مجوز را فقط پس از راه‌اندازی دوبارهٔ Sokuji اعمال می‌کند.",
-      "restart": "راه‌اندازی دوبارهٔ Sokuji",
+      "askedText": "وقتی macOS پرسید به AED Translator اجازه دهید، یا آن را در System Settings روشن کنید. macOS مجوز را فقط پس از راه‌اندازی دوبارهٔ AED Translator اعمال می‌کند.",
+      "restart": "راه‌اندازی دوبارهٔ AED Translator",
       "refresh": "تازه‌سازی",
       "cancel": "شروع بدون زمینهٔ صفحه‌نمایش",
       "nothingVisible": "ناحیه‌ای که انتخاب کرده‌اید اکنون چیزی نشان نمی‌دهد. ناحیهٔ دیگری انتخاب کنید یا بدون زمینهٔ صفحه‌نمایش شروع کنید.",
@@ -1862,7 +1937,10 @@
       },
       "findModels": "یافتن مدل‌ها",
       "configure": "پیکربندی",
-      "manageModels": "مدیریت مدل‌ها"
+      "manageModels": "مدیریت مدل‌ها",
+      "internalModel": "مدل‌های متنی شبکهٔ شرکت و PGX",
+      "bailianModel": "Alibaba Cloud Model Studio · ترجمهٔ بلادرنگ",
+      "internalModelHint": "نام مدل را در بخش «زبان‌ها و ترکیب» انتخاب یا وارد کنید."
     },
     "lineup": {
       "title": "ترکیب",
@@ -1906,8 +1984,8 @@
         "key": "کلید",
         "held": "وقتی نگه داشته شده",
         "notHeld": "وقتی نگه داشته نشده",
-        "talkHeld": "Sokuji گوش می‌دهد؛ وقتی رها کنید، آن تکه ترجمه می‌شود و طرف مقابل ترجمه را می‌شنود. وقتی عبور مستقیم روشن باشد، طرف مقابل صدای خودتان را هم آرام می‌شنود.",
-        "talkNotHeld": "Sokuji گوش نمی‌دهد؛ هیچ‌چیز از آنچه می‌گویید ترجمه نمی‌شود و به طرف مقابل نمی‌رسد.",
+        "talkHeld": "AED Translator گوش می‌دهد؛ وقتی رها کنید، آن تکه ترجمه می‌شود و طرف مقابل ترجمه را می‌شنود. وقتی عبور مستقیم روشن باشد، طرف مقابل صدای خودتان را هم آرام می‌شنود.",
+        "talkNotHeld": "AED Translator گوش نمی‌دهد؛ هیچ‌چیز از آنچه می‌گویید ترجمه نمی‌شود و به طرف مقابل نمی‌رسد.",
         "translateHeld": "آنچه می‌گویید ترجمه می‌شود؛ طرف مقابل فقط ترجمه را می‌شنود، نه صدای خودتان را.",
         "translateNotHeld": "صدای خودتان بدون ترجمه مستقیم به طرف مقابل می‌رود.",
         "change": "تغییر",
@@ -2065,7 +2143,7 @@
     "foundInNotes": "در یادداشت‌ها پیدا شد",
     "foundInTitle": "در عنوان پیدا شد",
     "unavailable": "تاریخچه باز نشد.",
-    "unavailableNewer": "این تاریخچه با نسخهٔ جدیدتری از Sokuji نوشته شده است. برای باز کردنش Sokuji را به‌روز کنید.",
+    "unavailableNewer": "این تاریخچه با نسخهٔ جدیدتری از AED Translator نوشته شده است. برای باز کردنش AED Translator را به‌روز کنید.",
     "failed": "انجام نشد. دوباره امتحان کنید.",
     "me": "من",
     "other": "طرف مقابل",
@@ -2179,7 +2257,7 @@
       "wallet-frozen": "کیف پول Kizuna AI شما مسدود شده است.",
       "not-member": "دیگر عضو سازمانی نیستید که هزینهٔ Kizuna AI را می‌پردازد.",
       "too-large": "این رکورد برای اینکه Kizuna AI از آن یادداشت بنویسد بیش از حد طولانی است.",
-      "update-required": "برای نوشتن یادداشت با Kizuna AI، Sokuji را به‌روزرسانی کنید.",
+      "update-required": "برای نوشتن یادداشت با Kizuna AI، AED Translator را به‌روزرسانی کنید.",
       "other": "سرویس یادداشت درخواست را رد کرد."
     },
     "notesLatestFailed": "آخرین تلاش نوشته نشد: {{reason}}",

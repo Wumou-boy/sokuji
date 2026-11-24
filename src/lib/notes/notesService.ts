@@ -87,11 +87,13 @@ export function notesDefaultsNow(): NotesDefaults {
  * since changed, a service since removed), or one this build does not offer, is no choice: nothing was released under
  * another name, so nothing is migrated.
  */
-export function notesServiceOf(lineUp: Pick<LineUp, 'summarisation'> | null | undefined, d: NotesDefaults = notesDefaultsNow()): string {
+export function notesServiceOf(lineUp: (Pick<LineUp, 'summarisation'> & Partial<Pick<LineUp, 'translation'>>) | null | undefined, d: NotesDefaults = notesDefaultsNow()): string {
   const chosen = lineUp?.summarisation;
   const desktopOnly = chosen === BAILIAN_NOTES || chosen === LEGACY_COMPATIBLE_NOTES;
   if (chosen && NOTES_SERVICES.includes(chosen) && (!desktopOnly || isElectron())
     && (!DESKTOP_TEXT_MODELS.includes(chosen) || d.textModelsOffered)) return chosen;
+  // Fresh Qwen desktop profiles use the matching Bailian chat route for notes. An explicit notes choice always wins.
+  if (!chosen && lineUp?.translation === 'qwen_livetranslate' && isElectron()) return BAILIAN_NOTES;
   if (d.hostedOffered && d.signedIn) return KIZUNA_NOTES;
   if (d.openAiKeyed) return OPENAI_NOTES;
   if (d.geminiKeyed && d.textModelsOffered) return GEMINI_NOTES;

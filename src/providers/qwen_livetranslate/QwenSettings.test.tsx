@@ -25,7 +25,9 @@ import type { VoiceLibrarySectionProps } from '../../components/Settings/section
 const { library } = vi.hoisted(() => ({ library: [] as VoiceLibrarySectionProps[] }));
 vi.mock('../../components/Settings/sections/VoiceLibrarySection', () => ({
   default: function Library(props: VoiceLibrarySectionProps) {
-    library.push(props);
+    const index = library.findIndex((item) => item.label === props.label);
+    if (index < 0) library.push(props);
+    else library[index] = props;
     return null;
   },
 }));
@@ -45,6 +47,7 @@ vi.mock('../../lib/analytics', () => ({ useAnalytics: () => ({ trackEvent }) }))
 
 import { KizunaQwenSettingsView, QwenSettingsView, QwenVoiceSummary } from './QwenSettings';
 import { QWEN_DEFAULTS, QWEN_VOICES, SPEAKER_CLONE, SPEAKER_CLONE_ONCE, type QwenSettings } from './settings';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION } from './endpoints';
 
 const props = (patch: Partial<SettingsProps<QwenSettings>> = {}): SettingsProps<QwenSettings> => ({ settings: QWEN_DEFAULTS, update: vi.fn(), ...patch });
 beforeEach(() => {
@@ -54,6 +57,18 @@ beforeEach(() => {
 });
 
 describe('QwenSettingsView (spec §4, §7)', () => {
+  it('shows a separate workspace ID input and keeps the company key/personal key distinction clear', () => {
+    const update = vi.fn();
+    render(<QwenSettingsView {...props({ settings: { ...QWEN_DEFAULTS, connection: BAILIAN_WORKSPACE_CONNECTION, workspaceId: 'llm-team123' }, update })} />);
+    const id = screen.getByRole('textbox', { name: 'Bailian workspace ID' });
+    expect(id).toHaveValue('llm-team123');
+    fireEvent.change(id, { target: { value: 'llm-other456' } });
+    expect(update).toHaveBeenCalledWith({ workspaceId: 'llm-other456' });
+    expect(screen.getByText(/stored separately from your personal Qwen key/)).toBeInTheDocument();
+    expect(within(screen.getByTestId('qwen-workspace-settings')).getByRole('status')).toHaveTextContent('Windows desktop app only');
+    expect(screen.getByRole('switch', { name: 'Screen context' })).toBeInTheDocument();
+  });
+
   it("lists the two clones first under their own heading — every turn, then the first speaker once — then the 47 presets under Presets, with no preview", () => {
     render(<QwenSettingsView {...props()} />);
     expect(library).toHaveLength(1);
@@ -68,6 +83,22 @@ describe('QwenSettingsView (spec §4, §7)', () => {
     expect(mine.selectedId).toBe('Tina');
   });
 
+  it('offers a spoken sample and the meeting microphone for outgoing Qwen voice enrollment', async () => {
+    env.electron = true;
+    await act(async () => {
+      render(<QwenSettingsView {...props({
+        settings: { ...QWEN_DEFAULTS, connection: BAILIAN_ENDPOINT_ID },
+        account: { credentials: { apiKey: 'example-key' }, auth: { signedIn: false, getToken: async () => null } },
+        participantSpeaks: true,
+      })} />);
+    });
+    expect(library[0].recordingPrompt?.text).toContain('The first samples should arrive on Wednesday.');
+    expect(library[0].useMeetingMicrophone).toBe(true);
+    expect(library[1].recordingPrompt).toBeUndefined();
+    await act(async () => { await library[0].onRecord!(new Float32Array(16_000 * 10), 16_000); });
+    expect(library[0].createReview?.explicitClose).toBe(true);
+  });
+
   it("has no vocabulary of its own: the preferred translations are the app's word list now", () => {
     const { container } = render(<QwenSettingsView {...props()} />);
     expect(Array.from(container.querySelectorAll('.settings-section > h2')).map((h) => h.textContent)).not.toContain('Custom Vocabulary');
@@ -78,7 +109,7 @@ describe('QwenSettingsView (spec §4, §7)', () => {
     const update = vi.fn();
     render(<QwenSettingsView {...props({ update })} />);
     library[0].onSelect(SPEAKER_CLONE);
-    expect(update).toHaveBeenCalledWith({ voice: SPEAKER_CLONE });
+    expect(update).toHaveBeenCalledWith({ voice: SPEAKER_CLONE, voiceOwnerHash: '' });
   });
 
   it("adds the other party's row only while the participant speaks, writing its own field", () => {
@@ -445,7 +476,7 @@ describe('Screen context — the area chosen in the settings (owner, 2026-10-22,
   });
 
   it('a one-word label may break at its seam when the chip leaves it no room (the 300px panel): a soft hyphen in German and Dutch, a zero-width space in Japanese', () => {
-    const label = (catalog: typeof en) => (catalog.providers.qwen_livetranslate as Record<string, string>).screenContext;
+    const label = (catalog: { providers: { qwen_livetranslate: { screenContext: string } } }) => catalog.providers.qwen_livetranslate.screenContext;
     expect(label(de)).toBe('Bildschirm\u00ADkontext');
     expect(label(nl)).toBe('Scherm\u00ADcontext');
     expect(label(ja)).toBe('画面\u200Bコンテキスト');

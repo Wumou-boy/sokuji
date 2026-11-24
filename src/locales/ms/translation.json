@@ -62,12 +62,12 @@
     },
     "echoCancellation": "Pembatalan Gema",
     "echoCancellationTooltip": {
-      "app": "Sokuji sahaja — Membuang pertuturan terjemahan Sokuji jika ditangkap mikrofon. Pilih ini apabila mikrofon ialah kabel maya seperti BlackHole.",
+      "app": "AED Translator sahaja — Membuang pertuturan terjemahan AED Translator jika ditangkap mikrofon. Pilih ini apabila mikrofon ialah kabel maya seperti BlackHole.",
       "browser": "Pelayar sahaja — Membuang bunyi yang dimainkan pelayar ini, termasuk tab mesyuarat, jika ditangkap mikrofon. Pilih ini apabila mikrofon ialah kabel maya seperti BlackHole yang membawa bunyi aplikasi lain.",
       "all": "Semua bunyi — Turut membuang bunyi yang dimainkan aplikasi lain melalui pembesar suara, seperti aplikasi mesyuarat. Kabel maya yang digunakan sebagai mikrofon membawa bunyi itu, jadi ia akan menjadi senyap."
     },
     "echoCancellationMode": {
-      "app": "Sokuji sahaja",
+      "app": "AED Translator sahaja",
       "browser": "Pelayar sahaja",
       "all": "Semua bunyi"
     },
@@ -370,9 +370,9 @@
     "virtualMicrophone": "Mikrofon maya",
     "virtualMicrophoneNotice": "Notis mikrofon maya",
     "iUnderstand": "Saya faham",
-    "virtualMicWarningTitle": "Ini adalah mikrofon maya yang dicipta oleh Sokuji.",
+    "virtualMicWarningTitle": "Ini adalah mikrofon maya yang dicipta oleh AED Translator.",
     "virtualMicWarningText1": "Sila jangan pilih peranti ini di sini. Sebaliknya, gunakan mikrofon maya ini dalam aplikasi persidangan video anda (seperti Google Meet, Zoom, Microsoft Teams, dll.) untuk menerima output terjemahan suara masa nyata.",
-    "virtualMicWarningText2": "Untuk Sokuji berfungsi dengan betul, pilih mikrofon fizikal sebenar anda dari senarai.",
+    "virtualMicWarningText2": "Untuk AED Translator berfungsi dengan betul, pilih mikrofon fizikal sebenar anda dari senarai.",
     "realVoicePassthrough": "Passthrough",
     "passthroughManagedByPushToTranslate": "Dalam mod Tekan untuk Terjemah, passthrough diurus secara automatik: dimainkan pada kelantangan 100% apabila anda tidak menahan kekunci, dan berhenti (audio dihantar ke terjemahan) semasa anda menahannya.",
     "speechTitle": "Pertuturan",
@@ -412,7 +412,7 @@
     "screenRecordingDeniedNotice": "Kebenaran Diperlukan",
     "screenRecordingDeniedTitle": "Kebenaran Rakaman Skrin Ditolak",
     "screenRecordingDeniedText1": "Audio pihak lain memerlukan kebenaran Rakaman Skrin untuk menangkap audio sistem.",
-    "screenRecordingDeniedText2": "Sila pergi ke System Preferences > Privacy & Security > Screen Recording dan dayakan Sokuji.",
+    "screenRecordingDeniedText2": "Sila pergi ke System Preferences > Privacy & Security > Screen Recording dan dayakan AED Translator.",
     "screenRecordingDeniedText3": "Selepas mendayakan kebenaran itu, sila mulakan semula aplikasi.",
     "turnOnMicrophone": "Hidupkan mikrofon",
     "turnOffMicrophone": "Matikan mikrofon",
@@ -429,9 +429,9 @@
     "participantFellBackToSystemAudio": "Tangkapan aplikasi yang dipilih terhenti, jadi semua audio sistem kini diterjemahkan. Pilih semula aplikasi untuk menyempitkan skop.",
     "loopbackMicNotice": "Notis Input Loopback",
     "loopbackMicWarningTitle": "Input ini menangkap semula apa yang dimainkan komputer ini.",
-    "loopbackMicWarningText1": "Input loopback seperti \"Stereo Mix\" atau peranti \"Monitor of ...\" merakam output audio sistem itu sendiri. Dalam sesi yang mengandungi suara terjemahan Sokuji, Sokuji akan mendengar dan menterjemah dirinya sendiri dalam gelung.",
+    "loopbackMicWarningText1": "Input loopback seperti \"Stereo Mix\" atau peranti \"Monitor of ...\" merakam output audio sistem itu sendiri. Dalam sesi yang mengandungi suara terjemahan AED Translator, AED Translator akan mendengar dan menterjemah dirinya sendiri dalam gelung.",
     "loopbackMicWarningText2": "Peranti kekal dipilih sekiranya penghalaan ini disengajakan, tetapi untuk kegunaan biasa sila pilih mikrofon fizikal.",
-    "participantNoAudioYet": "Belum ada audio diterima daripada sumber yang dipilih. Jika ia sedang dimainkan tetapi tiada apa yang diterjemahkan, benarkan Sokuji di System Settings > Privacy & Security > System Audio Recording Only (macOS), kemudian mulakan sesi semula.",
+    "participantNoAudioYet": "Belum ada audio diterima daripada sumber yang dipilih. Jika ia sedang dimainkan tetapi tiada apa yang diterjemahkan, benarkan AED Translator di System Settings > Privacy & Security > System Audio Recording Only (macOS), kemudian mulakan sesi semula.",
     "audioCaptureUnprovenNotice": "Belum ada yang ditangkap",
     "audioCaptureUnprovenTitle": "Belum ada audio diterima daripada sumber yang dipilih",
     "audioCaptureUnprovenText1": "Jika sumber sedang dimainkan tetapi tiada apa yang diterjemahkan, macOS berkemungkinan menghantar kesenyapan: menangkap sesebuah aplikasi memerlukan kebenaran \"System Audio Recording Only\", dan tanpanya tiada ralat, hanya kesenyapan.",
@@ -475,7 +475,7 @@
     "verificationEmailFailed": "Gagal menghantar e-mel pengesahan. Sila cuba lagi",
     "alreadyVerified": "E-mel anda sudah disahkan!",
     "cooldownMessage": "Sila tunggu {{seconds}} saat",
-    "checkYourEmail": "E-mel pengesahan dihantar. Selesaikannya dalam peti masuk anda dan kembali — Sokuji akan mengesannya secara automatik.",
+    "checkYourEmail": "E-mel pengesahan dihantar. Selesaikannya dalam peti masuk anda dan kembali — AED Translator akan mengesannya secara automatik.",
     "emailVerifiedToast": "E-mel disahkan",
     "sessionExpired": "Sesi anda telah tamat. Sila log masuk semula.",
     "forgotPassword": "Lupa Kata Laluan?",
@@ -499,16 +499,16 @@
   },
   "simpleConfig": {
     "interfaceLanguage": "Bahasa Antara Muka",
-    "interfaceLanguageDesc": "Ini mengubah bahasa menu dan butang Sokuji. Ia TIDAK mempengaruhi bahasa mana yang boleh anda terjemahkan.",
+    "interfaceLanguageDesc": "Ini mengubah bahasa menu dan butang AED Translator. Ia TIDAK mempengaruhi bahasa mana yang boleh anda terjemahkan.",
     "translationLanguages": "Bahasa Terjemahan",
     "translationLanguagesDesc": "Pilih bahasa yang anda gunakan (Bahasa saya) dan bahasa yang anda mahu dengar terjemahannya (Bahasa pihak lain). Pilih \"Kesan Automatik\" jika anda tidak pasti bahasa apa yang akan anda tuturkan.",
     "yourLanguage": "Bahasa saya",
     "userAccount": "Akaun Pengguna",
     "userAccountTooltip": "Pengguna teknikal boleh menggunakan kunci API mereka sendiri. Akaun Pengguna direka untuk persediaan yang dipermudahkan.",
-    "signInRequired": "Daftar untuk menggunakan perkhidmatan terjemahan terbina dalam Sokuji — tiada kunci API diperlukan. Anda juga boleh terus menggunakan penyedia dan kunci anda sendiri.",
+    "signInRequired": "Daftar untuk menggunakan perkhidmatan terjemahan terbina dalam AED Translator — tiada kunci API diperlukan. Anda juga boleh terus menggunakan penyedia dan kunci anda sendiri.",
     "targetLanguage": "Bahasa pihak lain",
     "microphone": "Mikrofon",
-    "microphoneDesc": "Pilih mikrofon untuk menangkap pertuturan anda. Bercakap dalam bahasa anda ke mikrofon ini, dan Sokuji akan menterjemah semua yang didengarinya dalam masa nyata.",
+    "microphoneDesc": "Pilih mikrofon untuk menangkap pertuturan anda. Bercakap dalam bahasa anda ke mikrofon ini, dan AED Translator akan menterjemah semua yang didengarinya dalam masa nyata.",
     "swapLanguages": "Tukar bahasa",
     "swapNotSpoken": "Perkhidmatan pertuturan tidak membacakan bahasa-bahasa ini dalam arah sebaliknya.",
     "textOnly": "Teks sahaja",
@@ -588,7 +588,27 @@
       "screenContextNone": "Belum ada tetingkap dipilih: anda akan ditanya semasa sesi bermula.",
       "screenContextChoose": "Pilih…",
       "speakerLabels": "Label penutur",
-      "speakerLabelsTooltip": "Menomborkan orang di pihak sana — Penutur 1, Penutur 2… — sebaik sahaja lebih daripada satu suara kedengaran.\n\nIa mungkin menyangka seorang sebagai beberapa orang. Dilumpuhkan: tiada nombor dipaparkan.\n\nBerkuat kuasa mulai sesi seterusnya."
+      "speakerLabelsTooltip": "Menomborkan orang di pihak sana — Penutur 1, Penutur 2… — sebaik sahaja lebih daripada satu suara kedengaran.\n\nIa mungkin menyangka seorang sebagai beberapa orang. Dilumpuhkan: tiada nombor dipaparkan.\n\nBerkuat kuasa mulai sesi seterusnya.",
+      "voiceSummaryFixed": "Your own voice (fixed)",
+      "voiceDefaultName": "My voice",
+      "voiceReadAloudTitle": "Read this aloud at your usual speaking pace",
+      "voiceReadAloudSample": "Let’s review the project schedule. The first samples should arrive on Wednesday. Please check the quantities and specifications when they arrive, and send me a photo if anything looks wrong.",
+      "voiceUploadNotice": "After you confirm, AED Translator uploads this 10–20 second recording to Alibaba Model Studio's private temporary storage (expires after 48 hours) to create a Qwen 3.8 voice. Voice creation may be billed; translation is billed by usage. The cloned voice stays in your Alibaba account until you delete it. AED Translator lists only profiles created on this device because LiveTranslate does not provide a voice-list API.",
+      "voiceConsent": "After you confirm, AED Translator uses Alibaba temporary private storage by default. The optional public HTTPS URL is sent to Alibaba as the reference source; AED Translator does not upload audio to that host. Cloned voices remain in your Alibaba account until deleted.",
+      "voiceReferenceUrlLabel": "Optional public HTTPS audio URL (fallback)",
+      "voiceReferenceUrlPlaceholder": "https://your-public-host.example/voice.wav",
+      "voiceBailianOnly": "Voice enrollment is currently supported only with a Bailian shared Beijing API key. Choose Bailian shared and save its API key. Company workspace, QwenCloud and managed connections are not supported for enrollment.",
+      "voiceDesktopOnly": "Recording and enrollment are available in the AED Translator Windows desktop app.",
+      "voiceListError": "Could not load voice profiles saved in this app profile.",
+      "voiceCreateFailed": "Could not create this voice. Check the Bailian connection and try again.",
+      "connectionPersonal": "Personal QwenCloud",
+      "connectionBailianShared": "Bailian shared",
+      "connectionBailianWorkspace": "Company workspace",
+      "workspaceApiKey": "Company workspace API key",
+      "workspaceId": "Bailian workspace ID",
+      "workspaceKeyNote": "Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.",
+      "workspaceDesktopOnly": "Dedicated workspace connections are available in the Windows desktop app only.",
+      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace)"
     },
     "local_inference": {
       "name": "Peranti ini",
@@ -717,7 +737,7 @@
       "scopeLabel": "Sertakan",
       "scopeItemAria": "{{scope}} — {{line}}",
       "scopeEmpty": "Tiada yang dipilih",
-      "headerTitle": "Eksport perbualan Sokuji",
+      "headerTitle": "Eksport perbualan AED Translator",
       "headerSessionStarted": "Sesi bermula",
       "headerExported": "Dieksport",
       "headerProvider": "Pembekal",
@@ -961,7 +981,7 @@
     "gpuSoftwareOnly": "Pecutan GPU tidak tersedia — berjalan pada CPU",
     "gpuUnavailable": "Pecutan GPU tidak tersedia",
     "gpuSlowWarning": "Model tempatan masih berfungsi, tetapi transkripsi dan terjemahan akan menjadi jauh lebih perlahan.",
-    "gpuWaylandRemedy": "Dalam sesi Wayland, Chromium tidak boleh menggunakan GPU untuk ini. Menjalankan Sokuji dengan --ozone-platform=x11 memulihkan pecutan.",
+    "gpuWaylandRemedy": "Dalam sesi Wayland, Chromium tidak boleh menggunakan GPU untuk ini. Menjalankan AED Translator dengan --ozone-platform=x11 memulihkan pecutan.",
     "othersGroup": "Model lain",
     "requiresGpu": "Memerlukan GPU",
     "licenseConsent": {
@@ -972,7 +992,7 @@
       "viewLicense": "Lihat teks lesen penuh",
       "nonCommercial": "Lesen ini hanya membenarkan penggunaan bukan komersial — jangan gunakan model ini dalam mana-mana produk atau perkhidmatan komersial.",
       "restrictedTerms": "Ini bukan lesen sumber terbuka. Ia menetapkan syarat tentang cara model dan outputnya boleh digunakan — baca teks penuh sebelum anda bergantung padanya.",
-      "disclaimer": "Sokuji tidak bergabung dengan pengarang model dan tiada sebarang hubungan dengan mereka. Integrasi ini tidak rasmi dan disediakan sebagaimana adanya, tanpa sebarang jaminan.",
+      "disclaimer": "AED Translator tidak bergabung dengan pengarang model dan tiada sebarang hubungan dengan mereka. Integrasi ini tidak rasmi dan disediakan sebagaimana adanya, tanpa sebarang jaminan.",
       "attribution": "Atribusi: {{attribution}}",
       "cancel": "Batal",
       "accept": "Saya faham — bukan komersial sahaja",
@@ -1015,7 +1035,23 @@
       "engineHint": "Enjin desktop yang dimuat turun oleh versi terdahulu untuk menjalankan model pada komputer ini. Perkhidmatan “Peranti ini” tidak lagi menggunakannya; alih keluar untuk mengosongkan ruang.",
       "remove": "Alih keluar",
       "engineConfirm": "Alih keluar enjin setempat?",
-      "engineFrees": "Mengosongkan {{size}}."
+      "engineFrees": "Mengosongkan {{size}}.",
+      "aedLocalHint": "CPU models cover Chinese ↔ English and Japanese ↔ English. For direct Chinese ↔ Japanese, use WebGPU or a company endpoint.",
+      "laptopCpu": "Laptop · CPU",
+      "laptopGpu": "Laptop · WebGPU required",
+      "otherInstalled": "Other local model files ({{count}})",
+      "pgxGuideTitle": "PGX WebGPU models",
+      "pgxGuideHint": "Built-in WebGPU picks sized for PGX’s GB10 GPU and 128 GB unified-memory profile. Recommendations use the hardware specification; downloading requires WebGPU, and the model variant follows this device’s features.",
+      "pgxWebGpuTag": "PGX profile pick · WebGPU",
+      "pgxTitle": "PGX and company network",
+      "pgxHint": "Models listed in the PGX Ollama inventory. To use its text model, configure an OpenAI-compatible endpoint reachable from this device and enter the exact model ID. Network access and capacity depend on the server.",
+      "pgxInstalled": "Listed in PGX Ollama inventory",
+      "pgxQwen": "Qwen3.6 35B A3B",
+      "pgxQwenMeta": "Text chat and translation · Ollama model ID: qwen3.6-35b-a3b:latest",
+      "pgxCandidate": "Benchmark candidate · not installed on PGX",
+      "pgxHyMeta": "Translation candidate for llama.cpp. Existing results are local RTX 5080 replay and synthetic stream proxies, not PGX measurements.",
+      "pgxSenseMeta": "Speech recognition candidate. Existing results are local benchmark runs, not PGX measurements; this is not exposed by the text endpoint.",
+      "pgxConfigure": "Configure OpenAI-compatible endpoint"
     }
   },
   "notes": {
@@ -1054,25 +1090,25 @@
     "linuxMigrateTitle": "Versi baharu v{{version}} tersedia"
   },
   "audioSystem": {
-    "pactlMissingBody": "pactl (alat baris arahan PulseAudio) tidak dijumpai, jadi Sokuji tidak dapat menyediakan mikrofon/pembesar suara maya. Pasang, kemudian cuba semula:",
+    "pactlMissingBody": "pactl (alat baris arahan PulseAudio) tidak dijumpai, jadi AED Translator tidak dapat menyediakan mikrofon/pembesar suara maya. Pasang, kemudian cuba semula:",
     "installCommand": "sudo apt install pulseaudio-utils",
-    "unavailableBody": "Sokuji tidak dapat menyediakan mikrofon/pembesar suara maya. Pastikan PulseAudio atau PipeWire sedang berjalan.",
+    "unavailableBody": "AED Translator tidak dapat menyediakan mikrofon/pembesar suara maya. Pastikan PulseAudio atau PipeWire sedang berjalan.",
     "retry": "Cuba semula",
     "retrying": "Mencuba semula...",
-    "macDriverNotLoadedBody": "Mikrofon maya Sokuji telah dipasang, tetapi macOS belum memuatkannya, jadi aplikasi mesyuarat tidak dapat mendengar terjemahan anda. Baikinya; macOS akan meminta kata laluan pentadbir anda.",
-    "macRepairFailedBody": "Pembaikan tidak memulihkan mikrofon maya. Mulakan semula Mac anda, atau pasang semula Sokuji daripada pemasang .pkg.",
+    "macDriverNotLoadedBody": "Mikrofon maya AED Translator telah dipasang, tetapi macOS belum memuatkannya, jadi aplikasi mesyuarat tidak dapat mendengar terjemahan anda. Baikinya; macOS akan meminta kata laluan pentadbir anda.",
+    "macRepairFailedBody": "Pembaikan tidak memulihkan mikrofon maya. Mulakan semula Mac anda, atau pasang semula AED Translator daripada pemasang .pkg.",
     "repair": "Baiki",
     "repairing": "Membaiki...",
-    "macRepairPrompt": "Sokuji ingin membaiki mikrofon mayanya."
+    "macRepairPrompt": "AED Translator ingin membaiki mikrofon mayanya."
   },
   "vbCable": {
     "title": "Biarkan pihak lain mendengar terjemahan",
-    "body": "Aplikasi mesyuarat menerima terjemahan yang dituturkan melalui mikrofon maya. Pada Windows, itulah VB-CABLE, pemacu percuma daripada VB-Audio. Semua yang lain dalam Sokuji berfungsi tanpanya.",
+    "body": "Aplikasi mesyuarat menerima terjemahan yang dituturkan melalui mikrofon maya. Pada Windows, itulah VB-CABLE, pemacu percuma daripada VB-Audio. Semua yang lain dalam AED Translator berfungsi tanpanya.",
     "install": "Pasang VB-CABLE",
     "about": "Perihal VB-CABLE",
     "adminOnce": "Windows akan meminta kebenaran pentadbir sekali.",
     "installingTitle": "Memasang VB-CABLE…",
-    "installingBody": "Luluskan gesaan Windows, kemudian klik \"Install Driver\" dalam tetingkap VB-CABLE. Sokuji akan mengesannya sebaik sahaja dipasang.",
+    "installingBody": "Luluskan gesaan Windows, kemudian klik \"Install Driver\" dalam tetingkap VB-CABLE. AED Translator akan mengesannya sebaik sahaja dipasang.",
     "installingBusy": "Memasang…",
     "failedTitle": "VB-CABLE tidak dipasang",
     "failedBody": "Pemasangan dibatalkan atau tidak selesai. Cuba lagi, atau pasang sendiri daripada laman web VB-Audio.",
@@ -1085,7 +1121,7 @@
     "storeStep3": "Klik \"Install Driver\", kemudian mulakan semula PC anda.",
     "openWebsite": "Buka laman web VB-Audio",
     "checkAgain": "Semak semula",
-    "picksUp": "Sokuji akan mengesannya secara automatik sebaik sahaja dipasang.",
+    "picksUp": "AED Translator akan mengesannya secara automatik sebaik sahaja dipasang.",
     "notNow": "Bukan sekarang"
   },
   "subtitle": {
@@ -1184,7 +1220,7 @@
     "previewChargedToBalance": "Pratonton mensintesis klip pendek dan dicaj daripada baki akaun anda.",
     "previewFailed": "Tidak dapat menjana pratonton untuk suara ini.",
     "renameFailed": "Tidak dapat menamakan semula suara ini.",
-    "recordStartFailed": "Tidak dapat mula merakam. Pastikan mikrofon disambungkan dan Sokuji dibenarkan menggunakannya.",
+    "recordStartFailed": "Tidak dapat mula merakam. Pastikan mikrofon disambungkan dan AED Translator dibenarkan menggunakannya.",
     "previewLanguageUnsupported": "Model ini tiada ayat contoh dalam bahasa yang boleh dituturkannya.",
     "previewNeedsBalance": "Tambah nilai baki anda untuk mendengar pratonton suara ini.",
     "previewNeedsSessionStopped": "Tamatkan sesi untuk mendengar pratonton suara ini.",
@@ -1289,13 +1325,17 @@
       },
       "anyUseCase": "Semua kegunaan",
       "anyStyle": "Semua gaya"
-    }
+    },
+    "recordNoSelectedMic": "Select a physical microphone in Audio settings before recording.",
+    "recordSilent": "No sound reached the recorder. Check the microphone and its input volume, then try again.",
+    "recordingMicrophone": "Microphone · {{name}}",
+    "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
-    "ttsEcho": "Pembesar suara anda memulangkan suara terjemahan Sokuji ke mikrofon.",
+    "ttsEcho": "Pembesar suara anda memulangkan suara terjemahan AED Translator ke mikrofon.",
     "meetingEcho": "Audio mesyuarat daripada pembesar suara anda sampai ke mikrofon.",
     "farEndEcho": "Peranti seorang peserta menggemakan terjemahan anda kembali ke mesyuarat.",
-    "selfCapture": "Sumber audio pihak lain sedang menangkap audio Sokuji sendiri.",
+    "selfCapture": "Sumber audio pihak lain sedang menangkap audio AED Translator sendiri.",
     "routingLoop": "Peranti input yang dipilih menangkap terus main balik komputer ini.",
     "actionHeadphones": "Menggunakan fon kepala akan memutuskan gelung.",
     "actionAskRemote": "Minta peserta itu menggunakan fon kepala.",
@@ -1317,7 +1357,7 @@
     "clearAllKeepsPicks": "Pilihan anda disimpan dan akan kembali apabila model dimuat turun semula."
   },
   "setup": {
-    "title": "Sediakan Sokuji",
+    "title": "Sediakan AED Translator",
     "stepOf": "Langkah {{current}} daripada {{total}}",
     "back": "Kembali",
     "next": "Seterusnya",
@@ -1327,7 +1367,7 @@
     "rerun": "Jalankan persediaan semula",
     "steps": {
       "language": {
-        "title": "Bahasa apa yang Sokuji patut tuturkan kepada anda?",
+        "title": "Bahasa apa yang AED Translator patut tuturkan kepada anda?",
         "desc": "Ini ialah bahasa menu dan butang. Anda memilih bahasa untuk diterjemah kemudian.",
         "label": "Bahasa antara muka"
       },
@@ -1444,7 +1484,7 @@
       "guide": "Cara mendapatkan kunci ini",
       "verifyEmail": "Log masuk berjaya. Buka pautan yang kami e-melkan kepada anda untuk mengesahkan alamat anda — kredit percubaan akan masuk sebaik sahaja anda berbuat demikian.",
       "onFile": "Kunci sudah disimpan — biarkan ini kosong untuk mengekalkannya.",
-      "offlineHardware": "Sokuji berjalan lancar dengan GPU dan VRAM yang mencukupi; dengan CPU sahaja ia jelas lebih perlahan.",
+      "offlineHardware": "AED Translator berjalan lancar dengan GPU dan VRAM yang mencukupi; dengan CPU sahaja ia jelas lebih perlahan.",
       "openaiOneKey": "Satu kunci ini digunakan untuk OpenAI Realtime, Translate dan Live.",
       "baseUrl": "Alamat",
       "baseUrlPlaceholder": "Alamat, seperti https://openrouter.ai/api/v1",
@@ -1474,7 +1514,7 @@
     "steps": {
       "welcome": {
         "title": "Anda sudah bersedia",
-        "content": "Sokuji telah dikonfigurasikan untuk senario anda. Berikut ialah tinjauan ringkas — ia mengambil masa kurang daripada seminit."
+        "content": "AED Translator telah dikonfigurasikan untuk senario anda. Berikut ialah tinjauan ringkas — ia mengambil masa kurang daripada seminit."
       },
       "mode-picker": {
         "title": "Mod terjemahan",
@@ -1485,7 +1525,7 @@
       },
       "microphone": {
         "title": "Mikrofon anda",
-        "content": "Pertuturan anda masuk di sini. Lalai sistem sudah dipilih. Jangan pilih mikrofon maya Sokuji — itu untuk aplikasi mesyuarat anda."
+        "content": "Pertuturan anda masuk di sini. Lalai sistem sudah dipilih. Jangan pilih mikrofon maya AED Translator — itu untuk aplikasi mesyuarat anda."
       },
       "monitor": {
         "title": "Dengar diri anda diterjemah",
@@ -1494,15 +1534,15 @@
       "output-routing": {
         "title": "Bagaimana pihak lain mendengar anda",
         "content": "Suara terjemahan anda pergi ke mikrofon maya; pilih ia sebagai mikrofon dalam aplikasi mesyuarat anda.",
-        "content_extension": "Dalam Google Meet, Zoom atau Teams, pilih \"Sokuji Virtual Microphone\" sebagai mikrofon anda. Sokuji menambahkannya secara automatik ke laman mesyuarat yang disokong.",
-        "content_electronLinux": "Sokuji telah mencipta mikrofon maya pada sistem ini. Pilih ia sebagai mikrofon dalam aplikasi mesyuarat anda.",
-        "content_electronOther": "Anda memerlukan kabel audio maya (contohnya VB-Cable). Hantar output Sokuji kepadanya, dan pilih ia sebagai mikrofon dalam aplikasi mesyuarat anda."
+        "content_extension": "Dalam Google Meet, Zoom atau Teams, pilih \"Sokuji Virtual Microphone\" sebagai mikrofon anda. AED Translator menambahkannya secara automatik ke laman mesyuarat yang disokong.",
+        "content_electronLinux": "AED Translator telah mencipta mikrofon maya pada sistem ini. Pilih ia sebagai mikrofon dalam aplikasi mesyuarat anda.",
+        "content_electronOther": "Anda memerlukan kabel audio maya (contohnya VB-Cable). Hantar output AED Translator kepadanya, dan pilih ia sebagai mikrofon dalam aplikasi mesyuarat anda."
       },
       "participant-source": {
         "title": "Suara pihak lain",
-        "content": "Sokuji mendengar pihak lain di sini.",
+        "content": "AED Translator mendengar pihak lain di sini.",
         "content_electron": "Pilih aplikasi untuk diterjemah, atau semua audio sistem. Suara asal mereka terus dimainkan seperti biasa.",
-        "content_extension": "Sokuji menterjemah audio tab semasa. Suara asal mereka terus dimainkan seperti biasa."
+        "content_extension": "AED Translator menterjemah audio tab semasa. Suara asal mereka terus dimainkan seperti biasa."
       },
       "subtitle": {
         "title": "Mod Sari Kata",
@@ -1564,7 +1604,7 @@
     "lineup_source_not_fixed": "{{provider}} perlu tahu bahasa yang dituturkan. Pilih bahasa itu sebagai ganti “Kesan Automatik”, atau pilih perkhidmatan terjemahan lain.",
     "lineup_pair_not_translated": "{{provider}} tidak menterjemah {{source}} → {{target}}. Pilih bahasa lain, atau perkhidmatan terjemahan lain.",
     "lineup_face_to_face_apart": "“Bersemuka” memerlukan satu perkhidmatan untuk transkripsi dan terjemahan. Pilih {{provider}} untuk terjemahan juga, atau tetapkan “Kedudukan pihak lain” kepada “Dalam mesyuarat”.",
-    "session_in_use": "Tetingkap atau peranti lain sedang menggunakan akaun ini. Hentikan sesi di sana, atau jika Sokuji baru sahaja tertutup tanpa dijangka, cuba lagi dalam seminit.",
+    "session_in_use": "Tetingkap atau peranti lain sedang menggunakan akaun ini. Hentikan sesi di sana, atau jika AED Translator baru sahaja tertutup tanpa dijangka, cuba lagi dalam seminit.",
     "previous_session_ending": "Sesi anda sebelum ini masih sedang ditamatkan. Sila cuba lagi dalam seminit.",
     "app_capture_lost_using_system_audio": "Tangkapan aplikasi terhenti, jadi semua audio sistem kini diterjemahkan.",
     "app_capture_monitor_missing": "Tangkapan aplikasi tidak bermula, jadi semua audio sistem kini diterjemahkan.",
@@ -1586,14 +1626,14 @@
     "translation_unavailable": "Tiada model terjemahan untuk arah ini: pertuturannya hanya ditranskripkan.",
     "local_models_missing": "Sila muat turun model yang diperlukan dalam Tetapan untuk bermula.",
     "no_microphone": "Konfigurasikan peranti untuk mod ini bagi bermula.",
-    "silent_no_permission": "Belum ada audio diterima daripada sumber yang dipilih. Jika ia sedang dimainkan tetapi tiada apa yang diterjemahkan, benarkan Sokuji di System Settings > Privacy & Security > System Audio Recording Only (macOS), kemudian mulakan sesi semula.",
+    "silent_no_permission": "Belum ada audio diterima daripada sumber yang dipilih. Jika ia sedang dimainkan tetapi tiada apa yang diterjemahkan, benarkan AED Translator di System Settings > Privacy & Security > System Audio Recording Only (macOS), kemudian mulakan sesi semula.",
     "loopback_denied": "Audio pihak lain memerlukan kebenaran Rakaman Skrin untuk menangkap audio sistem.",
     "mic_lost_using_other": "Mikrofon “{{lost}}” terputus, jadi “{{device}}” digunakan sebagai ganti.",
     "mic_lost_waiting": "Mikrofon terputus. Terjemahan pertuturan anda akan bersambung apabila mikrofon disambungkan.",
     "mic_now_using": "Kini menggunakan mikrofon “{{device}}”.",
     "mic_in_use": "Mikrofon “{{device}}” sedang digunakan oleh {{apps}}. Tutup {{apps}} dan mula semula, atau pilih mikrofon lain.",
     "mic_unreadable": "Windows tidak dapat membuka mikrofon “{{device}}”. Mungkin apl lain sedang menggunakannya, atau pemacunya berhenti bertindak balas. Tutup apl yang menggunakannya atau sambungkan semula, kemudian mula semula.",
-    "mic_blocked": "Windows tidak membenarkan Sokuji menggunakan mikrofon. Hidupkan akses mikrofon untuk apl desktop dalam Tetapan › Privasi & keselamatan › Mikrofon, kemudian mula semula.",
+    "mic_blocked": "Windows tidak membenarkan AED Translator menggunakan mikrofon. Hidupkan akses mikrofon untuk apl desktop dalam Tetapan › Privasi & keselamatan › Mikrofon, kemudian mula semula.",
     "speaker_tts_missing": "Terjemahan yang didengar pihak lain hanya dalam bentuk teks: tiada model suara yang bertutur dalam {{target}}.",
     "participant_tts_missing": "Terjemahan yang saya dengar hanya dalam bentuk teks: tiada model suara yang bertutur dalam {{target}}.",
     "participant_tts_over_budget": "Terjemahan yang saya dengar hanya dalam bentuk teks: memori tidak mencukupi untuk memuatkan model suara pihak lain juga.",
@@ -1606,8 +1646,8 @@
     "not_org_member_unnamed": "Anda bukan lagi ahli organisasi anda.",
     "org_wallet_frozen": "Akaun {{organization}} digantung. Hubungi pemiliknya, atau gunakan baki peribadi anda.",
     "org_wallet_frozen_unnamed": "Akaun organisasi digantung. Hubungi pemiliknya, atau gunakan baki peribadi anda.",
-    "org_wallet_frozen_owner": "Akaun {{organization}} digantung. Hubungi sokongan Sokuji, atau gunakan baki peribadi anda.",
-    "org_wallet_frozen_owner_unnamed": "Akaun organisasi digantung. Hubungi sokongan Sokuji, atau gunakan baki peribadi anda.",
+    "org_wallet_frozen_owner": "Akaun {{organization}} digantung. Hubungi sokongan AED Translator, atau gunakan baki peribadi anda.",
+    "org_wallet_frozen_owner_unnamed": "Akaun organisasi digantung. Hubungi sokongan AED Translator, atau gunakan baki peribadi anda.",
     "model_missing": "Perkhidmatan tidak menawarkan model ini: {{detail}}",
     "quota": "Akaun perkhidmatan tiada baki kredit: {{detail}}",
     "text_model_unset": "Pilih model untuk terjemahan, atau taip namanya, dalam “Bahasa dan susunan”.",
@@ -1615,7 +1655,7 @@
     "address_invalid": "Alamat perkhidmatan serasi tidak boleh digunakan: {{detail}}"
   },
   "viewer": {
-    "title": "Sari kata Sokuji",
+    "title": "Sari kata AED Translator",
     "connecting": "Menyambung…",
     "original": "Asal",
     "enter": {
@@ -1673,7 +1713,7 @@
     },
     "shortcuts": "+ − saiz teks · B kedua-dua bahasa · F skrin penuh · End ke terkini",
     "transcript": {
-      "header": "Sari kata Sokuji, disimpan {{time}}"
+      "header": "Sari kata AED Translator, disimpan {{time}}"
     },
     "present": {
       "title": "Baca sari kata pada telefon atau komputer anda",
@@ -1686,7 +1726,7 @@
       "androidChrome": "Chrome di Android tidak dapat membukanya? Benarkan dalam Tetapan → Apl → Chrome → Kebenaran → Peranti berdekatan.",
       "watching": "Menonton: {{count}}",
       "fullscreen": "Skrin penuh",
-      "windowTitle": "Halaman projektor Sokuji",
+      "windowTitle": "Halaman projektor AED Translator",
       "ended": "Perkongsian telah tamat"
     }
   },
@@ -1695,7 +1735,7 @@
     "buttonActive": "Berkongsi sari kata: {{count}} peranti menonton",
     "intro": "Benarkan orang dalam rangkaian yang sama membaca sari kata dan terjemahan di sini pada telefon atau komputer mereka.",
     "enable": "Kongsi sari kata",
-    "firewallNote": "Windows mungkin bertanya sama ada Sokuji boleh menggunakan rangkaian. Pilih “Rangkaian persendirian”.",
+    "firewallNote": "Windows mungkin bertanya sama ada AED Translator boleh menggunakan rangkaian. Pilih “Rangkaian persendirian”.",
     "address": "Alamat",
     "copy": "Salin",
     "copied": "Disalin",
@@ -1718,7 +1758,7 @@
     "openPresent": "Buka halaman projektor",
     "stop": "Henti berkongsi",
     "stopNote": "Halaman penonton akan menunjukkan bahawa perkongsian telah tamat.",
-    "warnNoViewers": "Sudah dua minit dan belum ada peranti yang bersambung. Rangkaian ini mungkin menghalang peranti daripada saling berhubung (Wi‑Fi tetamu dan sesetengah rangkaian syarikat begitu), atau tembok api mungkin menyekat Sokuji. Pastikan semua orang berada dalam rangkaian yang sama dengan komputer ini, benarkan Sokuji pada rangkaian persendirian dalam Windows, atau gunakan hotspot telefon atau penghala anda sendiri.",
+    "warnNoViewers": "Sudah dua minit dan belum ada peranti yang bersambung. Rangkaian ini mungkin menghalang peranti daripada saling berhubung (Wi‑Fi tetamu dan sesetengah rangkaian syarikat begitu), atau tembok api mungkin menyekat AED Translator. Pastikan semua orang berada dalam rangkaian yang sama dengan komputer ini, benarkan AED Translator pada rangkaian persendirian dalam Windows, atau gunakan hotspot telefon atau penghala anda sendiri.",
     "warnAddressChanged": "Rangkaian telah berubah. Alamat kini {{address}}: hantar semula pautan atau buka semula halaman projektor.",
     "errorPortsBusy": "Tidak dapat mula berkongsi: port 7788–7797 semuanya sedang digunakan.",
     "errorListen": "Tidak dapat mula berkongsi: {{reason}}"
@@ -1733,7 +1773,42 @@
     "playedRight": "Dimainkan di telinga kanan",
     "notPlayed": "Tidak dimainkan: terjemahan ini dalam bahasa {{language}}, bukan {{target}}, jadi tidak dibacakan kepada sesiapa.",
     "legendMe": "{{language}} · saya",
-    "legendOther": "{{language}} · pihak lain"
+    "legendOther": "{{language}} · pihak lain",
+    "modeGroup": "Translation mode",
+    "onlineMeeting": "Online meeting",
+    "title": "Face to face",
+    "intro": "Choose two subtitle languages and take turns speaking into one microphone.",
+    "backToMeeting": "Online meeting",
+    "languageChoices": "Reading languages",
+    "firstLanguage": "First subtitle language",
+    "secondLanguage": "Second subtitle language",
+    "subtitleOnly": "Subtitles only. No speech is synthesized.",
+    "speakerNumber": "Speaker {{number}}",
+    "speaker": "Speaker",
+    "transcribing": "Listening…",
+    "translationPending": "Translating…",
+    "translationUnavailable": "Translation unavailable",
+    "waitingLive": "Listening for speech…",
+    "personA": "Person A",
+    "personB": "Person B",
+    "noSpeech": "Qwen provides realtime captions. The configured text service translates the other direction.",
+    "ready": "Choose two subtitle languages, then start listening.",
+    "starting": "Connecting to Qwen and opening the microphone…",
+    "stopping": "Releasing the microphone…",
+    "live": "Listening. Subtitles will appear as you speak.",
+    "failed": "Could not start face-to-face translation.",
+    "start": "Start listening",
+    "stop": "Stop listening",
+    "retry": "Retry",
+    "speakers": "Speaker assignments",
+    "assignSpeakers": "Who is speaking?",
+    "detectedSpeaker": "Detected speaker {{id}}",
+    "captions": "Conversation subtitles",
+    "waiting": "Subtitles will appear here as you speak.",
+    "speakerUnknown": "Speaker unassigned",
+    "languageUnknown": "Language unknown",
+    "textRoute": "Text translation",
+    "assignToTranslate": "Assign this speaker to choose the translation direction."
   },
   "screenContext": {
     "picker": {
@@ -1746,11 +1821,11 @@
       "none": "Tiada tetingkap atau skrin untuk dikongsi ditemui.",
       "minimizedHint": "Tetingkap yang diminimumkan tidak boleh dikongsi: pulihkan tetingkap, kemudian Segarkan.",
       "deniedTitle": "Kebenaran Rakaman Skrin diperlukan",
-      "deniedText": "macOS tidak membenarkan Sokuji melihat skrin. Ini juga berlaku apabila Sokuji dihidupkan dalam System Settings, jika kebenaran itu diberikan kepada versi yang lebih lama.",
+      "deniedText": "macOS tidak membenarkan AED Translator melihat skrin. Ini juga berlaku apabila AED Translator dihidupkan dalam System Settings, jika kebenaran itu diberikan kepada versi yang lebih lama.",
       "openSettings": "Buka Tetapan Sistem",
       "reask": "Minta macOS sekali lagi",
-      "askedText": "Benarkan Sokuji apabila macOS bertanya, atau hidupkannya dalam System Settings. macOS hanya menggunakan kebenaran itu selepas Sokuji dimulakan semula.",
-      "restart": "Mulakan semula Sokuji",
+      "askedText": "Benarkan AED Translator apabila macOS bertanya, atau hidupkannya dalam System Settings. macOS hanya menggunakan kebenaran itu selepas AED Translator dimulakan semula.",
+      "restart": "Mulakan semula AED Translator",
       "refresh": "Segarkan",
       "cancel": "Mula tanpa konteks skrin",
       "nothingVisible": "Kawasan yang anda pilih tidak menunjukkan apa-apa sekarang. Pilih yang lain, atau mula tanpa konteks skrin.",
@@ -1862,7 +1937,10 @@
       },
       "findModels": "Cari model",
       "configure": "Tetapkan",
-      "manageModels": "Urus model"
+      "manageModels": "Urus model",
+      "internalModel": "Model teks rangkaian syarikat dan PGX",
+      "bailianModel": "Alibaba Cloud Model Studio · terjemahan masa nyata",
+      "internalModelHint": "Pilih atau masukkan nama model di bawah “Bahasa dan susunan”."
     },
     "lineup": {
       "title": "Susunan",
@@ -1906,8 +1984,8 @@
         "key": "Kekunci",
         "held": "Semasa ditekan",
         "notHeld": "Semasa tidak ditekan",
-        "talkHeld": "Sokuji mendengar; apabila anda melepaskan kekunci, potongan itu diterjemah dan pihak lain mendengar terjemahannya. Apabila Passthrough dihidupkan, pihak lain juga mendengar suara anda sendiri secara perlahan.",
-        "talkNotHeld": "Sokuji tidak mendengar; apa sahaja yang anda katakan tidak diterjemah dan tidak sampai kepada pihak lain.",
+        "talkHeld": "AED Translator mendengar; apabila anda melepaskan kekunci, potongan itu diterjemah dan pihak lain mendengar terjemahannya. Apabila Passthrough dihidupkan, pihak lain juga mendengar suara anda sendiri secara perlahan.",
+        "talkNotHeld": "AED Translator tidak mendengar; apa sahaja yang anda katakan tidak diterjemah dan tidak sampai kepada pihak lain.",
         "translateHeld": "Apa yang anda katakan diterjemah; pihak lain hanya mendengar terjemahannya, bukan suara anda sendiri.",
         "translateNotHeld": "Suara anda sendiri terus sampai kepada pihak lain, tanpa terjemahan.",
         "change": "Tukar",
@@ -2065,7 +2143,7 @@
     "foundInNotes": "Ditemui dalam nota",
     "foundInTitle": "Ditemui dalam tajuk",
     "unavailable": "Sejarah tidak dapat dibuka.",
-    "unavailableNewer": "Sejarah ini ditulis oleh versi Sokuji yang lebih baharu. Kemas kini Sokuji untuk membukanya.",
+    "unavailableNewer": "Sejarah ini ditulis oleh versi AED Translator yang lebih baharu. Kemas kini AED Translator untuk membukanya.",
     "failed": "Itu tidak berjaya. Cuba lagi.",
     "me": "Saya",
     "other": "Pihak lain",
@@ -2179,7 +2257,7 @@
       "wallet-frozen": "Dompet Kizuna AI anda dibekukan.",
       "not-member": "Anda bukan lagi ahli organisasi yang membayar Kizuna AI.",
       "too-large": "Rekod ini terlalu panjang untuk Kizuna AI menulis nota daripadanya.",
-      "update-required": "Kemas kini Sokuji untuk menulis nota dengan Kizuna AI.",
+      "update-required": "Kemas kini AED Translator untuk menulis nota dengan Kizuna AI.",
       "other": "Perkhidmatan nota menolak permintaan."
     },
     "notesLatestFailed": "Cubaan terakhir tidak dapat ditulis: {{reason}}",

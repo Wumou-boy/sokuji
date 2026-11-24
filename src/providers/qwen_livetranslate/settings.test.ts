@@ -7,6 +7,7 @@ import {
   QWEN_DEFAULTS, QWEN_LANGUAGES, QWEN_MODEL, QWEN_PAUSE, QWEN_SPOKEN, QWEN_VOICES, qwenCredentials, qwenLanguages, qwenParticipantVoice, qwenSpeakerVoice,
   SPEAKER_CLONE, SPEAKER_CLONE_ONCE,
 } from './settings';
+import { BAILIAN_WORKSPACE_CONNECTION, normalizeBailianWorkspaceId } from './endpoints';
 
 const signedOut: AuthContext = { signedIn: false, getToken: async () => null };
 const codes = (list: readonly { value: string }[]) => list.map((o) => o.value);
@@ -14,7 +15,7 @@ const codes = (list: readonly { value: string }[]) => list.map((o) => o.value);
 describe("Qwen LiveTranslate's settings", () => {
   it('runs one model, and starts from two different presets and the server\'s own pause', () => {
     expect(QWEN_MODEL).toBe('qwen3.8-livetranslate-flash-realtime');
-    expect(QWEN_DEFAULTS).toEqual({ connection: 'auto', voice: 'Tina', participantVoice: 'Ethan', pauseMs: 2500, region: 'sg', screenContext: false, speakerLabels: true });
+    expect(QWEN_DEFAULTS).toEqual({ connection: 'auto', workspaceId: '', voice: 'Tina', voiceOwnerHash: '', participantVoice: 'Ethan', pauseMs: 2500, region: 'sg', screenContext: false, speakerLabels: true });
   });
 
   it('starts with speaker labels on, keeps a stored boolean and defaults anything else', () => {
@@ -32,6 +33,15 @@ describe("Qwen LiveTranslate's settings", () => {
     expect(stored).not.toHaveProperty('hotwords');
     expect(stored.pauseMs).toBe(QWEN_PAUSE.default);
     expect(migrateQwenSettings({ region: 'cn' }).region).toBe('cn');
+  });
+
+  it('migrates the explicit workspace route and validates only a Bailian llm workspace ID label', () => {
+    expect(migrateQwenSettings({ connection: BAILIAN_WORKSPACE_CONNECTION, workspaceId: ' LLM-ABC123 ' })).toMatchObject({ connection: BAILIAN_WORKSPACE_CONNECTION, workspaceId: 'llm-abc123' });
+    expect(migrateQwenSettings({ connection: 'bailian-workspace', workspaceId: 'https://evil.test' })).toMatchObject({ connection: BAILIAN_WORKSPACE_CONNECTION, workspaceId: '' });
+    expect(normalizeBailianWorkspaceId('llm-a1b2')).toBe('llm-a1b2');
+    expect(normalizeBailianWorkspaceId('llm-a1-b2')).toBeNull();
+    expect(normalizeBailianWorkspaceId('trial')).toBeNull();
+    expect(normalizeBailianWorkspaceId('llm-a1.cn-beijing.maas.aliyuncs.com')).toBeNull();
   });
 
   it('starts with screen context off, keeps a stored boolean and defaults anything else', () => {
@@ -110,10 +120,15 @@ describe("Qwen LiveTranslate's settings", () => {
     expect(qwenLanguages.wire.toWire('fil')).toBe('fil');
   });
 
-  it('reads one trimmed key, and an empty one as missing', () => {
-    expect(qwenCredentials.keys).toEqual(['apiKey']);
+  it('keeps the personal and company workspace keys in separate stored fields, and reads only the active field', () => {
+    expect(qwenCredentials.keys).toEqual(['apiKey', 'workspaceApiKey']);
     expect(qwenCredentials.fields(QWEN_DEFAULTS)).toEqual([{ key: 'apiKey', labelKey: 'setup.credentials.apiKey', secret: true, placeholderKey: 'simpleSettings.apiKeyPlaceholder' }]);
     expect(qwenCredentials.read({ apiKey: '  sk-ws-T.ABCDEFGH.ijklmnop\n' }, signedOut)).toEqual({ apiKey: 'sk-ws-T.ABCDEFGH.ijklmnop' });
     expect(qwenCredentials.read({ apiKey: ' ' }, signedOut)).toEqual({ missing: 'Enter your Qwen API key.' });
+    const company = { ...QWEN_DEFAULTS, connection: BAILIAN_WORKSPACE_CONNECTION };
+    expect(qwenCredentials.fields(company)).toEqual([{ key: 'workspaceApiKey', labelKey: 'providers.qwen_livetranslate.workspaceApiKey', secret: true, placeholderKey: 'simpleSettings.apiKeyPlaceholder' }]);
+    expect(qwenCredentials.read({ workspaceApiKey: '  company-key\n' }, signedOut)).toEqual({ apiKey: 'company-key' });
+    expect(qwenCredentials.read({ workspaceApiKey: '', apiKey: 'personal-key' }, signedOut)).toEqual({ missing: 'Enter your Bailian workspace API key.' });
+    expect(qwenCredentials.choice?.setting).toBe('connection');
   });
 });

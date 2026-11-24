@@ -45,7 +45,9 @@ import { closeCodeAction, createReconnector, refusalResult, reissueFailed, type 
 import { isVoiced } from '../../lib/session/turn';
 import type { DetectEndpoint, Detection } from './check';
 import type { QwenConfig } from './config';
-import { ENDPOINTS, type EndpointId } from './endpoints';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, bailianWorkspaceSocketUrl, ENDPOINTS, normalizeBailianWorkspaceId, type EndpointId } from './endpoints';
+import { isBailianWorkspaceAvailable } from './workspace';
+import { resolveQwenVoiceForSession } from './voiceIdentity';
 import { QwenSegments } from './segments';
 import type { QwenCredentials } from './settings';
 import {
@@ -160,6 +162,8 @@ export interface QwenAdapterDeps {
   openHeaderSocket: OpenHeaderSocket;
   /** Finds the key's endpoint when no check has (`check.ts`): a stub in tests. */
   detect: DetectEndpoint;
+  /** Workspace mode ships only in the Windows desktop app in this release; injectable for replay tests. */
+  workspaceSupported?: () => boolean;
 }
 
 type Phase = 'opening' | 'configuring' | 'live' | 'ended';
@@ -205,9 +209,11 @@ function seamRefusal(error: unknown, managed: boolean): unknown {
 class QwenLeg implements AdapterSession {
   /** Each leg is its own connection (split legs): never `shared`. The region is the endpoint's, once the start has chosen it. */
   get info(): AdapterSession['info'] {
-    return { transport: 'websocket', ...(this.endpoint ? { region: ENDPOINTS[this.endpoint].region } : {}) };
+    return { transport: 'websocket', ...(this.workspaceId ? { region: 'cn' as const } : this.endpoint ? { region: ENDPOINTS[this.endpoint].region } : {}) };
   }
   private phase: Phase = 'opening';
+  /** Resolved once against the actual key/endpoint; a stale account-owned clone falls back to Tina. */
+  private sessionVoice: QwenConfig['voice'];
   /** The connection in use once live. */
   private socket: WebSocket | null = null;
   /** The live connection's: lets it go, telling the lease when its session was reported. A no-op when none is live. */
@@ -220,6 +226,8 @@ class QwenLeg implements AdapterSession {
   private apiKey: string;
   /** The endpoint the start dialled: every reconnect's too, never detected again. */
   private endpoint: EndpointId | null = null;
+  /** A dedicated Bailian workspace is resolved once at start and reused for every reconnect. */
+  private workspaceId: string | null = null;
   private readonly reconnector: Reconnector;
   /** The drop the reconnector took up last: what a give-up reports with. */
   private drop: DropInfo | null = null;
@@ -279,6 +287,7 @@ class QwenLeg implements AdapterSession {
     private readonly events: AdapterEvents,
     private readonly deps: QwenAdapterDeps,
   ) {
+    this.sessionVoice = request.config.voice;
     this.segments = new QwenSegments({
       sink: events,
       person: request.config.person,
@@ -302,9 +311,22 @@ class QwenLeg implements AdapterSession {
   async open(): Promise<AdapterSession> {
     try {
       this.watchFrames();
+      if (this.request.config.connection === BAILIAN_WORKSPACE_CONNECTION) {
+        const supported = this.deps.workspaceSupported?.() ?? isBailianWorkspaceAvailable();
+        if (!supported) throw new AdapterStartError('Bailian workspace connections are available in the Windows desktop app only.', 'client');
+        const workspaceId = normalizeBailianWorkspaceId(this.request.config.workspaceId);
+        if (!workspaceId) throw new AdapterStartError('Enter a valid Bailian workspace ID before starting Qwen LiveTranslate.', 'client');
+        this.endpoint = null;
+        this.workspaceId = workspaceId;
+        this.sessionVoice = await resolveQwenVoiceForSession(this.request.config.voice, this.apiKey, false);
+        await this.connect(null, workspaceId, this.request.signal);
+        return this;
+      }
       const endpoint = this.request.config.endpoint ?? this.request.credentials.endpoint ?? await this.detect();
       this.endpoint = endpoint;
-      await this.connect(endpoint, this.request.signal);
+      this.workspaceId = null;
+      this.sessionVoice = await resolveQwenVoiceForSession(this.request.config.voice, this.apiKey, endpoint === BAILIAN_ENDPOINT_ID);
+      await this.connect(endpoint, null, this.request.signal);
       return this;
     } catch (error) {
       this.shutDown();
@@ -398,10 +420,16 @@ class QwenLeg implements AdapterSession {
       this.held.push(pcm);
       return;
     }
-    ws.send(appendFrame(pcm));
+    this.sendPcm(ws, pcm);
     this.appended = true;
     this.lastSentAt = this.request.clock.now();
     this.audioSent();
+  }
+
+  /** Writes one append frame, then accounts for exactly the PCM accepted by the socket. */
+  private sendPcm(ws: WebSocket, pcm: Int16Array): void {
+    ws.send(appendFrame(pcm));
+    this.request.config.turnAudio?.append(pcm);
   }
 
   /** The screen source's subscription, when the request has one: frames are kept or sent by `onFrame`, a loss and a return are said. */
@@ -509,7 +537,7 @@ class QwenLeg implements AdapterSession {
     const held = this.held;
     this.held = [];
     if (!ws || held.length === 0) return;
-    for (const pcm of held) ws.send(appendFrame(pcm));
+    for (const pcm of held) this.sendPcm(ws, pcm);
     this.appended = true;
     this.lastSentAt = this.request.clock.now();
     this.frame('out', 'session.audio_released', { chunks: held.length });
@@ -539,7 +567,7 @@ class QwenLeg implements AdapterSession {
     if (idleMs < KEEPALIVE_IDLE_MS) return;
     const manual = this.request.config.manual;
     if (manual && (this.busy || this.appended)) return;
-    ws.send(appendFrame(KEEPALIVE_SILENCE));
+    this.sendPcm(ws, KEEPALIVE_SILENCE);
     this.frame('out', 'session.keepalive', { idleMs });
     this.audioSent();
     this.lastSentAt = now;
@@ -637,7 +665,7 @@ class QwenLeg implements AdapterSession {
    * `signal` aborts — the request's at the start, the reconnector's for an
    * attempt.
    */
-  private connect(endpoint: EndpointId, signal: AbortSignal): Promise<WebSocket> {
+  private connect(endpoint: EndpointId | null, workspaceId: string | null, signal: AbortSignal): Promise<WebSocket> {
     return new Promise<WebSocket>((resolve, reject) => {
       const { clock, config, credentials } = this.request;
       // A stop while the endpoint was being found: nothing opens.
@@ -704,11 +732,11 @@ class QwenLeg implements AdapterSession {
         over = true;
         if (reported && created !== undefined) tellEnded(created);
       };
-      const url = socketUrl(endpoint, config.model);
-      const headers = qwenHeaders({ apiKey: this.apiKey });
+      const url = workspaceId ? bailianWorkspaceSocketUrl(workspaceId, config.model) : socketUrl(endpoint as EndpointId, config.model);
+      const headers = qwenHeaders({ apiKey: this.apiKey }, workspaceId !== null);
       const rule = ruleFor(url, { set: {} });
       // The endpoint, the rule's place and the header's name, never a value.
-      this.frame('out', 'session.headers', { endpoint, host: rule.host, path: rule.path, set: Object.keys(headers.set) });
+      this.frame('out', 'session.headers', { endpoint: workspaceId ? BAILIAN_WORKSPACE_CONNECTION : endpoint, host: rule.host, path: rule.path, set: Object.keys(headers.set) });
       this.deps.openHeaderSocket(url, headers, {
         signal: seam.signal,
         clock,
@@ -753,7 +781,7 @@ class QwenLeg implements AdapterSession {
       const s = (typeof e.session === 'object' && e.session !== null ? e.session : {}) as { id?: unknown; model?: unknown };
       this.frame('in', 'session.created', { id: str(s.id), model: str(s.model) });
       if (this.phase !== 'opening') return;
-      const update = sessionUpdate(this.request.config, { video: this.request.frames !== undefined });
+      const update = sessionUpdate({ ...this.request.config, voice: this.sessionVoice }, { video: this.request.frames !== undefined });
       ws.send(JSON.stringify(update));
       this.frame('out', 'session.update', update.session);
       this.phase = 'configuring';
@@ -790,7 +818,10 @@ class QwenLeg implements AdapterSession {
       case 'input_audio_buffer.speech_started': {
         const speaker = typeof e.speaker_id === 'number' ? e.speaker_id : null;
         this.frame('in', e.type, { itemId, speaker });
-        if (itemId) this.segments.heard(itemId, speaker);
+        if (itemId) {
+          this.request.config.turnAudio?.speechStarted(itemId, e.audio_start_ms);
+          this.segments.heard(itemId, speaker);
+        }
         return;
       }
       case 'conversation.item.created': {
@@ -862,6 +893,9 @@ class QwenLeg implements AdapterSession {
         this.probeCleared();
         return;
       case 'input_audio_buffer.speech_stopped':
+        if (itemId) this.request.config.turnAudio?.speechStopped(itemId, e.audio_end_ms);
+        this.frame('in', e.type, { itemId });
+        return;
       case 'response.created':
       case 'response.content_part.added':
       case 'response.content_part.done':
@@ -946,6 +980,7 @@ class QwenLeg implements AdapterSession {
    */
   private dropped(drop: Pick<DropInfo, 'cause' | 'closeCode' | 'errorCode'>): void {
     if (this.phase === 'ended') return;
+    this.request.config.turnAudio?.resetStream();
     this.segments.abandon();
     this.resetTurnState();
     this.stopKeepalive();
@@ -1058,7 +1093,7 @@ class QwenLeg implements AdapterSession {
     this.phase = 'opening';
     let ws: WebSocket;
     try {
-      ws = await this.connect(this.endpoint as EndpointId, signal);
+      ws = await this.connect(this.endpoint, this.workspaceId, signal);
     } catch (error) {
       // Closed by the abort (a stop, the budget's end): not the attempt's own failure.
       if (signal.aborted || this.hasEnded()) return abandoned;

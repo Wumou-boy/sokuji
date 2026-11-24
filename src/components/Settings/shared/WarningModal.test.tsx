@@ -78,7 +78,7 @@ describe('WarningModal permission types', () => {
 
   it('names the bundle macOS actually lists, which in dev is Electron', async () => {
     // `npm run dev` runs Electron's own bundle, so telling the developer to
-    // enable "Sokuji" sends them looking for an entry that does not exist.
+    // enable "AED Translator" sends them looking for an entry that does not exist.
     invoke.mockImplementation(async (channel: string) =>
       channel === 'get-tcc-display-name' ? { name: 'Electron', isDev: true } : { ok: true }
     );
@@ -88,7 +88,7 @@ describe('WarningModal permission types', () => {
     expect(await screen.findByText(/enable "Electron"/)).toBeInTheDocument();
   });
 
-  it('falls back to Sokuji when the name cannot be fetched', async () => {
+  it('falls back to AED Translator when the name cannot be fetched', async () => {
     invoke.mockImplementation(async (channel: string) => {
       if (channel === 'get-tcc-display-name') throw new Error('no ipc');
       return { ok: true };
@@ -96,7 +96,7 @@ describe('WarningModal permission types', () => {
 
     render(<WarningModal isOpen={true} onClose={vi.fn()} type="audio-capture-denied" />);
 
-    expect(await screen.findByText(/enable "Sokuji"/)).toBeInTheDocument();
+    expect(await screen.findByText(/enable "AED Translator"/)).toBeInTheDocument();
   });
 
   it('shows no settings button for warnings that are not permissions', () => {

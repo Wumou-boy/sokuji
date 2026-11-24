@@ -17,7 +17,24 @@
 // next clear of the same host and path answers (once).
 
 /** A rule's key in the map: its host and its path, '' for every path. */
-const keyOf = (host, path) => `${host}\u0000${path}`;
+const keyOf = (host, path, exactPath = false) => `${host}\u0000${path}\u0000${exactPath ? 'exact' : 'prefix'}`;
+
+function workspaceRuleProblem(host, path, exactPath, headers, removeHeaders) {
+  if (typeof host !== 'string' || !/cn-beijing\.maas\.aliyuncs\.com/i.test(host)) return null;
+  if (!/^llm-[a-z0-9]{1,59}\.cn-beijing\.maas\.aliyuncs\.com$/i.test(host)
+      || path !== '/api-ws/v1/realtime'
+      || exactPath !== true
+      || !headers || typeof headers !== 'object' || Array.isArray(headers)) {
+    return 'Bailian workspace rules require an exact Beijing workspace host and realtime path';
+  }
+  const names = Object.keys(headers);
+  const auth = names.find((name) => name.toLowerCase() === 'authorization');
+  if (names.length !== 1 || !auth || typeof headers[auth] !== 'string' || !/^Bearer [^\r\n]+$/.test(headers[auth])) {
+    return 'Bailian workspace rules may set only a Bearer Authorization header';
+  }
+  if (Array.isArray(removeHeaders) && removeHeaders.length > 0) return 'Bailian workspace rules cannot remove headers';
+  return null;
+}
 
 function createWsHeaderRules() {
   // key → { host, path, set: Map<name, value>, remove: Set<lowercased name> }
@@ -34,13 +51,15 @@ function createWsHeaderRules() {
    * dropped. A rule for the same host and path replaces it.
    */
   function set(args) {
-    const { host, path, headers, removeHeaders } = args || {};
+    const { host, path, headers, removeHeaders, exactPath } = args || {};
     if (!host || typeof host !== 'string' || !headers || typeof headers !== 'object') {
       return { success: false, error: 'Invalid arguments: host and headers required' };
     }
     if (path !== undefined && path !== '' && (typeof path !== 'string' || !path.startsWith('/'))) {
       return { success: false, error: 'Invalid arguments: path must start with /' };
     }
+    const workspaceProblem = workspaceRuleProblem(host, path, exactPath, headers, removeHeaders);
+    if (workspaceProblem) return { success: false, error: workspaceProblem };
     const setHeaders = new Map(
       Object.entries(headers)
         .filter(([, v]) => v != null && v !== '')
@@ -52,15 +71,16 @@ function createWsHeaderRules() {
         .map((n) => n.trim().toLowerCase()),
     );
     const rulePath = path || '';
-    rules.set(keyOf(host, rulePath), { host, path: rulePath, set: setHeaders, remove });
+    const exact = exactPath === true;
+    rules.set(keyOf(host, rulePath, exact), { host, path: rulePath, exactPath: exact, set: setHeaders, remove });
     return { success: true };
   }
 
   /** Removes the rule for `host` and `path` ('' or absent: the host-wide one), if it is still there. */
   function clear(args) {
-    const { host, path } = args || {};
+    const { host, path, exactPath } = args || {};
     if (!host) return { success: false, error: 'Invalid arguments: host required' };
-    const key = keyOf(host, path || '');
+    const key = keyOf(host, path || '', exactPath === true);
     rules.delete(key);
     const { requestId } = awaiting.get(key) || {};
     awaiting.delete(key);
@@ -83,7 +103,7 @@ function createWsHeaderRules() {
     let best = null;
     for (const entry of awaiting.values()) {
       if (entry.host !== target.host) continue;
-      if (entry.path && !target.pathname.startsWith(entry.path)) continue;
+      if (entry.exactPath ? target.pathname !== entry.path : entry.path && !target.pathname.startsWith(entry.path)) continue;
       if (!best || entry.path.length > best.path.length) best = entry;
     }
     if (!best || !responseHeaders || typeof responseHeaders !== 'object') return;
@@ -109,7 +129,7 @@ function createWsHeaderRules() {
     let best = null;
     for (const rule of rules.values()) {
       if (rule.host !== target.host) continue;
-      if (rule.path && !target.pathname.startsWith(rule.path)) continue;
+      if (rule.exactPath ? target.pathname !== rule.path : rule.path && !target.pathname.startsWith(rule.path)) continue;
       if (!best || rule.path.length > best.path.length) best = rule;
     }
     if (!best) return false;
@@ -119,8 +139,8 @@ function createWsHeaderRules() {
       }
     }
     for (const [name, value] of best.set.entries()) requestHeaders[name] = value;
-    rules.delete(keyOf(best.host, best.path));
-    awaiting.set(keyOf(best.host, best.path), { host: best.host, path: best.path });
+    rules.delete(keyOf(best.host, best.path, best.exactPath));
+    awaiting.set(keyOf(best.host, best.path, best.exactPath), { host: best.host, path: best.path, exactPath: best.exactPath });
     return true;
   }
 

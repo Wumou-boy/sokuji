@@ -8,6 +8,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { AdapterStartError, SAMPLE_RATE, type FrameReason, type FrameSource } from '../../lib/contract/adapter';
+import { QwenTurnAudioBuffer } from '../../lib/faceToFace/audioBuffer';
 import type { AdapterEvent } from '../../lib/contract/events';
 import { HeaderSocketError } from '../../lib/contract/headerSocket';
 import { driveAdapter, flush, type ScenarioStep } from '../../lib/contract/testing/drive';
@@ -150,6 +151,37 @@ describe('the Qwen LiveTranslate adapter: the start (spec §6)', () => {
     expect(h.socket().url).toBe('wss://maas.qianwenaiapi.com/api-ws/v1/realtime?model=qwen3.8-livetranslate-flash-realtime');
   });
 
+  it('pins a company workspace to its exact endpoint and honors supplied screen frames', async () => {
+    const frames = fakeFrameSource({ inHand: JPEG_A });
+    const h = startQwen({ patch: { connection: 'bailian-workspace', workspaceId: 'LLM-Team123' }, frames, workspaceSupported: () => true });
+    await flush();
+    expect(h.seam.registrations).toEqual([{
+      host: 'llm-team123.cn-beijing.maas.aliyuncs.com', path: '/api-ws/v1/realtime',
+      set: { Authorization: `Bearer ${KEY.apiKey}` }, remove: [], exactPath: true, cleared: false,
+    }]);
+    expect(h.socket().url).toBe('wss://llm-team123.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime?model=qwen3.8-livetranslate-flash-realtime');
+    expect(frames.subscribers).toBe(1);
+    h.socket().open();
+    await flush();
+    h.socket().receive(SERVER.created());
+    expect(h.sent()[0].session).toHaveProperty('input_modalities', ['audio', 'video']);
+    h.socket().receive(SERVER.updated());
+    const session = await h.starting;
+    expect(session.info.region).toBe('cn');
+    session.appendAudio(chunk());
+    expect(types(h.socket()).slice(-2)).toEqual(['input_audio_buffer.append', 'input_image_buffer.append']);
+    frames.emit(JPEG_B);
+    expect(types(h.socket()).at(-1)).toBe('input_image_buffer.append');
+    await session.stop();
+    expect(frames.subscribers).toBe(0);
+  });
+
+  it('refuses a workspace route outside Windows desktop before registering a header rule', async () => {
+    const h = startQwen({ patch: { connection: 'bailian-workspace', workspaceId: 'llm-team123' }, workspaceSupported: () => false });
+    await expect(h.starting).rejects.toEqual(new AdapterStartError('Bailian workspace connections are available in the Windows desktop app only.', 'client'));
+    expect(h.seam.registrations).toEqual([]);
+  });
+
   it("tells the run the region of the endpoint it dialled: Beijing's for a Beijing key", async () => {
     const { session } = await qwenSession({ shared: { ...SHARED, models: [{ id: 'cn' }] } });
     expect(session.info.region).toBe('cn');
@@ -287,6 +319,53 @@ describe('the Qwen LiveTranslate adapter: the session (spec §6)', () => {
     h.session.appendAudio(chunk(-3));
     expect(h.appended().map((p) => p[0])).toEqual([1_000, -3]);
     expect(h.of('frame').length).toBe(before);
+  });
+
+  it('maps source item origins to exact PCM from the bytes actually sent on the socket', async () => {
+    const h = await qwenSession();
+    const buffer = new QwenTurnAudioBuffer();
+    h.config.turnAudio = buffer;
+    const sent = (fill: number) => h.session.appendAudio(new Int16Array(240).fill(fill));
+
+    sent(11);
+    h.socket().receive(JSON.stringify({ type: 'input_audio_buffer.speech_started', item_id: 'wire_item', audio_start_ms: 10 }));
+    sent(22);
+    h.socket().receive(SERVER.heardItem('wire_item'));
+    h.socket().receive(SERVER.sourceDelta('wire_item', 'hello'));
+    const source = h.of('segmentOpened').find((event) => event.payload.side === 'source');
+    expect(source?.payload.origin).toBe('wire_item');
+    const audio = buffer.read(source!.payload.origin!);
+    sent(33);
+    h.socket().receive(JSON.stringify({ type: 'input_audio_buffer.speech_stopped', item_id: 'wire_item', audio_end_ms: 30 }));
+
+    await expect(audio).resolves.toEqual(new Int16Array([...new Int16Array(240).fill(22), ...new Int16Array(240).fill(33)]));
+    buffer.dispose();
+    await h.session.stop();
+  });
+
+  it('uses the actual outgoing stream clock after push-to-talk quiet is held back', async () => {
+    const h = await qwenSession({ context: MANUAL_CTX });
+    const buffer = new QwenTurnAudioBuffer();
+    h.config.turnAudio = buffer;
+    const voice = new Int16Array(12_000).fill(2_000);
+    const nextVoice = new Int16Array(12_000).fill(3_000);
+    h.session.appendAudio(voice);
+    for (let n = 0; n < 25; n++) h.session.appendAudio(new Int16Array(2_400));
+    h.session.appendAudio(nextVoice);
+    h.socket().receive(SERVER.responseDone());
+    const wire = h.appended();
+    expect(wire.reduce((n, pcm) => n + pcm.length, 0)).toBe(12_000 + 48_000 + 7_200 + 12_000);
+
+    h.socket().receive(JSON.stringify({ type: 'input_audio_buffer.speech_started', item_id: 'manual_item', audio_start_ms: 500 }));
+    h.socket().receive(SERVER.heardItem('manual_item'));
+    h.socket().receive(SERVER.sourceDelta('manual_item', 'hello'));
+    const source = h.of('segmentOpened').find((event) => event.payload.side === 'source');
+    const audio = buffer.read(source!.payload.origin!);
+    h.socket().receive(JSON.stringify({ type: 'input_audio_buffer.speech_stopped', item_id: 'manual_item', audio_end_ms: 3_300 }));
+
+    await expect(audio).resolves.toEqual(new Int16Array(wire.flatMap((pcm) => [...pcm]).slice(12_000)));
+    buffer.dispose();
+    await h.session.stop();
   });
 
   it("turns one recorded turn into a source and its translation, stating their origin, the speech on the translation, its range once the speech is done; no person on my leg", async () => {

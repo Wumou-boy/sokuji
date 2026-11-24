@@ -62,6 +62,7 @@ import { watchVoiceLeaseRecovery } from './voiceLeaseRecovery';
 import { registerSubtitleFeed } from './subtitleFeed';
 import { appStartInputs, createFrameLog, decorateSessionAnalytics, teeFrames, type FrameLog } from './telemetry';
 import { ORG_REFUSAL_CODES } from '../lib/session/orgNotice';
+import { useFaceToFaceStore } from '../stores/faceToFaceStore';
 
 /** What only React can reach, handed in by `useAppSessionBridges`. */
 export interface AppBridges {
@@ -569,6 +570,11 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
     runner, view, karaoke, subtitle, punctuation, frames,
     audio,
     start(method) {
+      const faceToFace = useFaceToFaceStore.getState();
+      if (faceToFace.mode !== 'meeting' || faceToFace.phase === 'starting' || faceToFace.phase === 'live' || faceToFace.phase === 'stopping') {
+        reportWarning('AppSession', 'Switch to Online meeting before starting a meeting translation session.', { dedupeKey: 'session:face-to-face-exclusive' });
+        return Promise.resolve();
+      }
       if (choosing) return choosing;
       if (!subtitle.get().canStart) return Promise.resolve();
       if (!screenContextWanted()) return runner.start(method);

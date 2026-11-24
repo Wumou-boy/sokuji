@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useState } from 'react';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import VoiceCreateModal, { type VoiceCreateModalProps } from './VoiceCreateModal';
+import useAudioStore from '../../../stores/audioStore';
 
 const base = { isOpen: true, onClose: vi.fn(), capability: { importModes: ['upload'] as ('upload' | 'record')[] } };
 
@@ -119,6 +120,24 @@ describe('VoiceCreateModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the fixed voice review open until the user explicitly closes it', () => {
+    const onClose = vi.fn();
+    const onConfirm = vi.fn();
+    const { container } = render(<VoiceCreateModal {...base} review={{
+      seq: 1, audioBlob: null, error: null, busy: false, explicitClose: true, onClose, onConfirm,
+    }} />);
+    const name = screen.getByRole('textbox');
+    fireEvent.change(name, { target: { value: 'My fixed voice' } });
+    fireEvent.click(container.querySelector('.voice-modal-overlay')!);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(name).toHaveValue('My fixed voice');
+    expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /close/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('renders the provider note', () => {
     render(<VoiceCreateModal {...base} onImport={vi.fn()} note="Previewing is charged to your balance." />);
     expect(screen.getByText(/charged to your balance/i)).toBeInTheDocument();
@@ -205,6 +224,7 @@ describe('VoiceCreateModal — focus', () => {
  * onRecord is never reached.
  */
 function installCaptureStubs() {
+  vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
   const stopTrack = vi.fn();
   const gum = vi.fn(async () => ({ getTracks: () => [{ stop: stopTrack }] }));
   Object.defineProperty(navigator, 'mediaDevices', {
@@ -224,12 +244,15 @@ function installCaptureStubs() {
   class FakeAudioContext {
     sampleRate = 48000;
     destination = {};
+    state = 'running';
     createMediaStreamSource() { return { connect: vi.fn(), disconnect: vi.fn() }; }
+    createAnalyser() { return { fftSize: 1024, getFloatTimeDomainData: vi.fn(), disconnect: vi.fn() }; }
     createScriptProcessor() { return processor; }
+    resume = vi.fn(async () => {});
     close = vi.fn(async () => {});
   }
   vi.stubGlobal('AudioContext', FakeAudioContext);
-  return { stopTrack, processor };
+  return { stopTrack, processor, getUserMedia: gum };
 }
 
 /**
@@ -449,5 +472,58 @@ describe('VoiceCreateModal — a recording that cannot start', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
+  });
+});
+
+describe('VoiceCreateModal — Qwen recording capture', () => {
+  const originalMediaDevices = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
+  afterEach(() => {
+    if (originalMediaDevices) Object.defineProperty(navigator, 'mediaDevices', originalMediaDevices);
+    else delete (navigator as { mediaDevices?: unknown }).mediaDevices;
+    useAudioStore.setState({ selectedInputDevice: null, audioInputDevices: [] });
+    vi.unstubAllGlobals();
+  });
+
+  it('uses the selected real meeting microphone without ever selecting a virtual input', async () => {
+    const selected = { deviceId: 'physical-1', label: 'USB Microphone', isVirtual: false };
+    const { getUserMedia } = installCaptureStubs();
+    useAudioStore.setState({ selectedInputDevice: selected, audioInputDevices: [selected] });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<VoiceCreateModal {...base} capability={{ importModes: ['record'] }} onRecord={vi.fn()} useMeetingMicrophone recordingPrompt={{ title: 'Use your microphone', text: 'Speak now.' }} />);
+    expect(screen.getByText(/USB Microphone/)).toBeInTheDocument();
+    expect(screen.getByText('Use your microphone')).toBeInTheDocument();
+    expect(getUserMedia).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /record voice/i }));
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: /stop recording/i })).toBeInTheDocument());
+    expect(getUserMedia).toHaveBeenCalledWith(expect.objectContaining({ audio: expect.objectContaining({ deviceId: { exact: 'physical-1' }, echoCancellation: false }) }));
+    fireEvent.click(screen.getByRole('button', { name: /stop recording/i }));
+    await screen.findByRole('alert');
+    warn.mockRestore();
+  });
+
+  it('falls back from a virtual meeting input to a listed physical microphone', async () => {
+    const physical = { deviceId: 'physical-2', label: 'Laptop Microphone', isVirtual: false };
+    const virtual = { deviceId: 'vb-cable', label: 'CABLE Output (VB-Audio Virtual Cable)', isVirtual: false };
+    const { getUserMedia } = installCaptureStubs();
+    useAudioStore.setState({ selectedInputDevice: virtual, audioInputDevices: [virtual, physical] });
+    render(<VoiceCreateModal {...base} capability={{ importModes: ['record'] }} onRecord={vi.fn()} useMeetingMicrophone />);
+    expect(screen.getByText(/Laptop Microphone/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /record voice/i }));
+    await vi.waitFor(() => expect(getUserMedia).toHaveBeenCalled());
+    expect(getUserMedia).toHaveBeenCalledWith(expect.objectContaining({ audio: expect.objectContaining({ deviceId: { exact: 'physical-2' } }) }));
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: /stop recording/i })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /stop recording/i }));
+  });
+
+  it('rejects silent capture and does not submit it', async () => {
+    const { processor } = installCaptureStubs();
+    const onRecord = vi.fn();
+    render(<VoiceCreateModal {...base} capability={{ importModes: ['record'] }} onRecord={onRecord} />);
+    fireEvent.click(screen.getByRole('button', { name: /record voice/i }));
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: /stop recording/i })).toBeInTheDocument());
+    processor.onaudioprocess?.({ inputBuffer: { getChannelData: () => new Float32Array(10) } });
+    fireEvent.click(screen.getByRole('button', { name: /stop recording/i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/no sound reached the recorder/i);
+    expect(onRecord).not.toHaveBeenCalled();
   });
 });

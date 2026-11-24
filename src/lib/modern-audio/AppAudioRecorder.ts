@@ -4,6 +4,18 @@ import {
   AudioDataCallback,
 } from './IParticipantAudioRecorder';
 
+function waitForWindowsLoopback() {
+  let complete: ((error: Error | null) => void) | undefined;
+  const result = new Promise<Error | null>((resolve) => { complete = resolve; });
+  const timer = setTimeout(() => finish(new Error('Windows system audio startup timed out.')), 4_500);
+  function finish(error: Error | null) {
+    clearTimeout(timer);
+    complete?.(error);
+    complete = undefined;
+  }
+  return { result, finish, pending: () => complete !== undefined };
+}
+
 /**
  * Participant recorder fed by the per-application capture helper (issue #335),
  * used on both Windows and macOS - the two share one CLI contract.
@@ -119,11 +131,25 @@ export class AppAudioRecorder implements IParticipantAudioRecorder {
       console.error('[Sokuji] [AppAudioRecorder] Application capture requires Electron');
       return false;
     }
+    this.beginFailure = undefined;
+    this.stopping = false;
+    const ready = deviceId === 'desktop-audio-loopback' && electron.osInfo?.platform === 'win32'
+      ? waitForWindowsLoopback() : null;
 
     // Subscribe before starting, or the first PCM chunks are dropped.
     // preload strips the IPC event, so handlers receive the payload directly.
     this.pcmHandler = (payload: Uint8Array) => this.onPcm(payload);
-    this.eventHandler = (payload) => this.onHelperEvent(payload);
+    this.eventHandler = (payload) => {
+      if (ready?.pending()) {
+        if (payload.event === 'format') ready.finish(null);
+        else if (payload.event === 'error' || payload.event === 'exit') {
+          const code = typeof payload.code === 'string' ? ` (${payload.code})` : '';
+          ready.finish(new Error(`Windows system audio helper could not start${code}.`));
+        }
+        return;
+      }
+      this.onHelperEvent(payload);
+    };
     electron.receive('app-audio:pcm', this.pcmHandler);
     electron.receive('app-audio:event', this.eventHandler);
 
@@ -134,15 +160,25 @@ export class AppAudioRecorder implements IParticipantAudioRecorder {
       // Both listeners are already registered at this point; throwing here
       // would leak them and take the session start down with it.
       console.error('[Sokuji] [AppAudioRecorder] Capture request failed:', error);
+      ready?.finish(new Error('Windows system audio helper did not respond.'));
       await this.end();
       this.beginFailure = error;
       return false;
     }
     if (!result?.ok) {
       console.error('[Sokuji] [AppAudioRecorder] Failed to start capture:', result?.error);
+      ready?.finish(new Error('Windows system audio helper is unavailable.'));
       await this.end();
       this.beginFailure = result?.error;
       return false;
+    }
+    if (ready) {
+      const error = await ready.result;
+      if (error) {
+        await this.end();
+        this.beginFailure = error;
+        return false;
+      }
     }
 
     this.status = 'paused';

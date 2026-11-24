@@ -93,6 +93,31 @@ describe('the WebSocket upgrade header rules (Stage 2 OpenAI Live, ruling 7; cho
     expect(rules.size).toBe(1);
   });
 
+  it('applies a dedicated Bailian workspace key only to its exact Beijing realtime pathname', () => {
+    const rules = createWsHeaderRules();
+    const host = 'llm-a1b2.cn-beijing.maas.aliyuncs.com';
+    const exact = { host, path: '/api-ws/v1/realtime', exactPath: true, headers: { Authorization: 'Bearer workspace-key' } };
+    expect(rules.set(exact)).toEqual({ success: true });
+    const sibling = upgrade();
+    expect(rules.take(`wss://${host}/api-ws/v1/realtime-extra?model=m`, sibling)).toBe(false);
+    expect(sibling).not.toHaveProperty('Authorization');
+    expect(rules.size).toBe(1);
+    const intended = upgrade();
+    expect(rules.take(`wss://${host}/api-ws/v1/realtime?model=m`, intended)).toBe(true);
+    expect(intended.Authorization).toBe('Bearer workspace-key');
+  });
+
+  it('refuses broad, malformed, or non-Beijing workspace credential rules', () => {
+    const rules = createWsHeaderRules();
+    const host = 'llm-a1b2.cn-beijing.maas.aliyuncs.com';
+    const headers = { Authorization: 'Bearer workspace-key' };
+    expect(rules.set({ host, path: '/api-ws/v1/', headers })).toMatchObject({ success: false });
+    expect(rules.set({ host, path: '/api-ws/v1/realtime', headers })).toMatchObject({ success: false });
+    expect(rules.set({ host: 'llm-a1b2.cn-beijing.maas.aliyuncs.com.evil.test', path: '/api-ws/v1/realtime', exactPath: true, headers })).toMatchObject({ success: false });
+    expect(rules.set({ host: 'other.cn-beijing.maas.aliyuncs.com', path: '/api-ws/v1/realtime', exactPath: true, headers })).toMatchObject({ success: false });
+    expect(rules.size).toBe(0);
+  });
+
   describe("the handshake response's request id", () => {
     const URL_ = 'wss://maas.qwencloudapi.com/api-ws/v1/realtime?model=m';
     const QWEN = { host: 'maas.qwencloudapi.com', path: '/api-ws/', headers: { Authorization: 'Bearer k' } };

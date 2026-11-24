@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import LocalInferenceVoiceSection from './LocalInferenceVoiceSection';
 
-vi.mock('react-i18next', () => ({
+vi.mock('react-i18next', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
   useTranslation: () => ({ t: (_k: string, fb?: string) => fb ?? _k }),
 }));
 // Engine resolution drives which control renders.

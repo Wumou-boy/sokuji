@@ -6,17 +6,31 @@
 import type { AppSession } from './session';
 import type { Leg, Segment } from '../lib/conversation/types';
 import { planFromStores, subscribePlan } from '../lib/plan/fromStores';
-import { providersIn, transcriptionProvider } from '../lib/plan/read';
+import { providersIn, transcriptionProvider, unitFor } from '../lib/plan/read';
+import { BAILIAN_NOTES, notesServiceOf } from '../lib/notes/notesService';
 import useAudioStore from '../stores/audioStore';
 import { useLineUpStore } from '../stores/lineUpStore';
+import { useFaceToFaceStore } from '../stores/faceToFaceStore';
 import { useProviderStore } from '../stores/providerStore';
 import { useRoutingStore } from '../stores/routingStore';
-import { useSettingsStore } from '../stores/settingsStore';
+import { DEFAULT_NOTES_BAILIAN_MODEL, useSettingsStore } from '../stores/settingsStore';
 import useLogStore from '../stores/logStore';
 import { presentProviders } from '../providers/registry';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, normalizeBailianWorkspaceId } from '../providers/qwen_livetranslate/endpoints';
+import { QWEN_MODEL, type QwenSettings } from '../providers/qwen_livetranslate/settings';
+import { isLoopbackInput, isVirtualMic } from '../utils/audioDevices';
+import { openSystemAudio } from '../lib/audio/capture/systemAudio';
+import { base64ToPcm } from '../lib/contract/pcm64';
+import { SAMPLE_RATE } from '../lib/contract/adapter';
+import type { OpenSource } from '../lib/session/source';
+import { loadQwenVoiceProfiles } from '../providers/qwen_livetranslate/voiceProfileStorage';
+import { runQwenVoiceBenchmark } from '../providers/qwen_livetranslate/voiceBenchmark';
+import { getFaceToFaceDiagnostics, startFaceToFaceRuntime, stopFaceToFaceRuntime } from '../lib/faceToFace/runtime';
 
 type ElectronBridge = Pick<Window['electron'], 'invoke' | 'receive' | 'removeListener'>;
-type Command = 'status' | 'session.start' | 'session.stop' | 'logs.enable' | 'logs.list' | 'captions.list' | 'provider.configure-qwen-beijing' | 'credentials.status' | 'notes.check';
+type Command = 'status' | 'view.set-mode' | 'audio.inputs' | 'audio.system-check' | 'session.start' | 'session.stop' | 'logs.enable' | 'logs.list' | 'captions.list'
+  | 'provider.configure-qwen-beijing' | 'provider.configure-qwen-workspace' | 'provider.configure-qwen-defaults' | 'credentials.status' | 'notes.check'
+  | 'voice.benchmark' | 'face-to-face.start' | 'face-to-face.stop' | 'face-to-face.replay';
 type Request = { id: string; command: Command; args?: unknown };
 type Reply = { id: string; result: { ok: true; data: unknown } | { ok: false; error: { code: string; message: string } } };
 
@@ -40,10 +54,38 @@ function boundedLimit(value: unknown, fallback = 20): number {
 function requestOf(value: unknown): Request | null {
   if (!isObject(value) || typeof value.id !== 'string' || value.id.length < 1 || value.id.length > 128) return null;
   const command = value.command;
-  if (command !== 'status' && command !== 'session.start' && command !== 'session.stop'
+  if (command !== 'status' && command !== 'view.set-mode' && command !== 'audio.inputs' && command !== 'audio.system-check' && command !== 'session.start' && command !== 'session.stop'
     && command !== 'logs.enable' && command !== 'logs.list' && command !== 'captions.list'
-    && command !== 'provider.configure-qwen-beijing' && command !== 'credentials.status' && command !== 'notes.check') return null;
+    && command !== 'provider.configure-qwen-beijing' && command !== 'provider.configure-qwen-workspace'
+    && command !== 'provider.configure-qwen-defaults' && command !== 'credentials.status' && command !== 'notes.check'
+    && command !== 'voice.benchmark' && command !== 'face-to-face.start' && command !== 'face-to-face.stop' && command !== 'face-to-face.replay') return null;
   return { id: value.id, command, args: value.args };
+}
+
+function replaySource(pcm: Int16Array): OpenSource {
+  return async (_leg, signal) => {
+    signal.throwIfAborted();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = () => clearTimeout(timer);
+    return {
+      onPcm(listener) {
+        const started = performance.now();
+        let offset = 0;
+        const next = () => {
+          if (signal.aborted) return;
+          const end = Math.min(pcm.length, offset + SAMPLE_RATE * 0.08);
+          listener(pcm.subarray(offset, end));
+          offset = end;
+          if (offset < pcm.length) timer = setTimeout(next, Math.max(0, started + offset / SAMPLE_RATE * 1000 - performance.now()));
+        };
+        timer = setTimeout(next, 0);
+        return stop;
+      },
+      onEnded: () => () => {},
+      onDegraded: () => () => {},
+      async stop() { stop(); },
+    };
+  };
 }
 
 function textField(text: string, includeText: boolean): { text?: string; truncated?: boolean } {
@@ -114,20 +156,26 @@ export function attachAgentControl(
   electron: ElectronBridge | undefined = typeof window === 'undefined' ? undefined : window.electron,
 ): () => void {
   if (!electron?.receive || !electron.removeListener || !electron.invoke) return () => {};
+  let checkingSystemAudio = false;
+  let benchmarkingVoice = false;
 
   const status = () => {
     const plan = planFromStores();
     const provider = plan.state === 'ready' ? transcriptionProvider(plan.plan).id : null;
+    const translationProvider = plan.state === 'ready' ? unitFor(plan.plan, 'translation').provider.id : null;
+    const notesService = notesServiceOf(useLineUpStore.getState().lineUp);
     const readiness = provider ? useProviderStore.getState().readiness[provider] : undefined;
     const audioMode = useAudioStore.getState().mode;
     const subtitle = session.subtitle.get();
-    const settingsLoaded = useSettingsStore.getState().settingsLoaded;
+    const { mode: appMode, phase: faceToFacePhase, languages: faceToFaceLanguages } = useFaceToFaceStore.getState();
+    const { settingsLoaded, notesBailianModel } = useSettingsStore.getState();
     const appReady = settingsLoaded && plan.state !== 'loading';
     const incomingOnly = audioMode === 'participant';
     const speechOutputOff = useRoutingStore.getState().participantSpeech !== true;
-    const canStart = appReady && plan.state === 'ready' && subtitle.canStart && incomingOnly && speechOutputOff;
+    const canStart = appMode === 'meeting' && appReady && plan.state === 'ready' && subtitle.canStart && incomingOnly && speechOutputOff;
     let reasonCode: string | undefined;
     if (!appReady) reasonCode = 'app_not_ready';
+    else if (appMode === 'face-to-face') reasonCode = 'face_to_face_selected';
     else if (!incomingOnly) reasonCode = 'participant_audio_mode_required';
     else if (!speechOutputOff) reasonCode = 'translated_speech_output_enabled';
     else if (!subtitle.canStart) reasonCode = subtitle.idle.kind === 'unready'
@@ -135,9 +183,16 @@ export function attachAgentControl(
       : subtitle.idle.kind === 'failed' ? subtitle.idle.notice.code : 'session_not_startable';
     return {
       appReady,
+      appMode,
+      faceToFacePhase,
+      ...(appMode === 'face-to-face' ? { faceToFace: getFaceToFaceDiagnostics(), faceToFaceLanguages } : {}),
       phase: subtitle.phase,
       canStart,
       provider,
+      translationProvider,
+      ...(translationProvider === 'qwen_livetranslate' ? { translationModel: QWEN_MODEL } : {}),
+      notesService,
+      ...(notesService === BAILIAN_NOTES ? { notesModel: notesBailianModel } : {}),
       audioMode,
       incomingOnly,
       translatedSpeechOutputEnabled: !speechOutputOff,
@@ -165,7 +220,167 @@ export function attachAgentControl(
           case 'status':
             reply(request.id, { ok: true, data: status() });
             return;
+          case 'audio.inputs': {
+            const { audioInputDevices, selectedInputDevice, selectedParticipantSource, devicesLoaded, isMicMuted } = useAudioStore.getState();
+            const browserDevices = await navigator.mediaDevices?.enumerateDevices().catch(() => []) ?? [];
+            const systemDefault = browserDevices.find((device) => device.kind === 'audioinput' && device.deviceId === 'default');
+            const systemOutput = browserDevices.find((device) => device.kind === 'audiooutput' && device.deviceId === 'default');
+            const describe = (device: { label: string; isVirtual?: boolean }) => ({
+              label: device.label.slice(0, 180),
+              virtual: Boolean(device.isVirtual || isVirtualMic(device) || isLoopbackInput(device)),
+            });
+            reply(request.id, { ok: true, data: {
+              devicesLoaded,
+              meetingMicMuted: isMicMuted,
+              meetingInput: selectedInputDevice ? describe(selectedInputDevice) : null,
+              systemDefault: systemDefault?.label ? describe(systemDefault) : null,
+              systemOutput: systemOutput?.label ? describe(systemOutput) : null,
+              participantSource: selectedParticipantSource
+                ? { scope: selectedParticipantSource.deviceId.startsWith('app:') ? 'application' : 'system', label: selectedParticipantSource.label.slice(0, 180) }
+                : { scope: 'system' },
+              inputs: audioInputDevices.map(describe),
+            } });
+            return;
+          }
+          case 'audio.system-check': {
+            const { mode, phase } = useFaceToFaceStore.getState();
+            if (checkingSystemAudio || mode !== 'meeting' || phase !== 'idle' || session.runner.state.getState().phase !== 'idle') {
+              reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Run this check while Online Meeting is idle.' } });
+              return;
+            }
+            const selected = useAudioStore.getState().selectedParticipantSource?.deviceId ?? 'desktop-audio-loopback';
+            checkingSystemAudio = true;
+            try {
+              let backend: string | undefined;
+              const source = await openSystemAudio({
+                sourceId: () => selected,
+                muted: () => true,
+                subscribe: () => () => {},
+                audioSeen: () => {},
+                widened: () => {},
+                captureStarted: (started) => { backend = started; },
+              }, AbortSignal.timeout(12_000));
+              await source.stop();
+              reply(request.id, { ok: true, data: { captureOpened: true, ...(backend ? { backend } : {}) } });
+            } catch (error) {
+              const message = error instanceof Error ? error.message.slice(0, 300) : 'The participant audio source could not be opened.';
+              reply(request.id, { ok: false, error: { code: 'system_audio_check_failed', message } });
+            } finally {
+              checkingSystemAudio = false;
+            }
+            return;
+          }
+          case 'voice.benchmark': {
+            const args = isObject(request.args) ? request.args : {};
+            if (typeof args.round !== 'number' || !Number.isInteger(args.round) || args.round < 1 || args.round > 9
+              || typeof args.pcm !== 'string' || args.pcm.length > 512_000) {
+              reply(request.id, { ok: false, error: { code: 'benchmark_bad_fixture', message: 'The benchmark requires a valid synthetic audio sample.' } });
+              return;
+            }
+            if (benchmarkingVoice || session.runner.state.getState().phase !== 'idle' || useFaceToFaceStore.getState().phase !== 'idle') {
+              reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Run the voice benchmark while both meeting modes are idle.' } });
+              return;
+            }
+            benchmarkingVoice = true;
+            let stage = 'credentials';
+            try {
+              const entry = useProviderStore.getState().entries.qwen_livetranslate;
+              const apiKey = entry?.credentials.apiKey?.trim();
+              const settings = entry?.settings as QwenSettings | undefined;
+              if (!apiKey || !settings || settings.connection === BAILIAN_WORKSPACE_CONNECTION) {
+                reply(request.id, { ok: false, error: { code: 'benchmark_bailian_required', message: 'The benchmark needs the Bailian key that created the fixed voice.' } });
+                return;
+              }
+              stage = 'voice_profiles';
+              const profiles = await loadQwenVoiceProfiles(apiKey);
+              const selected = profiles.find((profile) => profile.id === settings.voice);
+              const fixed = selected ?? (profiles.length === 1 ? profiles[0] : undefined);
+              if (!fixed) {
+                reply(request.id, { ok: false, error: { code: 'benchmark_fixed_voice_required', message: 'Select the fixed Qwen voice you want to benchmark.' } });
+                return;
+              }
+              stage = 'fixture';
+              const pcm = base64ToPcm(args.pcm);
+              if (pcm.length < 24_000 || pcm.length > 192_000) {
+                reply(request.id, { ok: false, error: { code: 'benchmark_bad_fixture', message: 'Use one to eight seconds of 24 kHz mono PCM.' } });
+                return;
+              }
+              stage = 'realtime';
+              const report = await runQwenVoiceBenchmark({
+                endpoint: BAILIAN_ENDPOINT_ID,
+                apiKey,
+                fixedVoice: fixed.id,
+                clips: [{ pcm, sampleRate: 24_000 }],
+                rounds: 1,
+                startRound: args.round - 1,
+                targetLanguage: 'en',
+                signal: AbortSignal.timeout(34_000),
+              });
+              reply(request.id, { ok: true, data: { ...report, fixedVoiceSelection: selected ? 'current' : 'only-stored' } });
+            } catch {
+              reply(request.id, { ok: false, error: { code: `voice_benchmark_${stage}_failed`, message: 'The voice benchmark could not complete.' } });
+            } finally {
+              benchmarkingVoice = false;
+            }
+            return;
+          }
+          case 'view.set-mode': {
+            const mode = isObject(request.args) ? request.args.mode : undefined;
+            if (mode !== 'meeting' && mode !== 'face-to-face') {
+              reply(request.id, { ok: false, error: { code: 'invalid_mode', message: 'Choose meeting or face-to-face.' } });
+              return;
+            }
+            const faceToFace = useFaceToFaceStore.getState();
+            if (session.runner.state.getState().phase !== 'idle' || (faceToFace.phase !== 'idle' && faceToFace.phase !== 'error')) {
+              reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before switching modes.' } });
+              return;
+            }
+            faceToFace.setMode(mode);
+            reply(request.id, { ok: true, data: status() });
+            return;
+          }
+          case 'face-to-face.start':
+          case 'face-to-face.replay': {
+            const { mode, phase } = useFaceToFaceStore.getState();
+            if (mode !== 'face-to-face') {
+              reply(request.id, { ok: false, error: { code: 'meeting_selected', message: 'Open Face to Face first.' } });
+              return;
+            }
+            if (checkingSystemAudio || benchmarkingVoice || session.runner.state.getState().phase !== 'idle' || (phase !== 'idle' && phase !== 'error')) {
+              reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before starting Face to Face.' } });
+              return;
+            }
+            let capture: OpenSource | undefined;
+            if (request.command === 'face-to-face.replay') {
+              const args = isObject(request.args) ? request.args : {};
+              if (typeof args.pcm !== 'string' || args.pcm.length > 1_920_000) {
+                reply(request.id, { ok: false, error: { code: 'face_replay_bad_fixture', message: 'Use 1–30 seconds of 24 kHz mono PCM.' } });
+                return;
+              }
+              const pcm = base64ToPcm(args.pcm);
+              if (pcm.length < SAMPLE_RATE || pcm.length > SAMPLE_RATE * 30) {
+                reply(request.id, { ok: false, error: { code: 'face_replay_bad_fixture', message: 'Use 1–30 seconds of 24 kHz mono PCM.' } });
+                return;
+              }
+              capture = replaySource(pcm);
+            }
+            void startFaceToFaceRuntime(undefined, capture).catch(() => {});
+            reply(request.id, { ok: true, data: status() });
+            return;
+          }
+          case 'face-to-face.stop':
+            await stopFaceToFaceRuntime();
+            reply(request.id, { ok: true, data: status() });
+            return;
           case 'session.start': {
+            if (checkingSystemAudio || benchmarkingVoice) {
+              reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Wait for the current audio diagnostic to finish.' } });
+              return;
+            }
+            if (useFaceToFaceStore.getState().mode !== 'meeting') {
+              reply(request.id, { ok: false, error: { code: 'face_to_face_selected', message: 'Switch to Online Meeting in AED Translator to start an incoming-only session.' } });
+              return;
+            }
             if (session.runner.state.getState().phase !== 'idle') {
               reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before starting a new one.' } });
               return;
@@ -218,7 +433,18 @@ export function attachAgentControl(
             const args = isObject(request.args) ? request.args : {};
             const limit = boundedLimit(args.limit, 20);
             const includeText = args.includeText === true;
-            const items = captionsOf(session.runner.conversation.snapshot(), limit, includeText);
+            const face = useFaceToFaceStore.getState();
+            const items = face.mode === 'face-to-face'
+              ? face.captions.slice(-Math.min(limit, includeText ? 24 : 100)).map((row) => ({
+                speaker: row.speakerNumber ?? null,
+                sourceLanguage: row.sourceLanguage ?? null,
+                final: row.final,
+                subtitles: [face.languages.first, face.languages.second].map((language) => {
+                  const text = row.subtitles[language];
+                  return { language, present: Boolean(text), ...(text ? textField(text, includeText) : {}) };
+                }),
+              }))
+              : captionsOf(session.runner.conversation.snapshot(), limit, includeText);
             reply(request.id, { ok: true, data: { textIncluded: includeText, items } });
             return;
           }
@@ -240,6 +466,7 @@ export function attachAgentControl(
             reply(request.id, { ok: true, data: {
               openaiConfigured: Boolean(entries.openai?.credentials.apiKey?.trim()),
               qwenConfigured: Boolean(entries.qwen_livetranslate?.credentials.apiKey?.trim()),
+              qwenWorkspaceKeyConfigured: Boolean(entries.qwen_livetranslate?.credentials.workspaceApiKey?.trim()),
             } });
             return;
           }
@@ -292,7 +519,39 @@ export function attachAgentControl(
             reply(request.id, { ok: true, data: { service, model: configured.model, topics: result.body.topics.length } });
             return;
           }
-          case 'provider.configure-qwen-beijing': {
+          case 'provider.configure-qwen-defaults': {
+            const { lineUp, locked, choose } = useLineUpStore.getState();
+            const settings = useSettingsStore.getState();
+            if (locked || session.runner.state.getState().phase !== 'idle') {
+              reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before changing providers.' } });
+              return;
+            }
+            if (!settings.settingsLoaded || !lineUp) {
+              reply(request.id, { ok: false, error: { code: 'app_not_ready', message: 'The app settings are not ready yet.' } });
+              return;
+            }
+            if (!presentProviders().some((provider) => provider.id === 'qwen_livetranslate')) {
+              reply(request.id, { ok: false, error: { code: 'provider_unavailable', message: 'Qwen LiveTranslate is not available in this build.' } });
+              return;
+            }
+            if (settings.notesBailianModel !== DEFAULT_NOTES_BAILIAN_MODEL) {
+              await settings.setNotesBailianModel(DEFAULT_NOTES_BAILIAN_MODEL);
+            }
+            const modelSaved = useSettingsStore.getState().notesBailianModel === DEFAULT_NOTES_BAILIAN_MODEL;
+            const translationSelected = useLineUpStore.getState().stored && lineUp.translation === 'qwen_livetranslate';
+            const translationSaved = modelSaved && (translationSelected || await choose('translation', 'qwen_livetranslate'));
+            const notesSaved = translationSaved && (lineUp.summarisation === BAILIAN_NOTES || await choose('summarisation', BAILIAN_NOTES));
+            if (!notesSaved) {
+              reply(request.id, { ok: false, error: { code: 'provider_configuration_persist_failed', message: 'The Qwen selections could not all be saved.' } });
+              return;
+            }
+            const { notesChatForService } = await import('../lib/notes/appNotes');
+            reply(request.id, { ok: true, data: { ...status(), notesConfigured: Boolean(await notesChatForService(BAILIAN_NOTES)) } });
+            return;
+          }
+          case 'provider.configure-qwen-beijing':
+          case 'provider.configure-qwen-workspace': {
+            const company = request.command === 'provider.configure-qwen-workspace';
             if (session.runner.state.getState().phase !== 'idle' || useLineUpStore.getState().locked) {
               reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before changing providers.' } });
               return;
@@ -301,10 +560,16 @@ export function attachAgentControl(
               reply(request.id, { ok: false, error: { code: 'app_not_ready', message: 'The app settings are not ready yet.' } });
               return;
             }
-            if (!isObject(request.args) || Object.keys(request.args).some((key) => key !== 'apiKey')
-              || typeof request.args.apiKey !== 'string' || request.args.apiKey.trim().length === 0
-              || request.args.apiKey.length > 4_096) {
-              reply(request.id, { ok: false, error: { code: 'invalid_argument', message: 'Expected one nonempty apiKey value.' } });
+            const args = request.args;
+            const fields = company ? ['apiKey', 'workspaceId'] : ['apiKey'];
+            const workspaceId = company && isObject(args) ? normalizeBailianWorkspaceId(args.workspaceId) : null;
+            if (!isObject(args) || Object.keys(args).some((key) => !fields.includes(key))
+              || typeof args.apiKey !== 'string' || args.apiKey.trim().length === 0 || args.apiKey.length > 4_096
+              || (company && !workspaceId)) {
+              reply(request.id, { ok: false, error: {
+                code: 'invalid_argument',
+                message: company ? 'Expected a Beijing workspace ID and API key.' : 'Expected one nonempty apiKey value.',
+              } });
               return;
             }
             const provider = presentProviders().find((item) => item.id === 'qwen_livetranslate');
@@ -318,18 +583,18 @@ export function attachAgentControl(
               reply(request.id, { ok: false, error: { code: 'session_busy', message: 'Stop the current session before changing providers.' } });
               return;
             }
-            // This is the own-key Beijing connection choice. `region` stays
-            // reserved for managed Qwen billing and is intentionally untouched.
-            store.updateSettings(provider, { connection: 'bailian-cn' });
-            store.setCredential(provider, 'apiKey', request.args.apiKey.trim());
-            const fields = ['apiKey', 'connection'];
-            if (!await store.flush(provider, fields)) {
+            const connection = company ? BAILIAN_WORKSPACE_CONNECTION : 'bailian-cn';
+            const credential = company ? 'workspaceApiKey' : 'apiKey';
+            const settings = workspaceId ? { connection, workspaceId } : { connection };
+            store.updateSettings(provider, settings);
+            store.setCredential(provider, credential, args.apiKey.trim());
+            if (!await store.flush(provider, [credential, ...Object.keys(settings)])) {
               reply(request.id, { ok: false, error: { code: 'provider_configuration_persist_failed', message: 'The Qwen configuration could not be saved.' } });
               return;
             }
             reply(request.id, { ok: true, data: {
               provider: 'qwen_livetranslate', configured: true,
-              connection: 'bailian-cn',
+              connection,
               sessionStarted: false, credentialConfigured: true,
             } });
             return;

@@ -62,12 +62,12 @@
     },
     "echoCancellation": "ప్రతిధ్వని రద్దు",
     "echoCancellationTooltip": {
-      "app": "Sokuji మాత్రమే — మైక్రోఫోన్ Sokuji అనువాద ప్రసంగాన్ని గ్రహిస్తే దాన్ని తొలగిస్తుంది. మైక్రోఫోన్ BlackHole వంటి వర్చువల్ కేబుల్ అయితే దీన్ని ఎంచుకోండి.",
+      "app": "AED Translator మాత్రమే — మైక్రోఫోన్ AED Translator అనువాద ప్రసంగాన్ని గ్రహిస్తే దాన్ని తొలగిస్తుంది. మైక్రోఫోన్ BlackHole వంటి వర్చువల్ కేబుల్ అయితే దీన్ని ఎంచుకోండి.",
       "browser": "బ్రౌజర్ మాత్రమే — ఈ బ్రౌజర్ ప్లే చేసే శబ్దాన్ని (మీటింగ్ ట్యాబ్‌లతో సహా) మైక్రోఫోన్ గ్రహిస్తే దాన్ని తొలగిస్తుంది. మైక్రోఫోన్ వేరే యాప్ శబ్దాన్ని మోసే BlackHole వంటి వర్చువల్ కేబుల్ అయితే దీన్ని ఎంచుకోండి.",
       "all": "అన్ని శబ్దాలు — మీటింగ్ యాప్ వంటి ఇతర యాప్‌లు స్పీకర్లలో ప్లే చేసే శబ్దాన్ని కూడా తొలగిస్తుంది. మైక్రోఫోన్‌గా వాడే వర్చువల్ కేబుల్ సరిగ్గా ఆ శబ్దాన్నే మోస్తుంది, కాబట్టి అది నిశ్శబ్దమవుతుంది."
     },
     "echoCancellationMode": {
-      "app": "Sokuji మాత్రమే",
+      "app": "AED Translator మాత్రమే",
       "browser": "బ్రౌజర్ మాత్రమే",
       "all": "అన్ని శబ్దాలు"
     },
@@ -370,9 +370,9 @@
     "virtualMicrophone": "వర్చువల్ మైక్రోఫోన్",
     "virtualMicrophoneNotice": "వర్చువల్ మైక్రోఫోన్ నోటీసు",
     "iUnderstand": "నాకు అర్థమైంది",
-    "virtualMicWarningTitle": "ఇది Sokuji సృష్టించిన వర్చువల్ మైక్రోఫోన్.",
+    "virtualMicWarningTitle": "ఇది AED Translator సృష్టించిన వర్చువల్ మైక్రోఫోన్.",
     "virtualMicWarningText1": "దయచేసి ఇక్కడ ఈ పరికరాన్ని ఎంచుకోవద్దు. బదులుగా, ప్రత్యక్ష ప్రసంగ అనువాద అవుట్‌పుట్‌ను స్వీకరించడానికి మీ వీడియో కాన్ఫరెన్సింగ్ అప్లికేషన్‌లలో (Google Meet, Zoom, Microsoft Teams వంటివి) ఈ వర్చువల్ మైక్రోఫోన్‌ను ఉపయోగించండి.",
-    "virtualMicWarningText2": "Sokuji సరిగ్గా పని చేయడానికి, దయచేసి జాబితా నుండి మీ నిజమైన భౌతిక మైక్రోఫోన్‌ను ఎంచుకోండి.",
+    "virtualMicWarningText2": "AED Translator సరిగ్గా పని చేయడానికి, దయచేసి జాబితా నుండి మీ నిజమైన భౌతిక మైక్రోఫోన్‌ను ఎంచుకోండి.",
     "realVoicePassthrough": "పాస్‌త్రూ",
     "passthroughManagedByPushToTranslate": "పుష్-టు-ట్రాన్స్‌లేట్ మోడ్‌లో పాస్‌త్రూ స్వయంచాలకంగా నిర్వహించబడుతుంది: కీని నొక్కి పట్టుకోనప్పుడు 100% వాల్యూమ్‌లో వినిపిస్తుంది, నొక్కి పట్టుకున్నప్పుడు రికార్డింగ్ మరియు అనువాదం జరుగుతుంది (పాస్‌త్రూ ఉండదు).",
     "speechTitle": "ప్రసంగం",
@@ -412,7 +412,7 @@
     "screenRecordingDeniedNotice": "అనుమతి అవసరం",
     "screenRecordingDeniedTitle": "స్క్రీన్ రికార్డింగ్ అనుమతి నిరాకరించబడింది",
     "screenRecordingDeniedText1": "సిస్టమ్ ఆడియోను క్యాప్చర్ చేయడానికి ఇతరుల ఆడియోకు స్క్రీన్ రికార్డింగ్ అనుమతి అవసరం.",
-    "screenRecordingDeniedText2": "దయచేసి System Preferences > Privacy & Security > Screen Recording కు వెళ్లి Sokuji ని ప్రారంభించండి.",
+    "screenRecordingDeniedText2": "దయచేసి System Preferences > Privacy & Security > Screen Recording కు వెళ్లి AED Translator ని ప్రారంభించండి.",
     "screenRecordingDeniedText3": "అనుమతిని ప్రారంభించిన తర్వాత, దయచేసి యాప్‌ను పునఃప్రారంభించండి.",
     "turnOnMicrophone": "మైక్రోఫోన్ ఆన్ చేయండి",
     "turnOffMicrophone": "మైక్రోఫోన్ ఆఫ్ చేయండి",
@@ -429,9 +429,9 @@
     "participantFellBackToSystemAudio": "ఎంచుకున్న అప్లికేషన్ క్యాప్చర్ ఆగిపోయింది, కాబట్టి ఇప్పుడు మొత్తం సిస్టమ్ ఆడియో అనువదించబడుతోంది. పరిధిని మళ్లీ తగ్గించడానికి అప్లికేషన్‌ను మళ్లీ ఎంచుకోండి.",
     "loopbackMicNotice": "లూప్‌బ్యాక్ ఇన్‌పుట్ గమనిక",
     "loopbackMicWarningTitle": "ఈ ఇన్‌పుట్ ఈ కంప్యూటర్ ప్లే చేస్తున్నదాన్ని మళ్లీ క్యాప్చర్ చేస్తుంది.",
-    "loopbackMicWarningText1": "\"Stereo Mix\" లేదా \"Monitor of ...\" వంటి లూప్‌బ్యాక్ ఇన్‌పుట్‌లు సిస్టమ్ సొంత ఆడియో అవుట్‌పుట్‌నే రికార్డ్ చేస్తాయి. Sokuji అనువాద స్వరం ఉన్న సెషన్‌లో, Sokuji తననే విని లూప్‌లో అనువదిస్తుంది.",
+    "loopbackMicWarningText1": "\"Stereo Mix\" లేదా \"Monitor of ...\" వంటి లూప్‌బ్యాక్ ఇన్‌పుట్‌లు సిస్టమ్ సొంత ఆడియో అవుట్‌పుట్‌నే రికార్డ్ చేస్తాయి. AED Translator అనువాద స్వరం ఉన్న సెషన్‌లో, AED Translator తననే విని లూప్‌లో అనువదిస్తుంది.",
     "loopbackMicWarningText2": "ఈ రూటింగ్ ఉద్దేశపూర్వకమైతే పరికరం ఎంపికలో ఉంటుంది; సాధారణ వినియోగానికి నిజమైన మైక్రోఫోన్‌ను ఎంచుకోండి.",
-    "participantNoAudioYet": "ఎంచుకున్న మూలం నుండి ఇంకా ఆడియో రాలేదు. అది ప్లే అవుతున్నా ఏమీ అనువదించబడకపోతే, System Settings > Privacy & Security > System Audio Recording Only లో Sokuji ని అనుమతించి (macOS), ఆపై సెషన్‌ను మళ్లీ ప్రారంభించండి.",
+    "participantNoAudioYet": "ఎంచుకున్న మూలం నుండి ఇంకా ఆడియో రాలేదు. అది ప్లే అవుతున్నా ఏమీ అనువదించబడకపోతే, System Settings > Privacy & Security > System Audio Recording Only లో AED Translator ని అనుమతించి (macOS), ఆపై సెషన్‌ను మళ్లీ ప్రారంభించండి.",
     "audioCaptureUnprovenNotice": "ఇంకా ఏమీ క్యాప్చర్ కాలేదు",
     "audioCaptureUnprovenTitle": "ఎంచుకున్న మూలం నుండి ఇంకా ఆడియో రాలేదు",
     "audioCaptureUnprovenText1": "మూలం ప్లే అవుతున్నా ఏమీ అనువదించబడకపోతే, macOS బహుశా నిశ్శబ్దాన్నే అందిస్తోంది: ఒక యాప్‌ను క్యాప్చర్ చేయడానికి \"System Audio Recording Only\" అనుమతి అవసరం, అది లేకపోతే లోపం రాదు, నిశ్శబ్దం మాత్రమే ఉంటుంది.",
@@ -475,7 +475,7 @@
     "verificationEmailFailed": "ధృవీకరణ ఇమెయిల్ పంపడంలో విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి",
     "alreadyVerified": "మీ ఇమెయిల్ ఇప్పటికే ధృవీకరించబడింది!",
     "cooldownMessage": "దయచేసి {{seconds}} సెకన్లు వేచి ఉండండి",
-    "checkYourEmail": "ధృవీకరణ ఇమెయిల్ పంపబడింది. మీ ఇన్‌బాక్స్‌లో ధృవీకరణ పూర్తి చేసి తిరిగి రండి — Sokuji దానిని ఆటోమేటిక్‌గా గుర్తిస్తుంది.",
+    "checkYourEmail": "ధృవీకరణ ఇమెయిల్ పంపబడింది. మీ ఇన్‌బాక్స్‌లో ధృవీకరణ పూర్తి చేసి తిరిగి రండి — AED Translator దానిని ఆటోమేటిక్‌గా గుర్తిస్తుంది.",
     "emailVerifiedToast": "ఇమెయిల్ ధృవీకరించబడింది",
     "sessionExpired": "మీ సెషన్ గడువు ముగిసింది. దయచేసి మళ్లీ సైన్ ఇన్ చేయండి.",
     "forgotPassword": "పాస్వర్డ్ మర్చిపోయారా?",
@@ -499,16 +499,16 @@
   },
   "simpleConfig": {
     "interfaceLanguage": "ఇంటర్ఫేస్ భాష",
-    "interfaceLanguageDesc": "ఇది Sokuji మెనులు మరియు బటన్ల భాషను మారుస్తుంది. మీరు అనువదించగల భాషలను ఇది ప్రభావితం చేయదు.",
+    "interfaceLanguageDesc": "ఇది AED Translator మెనులు మరియు బటన్ల భాషను మారుస్తుంది. మీరు అనువదించగల భాషలను ఇది ప్రభావితం చేయదు.",
     "translationLanguages": "అనువాద భాషలు",
     "translationLanguagesDesc": "మీరు మాట్లాడే భాష (నా భాష) మరియు మీరు అనువాదం వినాలని అనుకునే భాష (ఇతరుల భాష) ఎంచుకోండి. మీరు ఏ భాషలో మాట్లాడతారో ఖచ్చితంగా తెలియకుంటే \"స్వయంచాలక గుర్తింపు\" ఎంచుకోండి.",
     "yourLanguage": "నా భాష",
     "userAccount": "వినియోగదారు ఖాతా",
     "userAccountTooltip": "తకనీకీ వినియోగదారులు వారు స్వంత API కీలను ఉపయోగించవచ్చు. వినియోగదారు ఖాతా సరళీకృత సెటప్కోసం కోసం ఏర్పాటు చేయబడింది.",
-    "signInRequired": "Sokuji యొక్క అంతర్నిర్మిత అనువాద సేవను ఉపయోగించడానికి సైన్ అప్ చేయండి — API కీ అవసరం లేదు. మీరు కావాలంటే మీ స్వంత ప్రొవైడర్‌ను, కీని కూడా వాడటం కొనసాగించవచ్చు.",
+    "signInRequired": "AED Translator యొక్క అంతర్నిర్మిత అనువాద సేవను ఉపయోగించడానికి సైన్ అప్ చేయండి — API కీ అవసరం లేదు. మీరు కావాలంటే మీ స్వంత ప్రొవైడర్‌ను, కీని కూడా వాడటం కొనసాగించవచ్చు.",
     "targetLanguage": "ఇతరుల భాష",
     "microphone": "మైక్రోఫోన్",
-    "microphoneDesc": "మీ మాటలను కాప్చర్ చేయడానికి మైక్రోఫోన్ ఎంచుకోండి. ఈ మైక్రోఫోన్‌లో మీ భాషలో మాట్లాడండి, మరియు Sokuji అది వినే అన్నింటిని రియల్ టైమ్‌లో అనువదిస్తుంది.",
+    "microphoneDesc": "మీ మాటలను కాప్చర్ చేయడానికి మైక్రోఫోన్ ఎంచుకోండి. ఈ మైక్రోఫోన్‌లో మీ భాషలో మాట్లాడండి, మరియు AED Translator అది వినే అన్నింటిని రియల్ టైమ్‌లో అనువదిస్తుంది.",
     "swapLanguages": "భాషలు మార్చు",
     "swapNotSpoken": "ప్రసంగ సేవ ఈ భాషలను వ్యతిరేక దిశలో చదవదు.",
     "textOnly": "టెక్స్ట్ మాత్రమే",
@@ -588,7 +588,27 @@
       "screenContextNone": "ఇంకా ఏ విండోనూ ఎంచుకోలేదు: సెషన్ ప్రారంభమైనప్పుడు మిమ్మల్ని అడుగుతుంది.",
       "screenContextChoose": "ఎంచుకోండి…",
       "speakerLabels": "వక్త లేబుళ్లు",
-      "speakerLabelsTooltip": "అవతలి వైపు వ్యక్తులకు సంఖ్యలు ఇస్తుంది — వక్త 1, వక్త 2… — ఒకటి కంటే ఎక్కువ స్వరాలు వినిపించినప్పుడు.\n\nఇది ఒక వ్యక్తిని పలువురిగా పొరబడవచ్చు. నిష్క్రియం: సంఖ్యలు చూపబడవు.\n\nతదుపరి సెషన్ నుండి వర్తిస్తుంది."
+      "speakerLabelsTooltip": "అవతలి వైపు వ్యక్తులకు సంఖ్యలు ఇస్తుంది — వక్త 1, వక్త 2… — ఒకటి కంటే ఎక్కువ స్వరాలు వినిపించినప్పుడు.\n\nఇది ఒక వ్యక్తిని పలువురిగా పొరబడవచ్చు. నిష్క్రియం: సంఖ్యలు చూపబడవు.\n\nతదుపరి సెషన్ నుండి వర్తిస్తుంది.",
+      "voiceSummaryFixed": "Your own voice (fixed)",
+      "voiceDefaultName": "My voice",
+      "voiceReadAloudTitle": "Read this aloud at your usual speaking pace",
+      "voiceReadAloudSample": "Let’s review the project schedule. The first samples should arrive on Wednesday. Please check the quantities and specifications when they arrive, and send me a photo if anything looks wrong.",
+      "voiceUploadNotice": "After you confirm, AED Translator uploads this 10–20 second recording to Alibaba Model Studio's private temporary storage (expires after 48 hours) to create a Qwen 3.8 voice. Voice creation may be billed; translation is billed by usage. The cloned voice stays in your Alibaba account until you delete it. AED Translator lists only profiles created on this device because LiveTranslate does not provide a voice-list API.",
+      "voiceConsent": "After you confirm, AED Translator uses Alibaba temporary private storage by default. The optional public HTTPS URL is sent to Alibaba as the reference source; AED Translator does not upload audio to that host. Cloned voices remain in your Alibaba account until deleted.",
+      "voiceReferenceUrlLabel": "Optional public HTTPS audio URL (fallback)",
+      "voiceReferenceUrlPlaceholder": "https://your-public-host.example/voice.wav",
+      "voiceBailianOnly": "Voice enrollment is currently supported only with a Bailian shared Beijing API key. Choose Bailian shared and save its API key. Company workspace, QwenCloud and managed connections are not supported for enrollment.",
+      "voiceDesktopOnly": "Recording and enrollment are available in the AED Translator Windows desktop app.",
+      "voiceListError": "Could not load voice profiles saved in this app profile.",
+      "voiceCreateFailed": "Could not create this voice. Check the Bailian connection and try again.",
+      "connectionPersonal": "Personal QwenCloud",
+      "connectionBailianShared": "Bailian shared",
+      "connectionBailianWorkspace": "Company workspace",
+      "workspaceApiKey": "Company workspace API key",
+      "workspaceId": "Bailian workspace ID",
+      "workspaceKeyNote": "Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.",
+      "workspaceDesktopOnly": "Dedicated workspace connections are available in the Windows desktop app only.",
+      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace)"
     },
     "local_inference": {
       "name": "ఈ పరికరం",
@@ -717,7 +737,7 @@
       "scopeLabel": "చేర్చు",
       "scopeItemAria": "{{scope}} — {{line}}",
       "scopeEmpty": "ఏదీ ఎంపిక చేయలేదు",
-      "headerTitle": "Sokuji సంభాషణ ఎగుమతి",
+      "headerTitle": "AED Translator సంభాషణ ఎగుమతి",
       "headerSessionStarted": "సెషన్ ప్రారంభం",
       "headerExported": "ఎగుమతి సమయం",
       "headerProvider": "సేవా దారుడు",
@@ -972,7 +992,7 @@
       "viewLicense": "పూర్తి లైసెన్స్ చూడండి",
       "nonCommercial": "ఈ లైసెన్స్ వాణిజ్యేతర వినియోగాన్ని మాత్రమే అనుమతిస్తుంది — ఏ వాణిజ్య ఉత్పత్తిలో లేదా సేవలో ఈ మోడల్‌ను ఉపయోగించవద్దు.",
       "restrictedTerms": "ఇది ఓపెన్-సోర్స్ లైసెన్స్ కాదు. మోడల్‌ను, దాని అవుట్‌పుట్‌ను ఎలా ఉపయోగించవచ్చనే దానిపై ఇది షరతులు విధిస్తుంది — దానిపై ఆధారపడే ముందు పూర్తి పాఠాన్ని చదవండి.",
-      "disclaimer": "Sokuji మోడల్ రచయితలతో అనుబంధం లేదు, వారితో ఎలాంటి సంబంధం లేదు. ఈ ఇంటిగ్రేషన్ అనధికారికం; ఎలాంటి హామీ లేకుండా యథాతథంగా అందించబడుతుంది.",
+      "disclaimer": "AED Translator మోడల్ రచయితలతో అనుబంధం లేదు, వారితో ఎలాంటి సంబంధం లేదు. ఈ ఇంటిగ్రేషన్ అనధికారికం; ఎలాంటి హామీ లేకుండా యథాతథంగా అందించబడుతుంది.",
       "attribution": "గుర్తింపు: {{attribution}}",
       "cancel": "రద్దు చేయి",
       "accept": "అర్థమైంది — వాణిజ్యేతర వినియోగం మాత్రమే",
@@ -1015,7 +1035,23 @@
       "engineHint": "ఈ కంప్యూటర్‌లో మోడల్‌లను నడపడానికి పాత వెర్షన్‌లు డౌన్‌లోడ్ చేసిన డెస్క్‌టాప్ ఇంజిన్. “ఈ పరికరం” సేవ ఇకపై దీన్ని ఉపయోగించదు; స్థలం ఖాళీ చేయడానికి దీన్ని తీసివేయండి.",
       "remove": "తీసివేయి",
       "engineConfirm": "స్థానిక ఇంజిన్‌ను తీసివేయాలా?",
-      "engineFrees": "{{size}} ఖాళీ అవుతుంది."
+      "engineFrees": "{{size}} ఖాళీ అవుతుంది.",
+      "aedLocalHint": "CPU models cover Chinese ↔ English and Japanese ↔ English. For direct Chinese ↔ Japanese, use WebGPU or a company endpoint.",
+      "laptopCpu": "Laptop · CPU",
+      "laptopGpu": "Laptop · WebGPU required",
+      "otherInstalled": "Other local model files ({{count}})",
+      "pgxGuideTitle": "PGX WebGPU models",
+      "pgxGuideHint": "Built-in WebGPU picks sized for PGX’s GB10 GPU and 128 GB unified-memory profile. Recommendations use the hardware specification; downloading requires WebGPU, and the model variant follows this device’s features.",
+      "pgxWebGpuTag": "PGX profile pick · WebGPU",
+      "pgxTitle": "PGX and company network",
+      "pgxHint": "Models listed in the PGX Ollama inventory. To use its text model, configure an OpenAI-compatible endpoint reachable from this device and enter the exact model ID. Network access and capacity depend on the server.",
+      "pgxInstalled": "Listed in PGX Ollama inventory",
+      "pgxQwen": "Qwen3.6 35B A3B",
+      "pgxQwenMeta": "Text chat and translation · Ollama model ID: qwen3.6-35b-a3b:latest",
+      "pgxCandidate": "Benchmark candidate · not installed on PGX",
+      "pgxHyMeta": "Translation candidate for llama.cpp. Existing results are local RTX 5080 replay and synthetic stream proxies, not PGX measurements.",
+      "pgxSenseMeta": "Speech recognition candidate. Existing results are local benchmark runs, not PGX measurements; this is not exposed by the text endpoint.",
+      "pgxConfigure": "Configure OpenAI-compatible endpoint"
     }
   },
   "notes": {
@@ -1054,16 +1090,16 @@
     "linuxMigrateTitle": "కొత్త వెర్షన్ v{{version}} అందుబాటులో ఉంది"
   },
   "audioSystem": {
-    "pactlMissingBody": "pactl (PulseAudio కమాండ్-లైన్ సాధనాలు) కనుగొనబడలేదు, కాబట్టి Sokuji తన వర్చువల్ మైక్రోఫోన్/స్పీకర్‌ను సెటప్ చేయలేకపోయింది. దీన్ని ఇన్‌స్టాల్ చేసి, ఆపై మళ్లీ ప్రయత్నించండి:",
+    "pactlMissingBody": "pactl (PulseAudio కమాండ్-లైన్ సాధనాలు) కనుగొనబడలేదు, కాబట్టి AED Translator తన వర్చువల్ మైక్రోఫోన్/స్పీకర్‌ను సెటప్ చేయలేకపోయింది. దీన్ని ఇన్‌స్టాల్ చేసి, ఆపై మళ్లీ ప్రయత్నించండి:",
     "installCommand": "sudo apt install pulseaudio-utils",
-    "unavailableBody": "Sokuji తన వర్చువల్ మైక్రోఫోన్/స్పీకర్‌ను సెటప్ చేయలేకపోయింది. PulseAudio లేదా PipeWire రన్ అవుతోందని నిర్ధారించుకోండి.",
+    "unavailableBody": "AED Translator తన వర్చువల్ మైక్రోఫోన్/స్పీకర్‌ను సెటప్ చేయలేకపోయింది. PulseAudio లేదా PipeWire రన్ అవుతోందని నిర్ధారించుకోండి.",
     "retry": "మళ్లీ ప్రయత్నించండి",
     "retrying": "మళ్లీ ప్రయత్నిస్తోంది...",
-    "macDriverNotLoadedBody": "Sokuji వర్చువల్ మైక్రోఫోన్ ఇన్‌స్టాల్ అయి ఉంది, కానీ macOS దాన్ని లోడ్ చేయలేదు, కాబట్టి మీటింగ్ యాప్‌లు మీ అనువాదాన్ని వినలేకపోతున్నాయి. దాన్ని సరిచేయండి; macOS మీ అడ్మినిస్ట్రేటర్ పాస్‌వర్డ్ అడుగుతుంది.",
+    "macDriverNotLoadedBody": "AED Translator వర్చువల్ మైక్రోఫోన్ ఇన్‌స్టాల్ అయి ఉంది, కానీ macOS దాన్ని లోడ్ చేయలేదు, కాబట్టి మీటింగ్ యాప్‌లు మీ అనువాదాన్ని వినలేకపోతున్నాయి. దాన్ని సరిచేయండి; macOS మీ అడ్మినిస్ట్రేటర్ పాస్‌వర్డ్ అడుగుతుంది.",
     "macRepairFailedBody": "సరిచేసిన తర్వాత కూడా వర్చువల్ మైక్రోఫోన్ తిరిగి రాలేదు. మీ Macను రీస్టార్ట్ చేయండి, లేదా .pkg ఇన్‌స్టాలర్ నుండి Sokujiని మళ్లీ ఇన్‌స్టాల్ చేయండి.",
     "repair": "సరిచేయండి",
     "repairing": "సరిచేస్తోంది...",
-    "macRepairPrompt": "Sokuji తన వర్చువల్ మైక్రోఫోన్‌ను సరిచేయాలనుకుంటోంది."
+    "macRepairPrompt": "AED Translator తన వర్చువల్ మైక్రోఫోన్‌ను సరిచేయాలనుకుంటోంది."
   },
   "vbCable": {
     "title": "అవతలి వైపు వారికి అనువాదం వినిపించండి",
@@ -1072,7 +1108,7 @@
     "about": "VB-CABLE గురించి",
     "adminOnce": "Windows ఒకసారి నిర్వాహకుడి అనుమతి అడుగుతుంది.",
     "installingTitle": "VB-CABLE ఇన్‌స్టాల్ అవుతోంది…",
-    "installingBody": "Windows ప్రాంప్ట్‌ను ఆమోదించి, ఆపై VB-CABLE విండోలో \"Install Driver\" క్లిక్ చేయండి. ఇన్‌స్టాల్ అయిన వెంటనే Sokuji దాన్ని గుర్తిస్తుంది.",
+    "installingBody": "Windows ప్రాంప్ట్‌ను ఆమోదించి, ఆపై VB-CABLE విండోలో \"Install Driver\" క్లిక్ చేయండి. ఇన్‌స్టాల్ అయిన వెంటనే AED Translator దాన్ని గుర్తిస్తుంది.",
     "installingBusy": "ఇన్‌స్టాల్ అవుతోంది…",
     "failedTitle": "VB-CABLE ఇన్‌స్టాల్ కాలేదు",
     "failedBody": "ఇన్‌స్టాలేషన్ రద్దయింది లేదా పూర్తి కాలేదు. మళ్లీ ప్రయత్నించండి, లేదా VB-Audio వెబ్‌సైట్ నుండి మీరే ఇన్‌స్టాల్ చేయండి.",
@@ -1085,7 +1121,7 @@
     "storeStep3": "\"Install Driver\" క్లిక్ చేసి, ఆపై మీ PCని రీస్టార్ట్ చేయండి.",
     "openWebsite": "VB-Audio వెబ్‌సైట్‌ను తెరవండి",
     "checkAgain": "మళ్లీ తనిఖీ చేయండి",
-    "picksUp": "ఇన్‌స్టాల్ అయిన తర్వాత Sokuji దాన్ని ఆటోమేటిక్‌గా గుర్తిస్తుంది.",
+    "picksUp": "ఇన్‌స్టాల్ అయిన తర్వాత AED Translator దాన్ని ఆటోమేటిక్‌గా గుర్తిస్తుంది.",
     "notNow": "ఇప్పుడు కాదు"
   },
   "subtitle": {
@@ -1289,13 +1325,17 @@
       },
       "anyUseCase": "ఏ ఉపయోగమైనా",
       "anyStyle": "ఏ శైలి అయినా"
-    }
+    },
+    "recordNoSelectedMic": "Select a physical microphone in Audio settings before recording.",
+    "recordSilent": "No sound reached the recorder. Check the microphone and its input volume, then try again.",
+    "recordingMicrophone": "Microphone · {{name}}",
+    "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
-    "ttsEcho": "మీ స్పీకర్లు Sokuji అనువాద స్వరాన్ని మైక్రోఫోన్‌లోకి తిరిగి పంపుతున్నాయి.",
+    "ttsEcho": "మీ స్పీకర్లు AED Translator అనువాద స్వరాన్ని మైక్రోఫోన్‌లోకి తిరిగి పంపుతున్నాయి.",
     "meetingEcho": "స్పీకర్ల నుంచి సమావేశ ఆడియో మైక్రోఫోన్‌కు చేరుతోంది.",
     "farEndEcho": "ఒక పాల్గొనేవారి పరికరం మీ అనువాదాన్ని ప్రతిధ్వనిగా సమావేశానికి తిరిగి పంపుతోంది.",
-    "selfCapture": "ఇతరుల ఆడియో మూలం Sokuji సొంత ఆడియోనే క్యాప్చర్ చేస్తోంది.",
+    "selfCapture": "ఇతరుల ఆడియో మూలం AED Translator సొంత ఆడియోనే క్యాప్చర్ చేస్తోంది.",
     "routingLoop": "ఎంచుకున్న ఇన్‌పుట్ పరికరం ఈ కంప్యూటర్ ప్లేబ్యాక్‌ను నేరుగా క్యాప్చర్ చేస్తోంది.",
     "actionHeadphones": "హెడ్‌ఫోన్లు వాడితే లూప్ తెగిపోతుంది.",
     "actionAskRemote": "ఆ పాల్గొనేవారిని హెడ్‌ఫోన్లు వాడమని అడగండి.",
@@ -1327,7 +1367,7 @@
     "rerun": "సెటప్‌ను మళ్ళీ అమలు చేయండి",
     "steps": {
       "language": {
-        "title": "Sokuji మీతో ఏ భాషలో మాట్లాడాలి?",
+        "title": "AED Translator మీతో ఏ భాషలో మాట్లాడాలి?",
         "desc": "ఇది మెనులు మరియు బటన్ల భాష. మీరు అనువదించాల్సిన భాషలను తర్వాత ఎంచుకుంటారు.",
         "label": "ఇంటర్ఫేస్ భాష"
       },
@@ -1444,7 +1484,7 @@
       "guide": "ఈ కీని ఎలా పొందాలి",
       "verifyEmail": "సైన్ ఇన్ అయ్యారు. మీ చిరునామాను ధృవీకరించడానికి మేము మీకు ఇమెయిల్ చేసిన లింక్‌ను తెరవండి — మీరు అలా చేసిన వెంటనే ట్రయల్ క్రెడిట్ మీకు అందుతుంది.",
       "onFile": "ఒక కీ ఇప్పటికే సేవ్ చేయబడింది — దాన్ని అలాగే ఉంచడానికి దీన్ని ఖాళీగా వదిలేయండి.",
-      "offlineHardware": "GPU, తగినంత VRAM ఉంటే Sokuji బాగా నడుస్తుంది; CPU మాత్రమే అయితే గమనించదగ్గంత నెమ్మదిగా ఉంటుంది.",
+      "offlineHardware": "GPU, తగినంత VRAM ఉంటే AED Translator బాగా నడుస్తుంది; CPU మాత్రమే అయితే గమనించదగ్గంత నెమ్మదిగా ఉంటుంది.",
       "openaiOneKey": "ఈ ఒక్క కీ OpenAI Realtime, Translate, Live మూడింటికీ పని చేస్తుంది.",
       "baseUrl": "చిరునామా",
       "baseUrlPlaceholder": "చిరునామా, ఉదా. https://openrouter.ai/api/v1",
@@ -1474,7 +1514,7 @@
     "steps": {
       "welcome": {
         "title": "మీ సెటప్ పూర్తయింది",
-        "content": "Sokuji మీ సన్నివేశానికి అనుగుణంగా కాన్ఫిగర్ చేయబడింది. ఇప్పుడు క్లుప్తంగా చుట్టూ చూద్దాం — ఇది ఒక నిమిషం లోపే పూర్తవుతుంది."
+        "content": "AED Translator మీ సన్నివేశానికి అనుగుణంగా కాన్ఫిగర్ చేయబడింది. ఇప్పుడు క్లుప్తంగా చుట్టూ చూద్దాం — ఇది ఒక నిమిషం లోపే పూర్తవుతుంది."
       },
       "mode-picker": {
         "title": "అనువాద మోడ్",
@@ -1485,7 +1525,7 @@
       },
       "microphone": {
         "title": "మీ మైక్రోఫోన్",
-        "content": "మీ ప్రసంగం ఇక్కడ నుండి వస్తుంది. సిస్టమ్ డిఫాల్ట్ ఇప్పటికే ఎంచుకోబడింది. Sokuji వర్చువల్ మైక్రోఫోన్‌ను ఎంచుకోవద్దు — అది మీ మీటింగ్ యాప్ కోసం."
+        "content": "మీ ప్రసంగం ఇక్కడ నుండి వస్తుంది. సిస్టమ్ డిఫాల్ట్ ఇప్పటికే ఎంచుకోబడింది. AED Translator వర్చువల్ మైక్రోఫోన్‌ను ఎంచుకోవద్దు — అది మీ మీటింగ్ యాప్ కోసం."
       },
       "monitor": {
         "title": "మీ అనువదించిన స్వరాన్ని వినండి",
@@ -1494,15 +1534,15 @@
       "output-routing": {
         "title": "ఇతరులు మిమ్మల్ని ఎలా వింటారు",
         "content": "మీ అనువదించిన వాయిస్ వర్చువల్ మైక్రోఫోన్‌కు వెళుతుంది; దాన్ని మీ మీటింగ్ యాప్‌లో మైక్‌గా ఎంచుకోండి.",
-        "content_extension": "Google Meet, Zoom లేదా Teams‌లో, \"Sokuji Virtual Microphone\"ను మీ మైక్రోఫోన్‌గా ఎంచుకోండి. Sokuji దీన్ని మద్దతిచ్చే మీటింగ్ సైట్‌లకు స్వయంచాలకంగా జోడిస్తుంది.",
-        "content_electronLinux": "Sokuji ఈ సిస్టమ్‌లో ఒక వర్చువల్ మైక్రోఫోన్‌ను సృష్టించింది. దాన్ని మీ మీటింగ్ యాప్‌లో మైక్రోఫోన్‌గా ఎంచుకోండి.",
-        "content_electronOther": "మీకు ఒక వర్చువల్ ఆడియో కేబుల్ (ఉదాహరణకు VB-Cable) అవసరం. Sokuji అవుట్‌పుట్‌ను దానికి పంపి, మీ మీటింగ్ యాప్‌లో దాన్ని మైక్రోఫోన్‌గా ఎంచుకోండి."
+        "content_extension": "Google Meet, Zoom లేదా Teams‌లో, \"Sokuji Virtual Microphone\"ను మీ మైక్రోఫోన్‌గా ఎంచుకోండి. AED Translator దీన్ని మద్దతిచ్చే మీటింగ్ సైట్‌లకు స్వయంచాలకంగా జోడిస్తుంది.",
+        "content_electronLinux": "AED Translator ఈ సిస్టమ్‌లో ఒక వర్చువల్ మైక్రోఫోన్‌ను సృష్టించింది. దాన్ని మీ మీటింగ్ యాప్‌లో మైక్రోఫోన్‌గా ఎంచుకోండి.",
+        "content_electronOther": "మీకు ఒక వర్చువల్ ఆడియో కేబుల్ (ఉదాహరణకు VB-Cable) అవసరం. AED Translator అవుట్‌పుట్‌ను దానికి పంపి, మీ మీటింగ్ యాప్‌లో దాన్ని మైక్రోఫోన్‌గా ఎంచుకోండి."
       },
       "participant-source": {
         "title": "ఇతరుల స్వరం",
-        "content": "Sokuji ఇక్కడ ఇతరుల మాటలను వింటుంది.",
+        "content": "AED Translator ఇక్కడ ఇతరుల మాటలను వింటుంది.",
         "content_electron": "అనువదించాల్సిన అప్లికేషన్‌ను ఎంచుకోండి, లేదా మొత్తం సిస్టమ్ ఆడియోను ఎంచుకోండి. వారి అసలు స్వరం మామూలుగానే ప్లే అవుతూ ఉంటుంది.",
-        "content_extension": "Sokuji ప్రస్తుత ట్యాబ్ ఆడియోను అనువదిస్తుంది. వారి అసలు స్వరం మామూలుగానే ప్లే అవుతూ ఉంటుంది."
+        "content_extension": "AED Translator ప్రస్తుత ట్యాబ్ ఆడియోను అనువదిస్తుంది. వారి అసలు స్వరం మామూలుగానే ప్లే అవుతూ ఉంటుంది."
       },
       "subtitle": {
         "title": "సబ్‌టైటిల్ మోడ్",
@@ -1564,7 +1604,7 @@
     "lineup_source_not_fixed": "{{provider}}కు మాట్లాడే భాష తెలియాలి. “ఆటో డిటెక్ట్”కు బదులుగా ఆ భాషను ఎంచుకోండి, లేదా మరొక అనువాద సేవను ఎంచుకోండి.",
     "lineup_pair_not_translated": "{{provider}} {{source}} → {{target}} అనువాదం చేయదు. వేరే భాషలను ఎంచుకోండి, లేదా మరొక అనువాద సేవను.",
     "lineup_face_to_face_apart": "“ముఖాముఖి” కోసం లిప్యంతరీకరణ, అనువాదం రెండూ ఒకే సేవ చేయాలి. అనువాదానికి కూడా {{provider}}ను ఎంచుకోండి, లేదా “అవతలి వైపు”ను “మీటింగ్‌లో”కు మార్చండి.",
-    "session_in_use": "మరొక విండో లేదా పరికరం ఈ ఖాతాను ఉపయోగిస్తోంది. అక్కడ సెషన్‌ను ఆపండి, లేదా Sokuji ఇప్పుడే అనుకోకుండా మూసుకుపోయి ఉంటే, ఒక నిమిషం తర్వాత మళ్ళీ ప్రయత్నించండి.",
+    "session_in_use": "మరొక విండో లేదా పరికరం ఈ ఖాతాను ఉపయోగిస్తోంది. అక్కడ సెషన్‌ను ఆపండి, లేదా AED Translator ఇప్పుడే అనుకోకుండా మూసుకుపోయి ఉంటే, ఒక నిమిషం తర్వాత మళ్ళీ ప్రయత్నించండి.",
     "previous_session_ending": "మీ మునుపటి సెషన్ ఇంకా ముగుస్తోంది. దయచేసి ఒక నిమిషం తర్వాత మళ్ళీ ప్రయత్నించండి.",
     "app_capture_lost_using_system_audio": "యాప్ క్యాప్చర్ ఆగిపోయింది, కాబట్టి ఇప్పుడు మొత్తం సిస్టమ్ ఆడియో అనువదించబడుతోంది.",
     "app_capture_monitor_missing": "యాప్ క్యాప్చర్ ప్రారంభం కాలేదు, కాబట్టి ఇప్పుడు మొత్తం సిస్టమ్ ఆడియో అనువదించబడుతోంది.",
@@ -1586,14 +1626,14 @@
     "translation_unavailable": "ఈ దిశకు అనువాద మోడల్ లేదు: దాని వాక్ మాత్రమే లిప్యంతరీకరించబడుతుంది.",
     "local_models_missing": "ప్రారంభించడానికి సెట్టింగ్‌లలో అవసరమైన మోడల్‌లను డౌన్‌లోడ్ చేయండి.",
     "no_microphone": "ప్రారంభించడానికి ఈ మోడ్ కోసం పరికరాలను కాన్ఫిగర్ చేయండి.",
-    "silent_no_permission": "ఎంచుకున్న మూలం నుండి ఇంకా ఆడియో రాలేదు. అది ప్లే అవుతున్నా ఏమీ అనువదించబడకపోతే, System Settings > Privacy & Security > System Audio Recording Only లో Sokuji ని అనుమతించి (macOS), ఆపై సెషన్‌ను మళ్లీ ప్రారంభించండి.",
+    "silent_no_permission": "ఎంచుకున్న మూలం నుండి ఇంకా ఆడియో రాలేదు. అది ప్లే అవుతున్నా ఏమీ అనువదించబడకపోతే, System Settings > Privacy & Security > System Audio Recording Only లో AED Translator ని అనుమతించి (macOS), ఆపై సెషన్‌ను మళ్లీ ప్రారంభించండి.",
     "loopback_denied": "సిస్టమ్ ఆడియోను క్యాప్చర్ చేయడానికి ఇతరుల ఆడియోకు స్క్రీన్ రికార్డింగ్ అనుమతి అవసరం.",
     "mic_lost_using_other": "మైక్రోఫోన్ “{{lost}}” డిస్‌కనెక్ట్ అయింది, కాబట్టి దానికి బదులుగా “{{device}}” ఉపయోగించబడుతోంది.",
     "mic_lost_waiting": "మైక్రోఫోన్ డిస్‌కనెక్ట్ అయింది. మైక్రోఫోన్ కనెక్ట్ అయిన వెంటనే మీ మాటల అనువాదం మళ్లీ కొనసాగుతుంది.",
     "mic_now_using": "ఇప్పుడు మైక్రోఫోన్ “{{device}}” ఉపయోగించబడుతోంది.",
     "mic_in_use": "మైక్రోఫోన్ “{{device}}” ప్రస్తుతం ఉపయోగంలో ఉంది ({{apps}}). {{apps}}ను మూసివేసి మళ్లీ ప్రారంభించండి, లేదా మరొక మైక్రోఫోన్‌ను ఎంచుకోండి.",
     "mic_unreadable": "Windows మైక్రోఫోన్ “{{device}}”ను తెరవలేకపోయింది. మరొక యాప్ దాన్ని ఉపయోగిస్తూ ఉండవచ్చు, లేదా దాని డ్రైవర్ స్పందించకపోవచ్చు. దాన్ని ఉపయోగిస్తున్న యాప్‌లను మూసివేయండి లేదా దాన్ని మళ్లీ కనెక్ట్ చేయండి, ఆపై మళ్లీ ప్రారంభించండి.",
-    "mic_blocked": "Sokuji మైక్రోఫోన్‌ను ఉపయోగించడానికి Windows అనుమతించడం లేదు. సెట్టింగ్‌లు › గోప్యత & భద్రత › మైక్రోఫోన్‌లో డెస్క్‌టాప్ యాప్‌లకు మైక్రోఫోన్ యాక్సెస్‌ను ఆన్ చేయండి, ఆపై మళ్లీ ప్రారంభించండి.",
+    "mic_blocked": "AED Translator మైక్రోఫోన్‌ను ఉపయోగించడానికి Windows అనుమతించడం లేదు. సెట్టింగ్‌లు › గోప్యత & భద్రత › మైక్రోఫోన్‌లో డెస్క్‌టాప్ యాప్‌లకు మైక్రోఫోన్ యాక్సెస్‌ను ఆన్ చేయండి, ఆపై మళ్లీ ప్రారంభించండి.",
     "speaker_tts_missing": "అవతలి వైపు వినే అనువాదం వచనంగా మాత్రమే చూపబడుతుంది: {{target}} మాట్లాడే వాక్ మోడల్ ఏదీ లేదు.",
     "participant_tts_missing": "నేను వినే అనువాదం వచనంగా మాత్రమే చూపబడుతుంది: {{target}} మాట్లాడే వాక్ మోడల్ ఏదీ లేదు.",
     "participant_tts_over_budget": "నేను వినే అనువాదం వచనంగా మాత్రమే చూపబడుతుంది: అవతలి వైపు వాక్ మోడల్‌ను కూడా లోడ్ చేయడానికి తగినంత మెమరీ లేదు.",
@@ -1606,8 +1646,8 @@
     "not_org_member_unnamed": "మీరు ఇకపై మీ సంస్థలో లేరు.",
     "org_wallet_frozen": "{{organization}} ఖాతా నిలిపివేయబడింది. దాని యజమానిని సంప్రదించండి, లేదా మీ స్వంత బ్యాలెన్స్‌ను ఉపయోగించండి.",
     "org_wallet_frozen_unnamed": "సంస్థ ఖాతా నిలిపివేయబడింది. దాని యజమానిని సంప్రదించండి, లేదా మీ స్వంత బ్యాలెన్స్‌ను ఉపయోగించండి.",
-    "org_wallet_frozen_owner": "{{organization}} ఖాతా నిలిపివేయబడింది. Sokuji మద్దతును సంప్రదించండి, లేదా మీ స్వంత బ్యాలెన్స్‌ను ఉపయోగించండి.",
-    "org_wallet_frozen_owner_unnamed": "సంస్థ ఖాతా నిలిపివేయబడింది. Sokuji మద్దతును సంప్రదించండి, లేదా మీ స్వంత బ్యాలెన్స్‌ను ఉపయోగించండి.",
+    "org_wallet_frozen_owner": "{{organization}} ఖాతా నిలిపివేయబడింది. AED Translator మద్దతును సంప్రదించండి, లేదా మీ స్వంత బ్యాలెన్స్‌ను ఉపయోగించండి.",
+    "org_wallet_frozen_owner_unnamed": "సంస్థ ఖాతా నిలిపివేయబడింది. AED Translator మద్దతును సంప్రదించండి, లేదా మీ స్వంత బ్యాలెన్స్‌ను ఉపయోగించండి.",
     "model_missing": "సేవ ఈ మోడల్‌ను అందించదు: {{detail}}",
     "quota": "సేవ ఖాతాలో క్రెడిట్ మిగలలేదు: {{detail}}",
     "text_model_unset": "“భాషలు, లైన్-అప్”లో అనువాదం కోసం ఒక మోడల్‌ను ఎంచుకోండి, లేదా దాని పేరు టైప్ చేయండి.",
@@ -1615,7 +1655,7 @@
     "address_invalid": "అనుకూల సేవ చిరునామాను ఉపయోగించలేము: {{detail}}"
   },
   "viewer": {
-    "title": "Sokuji సబ్‌టైటిల్స్",
+    "title": "AED Translator సబ్‌టైటిల్స్",
     "connecting": "కనెక్ట్ అవుతోంది…",
     "original": "మూలం",
     "enter": {
@@ -1673,7 +1713,7 @@
     },
     "shortcuts": "+ − అక్షర పరిమాణం · B రెండు భాషలూ · F పూర్తి స్క్రీన్ · End లైవ్‌కు తిరిగి వెళ్ళు",
     "transcript": {
-      "header": "Sokuji సబ్‌టైటిల్స్, సేవ్ చేసిన సమయం {{time}}"
+      "header": "AED Translator సబ్‌టైటిల్స్, సేవ్ చేసిన సమయం {{time}}"
     },
     "present": {
       "title": "మీ ఫోన్ లేదా కంప్యూటర్‌లో సబ్‌టైటిల్స్ చదవండి",
@@ -1686,7 +1726,7 @@
       "androidChrome": "Android‌లో Chrome తెరవడం లేదా? సెట్టింగ్‌లు → యాప్‌లు → Chrome → అనుమతులు → సమీపంలోని పరికరాలు‌లో అనుమతించండి.",
       "watching": "చూస్తున్నవారు: {{count}}",
       "fullscreen": "పూర్తి స్క్రీన్",
-      "windowTitle": "Sokuji ప్రొజెక్టర్ పేజీ",
+      "windowTitle": "AED Translator ప్రొజెక్టర్ పేజీ",
       "ended": "షేరింగ్ ముగిసింది"
     }
   },
@@ -1695,7 +1735,7 @@
     "buttonActive": "సబ్‌టైటిల్స్ షేర్ అవుతున్నాయి · చూస్తున్నవారు: {{count}}",
     "intro": "ఇదే నెట్‌వర్క్‌లో ఉన్నవారు ఇక్కడి సబ్‌టైటిల్స్‌ను, అనువాదాలను తమ ఫోన్ లేదా కంప్యూటర్‌లో చదవడానికి అనుమతించండి.",
     "enable": "సబ్‌టైటిల్స్ షేర్ చేయి",
-    "firewallNote": "Sokuji నెట్‌వర్క్‌ను ఉపయోగించవచ్చా అని Windows అడగవచ్చు. ప్రైవేట్ నెట్‌వర్క్‌లను ఎంచుకోండి.",
+    "firewallNote": "AED Translator నెట్‌వర్క్‌ను ఉపయోగించవచ్చా అని Windows అడగవచ్చు. ప్రైవేట్ నెట్‌వర్క్‌లను ఎంచుకోండి.",
     "address": "చిరునామా",
     "copy": "కాపీ చేయి",
     "copied": "కాపీ అయింది",
@@ -1733,7 +1773,42 @@
     "playedRight": "కుడి చెవిలో ప్లే అయింది",
     "notPlayed": "ప్లే కాలేదు: ఈ అనువాదం {{target}}లో కాక {{language}}లో ఉంది, కాబట్టి ఇది ఎవరికీ చదివి వినిపించబడదు.",
     "legendMe": "{{language}} · నేను",
-    "legendOther": "{{language}} · ఇతర వ్యక్తి"
+    "legendOther": "{{language}} · ఇతర వ్యక్తి",
+    "modeGroup": "Translation mode",
+    "onlineMeeting": "Online meeting",
+    "title": "Face to face",
+    "intro": "Choose two subtitle languages and take turns speaking into one microphone.",
+    "backToMeeting": "Online meeting",
+    "languageChoices": "Reading languages",
+    "firstLanguage": "First subtitle language",
+    "secondLanguage": "Second subtitle language",
+    "subtitleOnly": "Subtitles only. No speech is synthesized.",
+    "speakerNumber": "Speaker {{number}}",
+    "speaker": "Speaker",
+    "transcribing": "Listening…",
+    "translationPending": "Translating…",
+    "translationUnavailable": "Translation unavailable",
+    "waitingLive": "Listening for speech…",
+    "personA": "Person A",
+    "personB": "Person B",
+    "noSpeech": "Qwen provides realtime captions. The configured text service translates the other direction.",
+    "ready": "Choose two subtitle languages, then start listening.",
+    "starting": "Connecting to Qwen and opening the microphone…",
+    "stopping": "Releasing the microphone…",
+    "live": "Listening. Subtitles will appear as you speak.",
+    "failed": "Could not start face-to-face translation.",
+    "start": "Start listening",
+    "stop": "Stop listening",
+    "retry": "Retry",
+    "speakers": "Speaker assignments",
+    "assignSpeakers": "Who is speaking?",
+    "detectedSpeaker": "Detected speaker {{id}}",
+    "captions": "Conversation subtitles",
+    "waiting": "Subtitles will appear here as you speak.",
+    "speakerUnknown": "Speaker unassigned",
+    "languageUnknown": "Language unknown",
+    "textRoute": "Text translation",
+    "assignToTranslate": "Assign this speaker to choose the translation direction."
   },
   "screenContext": {
     "picker": {
@@ -1746,10 +1821,10 @@
       "none": "షేర్ చేయడానికి విండో లేదా స్క్రీన్ ఏదీ కనుగొనబడలేదు.",
       "minimizedHint": "కనిష్ఠీకరించిన విండోను షేర్ చేయలేరు: విండోను తిరిగి తెరిచి, ఆపై రిఫ్రెష్ చేయండి.",
       "deniedTitle": "స్క్రీన్ రికార్డింగ్ అనుమతి అవసరం",
-      "deniedText": "macOS, Sokuji స్క్రీన్‌ను చూడనివ్వడం లేదు. System Settingsలో Sokuji ఆన్‌లో ఉన్నా, ఆ అనుమతి పాత వెర్షన్‌కు ఇచ్చినదైతే ఇలాగే జరుగుతుంది.",
+      "deniedText": "macOS, AED Translator స్క్రీన్‌ను చూడనివ్వడం లేదు. System Settingsలో AED Translator ఆన్‌లో ఉన్నా, ఆ అనుమతి పాత వెర్షన్‌కు ఇచ్చినదైతే ఇలాగే జరుగుతుంది.",
       "openSettings": "సిస్టమ్ సెట్టింగ్‌లను తెరవండి",
       "reask": "macOSను మళ్లీ అడగండి",
-      "askedText": "macOS అడిగినప్పుడు Sokujiని అనుమతించండి, లేదా System Settingsలో ఆన్ చేయండి. Sokuji పునఃప్రారంభమైన తర్వాతే macOS అనుమతిని అమలు చేస్తుంది.",
+      "askedText": "macOS అడిగినప్పుడు Sokujiని అనుమతించండి, లేదా System Settingsలో ఆన్ చేయండి. AED Translator పునఃప్రారంభమైన తర్వాతే macOS అనుమతిని అమలు చేస్తుంది.",
       "restart": "Sokujiని పునఃప్రారంభించండి",
       "refresh": "రిఫ్రెష్",
       "cancel": "స్క్రీన్ సందర్భం లేకుండా ప్రారంభించండి",
@@ -1862,7 +1937,10 @@
       },
       "findModels": "మోడల్‌లను కనుగొను",
       "configure": "సెటప్ చేయండి",
-      "manageModels": "మోడల్‌లను నిర్వహించండి"
+      "manageModels": "మోడల్‌లను నిర్వహించండి",
+      "internalModel": "కంపెనీ నెట్‌వర్క్ మరియు PGX టెక్స్ట్ మోడళ్లు",
+      "bailianModel": "Alibaba Cloud Model Studio · రియల్-టైమ్ అనువాదం",
+      "internalModelHint": "“భాషలు, లైన్-అప్” విభాగంలో మోడల్ పేరును ఎంచుకోండి లేదా నమోదు చేయండి."
     },
     "lineup": {
       "title": "లైన్-అప్",
@@ -1906,8 +1984,8 @@
         "key": "కీ",
         "held": "నొక్కి ఉంచినప్పుడు",
         "notHeld": "నొక్కి ఉంచనప్పుడు",
-        "talkHeld": "Sokuji వింటుంది; మీరు వదిలాక ఆ భాగం అనువదించబడుతుంది, అవతలి వైపు అనువాదాన్ని వింటుంది. “పాస్‌త్రూ” ఆన్‌లో ఉంటే, అవతలి వైపుకు మీ సొంత గొంతు కూడా మెల్లగా వినిపిస్తుంది.",
-        "talkNotHeld": "Sokuji వినదు; మీరు చెప్పేది ఏదీ అనువదించబడదు, అవతలి వైపుకు చేరదు.",
+        "talkHeld": "AED Translator వింటుంది; మీరు వదిలాక ఆ భాగం అనువదించబడుతుంది, అవతలి వైపు అనువాదాన్ని వింటుంది. “పాస్‌త్రూ” ఆన్‌లో ఉంటే, అవతలి వైపుకు మీ సొంత గొంతు కూడా మెల్లగా వినిపిస్తుంది.",
+        "talkNotHeld": "AED Translator వినదు; మీరు చెప్పేది ఏదీ అనువదించబడదు, అవతలి వైపుకు చేరదు.",
         "translateHeld": "మీరు చెప్పేది అనువదించబడుతుంది; అవతలి వైపు అనువాదాన్ని మాత్రమే వింటుంది, మీ సొంత గొంతును కాదు.",
         "translateNotHeld": "మీ సొంత గొంతు అనువాదం లేకుండా నేరుగా అవతలి వైపుకు వెళ్తుంది.",
         "change": "మార్చు",
@@ -2065,7 +2143,7 @@
     "foundInNotes": "గమనికల్లో దొరికింది",
     "foundInTitle": "శీర్షికలో దొరికింది",
     "unavailable": "చరిత్రను తెరవలేకపోయాం.",
-    "unavailableNewer": "ఈ చరిత్రను Sokuji కొత్త వెర్షన్ రాసింది. తెరవడానికి Sokuji‌ని అప్‌డేట్ చేయండి.",
+    "unavailableNewer": "ఈ చరిత్రను AED Translator కొత్త వెర్షన్ రాసింది. తెరవడానికి AED Translator‌ని అప్‌డేట్ చేయండి.",
     "failed": "అది పని చేయలేదు. మళ్లీ ప్రయత్నించండి.",
     "me": "నేను",
     "other": "ఇతరులు",
@@ -2179,7 +2257,7 @@
       "wallet-frozen": "మీ Kizuna AI వాలెట్ నిలిపివేయబడింది.",
       "not-member": "Kizuna AI కి చెల్లించే సంస్థలో మీరు ఇక సభ్యులు కారు.",
       "too-large": "ఈ రికార్డ్ Kizuna AI గమనికలు రాయలేనంత పొడవుగా ఉంది.",
-      "update-required": "Kizuna AI తో గమనికలు రాయడానికి Sokuji ని నవీకరించండి.",
+      "update-required": "Kizuna AI తో గమనికలు రాయడానికి AED Translator ని నవీకరించండి.",
       "other": "గమనికల సేవ అభ్యర్థనను తిరస్కరించింది."
     },
     "notesLatestFailed": "చివరి ప్రయత్నం రాయలేకపోయాం: {{reason}}",

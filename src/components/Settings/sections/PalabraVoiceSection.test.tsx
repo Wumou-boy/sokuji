@@ -481,9 +481,11 @@ describe('PalabraVoiceSection: recording a voice', () => {
       sampleRate = 16000;
       destination = {};
       createMediaStreamSource() { return { connect: vi.fn(), disconnect: vi.fn() }; }
+      createAnalyser() { return { fftSize: 1024, getFloatTimeDomainData: vi.fn(), disconnect: vi.fn() }; }
       createScriptProcessor() { processorNode = { connect: vi.fn(), disconnect: vi.fn(), onaudioprocess: null }; return processorNode; }
       close = vi.fn().mockResolvedValue(undefined);
     }
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
     vi.stubGlobal('AudioContext', FakeAudioContext);
     try {
       fireEvent.click(screen.getByRole('button', { name: /record voice/i }));
@@ -623,9 +625,11 @@ describe('PalabraVoiceSection: final-review fixes', () => {
       sampleRate = 16000;
       destination = {};
       createMediaStreamSource() { return { connect: vi.fn(), disconnect: vi.fn() }; }
+      createAnalyser() { return { fftSize: 1024, getFloatTimeDomainData: vi.fn(), disconnect: vi.fn() }; }
       createScriptProcessor() { processorNode = { connect: vi.fn(), disconnect: vi.fn(), onaudioprocess: null }; return processorNode; }
       close = vi.fn().mockResolvedValue(undefined);
     }
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
     vi.stubGlobal('AudioContext', FakeAudioContext);
     try {
       mount({ pairSource: 'hu', sleep: manualSleep().sleep });

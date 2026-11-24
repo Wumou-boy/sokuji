@@ -62,12 +62,12 @@
     },
     "echoCancellation": "Kaiunpoisto",
     "echoCancellationTooltip": {
-      "app": "Vain Sokuji — Poistaa Sokujin käännetyn puheen, jos mikrofoni poimii sen. Valitse tämä, kun mikrofoni on virtuaalinen kaapeli, kuten BlackHole.",
+      "app": "Vain AED Translator — Poistaa Sokujin käännetyn puheen, jos mikrofoni poimii sen. Valitse tämä, kun mikrofoni on virtuaalinen kaapeli, kuten BlackHole.",
       "browser": "Vain selain — Poistaa tämän selaimen toistaman äänen kokousvälilehdet mukaan lukien, jos mikrofoni poimii sen. Valitse tämä, kun mikrofoni on virtuaalinen kaapeli, kuten BlackHole, joka välittää toisen sovelluksen ääntä.",
       "all": "Kaikki äänet — Poistaa myös äänen, jonka muut sovellukset toistavat kaiuttimista, kuten kokoussovelluksen. Mikrofonina käytetty virtuaalinen kaapeli välittää juuri tätä ääntä, joten se hiljenisi."
     },
     "echoCancellationMode": {
-      "app": "Vain Sokuji",
+      "app": "Vain AED Translator",
       "browser": "Vain selain",
       "all": "Kaikki äänet"
     },
@@ -372,7 +372,7 @@
     "iUnderstand": "Ymmärrän",
     "virtualMicWarningTitle": "Tämä on Sokujin luoma virtuaalimikrofoni.",
     "virtualMicWarningText1": "Älä valitse tätä laitetta tässä. Käytä sen sijaan tätä virtuaalimikrofonia videokokoussovelluksissasi (kuten Google Meet, Zoom, Microsoft Teams jne.) vastaanottaaksesi reaaliaikaisen puheenkäännöksen.",
-    "virtualMicWarningText2": "Jotta Sokuji toimisi oikein, valitse luettelosta todellinen fyysinen mikrofonisi.",
+    "virtualMicWarningText2": "Jotta AED Translator toimisi oikein, valitse luettelosta todellinen fyysinen mikrofonisi.",
     "realVoicePassthrough": "Läpivienti",
     "passthroughManagedByPushToTranslate": "Paina ja käännä -tilassa läpisyöttö hallitaan automaattisesti: ääni kuuluu 100 %:n voimakkuudella, kun et pidä näppäintä pohjassa, ja pysähtyy (ääni ohjataan käännökseen), kun pidät näppäintä pohjassa.",
     "speechTitle": "Puhe",
@@ -412,7 +412,7 @@
     "screenRecordingDeniedNotice": "Käyttöoikeus vaaditaan",
     "screenRecordingDeniedTitle": "Näytön tallennuksen käyttöoikeus evätty",
     "screenRecordingDeniedText1": "Toisen ääni vaatii näytön tallennuksen käyttöoikeuden järjestelmän äänen kaappaamiseen.",
-    "screenRecordingDeniedText2": "Siirry kohtaan Järjestelmäasetukset > Tietosuoja ja turvallisuus > Näytön tallennus ja ota Sokuji käyttöön.",
+    "screenRecordingDeniedText2": "Siirry kohtaan Järjestelmäasetukset > Tietosuoja ja turvallisuus > Näytön tallennus ja ota AED Translator käyttöön.",
     "screenRecordingDeniedText3": "Kun olet ottanut käyttöoikeuden käyttöön, käynnistä sovellus uudelleen.",
     "turnOnMicrophone": "Ota mikrofoni käyttöön",
     "turnOffMicrophone": "Poista mikrofoni käytöstä",
@@ -429,9 +429,9 @@
     "participantFellBackToSystemAudio": "Valitun sovelluksen kaappaus pysähtyi, joten nyt käännetään kaikki järjestelmän ääni. Rajaa takaisin valitsemalla sovellus uudelleen.",
     "loopbackMicNotice": "Loopback-tulon huomautus",
     "loopbackMicWarningTitle": "Tämä tulo tallentaa uudelleen sen, mitä tietokone toistaa.",
-    "loopbackMicWarningText1": "Loopback-tulot kuten \"Stereo Mix\" tai \"Monitor of ...\" -laitteet äänittävät järjestelmän omaa äänilähtöä. Istunnossa, joka sisältää Sokujin käännetyn puheen, Sokuji kuulisi ja kääntäisi itseään silmukassa.",
+    "loopbackMicWarningText1": "Loopback-tulot kuten \"Stereo Mix\" tai \"Monitor of ...\" -laitteet äänittävät järjestelmän omaa äänilähtöä. Istunnossa, joka sisältää Sokujin käännetyn puheen, AED Translator kuulisi ja kääntäisi itseään silmukassa.",
     "loopbackMicWarningText2": "Laite pysyy valittuna, jos tämä reititys on tarkoituksellinen, mutta tavalliseen käyttöön valitse fyysinen mikrofoni.",
-    "participantNoAudioYet": "Valitusta lähteestä ei ole vielä tullut ääntä. Jos se toistaa eikä mitään käännetä, salli Sokuji kohdassa Järjestelmäasetukset > Tietosuoja ja turvallisuus > Vain järjestelmän äänen tallennus (macOS) ja aloita istunto uudelleen.",
+    "participantNoAudioYet": "Valitusta lähteestä ei ole vielä tullut ääntä. Jos se toistaa eikä mitään käännetä, salli AED Translator kohdassa Järjestelmäasetukset > Tietosuoja ja turvallisuus > Vain järjestelmän äänen tallennus (macOS) ja aloita istunto uudelleen.",
     "audioCaptureUnprovenNotice": "Mitään ei ole vielä kaapattu",
     "audioCaptureUnprovenTitle": "Valitusta lähteestä ei ole vielä tullut ääntä",
     "audioCaptureUnprovenText1": "Jos lähde toistaa eikä mitään käännetä, macOS toimittaa todennäköisesti hiljaisuutta: sovelluksen kaappaaminen vaatii käyttöoikeuden \"Vain järjestelmän äänen tallennus\", ja ilman sitä ei tule virhettä, vain hiljaisuutta.",
@@ -475,7 +475,7 @@
     "verificationEmailFailed": "Vahvistussähköpostin lähetys epäonnistui. Yritä uudelleen",
     "alreadyVerified": "Sähköpostisi on jo vahvistettu!",
     "cooldownMessage": "Odota {{seconds}} sekuntia",
-    "checkYourEmail": "Vahvistussähköposti lähetetty. Viimeistele se saapuneet-kansiossasi ja palaa takaisin — Sokuji huomaa sen automaattisesti.",
+    "checkYourEmail": "Vahvistussähköposti lähetetty. Viimeistele se saapuneet-kansiossasi ja palaa takaisin — AED Translator huomaa sen automaattisesti.",
     "emailVerifiedToast": "Sähköposti vahvistettu",
     "sessionExpired": "Istuntosi on vanhentunut. Kirjaudu sisään uudelleen.",
     "forgotPassword": "Unohditko salasanan?",
@@ -499,7 +499,7 @@
   },
   "simpleConfig": {
     "interfaceLanguage": "Käyttöliittymän kieli",
-    "interfaceLanguageDesc": "Tämä muuttaa Sokuji:n valikoiden ja painikkeiden kieltä. Se EI vaikuta siihen, minkä kielten välillä voit kääntää.",
+    "interfaceLanguageDesc": "Tämä muuttaa AED Translator:n valikoiden ja painikkeiden kieltä. Se EI vaikuta siihen, minkä kielten välillä voit kääntää.",
     "translationLanguages": "Käännöskielet",
     "translationLanguagesDesc": "Valitse, mitä kieltä puhut (Minun kieleni) ja millä kielellä haluat kuulla käännöksen (Toisen kieli). Valitse \"Automaattinen tunnistus\" jos et ole varma, mitä kieltä puhut.",
     "yourLanguage": "Minun kieleni",
@@ -508,7 +508,7 @@
     "signInRequired": "Rekisteröidy käyttääksesi Sokujin sisäänrakennettua käännöspalvelua — API-avainta ei tarvita. Voit myös jatkaa oman palveluntarjoajasi ja avaimesi käyttöä.",
     "targetLanguage": "Toisen kieli",
     "microphone": "Mikrofoni",
-    "microphoneDesc": "Valitse mikrofoni puheesi kaappaamiseen. Puhu kielelläsi tähän mikrofoniin, niin Sokuji kääntää kaiken mitä se kuulee reaaliajassa.",
+    "microphoneDesc": "Valitse mikrofoni puheesi kaappaamiseen. Puhu kielelläsi tähän mikrofoniin, niin AED Translator kääntää kaiken mitä se kuulee reaaliajassa.",
     "swapLanguages": "Vaihda kielet",
     "swapNotSpoken": "Puhepalvelu ei lue näitä kieliä toisin päin.",
     "textOnly": "Vain teksti",
@@ -588,7 +588,27 @@
       "screenContextNone": "Ikkunaa ei ole vielä valittu: sinulta kysytään istunnon alkaessa.",
       "screenContextChoose": "Valitse…",
       "speakerLabels": "Puhujatunnisteet",
-      "speakerLabelsTooltip": "Numeroi toisen osapuolen ihmiset – Puhuja 1, Puhuja 2… – kun kuuluu useampi kuin yksi ääni.\n\nSe voi luulla yhtä ihmistä useaksi. Pois käytöstä: numeroita ei näytetä.\n\nOtetaan käyttöön vasta seuraavasta istunnosta alkaen."
+      "speakerLabelsTooltip": "Numeroi toisen osapuolen ihmiset – Puhuja 1, Puhuja 2… – kun kuuluu useampi kuin yksi ääni.\n\nSe voi luulla yhtä ihmistä useaksi. Pois käytöstä: numeroita ei näytetä.\n\nOtetaan käyttöön vasta seuraavasta istunnosta alkaen.",
+      "voiceSummaryFixed": "Your own voice (fixed)",
+      "voiceDefaultName": "My voice",
+      "voiceReadAloudTitle": "Read this aloud at your usual speaking pace",
+      "voiceReadAloudSample": "Let’s review the project schedule. The first samples should arrive on Wednesday. Please check the quantities and specifications when they arrive, and send me a photo if anything looks wrong.",
+      "voiceUploadNotice": "After you confirm, AED Translator uploads this 10–20 second recording to Alibaba Model Studio's private temporary storage (expires after 48 hours) to create a Qwen 3.8 voice. Voice creation may be billed; translation is billed by usage. The cloned voice stays in your Alibaba account until you delete it. AED Translator lists only profiles created on this device because LiveTranslate does not provide a voice-list API.",
+      "voiceConsent": "After you confirm, AED Translator uses Alibaba temporary private storage by default. The optional public HTTPS URL is sent to Alibaba as the reference source; AED Translator does not upload audio to that host. Cloned voices remain in your Alibaba account until deleted.",
+      "voiceReferenceUrlLabel": "Optional public HTTPS audio URL (fallback)",
+      "voiceReferenceUrlPlaceholder": "https://your-public-host.example/voice.wav",
+      "voiceBailianOnly": "Voice enrollment is currently supported only with a Bailian shared Beijing API key. Choose Bailian shared and save its API key. Company workspace, QwenCloud and managed connections are not supported for enrollment.",
+      "voiceDesktopOnly": "Recording and enrollment are available in the AED Translator Windows desktop app.",
+      "voiceListError": "Could not load voice profiles saved in this app profile.",
+      "voiceCreateFailed": "Could not create this voice. Check the Bailian connection and try again.",
+      "connectionPersonal": "Personal QwenCloud",
+      "connectionBailianShared": "Bailian shared",
+      "connectionBailianWorkspace": "Company workspace",
+      "workspaceApiKey": "Company workspace API key",
+      "workspaceId": "Bailian workspace ID",
+      "workspaceKeyNote": "Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.",
+      "workspaceDesktopOnly": "Dedicated workspace connections are available in the Windows desktop app only.",
+      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace)"
     },
     "local_inference": {
       "name": "Tämä laite",
@@ -717,7 +737,7 @@
       "scopeLabel": "Sisällytä",
       "scopeItemAria": "{{scope}} — {{line}}",
       "scopeEmpty": "Ei valintoja",
-      "headerTitle": "Sokuji-keskustelun vienti",
+      "headerTitle": "AED Translator-keskustelun vienti",
       "headerSessionStarted": "Istunto alkoi",
       "headerExported": "Viety",
       "headerProvider": "Palveluntarjoaja",
@@ -972,7 +992,7 @@
       "viewLicense": "Näytä koko lisenssiteksti",
       "nonCommercial": "Tämä lisenssi sallii vain ei-kaupallisen käytön — älä käytä tätä mallia kaupallisissa tuotteissa tai palveluissa.",
       "restrictedTerms": "Tämä ei ole avoimen lähdekoodin lisenssi. Se asettaa ehtoja mallin ja sen tuotosten käytölle — lue koko teksti ennen kuin luotat siihen.",
-      "disclaimer": "Sokuji ei ole sidoksissa mallin tekijöihin eikä sillä ole heihin mitään suhdetta. Tämä integraatio on epävirallinen ja tarjotaan sellaisenaan ilman minkäänlaista takuuta.",
+      "disclaimer": "AED Translator ei ole sidoksissa mallin tekijöihin eikä sillä ole heihin mitään suhdetta. Tämä integraatio on epävirallinen ja tarjotaan sellaisenaan ilman minkäänlaista takuuta.",
       "attribution": "Tekijätiedot: {{attribution}}",
       "cancel": "Peruuta",
       "accept": "Ymmärrän — vain ei-kaupallinen käyttö",
@@ -1015,7 +1035,23 @@
       "engineHint": "Työpöytämoottori, jonka aiemmat versiot latasivat mallien ajamiseen tällä tietokoneella. Palvelu ”Tämä laite” ei enää käytä sitä; poista se vapauttaaksesi tilaa.",
       "remove": "Poista",
       "engineConfirm": "Poistetaanko paikallinen moottori?",
-      "engineFrees": "Vapauttaa {{size}}."
+      "engineFrees": "Vapauttaa {{size}}.",
+      "aedLocalHint": "CPU models cover Chinese ↔ English and Japanese ↔ English. For direct Chinese ↔ Japanese, use WebGPU or a company endpoint.",
+      "laptopCpu": "Laptop · CPU",
+      "laptopGpu": "Laptop · WebGPU required",
+      "otherInstalled": "Other local model files ({{count}})",
+      "pgxGuideTitle": "PGX WebGPU models",
+      "pgxGuideHint": "Built-in WebGPU picks sized for PGX’s GB10 GPU and 128 GB unified-memory profile. Recommendations use the hardware specification; downloading requires WebGPU, and the model variant follows this device’s features.",
+      "pgxWebGpuTag": "PGX profile pick · WebGPU",
+      "pgxTitle": "PGX and company network",
+      "pgxHint": "Models listed in the PGX Ollama inventory. To use its text model, configure an OpenAI-compatible endpoint reachable from this device and enter the exact model ID. Network access and capacity depend on the server.",
+      "pgxInstalled": "Listed in PGX Ollama inventory",
+      "pgxQwen": "Qwen3.6 35B A3B",
+      "pgxQwenMeta": "Text chat and translation · Ollama model ID: qwen3.6-35b-a3b:latest",
+      "pgxCandidate": "Benchmark candidate · not installed on PGX",
+      "pgxHyMeta": "Translation candidate for llama.cpp. Existing results are local RTX 5080 replay and synthetic stream proxies, not PGX measurements.",
+      "pgxSenseMeta": "Speech recognition candidate. Existing results are local benchmark runs, not PGX measurements; this is not exposed by the text endpoint.",
+      "pgxConfigure": "Configure OpenAI-compatible endpoint"
     }
   },
   "notes": {
@@ -1054,16 +1090,16 @@
     "linuxMigrateTitle": "Uusi versio v{{version}} saatavilla"
   },
   "audioSystem": {
-    "pactlMissingBody": "pactl (PulseAudion komentorivityökalut) ei löytynyt, joten Sokuji ei voinut määrittää virtuaalista mikrofonia/kaiutinta. Asenna se ja yritä sitten uudelleen:",
+    "pactlMissingBody": "pactl (PulseAudion komentorivityökalut) ei löytynyt, joten AED Translator ei voinut määrittää virtuaalista mikrofonia/kaiutinta. Asenna se ja yritä sitten uudelleen:",
     "installCommand": "sudo apt install pulseaudio-utils",
-    "unavailableBody": "Sokuji ei voinut määrittää virtuaalista mikrofonia/kaiutinta. Varmista, että PulseAudio tai PipeWire on käynnissä.",
+    "unavailableBody": "AED Translator ei voinut määrittää virtuaalista mikrofonia/kaiutinta. Varmista, että PulseAudio tai PipeWire on käynnissä.",
     "retry": "Yritä uudelleen",
     "retrying": "Yritetään uudelleen...",
     "macDriverNotLoadedBody": "Sokujin virtuaalinen mikrofoni on asennettu, mutta macOS ei ole ladannut sitä, joten kokoussovellukset eivät kuule käännöstäsi. Korjaa se; macOS pyytää ylläpitäjän salasanaa.",
-    "macRepairFailedBody": "Korjaus ei palauttanut virtuaalista mikrofonia. Käynnistä Mac uudelleen tai asenna Sokuji uudelleen .pkg-asennusohjelmalla.",
+    "macRepairFailedBody": "Korjaus ei palauttanut virtuaalista mikrofonia. Käynnistä Mac uudelleen tai asenna AED Translator uudelleen .pkg-asennusohjelmalla.",
     "repair": "Korjaa",
     "repairing": "Korjataan...",
-    "macRepairPrompt": "Sokuji haluaa korjata virtuaalisen mikrofoninsa."
+    "macRepairPrompt": "AED Translator haluaa korjata virtuaalisen mikrofoninsa."
   },
   "vbCable": {
     "title": "Anna toisen osapuolen kuulla käännös",
@@ -1072,7 +1108,7 @@
     "about": "Tietoja VB-CABLEsta",
     "adminOnce": "Windows pyytää järjestelmänvalvojan oikeuksia kerran.",
     "installingTitle": "Asennetaan VB-CABLEa…",
-    "installingBody": "Hyväksy Windowsin kehote ja napsauta sitten VB-CABLE-ikkunassa \"Install Driver\". Sokuji tunnistaa sen heti, kun se on asennettu.",
+    "installingBody": "Hyväksy Windowsin kehote ja napsauta sitten VB-CABLE-ikkunassa \"Install Driver\". AED Translator tunnistaa sen heti, kun se on asennettu.",
     "installingBusy": "Asennetaan…",
     "failedTitle": "VB-CABLEa ei asennettu",
     "failedBody": "Asennus peruttiin tai se ei valmistunut. Yritä uudelleen tai asenna se itse VB-Audion sivustolta.",
@@ -1085,7 +1121,7 @@
     "storeStep3": "Napsauta \"Install Driver\" ja käynnistä tietokone sitten uudelleen.",
     "openWebsite": "Avaa VB-Audion sivusto",
     "checkAgain": "Tarkista uudelleen",
-    "picksUp": "Sokuji tunnistaa sen automaattisesti, kun se on asennettu.",
+    "picksUp": "AED Translator tunnistaa sen automaattisesti, kun se on asennettu.",
     "notNow": "Ei nyt"
   },
   "subtitle": {
@@ -1184,7 +1220,7 @@
     "previewChargedToBalance": "Esikatselu syntetisoi lyhyen näytteen, ja sen hinta veloitetaan saldostasi.",
     "previewFailed": "Tämän äänen esikatselua ei voitu luoda.",
     "renameFailed": "Tämän äänen nimeä ei voitu muuttaa.",
-    "recordStartFailed": "Tallennusta ei voitu aloittaa. Tarkista, että mikrofoni on liitetty ja että Sokuji saa käyttää sitä.",
+    "recordStartFailed": "Tallennusta ei voitu aloittaa. Tarkista, että mikrofoni on liitetty ja että AED Translator saa käyttää sitä.",
     "previewLanguageUnsupported": "Tällä mallilla ei ole esimerkkilausetta kielellä, jota se puhuu.",
     "previewNeedsBalance": "Lataa saldoasi kuunnellaksesi tämän äänen esikatselun.",
     "previewNeedsSessionStopped": "Lopeta istunto kuunnellaksesi tämän äänen esikatselun.",
@@ -1289,7 +1325,11 @@
       },
       "anyUseCase": "Kaikki käyttötarkoitukset",
       "anyStyle": "Kaikki tyylit"
-    }
+    },
+    "recordNoSelectedMic": "Select a physical microphone in Audio settings before recording.",
+    "recordSilent": "No sound reached the recorder. Check the microphone and its input volume, then try again.",
+    "recordingMicrophone": "Microphone · {{name}}",
+    "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
     "ttsEcho": "Kaiuttimesi syöttävät Sokujin käännetyn puheen takaisin mikrofoniin.",
@@ -1317,7 +1357,7 @@
     "clearAllKeepsPicks": "Valintasi muistetaan ja palautuvat, kun mallit ladataan uudelleen."
   },
   "setup": {
-    "title": "Määritä Sokuji",
+    "title": "Määritä AED Translator",
     "stepOf": "Vaihe {{current}}/{{total}}",
     "back": "Takaisin",
     "next": "Seuraava",
@@ -1444,7 +1484,7 @@
       "guide": "Näin hankit tämän avaimen",
       "verifyEmail": "Kirjauduttu sisään. Avaa sähköpostitse lähettämämme linkki vahvistaaksesi osoitteesi — kokeilusaldo tulee voimaan, kun teet niin.",
       "onFile": "Avain on jo tallennettu — jätä tämä tyhjäksi säilyttääksesi sen.",
-      "offlineHardware": "Sokuji toimii hyvin näytönohjaimella, jossa on riittävästi muistia; pelkällä suorittimella se on selvästi hitaampi.",
+      "offlineHardware": "AED Translator toimii hyvin näytönohjaimella, jossa on riittävästi muistia; pelkällä suorittimella se on selvästi hitaampi.",
       "openaiOneKey": "Tämä yksi avain käy OpenAI Realtimelle, Translatelle ja Livelle.",
       "baseUrl": "Osoite",
       "baseUrlPlaceholder": "Osoite, esimerkiksi https://openrouter.ai/api/v1",
@@ -1474,7 +1514,7 @@
     "steps": {
       "welcome": {
         "title": "Olet valmis",
-        "content": "Sokuji on määritetty skenaariosi mukaan. Tässä lyhyt kierros — se kestää alle minuutin."
+        "content": "AED Translator on määritetty skenaariosi mukaan. Tässä lyhyt kierros — se kestää alle minuutin."
       },
       "mode-picker": {
         "title": "Käännöstila",
@@ -1494,15 +1534,15 @@
       "output-routing": {
         "title": "Miten toinen osapuoli kuulee sinut",
         "content": "Käännetty äänesi ohjautuu virtuaalimikrofoniin; valitse se mikrofoniksi kokoussovelluksessasi.",
-        "content_extension": "Valitse Google Meetissä, Zoomissa tai Teamsissa mikrofoniksi \"Sokuji Virtual Microphone\". Sokuji lisää sen automaattisesti tuettuihin kokoussivustoihin.",
-        "content_electronLinux": "Sokuji loi virtuaalimikrofonin tähän järjestelmään. Valitse se mikrofoniksi kokoussovelluksessasi.",
+        "content_extension": "Valitse Google Meetissä, Zoomissa tai Teamsissa mikrofoniksi \"Sokuji Virtual Microphone\". AED Translator lisää sen automaattisesti tuettuihin kokoussivustoihin.",
+        "content_electronLinux": "AED Translator loi virtuaalimikrofonin tähän järjestelmään. Valitse se mikrofoniksi kokoussovelluksessasi.",
         "content_electronOther": "Tarvitset virtuaalisen äänikaapelin (esimerkiksi VB-Cable). Ohjaa Sokujin äänilähtö siihen ja valitse se mikrofoniksi kokoussovelluksessasi."
       },
       "participant-source": {
         "title": "Toisen osapuolen ääni",
-        "content": "Sokuji kuuntelee toista osapuolta täältä.",
+        "content": "AED Translator kuuntelee toista osapuolta täältä.",
         "content_electron": "Valitse käännettävä sovellus tai koko järjestelmän ääni. Heidän alkuperäinen äänensä jatkuu normaalisti.",
-        "content_extension": "Sokuji kääntää nykyisen välilehden äänen. Heidän alkuperäinen äänensä jatkuu normaalisti."
+        "content_extension": "AED Translator kääntää nykyisen välilehden äänen. Heidän alkuperäinen äänensä jatkuu normaalisti."
       },
       "subtitle": {
         "title": "Tekstitystila",
@@ -1564,7 +1604,7 @@
     "lineup_source_not_fixed": "Palvelun {{provider}} on tiedettävä puhuttu kieli. Valitse se asetuksen ”Automaattinen tunnistus” sijaan tai valitse toinen käännöspalvelu.",
     "lineup_pair_not_translated": "{{provider}} ei käännä suuntaa {{source}} → {{target}}. Valitse muut kielet tai toinen käännöspalvelu.",
     "lineup_face_to_face_apart": "”Kasvokkain” tarvitsee yhden palvelun, joka sekä litteroi että kääntää. Valitse {{provider}} myös käännökseen tai aseta ”Missä toinen on” arvoon ”Kokouksessa”.",
-    "session_in_use": "Toinen ikkuna tai laite käyttää tätä tiliä. Lopeta istunto siellä, tai jos Sokuji sulkeutui juuri odottamatta, yritä uudelleen minuutin kuluttua.",
+    "session_in_use": "Toinen ikkuna tai laite käyttää tätä tiliä. Lopeta istunto siellä, tai jos AED Translator sulkeutui juuri odottamatta, yritä uudelleen minuutin kuluttua.",
     "previous_session_ending": "Edellinen istuntosi on vielä päättymässä. Yritä uudelleen minuutin kuluttua.",
     "app_capture_lost_using_system_audio": "Sovelluksen kaappaus pysähtyi, joten nyt käännetään kaikki järjestelmän ääni.",
     "app_capture_monitor_missing": "Sovelluksen kaappaus ei käynnistynyt, joten nyt käännetään kaikki järjestelmän ääni.",
@@ -1586,7 +1626,7 @@
     "translation_unavailable": "Tälle suunnalle ei ole käännösmallia: sen puhe vain litteroidaan.",
     "local_models_missing": "Lataa tarvittavat mallit Asetuksista aloittaaksesi.",
     "no_microphone": "Määritä tämän tilan laitteet aloittaaksesi.",
-    "silent_no_permission": "Valitusta lähteestä ei ole vielä tullut ääntä. Jos se toistaa eikä mitään käännetä, salli Sokuji kohdassa Järjestelmäasetukset > Tietosuoja ja turvallisuus > Vain järjestelmän äänen tallennus (macOS) ja aloita istunto uudelleen.",
+    "silent_no_permission": "Valitusta lähteestä ei ole vielä tullut ääntä. Jos se toistaa eikä mitään käännetä, salli AED Translator kohdassa Järjestelmäasetukset > Tietosuoja ja turvallisuus > Vain järjestelmän äänen tallennus (macOS) ja aloita istunto uudelleen.",
     "loopback_denied": "Toisen ääni vaatii näytön tallennuksen käyttöoikeuden järjestelmän äänen kaappaamiseen.",
     "mic_lost_using_other": "Mikrofoni ”{{lost}}” irrotettiin, joten sen sijaan käytetään mikrofonia ”{{device}}”.",
     "mic_lost_waiting": "Mikrofoni irrotettiin. Puheesi kääntäminen jatkuu, kun mikrofoni yhdistetään.",
@@ -1615,7 +1655,7 @@
     "address_invalid": "Yhteensopivan palvelun osoitetta ei voi käyttää: {{detail}}"
   },
   "viewer": {
-    "title": "Sokuji-tekstitys",
+    "title": "AED Translator-tekstitys",
     "connecting": "Yhdistetään…",
     "original": "Alkuperäinen",
     "enter": {
@@ -1673,7 +1713,7 @@
     },
     "shortcuts": "+ − fonttikoko · B molemmat kielet · F koko näyttö · End takaisin uusimpaan",
     "transcript": {
-      "header": "Sokuji-tekstitys, tallennettu {{time}}"
+      "header": "AED Translator-tekstitys, tallennettu {{time}}"
     },
     "present": {
       "title": "Lue tekstitys puhelimella tai tietokoneella",
@@ -1686,7 +1726,7 @@
       "androidChrome": "Eikö Chrome avaa sivua Androidissa? Salli se kohdassa Asetukset → Sovellukset → Chrome → Käyttöoikeudet → Lähellä olevat laitteet.",
       "watching": "Katsojia: {{count}}",
       "fullscreen": "Koko näyttö",
-      "windowTitle": "Sokuji-projektorisivu",
+      "windowTitle": "AED Translator-projektorisivu",
       "ended": "Jakaminen on päättynyt"
     }
   },
@@ -1695,7 +1735,7 @@
     "buttonActive": "Tekstitystä jaetaan · katsojia: {{count}}",
     "intro": "Samassa verkossa olevat voivat lukea tämän tekstityksen ja käännökset puhelimellaan tai tietokoneellaan.",
     "enable": "Jaa tekstitys",
-    "firewallNote": "Windows saattaa kysyä, saako Sokuji käyttää verkkoa. Valitse ”Yksityiset verkot”.",
+    "firewallNote": "Windows saattaa kysyä, saako AED Translator käyttää verkkoa. Valitse ”Yksityiset verkot”.",
     "address": "Osoite",
     "copy": "Kopioi",
     "copied": "Kopioitu",
@@ -1718,7 +1758,7 @@
     "openPresent": "Avaa projektorisivu",
     "stop": "Lopeta jakaminen",
     "stopNote": "Katsojien sivuilla näytetään, että jakaminen on päättynyt.",
-    "warnNoViewers": "Kaksi minuuttia on kulunut, eikä yksikään laite ole yhdistänyt. Tämä verkko saattaa estää laitteita tavoittamasta toisiaan (niin tekevät vieras-Wi‑Fi-verkot ja jotkin yritysverkot), tai palomuuri voi estää Sokujin. Varmista, että kaikki ovat samassa verkossa kuin tämä tietokone, salli Sokuji yksityisissä verkoissa Windowsissa tai käytä puhelimen yhteyspistettä tai omaa reititintä.",
+    "warnNoViewers": "Kaksi minuuttia on kulunut, eikä yksikään laite ole yhdistänyt. Tämä verkko saattaa estää laitteita tavoittamasta toisiaan (niin tekevät vieras-Wi‑Fi-verkot ja jotkin yritysverkot), tai palomuuri voi estää Sokujin. Varmista, että kaikki ovat samassa verkossa kuin tämä tietokone, salli AED Translator yksityisissä verkoissa Windowsissa tai käytä puhelimen yhteyspistettä tai omaa reititintä.",
     "warnAddressChanged": "Verkko vaihtui. Osoite on nyt {{address}}: lähetä linkki uudelleen tai avaa projektorisivu uudelleen.",
     "errorPortsBusy": "Jakamista ei voitu aloittaa: portit 7788–7797 ovat kaikki käytössä.",
     "errorListen": "Jakamista ei voitu aloittaa: {{reason}}"
@@ -1733,7 +1773,42 @@
     "playedRight": "Toistettu oikeassa korvassa",
     "notPlayed": "Ei toistettu: tämä käännös on kielellä {{language}}, ei kielellä {{target}}, joten sitä ei lueta kenellekään.",
     "legendMe": "{{language}} · minä",
-    "legendOther": "{{language}} · toinen"
+    "legendOther": "{{language}} · toinen",
+    "modeGroup": "Translation mode",
+    "onlineMeeting": "Online meeting",
+    "title": "Face to face",
+    "intro": "Choose two subtitle languages and take turns speaking into one microphone.",
+    "backToMeeting": "Online meeting",
+    "languageChoices": "Reading languages",
+    "firstLanguage": "First subtitle language",
+    "secondLanguage": "Second subtitle language",
+    "subtitleOnly": "Subtitles only. No speech is synthesized.",
+    "speakerNumber": "Speaker {{number}}",
+    "speaker": "Speaker",
+    "transcribing": "Listening…",
+    "translationPending": "Translating…",
+    "translationUnavailable": "Translation unavailable",
+    "waitingLive": "Listening for speech…",
+    "personA": "Person A",
+    "personB": "Person B",
+    "noSpeech": "Qwen provides realtime captions. The configured text service translates the other direction.",
+    "ready": "Choose two subtitle languages, then start listening.",
+    "starting": "Connecting to Qwen and opening the microphone…",
+    "stopping": "Releasing the microphone…",
+    "live": "Listening. Subtitles will appear as you speak.",
+    "failed": "Could not start face-to-face translation.",
+    "start": "Start listening",
+    "stop": "Stop listening",
+    "retry": "Retry",
+    "speakers": "Speaker assignments",
+    "assignSpeakers": "Who is speaking?",
+    "detectedSpeaker": "Detected speaker {{id}}",
+    "captions": "Conversation subtitles",
+    "waiting": "Subtitles will appear here as you speak.",
+    "speakerUnknown": "Speaker unassigned",
+    "languageUnknown": "Language unknown",
+    "textRoute": "Text translation",
+    "assignToTranslate": "Assign this speaker to choose the translation direction."
   },
   "screenContext": {
     "picker": {
@@ -1746,11 +1821,11 @@
       "none": "Jaettavaa ikkunaa tai näyttöä ei löytynyt.",
       "minimizedHint": "Pienennettyä ikkunaa ei voi jakaa: palauta ikkuna ja paina Päivitä.",
       "deniedTitle": "Näytön tallennuksen käyttöoikeus tarvitaan",
-      "deniedText": "macOS ei anna Sokujin nähdä näyttöä. Näin käy myös silloin, kun Sokuji on päällä Järjestelmäasetuksissa mutta käyttöoikeus on annettu vanhemmalle versiolle.",
+      "deniedText": "macOS ei anna Sokujin nähdä näyttöä. Näin käy myös silloin, kun AED Translator on päällä Järjestelmäasetuksissa mutta käyttöoikeus on annettu vanhemmalle versiolle.",
       "openSettings": "Avaa Järjestelmäasetukset",
       "reask": "Kysy macOS:ltä uudelleen",
-      "askedText": "Salli Sokuji, kun macOS kysyy, tai ota se käyttöön Järjestelmäasetuksissa. macOS ottaa käyttöoikeuden käyttöön vasta, kun Sokuji käynnistetään uudelleen.",
-      "restart": "Käynnistä Sokuji uudelleen",
+      "askedText": "Salli AED Translator, kun macOS kysyy, tai ota se käyttöön Järjestelmäasetuksissa. macOS ottaa käyttöoikeuden käyttöön vasta, kun AED Translator käynnistetään uudelleen.",
+      "restart": "Käynnistä AED Translator uudelleen",
       "refresh": "Päivitä",
       "cancel": "Aloita ilman näytön kontekstia",
       "nothingVisible": "Valitsemasi alue ei näytä juuri nyt mitään. Valitse toinen tai aloita ilman näytön kontekstia.",
@@ -1862,7 +1937,10 @@
       },
       "findModels": "Hae malleja",
       "configure": "Määritä",
-      "manageModels": "Hallitse malleja"
+      "manageModels": "Hallitse malleja",
+      "internalModel": "Yritysverkon ja PGX:n tekstimallit",
+      "bailianModel": "Alibaba Cloud Model Studio · reaaliaikainen käännös",
+      "internalModelHint": "Valitse tai kirjoita mallin nimi kohdassa ”Kielet ja kokoonpano”."
     },
     "lineup": {
       "title": "Kokoonpano",
@@ -1906,8 +1984,8 @@
         "key": "Näppäin",
         "held": "Kun pidät pohjassa",
         "notHeld": "Kun et pidä pohjassa",
-        "talkHeld": "Sokuji kuuntelee; kun päästät irti, se pätkä käännetään ja toinen osapuoli kuulee käännöksen. Kun Läpivienti on päällä, toinen osapuoli kuulee hiljaa myös oman äänesi.",
-        "talkNotHeld": "Sokuji ei kuuntele; mitään, mitä sanot, ei käännetä eikä välitetä toiselle osapuolelle.",
+        "talkHeld": "AED Translator kuuntelee; kun päästät irti, se pätkä käännetään ja toinen osapuoli kuulee käännöksen. Kun Läpivienti on päällä, toinen osapuoli kuulee hiljaa myös oman äänesi.",
+        "talkNotHeld": "AED Translator ei kuuntele; mitään, mitä sanot, ei käännetä eikä välitetä toiselle osapuolelle.",
         "translateHeld": "Se, mitä sanot, käännetään; toinen osapuoli kuulee vain käännöksen, ei omaa ääntäsi.",
         "translateNotHeld": "Oma äänesi menee kääntämättä suoraan toiselle osapuolelle.",
         "change": "Vaihda",
@@ -2065,7 +2143,7 @@
     "foundInNotes": "Löytyi muistiinpanoista",
     "foundInTitle": "Löytyi otsikosta",
     "unavailable": "Historiaa ei voitu avata.",
-    "unavailableNewer": "Tämän historian kirjoitti Sokujin uudempi versio. Avaa se päivittämällä Sokuji.",
+    "unavailableNewer": "Tämän historian kirjoitti Sokujin uudempi versio. Avaa se päivittämällä AED Translator.",
     "failed": "Se ei onnistunut. Yritä uudelleen.",
     "me": "Minä",
     "other": "Toinen",
@@ -2179,7 +2257,7 @@
       "wallet-frozen": "Kizuna AI -lompakkosi on jäädytetty.",
       "not-member": "Et ole enää sen organisaation jäsen, joka maksaa Kizuna AI:n.",
       "too-large": "Tämä tallenne on liian pitkä, jotta Kizuna AI voisi kirjoittaa siitä muistiinpanot.",
-      "update-required": "Päivitä Sokuji, jotta voit kirjoittaa muistiinpanoja Kizuna AI:lla.",
+      "update-required": "Päivitä AED Translator, jotta voit kirjoittaa muistiinpanoja Kizuna AI:lla.",
       "other": "Muistiinpanopalvelu hylkäsi pyynnön."
     },
     "notesLatestFailed": "Viimeisintä yritystä ei voitu kirjoittaa: {{reason}}",

@@ -19,6 +19,30 @@ export type EndpointId = keyof typeof ENDPOINTS;
 /** The order detection asks them in: Singapore first. */
 export const ENDPOINT_ORDER = ['intl', 'cn'] as const;
 export const BAILIAN_ENDPOINT_ID = 'bailian-cn' as const;
+export const BAILIAN_WORKSPACE_CONNECTION = 'bailian-workspace' as const;
+const BAILIAN_BEIJING_WORKSPACE_SUFFIX = '.cn-beijing.maas.aliyuncs.com';
+
+/** Bailian Workspace IDs occupy exactly one DNS label in the Beijing hostname. */
+export function normalizeBailianWorkspaceId(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const id = value.trim();
+  if (!/^llm-[a-z0-9]{1,59}$/i.test(id)) return null;
+  return id.toLowerCase();
+}
+
+/** The only endpoint accepted for a dedicated company workspace. */
+function bailianWorkspaceHost(value: unknown): string | null {
+  const id = normalizeBailianWorkspaceId(value);
+  return id ? `${id}${BAILIAN_BEIJING_WORKSPACE_SUFFIX}` : null;
+}
+
+/** The model is fixed by Sokuji; callers cannot supply a host, path or query. */
+export function bailianWorkspaceSocketUrl(value: unknown, model: string): string {
+  const host = bailianWorkspaceHost(value);
+  if (!host) throw new Error('Enter a valid Bailian workspace ID.');
+  return `wss://${host}/api-ws/v1/realtime?model=${encodeURIComponent(model)}`;
+}
+
 
 export function isEndpointId(v: unknown): v is EndpointId {
   return v === 'intl' || v === 'cn' || v === BAILIAN_ENDPOINT_ID;

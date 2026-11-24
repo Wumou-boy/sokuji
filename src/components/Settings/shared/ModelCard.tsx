@@ -23,6 +23,7 @@ export function ModelCard({
   isCompatible,
   isAutoSelected,
   compatibilityHint,
+  hardwareHint,
   deviceFeatures,
   onSelect,
   onDownload,
@@ -41,6 +42,7 @@ export function ModelCard({
   isCompatible: boolean;
   isAutoSelected?: boolean;
   compatibilityHint?: string;
+  hardwareHint?: string;
   deviceFeatures?: string[];
   onSelect?: () => void;
   onDownload: () => void;
@@ -102,6 +104,7 @@ export function ModelCard({
               <div className="model-card__languages">
                 <LanguageTags languages={entry.languages} />
               </div>
+              {hardwareHint && <span>{hardwareHint}</span>}
               {entry.recommended && (
                 <span className="model-card__recommended-badge">
                   <Star size={10} />

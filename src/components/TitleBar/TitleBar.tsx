@@ -110,7 +110,7 @@ const TitleBar: React.FC<TitleBarProps> = ({
       role="banner"
       data-fit={fitLevel}
     >
-      <span className="title-bar__title">Sokuji</span>
+      <span className="title-bar__title"><img src={`${import.meta.env.BASE_URL}logo192.png`} width={18} height={18} alt="" />AED Translator</span>
       <div className="title-bar__actions">
         <AccountButton />
         <SubtitleEnterButton />

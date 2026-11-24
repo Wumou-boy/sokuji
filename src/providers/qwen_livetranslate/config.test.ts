@@ -16,7 +16,7 @@ const ctx = (source: string, target: string, patch: Partial<SessionContext> = {}
 describe("Qwen LiveTranslate's builder (spec §5)", () => {
   it('builds my leg: the endpoint the check found, the target, my preset, automatic turns, no person labels', () => {
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, SHARED)).toEqual({
-      model: QWEN_MODEL, endpoint: 'intl', target: 'en', speech: true, voice: { kind: 'preset', name: 'Tina' }, manual: false, person: false, detectIncomingLanguage: false, skipSameLanguageText: false,
+      model: QWEN_MODEL, connection: 'auto', workspaceId: null, endpoint: 'intl', target: 'en', speech: true, voice: { kind: 'preset', name: 'Tina' }, manual: false, person: false, detectIncomingLanguage: false, skipSameLanguageText: false,
       phrases: {}, silenceMs: null, transport: 'websocket',
     });
   });
@@ -66,6 +66,14 @@ describe("Qwen LiveTranslate's builder (spec §5)", () => {
     });
   });
 
+  it('carries a dedicated workspace identity without inheriting a shared or detected endpoint', () => {
+    const workspace = { ...QWEN_DEFAULTS, connection: 'bailian-workspace' as const, workspaceId: 'llm-team123' };
+    expect(buildQwen(ctx('en', 'zh'), workspace, { ...SHARED, models: [{ id: 'cn' }] })).toMatchObject({
+      connection: 'bailian-workspace', workspaceId: 'llm-team123', endpoint: null,
+    });
+    expect(buildQwen(ctx('en', 'zh'), { ...workspace, workspaceId: 'trial' }, SHARED)).toEqual({ refused: 'Enter a valid Bailian workspace ID before starting Qwen LiveTranslate.' });
+  });
+
   it('turns are manual under push-to-talk', () => {
     expect(buildQwen(ctx('zh', 'en', { turns: 'manual' }), QWEN_DEFAULTS, SHARED)).toMatchObject({ manual: true });
   });
@@ -77,6 +85,13 @@ describe("Qwen LiveTranslate's builder (spec §5)", () => {
     const once = { ...QWEN_DEFAULTS, voice: SPEAKER_CLONE_ONCE, participantVoice: SPEAKER_CLONE_ONCE };
     expect(buildQwen(ctx('zh', 'en'), once, SHARED)).toMatchObject({ voice: { kind: 'clone', frequency: 'once' } });
     expect(buildQwen(ctx('en', 'zh'), once, SHARED)).toMatchObject({ voice: { kind: 'clone', frequency: 'once' } });
+  });
+
+  it('routes a created Qwen LiveTranslate voice as a fixed profile without changing the translation model', () => {
+    const id = 'qwen-translate-vc-own-123';
+    expect(buildQwen(ctx('zh', 'en'), { ...QWEN_DEFAULTS, voice: id }, SHARED)).toMatchObject({
+      model: QWEN_MODEL, voice: { kind: 'fixed', id }, speech: true,
+    });
   });
 
   it('runs the default for a stored voice the list does not have, and never gives the other party my preset', () => {

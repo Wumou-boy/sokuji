@@ -228,7 +228,7 @@ function setupCaptionShare({
     presentWindow = new BrowserWindow({
       width: 1100,
       height: 700,
-      title: 'Sokuji',
+      title: 'AED Translator',
       backgroundColor: '#111111',
       autoHideMenuBar: true,
       webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },

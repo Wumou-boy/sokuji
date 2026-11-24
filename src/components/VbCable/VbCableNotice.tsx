@@ -31,7 +31,7 @@ function Notice({ title, showTitle, live, children }: { title: string; showTitle
  * VB-CABLE's state on Windows, in one place (spec 2026-10-17 §4): the offer
  * while it is missing (an install in the website's build, a link in the
  * Store's), the install's progress or failure, and the ready line after an
- * install Sokuji started. Nothing otherwise.
+ * install AED Translator started. Nothing otherwise.
  */
 const VbCableNotice: React.FC<VbCableNoticeProps> = ({ variant, onNotNow }) => {
   const { t } = useTranslation();

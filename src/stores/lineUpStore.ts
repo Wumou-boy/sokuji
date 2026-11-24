@@ -24,12 +24,13 @@ import { describeCause, reportWarning } from '../lib/diagnostics/report';
 import type { Selections } from '../lib/local-inference/selection/types';
 import { choiceInput } from '../lib/plan/choice';
 import { presentHosts } from '../lib/plan/present';
-import { selectionFromStored } from '../lib/session/storedSettings';
+import { providerIdFromStored, selectionFromStored } from '../lib/session/storedSettings';
 import { guardAstCrossStage } from '../services/providers/astGuard';
 import { persistSetting } from '../services/persistSetting';
 import { ServiceFactory } from '../services/ServiceFactory';
 import { useModelStore } from './modelStore';
 import { useProviderStore } from './providerStore';
+import { isElectron } from '../utils/environment';
 
 export const LINEUP_KEY = 'settings.lineup';
 /**
@@ -97,10 +98,13 @@ async function writeProvider(lineUp: LineUp): Promise<void> {
   if (host !== undefined) await persistSetting(PROVIDER_KEY, host);
 }
 
-/** The provider today's values name: the stored one when it is offered here, the default managed one for a retired managed id, else the first offered; null when none is offered. */
+/** Resolve the saved provider, with Qwen as the initial desktop choice when no provider was saved. */
 function providerFromToday(stored: unknown): string | null {
   // Only a provider that serves every stage by itself: the retired OpenAI Compatible's stored id is now a text model's.
   const offered = presentHosts().filter((p) => runsByItself(p.id));
+  if (isElectron() && providerIdFromStored(stored) === null && offered.some((p) => p.id === 'qwen_livetranslate')) {
+    return 'qwen_livetranslate';
+  }
   return selectionFromStored(stored, offered.map((p) => p.id), offered.find((p) => p.kind === 'managed')?.id ?? null)?.id ?? null;
 }
 

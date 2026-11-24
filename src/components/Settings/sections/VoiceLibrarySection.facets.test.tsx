@@ -49,7 +49,8 @@ import type { VoiceEntry } from './VoiceLibrarySection';
 // `VoicePicker.facetTranslation.test.tsx` instead, and
 // locales.consistency.test.ts is what pins that every facet value has a key
 // in every catalog.
-vi.mock('react-i18next', () => ({
+vi.mock('react-i18next', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
   useTranslation: () => ({ t: (_k: string, def?: string) => def ?? _k }),
 }));
 

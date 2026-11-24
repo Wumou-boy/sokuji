@@ -8,6 +8,9 @@ import { caps } from '../../lib/lineup/catalog';
 // The target itself is made where a notice's action is: the page reads it here.
 export { providerOfTarget, providerTarget } from '../../lib/view/providerTarget';
 
+/** Services users can configure in this edition's Accounts and keys page. */
+export const ACCOUNT_SERVICES = ['qwen_livetranslate', 'openai_compatible'] as const;
+
 /** The OpenAI services share one key, so one row; OpenAI's text models use it too. */
 export const OPENAI_IDS: readonly string[] = ['openai', 'openai_translate', 'openai_live', 'openai_text'];
 /** Gemini Live and Gemini's text models share one key, so one row. */

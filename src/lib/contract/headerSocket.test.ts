@@ -51,6 +51,12 @@ describe('the header seam (F14)', () => {
     expect(ruleFor('wss://speech.example.test:8443/ws', { set: { 'User-Agent': 'x' } })).toEqual({ host: 'speech.example.test:8443', path: '/', set: { 'User-Agent': 'x' }, remove: [] });
   });
 
+  it('can scope a credential-bearing upgrade rule to one exact realtime pathname', () => {
+    expect(ruleFor('wss://llm-team1.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime?model=m', { set: { Authorization: 'Bearer key' }, exactPath: true })).toEqual({
+      host: 'llm-team1.cn-beijing.maas.aliyuncs.com', path: '/api-ws/v1/realtime', set: { Authorization: 'Bearer key' }, remove: [], exactPath: true,
+    });
+  });
+
   it('installs the rule before it makes the socket, resolves with the socket once open, and clears the rule then', async () => {
     const h = seam();
     let socket: WebSocket | null = null;

@@ -39,8 +39,8 @@ export const qwenLiveTranslateProvider: Provider<QwenSettings, QwenCredentials, 
 
   credentials: qwenCredentials,
   check: checkQwen,
-  // Endpoint choice changes the host and readiness check; voice edits do not.
-  checkReads: ['connection'],
+  // Endpoint and workspace ID choose the authenticated host; voice edits do not.
+  checkReads: ['connection', 'workspaceId'],
 
   languages: qwenLanguages,
 

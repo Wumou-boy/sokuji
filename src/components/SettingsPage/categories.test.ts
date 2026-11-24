@@ -70,14 +70,11 @@ describe('the settings categories', () => {
     expect(CATEGORIES.map((c) => c.id)).toEqual(['lineup', 'words', 'accounts', 'models', 'audio', 'display', 'history', 'general']);
   });
 
-  // The registry registers the catalog as it loads; this module may load before it, so it reads the catalog only when
-  // it searches.
   it('the settings categories load before any catalog is registered', async () => {
     vi.resetModules();
     const fresh = await import('./categories');
     expect(fresh.CATEGORIES.map((c) => c.id)).toContain('accounts');
-    (await import('../../lib/lineup/catalog.testing')).registerReleasedCatalog();
-    expect(fresh.filterCategories('Soniox', (k) => (k === 'providers.soniox.name' ? 'Soniox' : '')).map((c) => c.id)).toEqual(['accounts']);
+    expect(fresh.filterCategories('Qwen', (k) => (k === 'providers.qwen_livetranslate.name' ? 'Qwen LiveTranslate' : '')).map((c) => c.id)).toEqual(['accounts']);
   });
 });
 

@@ -27,6 +27,10 @@
 //   sokuji-audio-host.exe --target pid:1234
 //       Writes raw PCM to stdout until killed. Format is fixed at
 //       24000 Hz, 1 channel, signed 16-bit little-endian.
+//
+//   sokuji-audio-host.exe --target system
+//       Captures the global mix on the current default multimedia render
+//       endpoint using shared-mode WASAPI loopback, with the same PCM protocol.
 //       Writes one JSON object per line to stderr:
 //         {"event":"format","sampleRate":24000,"channels":1,"encoding":"s16le"}
 //         {"event":"error","code":"..."}
@@ -602,37 +606,13 @@ static BOOL WINAPI OnConsoleCtrl(DWORD) {
     return TRUE;
 }
 
-static int Capture(DWORD pid) {
-    // Keep a handle so we can tell "the app quit" from "the app went quiet".
-    HANDLE target = OpenProcess(SYNCHRONIZE, FALSE, pid);
-
-    AUDIOCLIENT_ACTIVATION_PARAMS params{};
-    params.ActivationType = AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK;
-    params.ProcessLoopbackParams.TargetProcessId = pid;
-    // Browsers and Electron apps render audio from a child process, so the whole
-    // tree must be included or a Chrome tab's audio is missed entirely.
-    params.ProcessLoopbackParams.ProcessLoopbackMode = PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE;
-
-    PROPVARIANT pv{};
-    pv.vt = VT_BLOB;
-    pv.blob.cbSize = sizeof(params);
-    pv.blob.pBlobData = reinterpret_cast<BYTE*>(&params);
-
-    ActivateHandler handler;
-    IActivateAudioInterfaceAsyncOperation* op = nullptr;
-    HRESULT hr = ActivateAudioInterfaceAsync(VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK,
-                                             __uuidof(IAudioClient), &pv, &handler, &op);
-    if (FAILED(hr)) { EmitError("activation_failed"); return 1; }
-
-    if (WaitForSingleObject(handler.done, 5000) != WAIT_OBJECT_0) {
-        EmitError("activation_failed");
-        return 1;
-    }
-    if (FAILED(handler.activateHr) || !handler.client) {
-        EmitError("activation_failed");
-        return 1;
-    }
-
+static int CaptureClient(IAudioClient* client, HANDLE target) {
+    HANDLE ready = nullptr;
+    IAudioCaptureClient* cap = nullptr;
+    bool started = false;
+    int rc = 1;
+    static const char kZeros[8192] = {};
+    const UINT32 blockAlign = kChannels * kBits / 8;
     WAVEFORMATEX fmt{};
     fmt.wFormatTag = WAVE_FORMAT_PCM;
     fmt.nChannels = kChannels;
@@ -641,28 +621,24 @@ static int Capture(DWORD pid) {
     fmt.nBlockAlign = fmt.nChannels * fmt.wBitsPerSample / 8;
     fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
 
-    hr = handler.client->Initialize(
+    HRESULT hr = client->Initialize(
         AUDCLNT_SHAREMODE_SHARED,
         AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM,
         0, 0, &fmt, nullptr);
-    if (FAILED(hr)) { EmitError("initialize_failed"); return 1; }
+    if (FAILED(hr)) { EmitError("initialize_failed"); goto cleanup; }
 
-    HANDLE ready = CreateEventW(nullptr, FALSE, FALSE, nullptr);
-    if (FAILED(handler.client->SetEventHandle(ready))) { EmitError("initialize_failed"); return 1; }
+    ready = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    if (!ready || FAILED(client->SetEventHandle(ready))) { EmitError("initialize_failed"); goto cleanup; }
 
-    IAudioCaptureClient* cap = nullptr;
-    if (FAILED(handler.client->GetService(__uuidof(IAudioCaptureClient), (void**)&cap))) {
-        EmitError("initialize_failed");
-        return 1;
+    if (FAILED(client->GetService(__uuidof(IAudioCaptureClient), (void**)&cap))) {
+        EmitError("initialize_failed"); goto cleanup;
     }
 
-    if (FAILED(handler.client->Start())) { EmitError("initialize_failed"); return 1; }
+    if (FAILED(client->Start())) { EmitError("initialize_failed"); goto cleanup; }
+    started = true;
+    rc = 0;
 
     EmitEvent("{\"event\":\"format\",\"sampleRate\":24000,\"channels\":1,\"encoding\":\"s16le\"}");
-
-    static const char kZeros[8192] = {};
-    const UINT32 blockAlign = fmt.nBlockAlign;
-    int rc = 0;
 
     while (!g_stop) {
         if (target && WaitForSingleObject(target, 0) == WAIT_OBJECT_0) {
@@ -677,7 +653,15 @@ static int Capture(DWORD pid) {
             UINT32 frames = 0;
             DWORD flags = 0;
             hr = cap->GetBuffer(&data, &frames, &flags, nullptr, nullptr);
-            if (FAILED(hr) || hr == AUDCLNT_S_BUFFER_EMPTY || frames == 0) {
+            if (FAILED(hr)) {
+                // Endpoint changes and driver failures invalidate the stream;
+                // report loss so the caller can release it and retry cleanly.
+                EmitError("initialize_failed");
+                rc = 1;
+                g_stop = TRUE;
+                break;
+            }
+            if (hr == AUDCLNT_S_BUFFER_EMPTY || frames == 0) {
                 if (SUCCEEDED(hr) && frames == 0) cap->ReleaseBuffer(0);
                 break;
             }
@@ -704,10 +688,69 @@ static int Capture(DWORD pid) {
         }
     }
 
-    handler.client->Stop();
-    cap->Release();
-    handler.client->Release();
-    if (target) CloseHandle(target);
+cleanup:
+    if (started) client->Stop();
+    if (cap) cap->Release();
+    if (ready) CloseHandle(ready);
+    return rc;
+}
+
+static int Capture(DWORD pid) {
+    // Keep a handle so we can tell "the app quit" from "the app went quiet".
+    HANDLE target = OpenProcess(SYNCHRONIZE, FALSE, pid);
+
+    AUDIOCLIENT_ACTIVATION_PARAMS params{};
+    params.ActivationType = AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK;
+    params.ProcessLoopbackParams.TargetProcessId = pid;
+    // Browsers and Electron apps render audio from a child process, so the whole
+    // tree must be included or a Chrome tab's audio is missed entirely.
+    params.ProcessLoopbackParams.ProcessLoopbackMode = PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE;
+
+    PROPVARIANT pv{};
+    pv.vt = VT_BLOB;
+    pv.blob.cbSize = sizeof(params);
+    pv.blob.pBlobData = reinterpret_cast<BYTE*>(&params);
+
+    ActivateHandler handler;
+    IActivateAudioInterfaceAsyncOperation* op = nullptr;
+    HRESULT hr = ActivateAudioInterfaceAsync(VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK,
+                                             __uuidof(IAudioClient), &pv, &handler, &op);
+    if (FAILED(hr)) { CloseHandle(target); EmitError("activation_failed"); return 1; }
+
+    int rc = 1;
+    if (WaitForSingleObject(handler.done, 5000) != WAIT_OBJECT_0 ||
+        FAILED(handler.activateHr) || !handler.client) {
+        EmitError("activation_failed");
+    } else {
+        rc = CaptureClient(handler.client, target);
+    }
+
+    if (op) op->Release();
+    if (handler.client) handler.client->Release();
+    if (handler.done) CloseHandle(handler.done);
+    CloseHandle(target);
+    return rc;
+}
+
+static int CaptureSystem() {
+    IMMDeviceEnumerator* en = nullptr;
+    IMMDevice* endpoint = nullptr;
+    IAudioClient* client = nullptr;
+    HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                                  __uuidof(IMMDeviceEnumerator), (void**)&en);
+    if (SUCCEEDED(hr)) hr = en->GetDefaultAudioEndpoint(eRender, eMultimedia, &endpoint);
+    if (SUCCEEDED(hr)) hr = endpoint->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, (void**)&client);
+
+    int rc = 1;
+    if (FAILED(hr) || !client) {
+        EmitError("activation_failed");
+    } else {
+        rc = CaptureClient(client, nullptr);
+    }
+
+    if (client) client->Release();
+    if (endpoint) endpoint->Release();
+    if (en) en->Release();
     return rc;
 }
 
@@ -718,7 +761,7 @@ static void Usage() {
         "usage:\n"
         "  sokuji-audio-host.exe --list\n"
         "  sokuji-audio-host.exe --devices\n"
-        "  sokuji-audio-host.exe --target pid:<processId>\n");
+        "  sokuji-audio-host.exe --target pid:<processId>|system\n");
 }
 
 int wmain(int argc, wchar_t** argv) {
@@ -731,19 +774,20 @@ int wmain(int argc, wchar_t** argv) {
     if (FAILED(hr)) { EmitError("activation_failed"); return 1; }
 
     int rc = 2;
+    g_stop = FALSE;
     if (wcscmp(argv[1], L"--list") == 0) {
         rc = ListSources();
     } else if (wcscmp(argv[1], L"--devices") == 0) {
         rc = ListDevices();
     } else if (wcscmp(argv[1], L"--target") == 0 && argc >= 3) {
-        if (wcsncmp(argv[2], L"pid:", 4) != 0) { EmitError("bad_target"); rc = 2; }
+        SetConsoleCtrlHandler(OnConsoleCtrl, TRUE);
+        if (wcscmp(argv[2], L"system") == 0) {
+            rc = CaptureSystem();
+        } else if (wcsncmp(argv[2], L"pid:", 4) != 0) { EmitError("bad_target"); rc = 2; }
         else {
             DWORD pid = static_cast<DWORD>(_wtoi(argv[2] + 4));
             if (pid == 0) { EmitError("bad_target"); rc = 2; }
-            else {
-                SetConsoleCtrlHandler(OnConsoleCtrl, TRUE);
-                rc = Capture(pid);
-            }
+            else rc = Capture(pid);
         }
     } else {
         Usage();

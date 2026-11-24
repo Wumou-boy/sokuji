@@ -3,14 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useFloating, FloatingFocusManager } from '@floating-ui/react';
 import { Plus, Mic, Square, X } from 'lucide-react';
 import type { VoiceLibraryCapability } from '../../../types/VoiceLibrary';
+import useAudioStore from '../../../stores/audioStore';
+import { pickDefaultInputDevice } from '../../../lib/audio/deviceChoice';
+import { isLoopbackInput, isVirtualMic } from '../../../utils/audioDevices';
 import SonioxCloneReviewStep, { type VoiceReviewLanguage } from './SonioxCloneReviewStep';
 import './VoiceCreateModal.scss';
 
-/** The post-acquisition confirmation phase, when the provider has one. Passing
- *  it non-null switches this dialog's body to the review step and hands every
- *  dismiss path to whoever staged the clip. Soniox cloning is the only
- *  provider that stages one; for everyone else a successful import finishes
- *  the flow, and this stays undefined. */
+/** A recorded or imported clip staged for confirmation by its provider. */
 export interface VoiceCreateReview {
   /** Bumped by the caller for each newly staged clip, and used as the review
    *  step's React key — a fresh mount reseeds its name field empty and its
@@ -23,13 +22,15 @@ export interface VoiceCreateReview {
   error: string | null;
   busy: boolean;
   notice?: string;
+  /** Optional caller-owned public HTTPS reference audio URL for APIs that require a public source URL. */
+  referenceUrl?: { value: string; onChange(value: string): void; label: string; placeholder: string };
   showName?: boolean;
   /** The clip's language, for a provider that must be told it (Palabra). */
   language?: VoiceReviewLanguage;
-  onConfirm: (name: string) => void;
-  /** Discard the staged clip. Reached from Confirm's sibling Cancel, and —
-   *  because the clip is the caller's, not this dialog's — from Escape, the
-   *  backdrop and the × too. */
+  onConfirm: (name: string, referenceUrl?: string) => void;
+  /** Keep this draft until the user confirms it or presses the header's close button. */
+  explicitClose?: boolean;
+  /** Discard the staged clip. */
   onClose: () => void;
 }
 
@@ -49,6 +50,10 @@ export interface VoiceCreateModalProps {
   /** Provider-specific footnote (e.g. Soniox's preview spends the user's own
    *  TTS quota). Provider-agnostic component, provider-specific copy. */
   note?: React.ReactNode;
+  /** Provider supplied instructions shown before and during microphone capture. */
+  recordingPrompt?: { title: string; text: string };
+  /** Capture from the microphone selected for the live meeting instead of the OS default. */
+  useMeetingMicrophone?: boolean;
   /** Non-null once a clip is staged for confirmation — see
    *  {@link VoiceCreateReview}. The caller must also keep `isOpen` true while
    *  it is set; this component does not force itself open. */
@@ -72,9 +77,17 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
   onRecord,
   capability,
   note,
+  recordingPrompt,
+  useMeetingMicrophone = false,
   review,
 }) => {
   const { t } = useTranslation();
+  const meetingMicrophone = useAudioStore((state) => state.selectedInputDevice);
+  const listedMicrophones = useAudioStore((state) => state.audioInputDevices);
+  const physicalMicrophones = listedMicrophones.filter((device) => !device.isVirtual && !isVirtualMic(device) && !isLoopbackInput(device));
+  const recordingDevice = meetingMicrophone && physicalMicrophones.some((device) => device.deviceId === meetingMicrophone.deviceId)
+    ? meetingMicrophone
+    : pickDefaultInputDevice(physicalMicrophones);
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordSecondsLeft, setRecordSecondsLeft] = useState<number | null>(null);
@@ -89,6 +102,7 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
   // at all. `SonioxCloneReviewStep` already had this exact seam (`error`
   // rendered as `.voice-capture-error` inside the dialog); this matches it.
   const [error, setError] = useState<string | null>(null);
+  const [inputLevel, setInputLevel] = useState(0);
   const transcriptInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recRef = useRef<{
@@ -96,6 +110,7 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
     stream: MediaStream;
     source: MediaStreamAudioSourceNode;
     processor: ScriptProcessorNode;
+    analyser: AnalyserNode;
     chunks: Float32Array[];
   } | null>(null);
   const recTimerRef = useRef<number | null>(null);
@@ -139,10 +154,12 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
     if (!rec) return;
     recRef.current = null;
     rec.processor.disconnect();
+    rec.analyser.disconnect();
     rec.source.disconnect();
     rec.stream.getTracks().forEach((track) => track.stop());
     void rec.ctx.close();
     setIsRecording(false);
+    setInputLevel(0);
   }, []);
   useEffect(() => releaseCapture, [releaseCapture]);
 
@@ -161,16 +178,9 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
     onClose();
   }, [releaseCapture, onClose]);
 
-  // While the review phase is up, the thing on screen is the caller's staged
-  // clip, so every way out of the dialog has to discard it — Escape, the
-  // backdrop and the × included, not just the Cancel beside Confirm. Routing
-  // them through `close()` instead would drop `creating` while the caller
-  // still held a clip, leaving the dialog up with no way to dismiss it.
-  //
-  // Read from the current render's props, never from a closure captured
-  // earlier: the clip is staged DURING `onImport`, so anything that latched
-  // `review` before that await is already stale.
+  // The provider owns the staged clip and is responsible for discarding it.
   const dismiss = review ? review.onClose : close;
+  const explicitClose = review?.explicitClose === true;
 
   const canUpload = capability.importModes.includes('upload');
   const canRecord = capability.importModes.includes('record');
@@ -241,7 +251,7 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
 
   const startRecording = useCallback(async () => {
     if (!onRecord || transcriptMissing) return;
-    const startFailed = t('voiceLibrary.recordStartFailed', 'Could not start recording. Check that a microphone is connected and that Sokuji may use it.');
+    const startFailed = t('voiceLibrary.recordStartFailed', 'Could not start recording. Check that a microphone is connected and that AED Translator may use it.');
     // No microphone API at all (an insecure page, an old browser) is the same
     // failure to the user as a refused one.
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -256,6 +266,10 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
     // release it: otherwise the OS keeps showing the microphone in use.
     let stream: MediaStream | undefined;
     let ctx: AudioContext | undefined;
+    if (useMeetingMicrophone && !recordingDevice?.deviceId) {
+      setError(t('voiceLibrary.recordNoSelectedMic', 'Select a microphone in audio settings before recording.'));
+      return;
+    }
     try {
       // Voice-cloning reference audio must be captured RAW: the cloning
       // model mimics everything in the clip, so browser echo-cancellation /
@@ -265,6 +279,7 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
       // Mono is enough for a voice reference and keeps the encoded clip small.
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
+          ...(useMeetingMicrophone && recordingDevice ? { deviceId: { exact: recordingDevice.deviceId } } : {}),
           echoCancellation: false,
           noiseSuppression: false,
           autoGainControl: false,
@@ -276,16 +291,35 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
         return;
       }
       ctx = new AudioContext();
+      if (ctx.state === 'suspended') await ctx.resume();
+      if (generation !== recGenerationRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        await ctx.close();
+        return;
+      }
       const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
       const processor = ctx.createScriptProcessor(4096, 1, 1);
       const chunks: Float32Array[] = [];
       processor.onaudioprocess = (e) => {
         chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
       };
       source.connect(processor);
+      source.connect(analyser);
       processor.connect(ctx.destination);
-      recRef.current = { ctx, stream, source, processor, chunks };
+      recRef.current = { ctx, stream, source, processor, analyser, chunks };
       setIsRecording(true);
+      const levelData = new Float32Array(analyser.fftSize);
+      const updateLevel = () => {
+        if (recRef.current?.analyser !== analyser) return;
+        analyser.getFloatTimeDomainData(levelData);
+        let sum = 0;
+        for (const sample of levelData) sum += sample * sample;
+        setInputLevel(Math.min(1, Math.sqrt(sum / levelData.length) * 8));
+        window.requestAnimationFrame(updateLevel);
+      };
+      window.requestAnimationFrame(updateLevel);
       // Countdown to the model's clip limit; auto-stop at 0 so the capture
       // can never exceed what the model can actually use.
       const limit = capability.maxClipSeconds ?? 20;
@@ -303,12 +337,10 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
       // microphone left the Record button as it was, as if nothing happened.
       // An attempt the dialog was closed on says nothing: close() already
       // cleared the error, and this one would show on the next open.
-      if (generation === recGenerationRef.current) {
-        setError(startFailed);
-      }
+      if (generation === recGenerationRef.current) setError(startFailed);
       console.warn('Recording failed to start:', err);
     }
-  }, [onRecord, transcriptMissing, capability.maxClipSeconds, t]);
+  }, [onRecord, transcriptMissing, capability.maxClipSeconds, t, useMeetingMicrophone, recordingDevice]);
 
   const stopRecording = useCallback(async () => {
     clearRecTimer();
@@ -317,17 +349,36 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
     recRef.current = null;
     setIsRecording(false);
     if (!rec) return;
-    const { ctx, stream, source, processor, chunks } = rec;
+    const { ctx, stream, source, processor, analyser, chunks } = rec;
     processor.disconnect();
+    analyser.disconnect();
     source.disconnect();
     stream.getTracks().forEach((track) => track.stop());
     const sampleRate = ctx.sampleRate;
     await ctx.close();
-    const total = chunks.reduce((n, c) => n + c.length, 0);
-    if (!onRecord || total === 0) return;
+    const captured = chunks.reduce((n, c) => n + c.length, 0);
+    // The interval timer can stop between ScriptProcessor callbacks; trim the
+    // final block to the provider's exact clip ceiling before passing it on.
+    const total = Math.min(captured, Math.floor((capability.maxClipSeconds ?? 20) * sampleRate));
+    if (!onRecord) return;
+    if (total === 0) {
+      setError(t('voiceLibrary.recordSilent', 'No microphone audio was received. Check the selected microphone and try again.'));
+      return;
+    }
     const clip = new Float32Array(total);
     let offset = 0;
-    for (const c of chunks) { clip.set(c, offset); offset += c.length; }
+    for (const c of chunks) {
+      const take = Math.min(c.length, total - offset);
+      clip.set(c.subarray(0, take), offset);
+      offset += take;
+      if (offset === total) break;
+    }
+    let peak = 0;
+    for (const sample of clip) peak = Math.max(peak, Math.abs(sample));
+    if (peak < 0.001) {
+      setError(t('voiceLibrary.recordSilent', 'No microphone audio was received. Check the selected microphone and try again.'));
+      return;
+    }
     try {
       // Same call-signature rule as handleFiles: only widen to the 3-arg form
       // when the capability requires a transcript.
@@ -350,7 +401,7 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
       setError(err instanceof Error ? err.message : String(err));
       console.warn('Recording handler failed:', err);
     }
-  }, [onRecord, capability.transcriptRequired, transcript, close]);
+  }, [onRecord, capability.transcriptRequired, transcript, close, t]);
   // Keep the auto-stop ref pointing at the latest committed closure — written
   // in an effect, not the render body (renders can be replayed/discarded,
   // e.g. under an <Activity> boundary).
@@ -373,11 +424,11 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
   // Close on Escape (ModelImportModal does the same, on `window` — nothing
   // here goes through floating-ui).
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || explicitClose) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') dismiss(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, dismiss]);
+  }, [isOpen, explicitClose, dismiss]);
 
   // No reference element: this dialog is centred over the app, anchored to
   // nothing. `useFloating` is here only for its open-state context, which is
@@ -388,7 +439,7 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="voice-modal-overlay" onClick={dismiss}>
+    <div className="voice-modal-overlay" onClick={explicitClose ? undefined : dismiss}>
       {/* Spec §7: focus moves in on open and returns to the invoking control
           on close. `aria-modal="true"` below is a promise to a screen reader;
           this is what makes part of it true.
@@ -427,6 +478,7 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
             type="button"
             className="voice-modal__x"
             onClick={dismiss}
+            disabled={explicitClose && review?.busy}
             aria-label={t('common.close', 'Close')}
           >
             <X size={17} />
@@ -445,13 +497,20 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
               error={review.error}
               busy={review.busy}
               notice={review.notice}
+              referenceUrl={review.referenceUrl}
               showName={review.showName}
               language={review.language}
               onConfirm={review.onConfirm}
-              onClose={review.onClose}
+              onClose={explicitClose ? undefined : review.onClose}
             />
           ) : (
             <>
+            {recordingPrompt && (
+              <section className="voice-create-modal__recording-prompt" aria-live="polite">
+                <strong>{recordingPrompt.title}</strong>
+                <span>{recordingPrompt.text}</span>
+              </section>
+            )}
             {capability.transcriptRequired && (
               <div className="voice-create-modal__transcript-field">
                 <label htmlFor={transcriptInputId} className="voice-create-modal__transcript-label">
@@ -484,6 +543,14 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
             )}
 
             {canRecord && (
+              <>
+              {useMeetingMicrophone && (
+                <div className="voice-create-modal__mic-source" role="status">
+                  {recordingDevice
+                    ? t('voiceLibrary.recordingMicrophone', 'Microphone: {{name}}', { name: recordingDevice.label })
+                    : t('voiceLibrary.recordNoSelectedMic', 'Select a microphone in audio settings before recording.')}
+                </div>
+              )}
               <button
                 type="button"
                 className="voice-create-modal__import-btn"
@@ -499,6 +566,12 @@ const VoiceCreateModal: React.FC<VoiceCreateModalProps> = ({
                   ? `${t('voiceLibrary.stopRecording', 'Stop recording')}${recordSecondsLeft !== null ? ` (${recordSecondsLeft}s)` : ''}`
                   : t('voiceLibrary.recordVoice', 'Record voice…')}
               </button>
+              {isRecording && (
+                <div className="voice-create-modal__input-level" role="meter" aria-label={t('voiceLibrary.microphoneLevel', 'Microphone input level')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(inputLevel * 100)}>
+                  <span style={{ transform: `scaleX(${inputLevel})` }} />
+                </div>
+              )}
+              </>
             )}
 
             {canUpload && (

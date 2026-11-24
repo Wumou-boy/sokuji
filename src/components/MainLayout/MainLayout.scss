@@ -98,6 +98,28 @@
       width: 100%;
     }
   }
+
+  .main-layout__workspace-modes {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px 0;
+    background: vars.$bg-page;
+
+    button {
+      border: 1px solid vars.$border-default;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 12px;
+      color: vars.$text-secondary;
+      background: vars.$bg-surface;
+      cursor: pointer;
+    }
+
+    button[aria-pressed='true'] {
+      border-bottom-color: vars.$bg-surface;
+      color: vars.$text-primary;
+      font-weight: 600;
+    }
+  }
   
   .main-panel-container {
     flex: 1;

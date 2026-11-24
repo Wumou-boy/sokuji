@@ -15,8 +15,9 @@ const DISPATCH_TIMEOUT_MS = 40_000;
 const DEFAULT_CLIENT_TIMEOUT_MS = 45_000;
 const MAX_CLIENT_TIMEOUT_MS = 60_000;
 const COMMANDS = new Set([
-  'status', 'session.start', 'session.stop', 'logs.enable', 'logs.list', 'captions.list',
-  'provider.configure-qwen-beijing', 'credentials.status', 'notes.check',
+  'status', 'view.set-mode', 'audio.inputs', 'audio.system-check', 'session.start', 'session.stop', 'logs.enable', 'logs.list', 'captions.list',
+  'provider.configure-qwen-beijing', 'provider.configure-qwen-workspace', 'provider.configure-qwen-defaults', 'credentials.status', 'notes.check',
+  'voice.benchmark', 'face-to-face.start', 'face-to-face.stop', 'face-to-face.replay',
 ]);
 
 function isPlainObject(value) {
@@ -33,9 +34,31 @@ function ownKeysOnly(value, allowed) {
   return isPlainObject(value) && Object.keys(value).every((key) => allowed.includes(key));
 }
 
+function normalizeWorkspaceId(value) {
+  if (typeof value !== 'string') return null;
+  const id = value.trim().toLowerCase();
+  return /^llm-[a-z0-9]{1,59}$/.test(id) ? id : null;
+}
+
+function isWorkspaceKey(value) {
+  return typeof value === 'string' && /^(?:sk|st)-[A-Za-z0-9._/+=-]{12,4000}$/.test(value);
+}
+
 function normalizeArgs(command, args) {
   if (args === undefined) args = {};
   if (!isPlainObject(args)) return { error: failure('BAD_ARGS', 'Command arguments must be an object.') };
+  if (command === 'voice.benchmark') {
+    if (!ownKeysOnly(args, ['round']) || !Number.isInteger(args.round) || args.round < 1 || args.round > 9) {
+      return { error: failure('BAD_ARGS', 'Choose a benchmark round from 1 to 9.') };
+    }
+    return { args: { round: args.round } };
+  }
+  if (command === 'view.set-mode') {
+    if (!ownKeysOnly(args, ['mode']) || !['meeting', 'face-to-face'].includes(args.mode)) {
+      return { error: failure('BAD_ARGS', 'Choose meeting or face-to-face.') };
+    }
+    return { args: { mode: args.mode } };
+  }
   if (command === 'notes.check') {
     if (!ownKeysOnly(args, ['service']) || !['bailian_notes', 'compatible_notes'].includes(args.service)) {
       return { error: failure('BAD_ARGS', 'Choose Bailian or the configured compatible notes service.') };
@@ -47,6 +70,14 @@ function normalizeArgs(command, args) {
       return { error: failure('BAD_ARGS', 'Supply a valid Bailian API key on standard input.') };
     }
     return { args: { apiKey: args.apiKey } };
+  }
+
+  if (command === 'provider.configure-qwen-workspace') {
+    const workspaceId = normalizeWorkspaceId(args.workspaceId);
+    if (!ownKeysOnly(args, ['apiKey', 'workspaceId']) || !isWorkspaceKey(args.apiKey) || !workspaceId) {
+      return { error: failure('BAD_ARGS', 'Supply the Beijing workspace ID and its Bailian API key on standard input.') };
+    }
+    return { args: { apiKey: args.apiKey, workspaceId } };
   }
 
   if (command === 'logs.enable') {
@@ -345,4 +376,4 @@ async function agentControlCommunicate({ profileDir, command, args = {}, timeout
   });
 }
 
-module.exports = { startAgentControl, agentControlCommunicate };
+module.exports = { startAgentControl, agentControlCommunicate, normalizeWorkspaceId, isWorkspaceKey };

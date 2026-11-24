@@ -23,7 +23,7 @@ const WarningModal: React.FC<WarningModalProps> = ({ isOpen, onClose, type, note
   // packaged build is "Sokuji", but `npm run dev` runs Electron's own bundle,
   // so telling a developer to look for "Sokuji" sends them hunting for an entry
   // that is not there.
-  const [tccName, setTccName] = useState<string>('Sokuji');
+  const [tccName, setTccName] = useState<string>('AED Translator');
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
@@ -55,7 +55,7 @@ const WarningModal: React.FC<WarningModalProps> = ({ isOpen, onClose, type, note
           title: t('audioPanel.loopbackMicNotice', 'Loopback Input Notice'),
           titleText: t('audioPanel.loopbackMicWarningTitle', 'This input re-captures what this computer is playing.'),
           paragraphs: [
-            t('audioPanel.loopbackMicWarningText1', 'Loopback inputs like "Stereo Mix" or a "Monitor of ..." device record the system\'s own audio output. During a session that includes Sokuji\'s translated speech, Sokuji would hear and translate itself in a loop.'),
+            t('audioPanel.loopbackMicWarningText1', 'Loopback inputs like "Stereo Mix" or a "Monitor of ..." device record the system\'s own audio output. During a session that includes AED Translator\'s translated speech, AED Translator would hear and translate itself in a loop.'),
             t('audioPanel.loopbackMicWarningText2', 'The device stays selected in case this routing is intentional, but for normal use please pick a physical microphone instead.')
           ]
         };

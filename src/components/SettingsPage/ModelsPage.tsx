@@ -1,14 +1,9 @@
 // src/components/SettingsPage/ModelsPage.tsx
 //
-// "Models and storage" as the mock draws it (v18; the owner chose the mock, 2026-11-15): every model the
-// "This device" service can use for the current languages, downloaded or not, as the model library's cards — Download
-// and Import side by side, In use, the progress, Delete (B-20; the rest folded under "other languages"); the helper
-// models (Smart Turn, the punctuation models, the
-// Japanese readings dictionary); the imported voices; on the desktop, the on-device engine earlier versions
-// downloaded (B-19), with what it takes and Remove; and a summary line with Clear all.
+// The internal catalog covers Chinese, Japanese, and English. Already downloaded
+// models remain manageable so an upgrade keeps local storage and selections usable.
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import {
   useModelDownloads, useModelStatuses, useDownloadErrors, useStorageUsedMb, useWebGPUAvailable, useDeviceFeatures, useModelStore,
 } from '../../stores/modelStore';
@@ -20,7 +15,6 @@ import { useProviderStore } from '../../stores/providerStore';
 import { stageProviderIn, storedLocalStages, useLineUpStore, useStoredLocalStages } from '../../stores/lineUpStore';
 import { RUN_STAGES } from '../../lib/lineup/types';
 import { MODEL_MANIFEST, deviceReady, getManifestEntry, type ModelManifestEntry } from '../../lib/local-inference/modelManifest';
-import { wasmCandidates } from '../../lib/local-inference/selection/candidates.wasm';
 import { resolveWasmDirection } from '../../lib/local-inference/selection/resolveWithStages';
 import { directionKey, splitDirection, type DirectionResult, type Stage } from '../../lib/local-inference/selection/types';
 import { formatBytes } from '../../lib/local-inference/formatBytes';
@@ -45,6 +39,17 @@ const TAGS: Record<Stage, [string, string]> = {
   translation: ['models.page.tag.translation', 'Translation'],
   tts: ['models.page.tag.tts', 'Speech'],
 };
+
+const LAPTOP_CPU_MODELS = new Set([
+  'sensevoice-int8',
+  'opus-mt-en-zh', 'opus-mt-zh-en', 'opus-mt-en-jap', 'opus-mt-jap-en',
+  'piper-en-lessac-low', 'piper-zh-huayan-medium', 'piper-plus-css10-ja-6lang',
+]);
+const LAPTOP_WEBGPU_MODELS = new Set(['hy-mt15-1.8b-translation']);
+const isCatalogued = (id: string) => LAPTOP_CPU_MODELS.has(id) || LAPTOP_WEBGPU_MODELS.has(id);
+// A small PGX-class GPU shortlist from this app's active WebGPU manifest. These
+// stay in their own group so installed cards do not appear twice.
+const PGX_WEBGPU_MODELS = new Set(['qwen3-asr-1.7b-webgpu', 'translategemma-4b-translation']);
 
 /** One row of the list: a tag, the name and a line about it, then its state and its one action. */
 function ModelRow({ tag, name, meta, state, children, confirm }: {
@@ -103,7 +108,6 @@ export function ModelsPage({ locked, settings, pair }: { locked: boolean; settin
   const runsHere = useLineUpStore((s) => RUN_STAGES.some((stage) => stageProviderIn(s, stage) === 'local_inference'));
 
   const [asking, setAsking] = useState<string | null>(null);
-  const [open, setOpen] = useState<Partial<Record<Stage, boolean>>>({});
   const [importTarget, setImportTarget] = useState<ModelManifestEntry | null>(null);
   const [dictStored, setDictStored] = useState<boolean | null>(null);
   const [imported, setImported] = useState<voiceStorage.StoredVoice[]>([]);
@@ -131,39 +135,21 @@ export function ModelsPage({ locked, settings, pair }: { locked: boolean; settin
   }, [desktop]);
   const engineShown = desktop && engineBytes !== null && engineBytes > 0;
 
-  // The models this pair can use, both ways, on every stage — and every one already on disk.
+  // Show the small company catalog plus installed models, including older or
+  // other-language downloads that may still occupy storage or be in use.
   const directions = useMemo(() => [directionKey(pair.source, pair.target), directionKey(pair.target, pair.source)], [pair.source, pair.target]);
   const stageGroups = useMemo(() => {
-    const source = wasmCandidates({ modelStatuses: statuses as never, webgpuAvailable: webgpu, deviceFeatures: features, withCloud: false });
-    const usable = new Set<string>();
-    for (const dir of directions) {
-      const [src, tgt] = splitDirection(dir);
-      for (const stage of STAGES) for (const c of source.pool(stage, src, tgt)) usable.add(c.id);
-    }
-    // By stage; within one, what is on disk, then what this computer can run (the recommended first), then the rest.
-    const rank = (m: ModelManifestEntry) => (statuses[m.id] === 'downloaded' ? 0 : deviceReady(m, webgpu) ? 1 : 2);
-    const order = (a: ModelManifestEntry, b: ModelManifestEntry) =>
-      STAGES.indexOf(STAGE_OF[a.type]) - STAGES.indexOf(STAGE_OF[b.type])
-      || rank(a) - rank(b)
-      || Number(Boolean(b.recommended)) - Number(Boolean(a.recommended))
-      || (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
-    const all = MODEL_MANIFEST.filter((m) => !m.isCloudModel && SESSION_TYPES.has(m.type)).sort(order);
     const onDisk = (m: ModelManifestEntry) => statuses[m.id] === 'downloaded' || Boolean(downloads[m.id]);
-    const isMine = (m: ModelManifestEntry) => usable.has(m.id) || onDisk(m);
-    // One small group per stage (owner, 2026-11-15): what is on disk and the recommended ones this computer can
-    // run; when that is nothing, the best one it can run stands in. The rest, other languages' last, wait in a fold.
-    return STAGES.map((stage) => {
-      const mine = all.filter((m) => STAGE_OF[m.type] === stage && isMine(m));
-      let shown = mine.filter((m) => onDisk(m) || (m.recommended && deviceReady(m, webgpu)));
-      if (shown.length === 0) shown = mine.filter((m) => deviceReady(m, webgpu)).slice(0, 1);
-      return {
-        stage,
-        shown,
-        rest: mine.filter((m) => !shown.includes(m)),
-        others: all.filter((m) => STAGE_OF[m.type] === stage && !isMine(m)),
-      };
-    });
-  }, [statuses, downloads, webgpu, features, directions]);
+    const rank = (m: ModelManifestEntry) => onDisk(m) ? 0 : deviceReady(m, webgpu) ? 1 : 2;
+    const order = (a: ModelManifestEntry, b: ModelManifestEntry) =>
+      rank(a) - rank(b) || Number(Boolean(b.recommended)) - Number(Boolean(a.recommended));
+    const all = MODEL_MANIFEST.filter((m) => !m.isCloudModel && SESSION_TYPES.has(m.type)).sort(order);
+    return STAGES.map((stage) => ({
+      stage,
+      shown: all.filter((m) => STAGE_OF[m.type] === stage && isCatalogued(m.id)),
+      installed: all.filter((m) => STAGE_OF[m.type] === stage && !isCatalogued(m.id) && !PGX_WEBGPU_MODELS.has(m.id) && onDisk(m)),
+    }));
+  }, [statuses, downloads, webgpu]);
 
   const resolveWith = useCallback((st: Record<string, string>) => (dir: string): DirectionResult =>
     resolveWasmDirection(...(splitDirection(dir) as [string, string]), settings.selections, {
@@ -182,7 +168,7 @@ export function ModelsPage({ locked, settings, pair }: { locked: boolean; settin
   }, [directions, resolveWith, statuses, runsHere]);
 
   // One session model as the library's card (B-20). Deleting asks first, under the card, with what it changes.
-  const sessionRow = (m: ModelManifestEntry) => {
+  const sessionRow = (m: ModelManifestEntry, hardwareContext?: string) => {
     const runnable = deviceReady(m, webgpu);
     const notes = () => (runsHere ? computeDeleteNotes(m.id, (id) => getManifestEntry(id)?.name ?? id, directions.map((dir) => ({ dir })),
       resolveWith(statuses), resolveWith({ ...statuses, [m.id]: 'not_downloaded' }), t) : []);
@@ -191,7 +177,9 @@ export function ModelsPage({ locked, settings, pair }: { locked: boolean; settin
         <ModelCard entry={m} status={downloads[m.id] ? 'downloading' : (statuses[m.id] ?? 'not_downloaded')} download={downloads[m.id]}
           errorMessage={errors[m.id]} isSessionActive={locked} isSelected={inUse.has(m.id) && statuses[m.id] === 'downloaded'}
           isCompatible={runnable} compatibilityHint={runnable ? undefined : t('models.page.cannotRun', "This computer can't run it")}
-          canDownload={runnable} deviceFeatures={features}
+          hardwareHint={hardwareContext ?? (LAPTOP_CPU_MODELS.has(m.id) ? t('models.page.laptopCpu', 'Laptop · CPU')
+            : LAPTOP_WEBGPU_MODELS.has(m.id) ? t('models.page.laptopGpu', 'Laptop · WebGPU required') : undefined)}
+          canDownload={runnable && (isCatalogued(m.id) || PGX_WEBGPU_MODELS.has(m.id))} deviceFeatures={features}
           // The store puts a failed download on the card (`downloadErrors`) and then rejects; nothing is left to do with it here.
           onDownload={() => void useModelStore.getState().downloadModel(m.id).catch(() => {})}
           onCancel={() => useModelStore.getState().cancelDownload(m.id)}
@@ -263,36 +251,29 @@ export function ModelsPage({ locked, settings, pair }: { locked: boolean; settin
         </div>
       )}
       <Group title={t('models.page.sessionTitle', 'Models for the session (the “This device” service)')}
-        hint={t('models.page.sessionHint', 'Stages set to “This device” in “Languages and line-up” use the models downloaded here.')}>
-        {stageGroups.map(({ stage, shown, rest, others }) => {
+        hint={t('models.page.aedLocalHint', 'CPU models cover Chinese ↔ English and Japanese ↔ English. For direct Chinese ↔ Japanese translation, use a WebGPU model or a company endpoint.')}>
+        {stageGroups.map(({ stage, shown, installed }) => {
           const title = t(TAGS[stage][0], TAGS[stage][1]);
-          const hidden = rest.length + others.length;
           return (
             // Anchored for an engine slot's "Browse library…" (B-20): the page scrolls here and lights the group.
             <div key={stage} className="models-stage" role="group" aria-label={title} id={`models-${stage}-section`}>
               <h4 className="models-stage__title">{title}</h4>
-              <div className="models-stage__shown">{shown.map(sessionRow)}</div>
-              {hidden > 0 && (
-                <div className="models-group__fold">
-                  <button type="button" className="models-group__fold-btn" aria-expanded={Boolean(open[stage])}
-                    onClick={() => setOpen((o) => ({ ...o, [stage]: !o[stage] }))}>
-                    {open[stage] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    {t('models.page.more', '{{count}} more', { count: hidden })}
-                  </button>
-                  {open[stage] && (
-                    <>
-                      {rest.map(sessionRow)}
-                      {others.length > 0 && (
-                        <p className="models-stage__caption">{t('models.page.otherLanguages', 'Models for other languages ({{count}})', { count: others.length })}</p>
-                      )}
-                      {others.map(sessionRow)}
-                    </>
-                  )}
-                </div>
+              <div className="models-stage__shown">{shown.map((m) => sessionRow(m))}</div>
+              {installed.length > 0 && (
+                <details className="models-group__fold">
+                  <summary className="models-group__fold-btn">{t('models.page.otherInstalled', 'Other downloaded models ({{count}})', { count: installed.length })}</summary>
+                  {installed.map((m) => sessionRow(m))}
+                </details>
               )}
             </div>
           );
         })}
+      </Group>
+
+      <Group title={t('models.page.pgxGuideTitle', 'PGX-class WebGPU picks')}
+        hint={t('models.page.pgxGuideHint', 'Built-in WebGPU picks sized for PGX’s GB10 GPU and 128 GB unified-memory profile. Recommendations use the hardware specification; downloading requires WebGPU, and the model variant follows this device’s features.')}>
+        {[...PGX_WEBGPU_MODELS].map((id) => MODEL_MANIFEST.find((m) => m.id === id)).filter((m): m is ModelManifestEntry => Boolean(m))
+          .map((m) => sessionRow(m, t('models.page.pgxWebGpuTag', 'PGX profile pick · WebGPU')))}
       </Group>
 
       <Group title={t('models.page.helpersTitle', 'Helper models')} hint={t('models.page.helpersHint', 'Small models that belong to no one stage.')}>

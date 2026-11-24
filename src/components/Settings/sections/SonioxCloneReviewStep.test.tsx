@@ -40,6 +40,18 @@ describe('SonioxCloneReviewStep: the sample language', () => {
     expect(confirm()).toBeDisabled();
   });
 
+  it('passes an optional public reference URL as caller input after consent', () => {
+    const onConfirm = vi.fn();
+    const onChange = vi.fn();
+    render(<SonioxCloneReviewStep {...base} onConfirm={onConfirm} referenceUrl={{
+      value: 'https://voice.example.com/clip.wav', onChange, label: 'Public audio URL', placeholder: 'https://host/clip.wav',
+    }} />);
+    expect(screen.getByLabelText('Public audio URL')).toHaveValue('https://voice.example.com/clip.wav');
+    consent();
+    fireEvent.click(screen.getByRole('button', { name: /clone voice/i }));
+    expect(onConfirm).toHaveBeenCalledWith('', 'https://voice.example.com/clip.wav');
+  });
+
   it('changing the select calls onChange with the option value', () => {
     const lang = language();
     render(<SonioxCloneReviewStep {...base} language={lang} />);

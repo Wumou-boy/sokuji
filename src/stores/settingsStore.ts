@@ -187,7 +187,7 @@ function clampSegmentationMode(value: unknown): SegmentationMode {
 
 /** The notes' model until the user names another (the one the notes were measured with). */
 export const DEFAULT_NOTES_MODEL = 'gpt-6-luna';
-export const DEFAULT_NOTES_BAILIAN_MODEL = 'qwen-flash';
+export const DEFAULT_NOTES_BAILIAN_MODEL = 'qwen3.8-flash';
 
 const defaultCommonSettings: CommonSettings = {
   // An id the old registry does not hold, so nothing old runs for it. Local

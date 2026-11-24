@@ -26,6 +26,29 @@ async function started() {
 }
 
 describe('AppAudioRecorder.begin', () => {
+  it('waits for Windows system capture to report its format before announcing success', async () => {
+    (window as any).electron.osInfo = { platform: 'win32' };
+    const rec = new AppAudioRecorder(24000);
+    const pending = rec.begin({ deviceId: 'desktop-audio-loopback' });
+    await Promise.resolve();
+    expect(rec.getStatus()).toBe('ended');
+    handlers['app-audio:event']({ event: 'format' });
+    expect(await pending).toBe(true);
+    expect(rec.getStatus()).toBe('paused');
+    await rec.end();
+  });
+
+  it('reports native startup failures and releases the helper listeners', async () => {
+    (window as any).electron.osInfo = { platform: 'win32' };
+    const rec = new AppAudioRecorder(24000);
+    const pending = rec.begin({ deviceId: 'desktop-audio-loopback' });
+    handlers['app-audio:event']({ event: 'error', code: 'initialize_failed' });
+    expect(await pending).toBe(false);
+    expect(rec.beginFailure).toHaveProperty('message', 'Windows system audio helper could not start (initialize_failed).');
+    expect(handlers['app-audio:event']).toBeUndefined();
+    expect(invoke).toHaveBeenCalledWith('stop-app-audio-capture');
+  });
+
   it('starts the helper for the selected source', async () => {
     const rec = await started();
     expect(invoke).toHaveBeenCalledWith('start-app-audio-capture', 'app:pid:42');

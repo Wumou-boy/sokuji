@@ -588,7 +588,27 @@
       "screenContextNone": "아직 선택한 창이 없습니다. 세션을 시작할 때 묻습니다.",
       "screenContextChoose": "선택…",
       "speakerLabels": "화자 라벨",
-      "speakerLabelsTooltip": "상대방 쪽 사람들에게 번호를 붙입니다(화자 1, 화자 2…). 둘 이상의 목소리가 들리면 표시됩니다.\n\n한 사람을 여러 명으로 잘못 인식할 수 있습니다. 비활성화: 번호를 표시하지 않습니다.\n\n다음 세션부터 적용됩니다."
+      "speakerLabelsTooltip": "상대방 쪽 사람들에게 번호를 붙입니다(화자 1, 화자 2…). 둘 이상의 목소리가 들리면 표시됩니다.\n\n한 사람을 여러 명으로 잘못 인식할 수 있습니다. 비활성화: 번호를 표시하지 않습니다.\n\n다음 세션부터 적용됩니다.",
+      "voiceSummaryFixed": "Your own voice (fixed)",
+      "voiceDefaultName": "My voice",
+      "voiceReadAloudTitle": "Read this aloud at your usual speaking pace",
+      "voiceReadAloudSample": "Let’s review the project schedule. The first samples should arrive on Wednesday. Please check the quantities and specifications when they arrive, and send me a photo if anything looks wrong.",
+      "voiceUploadNotice": "After you confirm, AED Translator uploads this 10–20 second recording to Alibaba Model Studio's private temporary storage (expires after 48 hours) to create a Qwen 3.8 voice. Voice creation may be billed; translation is billed by usage. The cloned voice stays in your Alibaba account until you delete it. AED Translator lists only profiles created on this device because LiveTranslate does not provide a voice-list API.",
+      "voiceConsent": "After you confirm, AED Translator uses Alibaba temporary private storage by default. The optional public HTTPS URL is sent to Alibaba as the reference source; AED Translator does not upload audio to that host. Cloned voices remain in your Alibaba account until deleted.",
+      "voiceReferenceUrlLabel": "Optional public HTTPS audio URL (fallback)",
+      "voiceReferenceUrlPlaceholder": "https://your-public-host.example/voice.wav",
+      "voiceBailianOnly": "Voice enrollment is currently supported only with a Bailian shared Beijing API key. Choose Bailian shared and save its API key. Company workspace, QwenCloud and managed connections are not supported for enrollment.",
+      "voiceDesktopOnly": "Recording and enrollment are available in the AED Translator Windows desktop app.",
+      "voiceListError": "Could not load voice profiles saved in this app profile.",
+      "voiceCreateFailed": "Could not create this voice. Check the Bailian connection and try again.",
+      "connectionPersonal": "Personal QwenCloud",
+      "connectionBailianShared": "Bailian shared",
+      "connectionBailianWorkspace": "Company workspace",
+      "workspaceApiKey": "Company workspace API key",
+      "workspaceId": "Bailian workspace ID",
+      "workspaceKeyNote": "Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.",
+      "workspaceDesktopOnly": "Dedicated workspace connections are available in the Windows desktop app only.",
+      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace)"
     },
     "local_inference": {
       "name": "이 기기",
@@ -717,7 +737,7 @@
       "scopeLabel": "포함",
       "scopeItemAria": "{{scope}} — {{line}}",
       "scopeEmpty": "선택된 항목 없음",
-      "headerTitle": "Sokuji 대화 내보내기",
+      "headerTitle": "AED Translator 대화 내보내기",
       "headerSessionStarted": "세션 시작",
       "headerExported": "내보낸 시각",
       "headerProvider": "제공자",
@@ -1015,7 +1035,23 @@
       "engineHint": "이전 버전이 이 컴퓨터에서 모델을 실행하려고 내려받은 데스크톱 엔진입니다. 지금의 \"이 기기\" 서비스는 이를 사용하지 않으니, 제거하면 공간이 확보됩니다.",
       "remove": "제거",
       "engineConfirm": "로컬 엔진을 제거할까요?",
-      "engineFrees": "{{size}}가 확보됩니다."
+      "engineFrees": "{{size}}가 확보됩니다.",
+      "aedLocalHint": "CPU models cover Chinese ↔ English and Japanese ↔ English. For direct Chinese ↔ Japanese, use WebGPU or a company endpoint.",
+      "laptopCpu": "Laptop · CPU",
+      "laptopGpu": "Laptop · WebGPU required",
+      "otherInstalled": "Other local model files ({{count}})",
+      "pgxGuideTitle": "PGX WebGPU models",
+      "pgxGuideHint": "Built-in WebGPU picks sized for PGX’s GB10 GPU and 128 GB unified-memory profile. Recommendations use the hardware specification; downloading requires WebGPU, and the model variant follows this device’s features.",
+      "pgxWebGpuTag": "PGX profile pick · WebGPU",
+      "pgxTitle": "PGX and company network",
+      "pgxHint": "Models listed in the PGX Ollama inventory. To use its text model, configure an OpenAI-compatible endpoint reachable from this device and enter the exact model ID. Network access and capacity depend on the server.",
+      "pgxInstalled": "Listed in PGX Ollama inventory",
+      "pgxQwen": "Qwen3.6 35B A3B",
+      "pgxQwenMeta": "Text chat and translation · Ollama model ID: qwen3.6-35b-a3b:latest",
+      "pgxCandidate": "Benchmark candidate · not installed on PGX",
+      "pgxHyMeta": "Translation candidate for llama.cpp. Existing results are local RTX 5080 replay and synthetic stream proxies, not PGX measurements.",
+      "pgxSenseMeta": "Speech recognition candidate. Existing results are local benchmark runs, not PGX measurements; this is not exposed by the text endpoint.",
+      "pgxConfigure": "Configure OpenAI-compatible endpoint"
     }
   },
   "notes": {
@@ -1289,13 +1325,17 @@
       },
       "anyUseCase": "용도 무관",
       "anyStyle": "스타일 무관"
-    }
+    },
+    "recordNoSelectedMic": "Select a physical microphone in Audio settings before recording.",
+    "recordSilent": "No sound reached the recorder. Check the microphone and its input volume, then try again.",
+    "recordingMicrophone": "Microphone · {{name}}",
+    "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
     "ttsEcho": "스피커에서 나온 Sokuji의 번역 음성이 마이크로 되돌아오고 있습니다.",
     "meetingEcho": "스피커의 회의 오디오가 마이크에 들어오고 있습니다.",
     "farEndEcho": "한 참가자의 기기가 회의에 번역을 에코로 되돌리고 있습니다.",
-    "selfCapture": "상대방 오디오 소스가 Sokuji 자체 오디오를 캡처하고 있습니다.",
+    "selfCapture": "상대방 오디오 소스가 AED Translator 자체 오디오를 캡처하고 있습니다.",
     "routingLoop": "선택한 입력 장치가 이 컴퓨터의 재생을 직접 캡처하고 있습니다.",
     "actionHeadphones": "헤드폰을 사용하면 루프가 끊어집니다.",
     "actionAskRemote": "해당 참가자에게 헤드폰 사용을 요청하세요.",
@@ -1317,7 +1357,7 @@
     "clearAllKeepsPicks": "선택 항목은 저장되며, 모델을 다시 다운로드하면 복원됩니다."
   },
   "setup": {
-    "title": "Sokuji 설정",
+    "title": "AED Translator 설정",
     "stepOf": "{{current}}/{{total}}단계",
     "back": "뒤로",
     "next": "다음",
@@ -1485,7 +1525,7 @@
       },
       "microphone": {
         "title": "내 마이크",
-        "content": "내 음성이 여기로 들어옵니다. 시스템 기본 장치가 이미 선택되어 있습니다. Sokuji 가상 마이크는 선택하지 마세요 — 이것은 회의 앱용입니다."
+        "content": "내 음성이 여기로 들어옵니다. 시스템 기본 장치가 이미 선택되어 있습니다. AED Translator 가상 마이크는 선택하지 마세요 — 이것은 회의 앱용입니다."
       },
       "monitor": {
         "title": "번역된 내 목소리 듣기",
@@ -1606,8 +1646,8 @@
     "not_org_member_unnamed": "더 이상 해당 조직에 속해 있지 않습니다.",
     "org_wallet_frozen": "{{organization}}의 계정이 일시 중지되었습니다. 소유자에게 문의하거나 개인 잔액을 사용하세요.",
     "org_wallet_frozen_unnamed": "조직의 계정이 일시 중지되었습니다. 소유자에게 문의하거나 개인 잔액을 사용하세요.",
-    "org_wallet_frozen_owner": "{{organization}}의 계정이 일시 중지되었습니다. Sokuji 지원팀에 문의하거나 개인 잔액을 사용하세요.",
-    "org_wallet_frozen_owner_unnamed": "조직의 계정이 일시 중지되었습니다. Sokuji 지원팀에 문의하거나 개인 잔액을 사용하세요.",
+    "org_wallet_frozen_owner": "{{organization}}의 계정이 일시 중지되었습니다. AED Translator 지원팀에 문의하거나 개인 잔액을 사용하세요.",
+    "org_wallet_frozen_owner_unnamed": "조직의 계정이 일시 중지되었습니다. AED Translator 지원팀에 문의하거나 개인 잔액을 사용하세요.",
     "model_missing": "서비스가 이 모델을 제공하지 않습니다: {{detail}}",
     "quota": "서비스 계정에 남은 크레딧이 없습니다: {{detail}}",
     "text_model_unset": "‘언어와 구성’에서 번역 모델을 고르거나 모델 이름을 입력하세요.",
@@ -1615,7 +1655,7 @@
     "address_invalid": "호환 서비스의 주소를 사용할 수 없습니다: {{detail}}"
   },
   "viewer": {
-    "title": "Sokuji 자막",
+    "title": "AED Translator 자막",
     "connecting": "연결 중…",
     "original": "원문",
     "enter": {
@@ -1673,7 +1713,7 @@
     },
     "shortcuts": "+ − 글자 크기 · B 두 언어 · F 전체 화면 · End 최신으로 이동",
     "transcript": {
-      "header": "Sokuji 자막, {{time}} 저장"
+      "header": "AED Translator 자막, {{time}} 저장"
     },
     "present": {
       "title": "휴대폰이나 컴퓨터에서 자막을 보세요",
@@ -1686,7 +1726,7 @@
       "androidChrome": "Android Chrome에서 열리지 않나요? 설정 → 애플리케이션 → Chrome → 권한 → 근처 기기에서 허용하세요.",
       "watching": "시청 중: {{count}}",
       "fullscreen": "전체 화면",
-      "windowTitle": "Sokuji 프로젝터 화면",
+      "windowTitle": "AED Translator 프로젝터 화면",
       "ended": "공유가 종료되었습니다"
     }
   },
@@ -1733,7 +1773,42 @@
     "playedRight": "오른쪽 귀로 재생됨",
     "notPlayed": "재생되지 않음: 이 번역은 {{target}}이(가) 아니라 {{language}}이므로 아무에게도 읽어 주지 않습니다.",
     "legendMe": "{{language}} · 나",
-    "legendOther": "{{language}} · 상대방"
+    "legendOther": "{{language}} · 상대방",
+    "modeGroup": "Translation mode",
+    "onlineMeeting": "Online meeting",
+    "title": "Face to face",
+    "intro": "Choose two subtitle languages and take turns speaking into one microphone.",
+    "backToMeeting": "Online meeting",
+    "languageChoices": "Reading languages",
+    "firstLanguage": "First subtitle language",
+    "secondLanguage": "Second subtitle language",
+    "subtitleOnly": "Subtitles only. No speech is synthesized.",
+    "speakerNumber": "Speaker {{number}}",
+    "speaker": "Speaker",
+    "transcribing": "Listening…",
+    "translationPending": "Translating…",
+    "translationUnavailable": "Translation unavailable",
+    "waitingLive": "Listening for speech…",
+    "personA": "Person A",
+    "personB": "Person B",
+    "noSpeech": "Qwen provides realtime captions. The configured text service translates the other direction.",
+    "ready": "Choose two subtitle languages, then start listening.",
+    "starting": "Connecting to Qwen and opening the microphone…",
+    "stopping": "Releasing the microphone…",
+    "live": "Listening. Subtitles will appear as you speak.",
+    "failed": "Could not start face-to-face translation.",
+    "start": "Start listening",
+    "stop": "Stop listening",
+    "retry": "Retry",
+    "speakers": "Speaker assignments",
+    "assignSpeakers": "Who is speaking?",
+    "detectedSpeaker": "Detected speaker {{id}}",
+    "captions": "Conversation subtitles",
+    "waiting": "Subtitles will appear here as you speak.",
+    "speakerUnknown": "Speaker unassigned",
+    "languageUnknown": "Language unknown",
+    "textRoute": "Text translation",
+    "assignToTranslate": "Assign this speaker to choose the translation direction."
   },
   "screenContext": {
     "picker": {
@@ -1750,7 +1825,7 @@
       "openSettings": "시스템 설정 열기",
       "reask": "macOS에 다시 요청",
       "askedText": "macOS가 물으면 Sokuji를 허용하거나 시스템 설정에서 켜세요. macOS는 Sokuji를 다시 시작한 뒤에야 권한을 적용합니다.",
-      "restart": "Sokuji 다시 시작",
+      "restart": "AED Translator 다시 시작",
       "refresh": "새로 고침",
       "cancel": "화면 컨텍스트 없이 시작",
       "nothingVisible": "선택한 영역에 지금 아무것도 표시되지 않습니다. 다른 영역을 선택하거나 화면 컨텍스트 없이 시작하세요.",
@@ -1862,7 +1937,10 @@
       },
       "findModels": "모델 찾기",
       "configure": "설정",
-      "manageModels": "모델 관리"
+      "manageModels": "모델 관리",
+      "internalModel": "회사 네트워크 및 PGX 텍스트 모델",
+      "bailianModel": "Alibaba Cloud Model Studio · 실시간 번역",
+      "internalModelHint": "“언어와 구성”에서 모델 이름을 선택하거나 입력하세요."
     },
     "lineup": {
       "title": "구성",

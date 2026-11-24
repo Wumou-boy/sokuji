@@ -125,6 +125,24 @@ describe('agent control transport', () => {
     expect(JSON.stringify(response)).not.toContain(apiKey);
   });
 
+  it.skipIf(!isWindows)('accepts a workspace ID and its key only on the workspace command', async () => {
+    profileDir = await mkdtemp(path.join(os.tmpdir(), 'sokuji-agent-control-'));
+    const dispatch = vi.fn(async () => ({ ok: true, data: { configured: true } }));
+    endpoint = await startAgentControl({ profileDir, dispatch });
+    const command = 'provider.configure-qwen-workspace';
+    const apiKey = 'sk-ws-test-placeholder+/valid=';
+    const workspaceId = 'llm-testcompany';
+
+    for (const bad of ['https://llm-testcompany', 'llm-testcompany.cn-beijing.maas.aliyuncs.com', 'llm-company/workspace']) {
+      await expect(agentControlCommunicate({ profileDir, command, args: { apiKey, workspaceId: bad } }))
+        .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
+    }
+    expect(dispatch).not.toHaveBeenCalled();
+    await expect(agentControlCommunicate({ profileDir, command, args: { apiKey, workspaceId } }))
+      .resolves.toEqual({ ok: true, data: { configured: true } });
+    expect(dispatch).toHaveBeenCalledExactlyOnceWith(command, { apiKey, workspaceId });
+  });
+
   it.skipIf(!isWindows)('does not overwrite an active endpoint metadata file', async () => {
     profileDir = await mkdtemp(path.join(os.tmpdir(), 'sokuji-agent-control-'));
     const file = path.join(profileDir, 'agent-control.json');

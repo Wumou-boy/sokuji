@@ -493,7 +493,7 @@ describe('a record', () => {
     now.mockRestore();
     const [txt, txtName, txtType] = vi.mocked(downloadFile).mock.calls[0];
     expect([txtName, txtType]).toEqual(['sokuji-conversation-20260115-090000.txt', 'text/plain;charset=utf-8']);
-    expect(txt).toContain('Sokuji conversation export');
+    expect(txt).toContain('AED Translator conversation export');
     expect(txt).toContain('Provider: soniox');
     expect(txt).toContain('还有两个问题。');
     expect(txt).not.toContain('还有一个问题。');

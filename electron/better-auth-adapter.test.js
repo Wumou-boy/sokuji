@@ -275,6 +275,7 @@ describe('WebSocket handshake responses', () => {
     expect(webRequestHandlers.get('headersReceivedFilter').urls).toContain('wss://maas.qwencloudapi.com/*');
     // The mainland storefront too: a Beijing grant's socket is one of these.
     expect(webRequestHandlers.get('headersReceivedFilter').urls).toContain('wss://maas.qianwenaiapi.com/*');
+    expect(webRequestHandlers.get('headersReceivedFilter').urls).toContain('wss://*.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime*');
 
     const responseHeaders = { 'x-request-id': ['abc'] };
     const emitted = receiveResponse(responseHeaders, { url: QWEN_URL, resourceType: 'webSocket' });

@@ -168,6 +168,7 @@ import { planFromStores } from '../lib/plan/fromStores';
 import { transcriptionProvider } from '../lib/plan/read';
 import { useLiveNotes } from '../lib/notes/live/liveStore';
 import { useTurnModeStore } from '../stores/turnModeStore';
+import { useFaceToFaceStore } from '../stores/faceToFaceStore';
 import { READINESS_DELAY_MS } from './readiness';
 import { createAppSession, type AppSessionOptions } from './session';
 import { currentSubtitleFeed } from './subtitleFeed';
@@ -185,6 +186,7 @@ const audioBefore = useAudioStore.getState();
 const settingsBefore = useSettingsStore.getState();
 const segmentationBefore = useSegmentationStore.getState();
 const turnModeBefore = useTurnModeStore.getState();
+const faceToFaceBefore = useFaceToFaceStore.getState();
 
 beforeEach(() => {
   runsOn(null);
@@ -200,6 +202,7 @@ afterEach(() => {
   useSettingsStore.setState(settingsBefore, true);
   useSegmentationStore.setState(segmentationBefore, true);
   useTurnModeStore.setState(turnModeBefore, true);
+  useFaceToFaceStore.setState(faceToFaceBefore, true);
   useLogStore.getState().setEnabled(false);
 });
 
@@ -232,6 +235,14 @@ function electronIpc(order: string[] = []) {
 }
 
 describe('createAppSession', () => {
+  it('does not start an online meeting run while the standalone face-to-face mode is selected', async () => {
+    const { session } = await setup();
+    const start = vi.spyOn(session.runner, 'start');
+    useFaceToFaceStore.getState().setMode('face-to-face');
+    await session.start();
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it('builds no playback until asked, and builds it once', async () => {
     const { session } = await setup();
     expect(getAppAudio).not.toHaveBeenCalled();

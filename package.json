@@ -1,6 +1,6 @@
 {
   "name": "sokuji",
-  "productName": "Sokuji",
+  "productName": "AED Translator",
   "version": "0.51.2",
   "sidecarVersion": "0.4.0",
   "private": true,
@@ -13,7 +13,7 @@
   },
   "build": {
     "appId": "ai.kizunaai.sokuji",
-    "productName": "Sokuji",
+    "productName": "AED Translator",
     "asar": true,
     "electronLanguages": [
       "en",
