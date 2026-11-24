@@ -1938,9 +1938,9 @@
       "findModels": "Hanapin ang mga modelo",
       "configure": "I-configure",
       "manageModels": "Pamahalaan ang mga model",
-      "internalModel": "Company network and PGX text models",
-      "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
-      "internalModelHint": "Choose or enter the model name under Languages and line-up."
+      "internalModel": "Mga text model ng network ng kumpanya at PGX",
+      "bailianModel": "Alibaba Cloud Model Studio · real-time na pagsasalin",
+      "internalModelHint": "Piliin o ilagay ang pangalan ng modelo sa ilalim ng “Mga wika at line-up”."
     },
     "lineup": {
       "title": "Line-up",

@@ -1938,9 +1938,9 @@
       "findModels": "Modelleri bul",
       "configure": "Yapılandır",
       "manageModels": "Modelleri yönet",
-      "internalModel": "Company network and PGX text models",
-      "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
-      "internalModelHint": "Choose or enter the model name under Languages and line-up."
+      "internalModel": "Şirket ağı ve PGX metin modelleri",
+      "bailianModel": "Alibaba Cloud Model Studio · gerçek zamanlı çeviri",
+      "internalModelHint": "“Diller ve düzen” bölümünde model adını seçin veya girin."
     },
     "lineup": {
       "title": "Düzen",

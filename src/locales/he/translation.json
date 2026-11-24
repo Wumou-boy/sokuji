@@ -1938,9 +1938,9 @@
       "findModels": "חיפוש מודלים",
       "configure": "הגדרה",
       "manageModels": "ניהול מודלים",
-      "internalModel": "Company network and PGX text models",
-      "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
-      "internalModelHint": "Choose or enter the model name under Languages and line-up."
+      "internalModel": "מודלי טקסט של רשת החברה ו-PGX",
+      "bailianModel": "Alibaba Cloud Model Studio · תרגום בזמן אמת",
+      "internalModelHint": "בחרו או הזינו את שם המודל תחת „שפות והרכב”."
     },
     "lineup": {
       "title": "הרכב",

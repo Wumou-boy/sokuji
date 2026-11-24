@@ -1938,9 +1938,9 @@
       "findModels": "मॉडल खोजें",
       "configure": "सेट करें",
       "manageModels": "मॉडल प्रबंधित करें",
-      "internalModel": "Company network and PGX text models",
-      "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
-      "internalModelHint": "Choose or enter the model name under Languages and line-up."
+      "internalModel": "कंपनी नेटवर्क और PGX के टेक्स्ट मॉडल",
+      "bailianModel": "Alibaba Cloud Model Studio · रीयल-टाइम अनुवाद",
+      "internalModelHint": "“भाषाएँ और लाइन-अप” में मॉडल का नाम चुनें या दर्ज करें।"
     },
     "lineup": {
       "title": "लाइन-अप",

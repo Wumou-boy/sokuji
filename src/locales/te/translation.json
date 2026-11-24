@@ -1938,9 +1938,9 @@
       "findModels": "మోడల్‌లను కనుగొను",
       "configure": "సెటప్ చేయండి",
       "manageModels": "మోడల్‌లను నిర్వహించండి",
-      "internalModel": "Company network and PGX text models",
-      "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
-      "internalModelHint": "Choose or enter the model name under Languages and line-up."
+      "internalModel": "కంపెనీ నెట్‌వర్క్ మరియు PGX టెక్స్ట్ మోడళ్లు",
+      "bailianModel": "Alibaba Cloud Model Studio · రియల్-టైమ్ అనువాదం",
+      "internalModelHint": "“భాషలు, లైన్-అప్” విభాగంలో మోడల్ పేరును ఎంచుకోండి లేదా నమోదు చేయండి."
     },
     "lineup": {
       "title": "లైన్-అప్",

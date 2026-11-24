@@ -1938,9 +1938,9 @@
       "findModels": "Tìm mô hình",
       "configure": "Thiết lập",
       "manageModels": "Quản lý mô hình",
-      "internalModel": "Company network and PGX text models",
-      "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
-      "internalModelHint": "Choose or enter the model name under Languages and line-up."
+      "internalModel": "Mô hình văn bản của mạng nội bộ công ty và PGX",
+      "bailianModel": "Alibaba Cloud Model Studio · dịch theo thời gian thực",
+      "internalModelHint": "Chọn hoặc nhập tên mô hình trong mục “Ngôn ngữ và cách phối hợp”."
     },
     "lineup": {
       "title": "Cách phối hợp",

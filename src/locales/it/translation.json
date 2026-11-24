@@ -1938,9 +1938,9 @@
       "findModels": "Trova modelli",
       "configure": "Configura",
       "manageModels": "Gestisci modelli",
-      "internalModel": "Company network and PGX text models",
-      "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
-      "internalModelHint": "Choose or enter the model name under Languages and line-up."
+      "internalModel": "Modelli di testo della rete aziendale e di PGX",
+      "bailianModel": "Alibaba Cloud Model Studio · traduzione in tempo reale",
+      "internalModelHint": "Scegli o inserisci il nome del modello in “Lingue e composizione”."
     },
     "lineup": {
       "title": "Composizione",
