@@ -9,6 +9,8 @@ import { personShade } from '../../lib/view/people';
 import { useConversationDisplayFontSize } from '../../stores/conversationDisplayStore';
 import type { FaceToFaceLanguage } from '../../stores/faceToFaceStore';
 import { useFaceToFaceStore } from '../../stores/faceToFaceStore';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
+import { SessionTokenMeter } from '../MainPanel/SessionTokenMeter';
 import { startFaceToFaceRuntime, stopFaceToFaceRuntime } from '../../lib/faceToFace/runtime';
 import '../MainPanel/ConversationRow.scss';
 import './FaceToFaceMode.scss';
@@ -23,6 +25,7 @@ export default function FaceToFaceMode({ onExit }: Props) {
   const error = useFaceToFaceStore((s) => s.error);
   const languages = useFaceToFaceStore((s) => s.languages);
   const captions = useFaceToFaceStore((s) => s.captions);
+  const sessionTokens = useSessionTokenStore((s) => s['face-to-face']);
   const setLanguage = useFaceToFaceStore((s) => s.setLanguage);
   const fontSize = useConversationDisplayFontSize();
   const captionList = useRef<HTMLElement>(null);
@@ -59,6 +62,7 @@ export default function FaceToFaceMode({ onExit }: Props) {
         <button type="button" className="face-to-face-mode__start" disabled={phase === 'stopping'} onClick={startOrStop}>
           {phase === 'stopping' ? t('faceToFace.stopping', 'Stopping…') : phase === 'starting' || phase === 'live' ? t('faceToFace.stop', 'Stop listening') : phase === 'error' ? t('faceToFace.retry', 'Retry') : t('faceToFace.start', 'Start listening')}
         </button>
+        <SessionTokenMeter session={sessionTokens} />
       </div>
 
       {phase !== 'idle' && (

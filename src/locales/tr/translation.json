@@ -1885,6 +1885,7 @@
       "audio": "Ses",
       "display": "Görünüm",
       "history": "Geçmiş ve notlar",
+      "usage": "Token kotası",
       "general": "Genel"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "mikrofon, gürültü bastırma, yankı, hoparlör, kulaklık, izleme, doğrudan geçiş, sanal mikrofon, sistem sesi",
       "display": "yazı tipi, boyut, renk, sıkışık, altyazı, başlıklar, önizleme",
       "history": "geçmiş, notlar, klasör",
+      "usage": "kullanım, token, kota, bakiye",
       "general": "arayüz dili, görünüm, tema, güncellemeler, günlükler, kurulum, yardım, sürüm"
     },
     "accounts": {

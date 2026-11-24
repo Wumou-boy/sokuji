@@ -1885,6 +1885,7 @@
       "audio": "Ljud",
       "display": "Visning",
       "history": "Historik och anteckningar",
+      "usage": "Tokenkvot",
       "general": "Allmänt"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "mikrofon, brusreducering, eko, högtalare, hörlurar, medhörning, genomkoppling, virtuell mikrofon, systemljud",
       "display": "teckensnitt, storlek, färg, kompakt, undertexter, textning, förhandsvisning",
       "history": "historik, anteckningar, mapp",
+      "usage": "användning, token, kvot, saldo",
       "general": "gränssnittsspråk, utseende, tema, uppdateringar, loggar, konfiguration, hjälp, version"
     },
     "accounts": {

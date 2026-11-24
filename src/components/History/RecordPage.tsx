@@ -16,6 +16,8 @@ import { recordRows, type RecordRow, type SpeakerLabels } from '../../lib/histor
 import type { HistorySentenceSide } from '../../lib/history/types';
 import { createProjector, DEFAULT_PROJECTION } from '../../lib/projection/project';
 import { useHistoryPageContext } from './historyContext';
+import { TokenUsageLine, TokenUsageUnknown, recordsForHistoryId } from './TokenUsage';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
 import { formatBytes, formatDateTime, formatLength, isComposing } from './format';
 import RecordExportMenu from './RecordExportMenu';
 import RecordPlayer, { type SeekFn } from './RecordPlayer';
@@ -87,6 +89,8 @@ export const RecordPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { store } = useHistoryPageContext();
   const open = useStore(store, (s) => s.open);
+  const tokenHistory = useSessionTokenStore((s) => s.history);
+  const notesTokenUsageByRecord = useSessionTokenStore((s) => s.notesByRecord);
   const busy = useStore(store, (s) => s.busy);
   const actions = store.getState();
   const language = i18n.language;
@@ -408,6 +412,8 @@ export const RecordPage: React.FC = () => {
   const hasPlayer = playable(record.tracks).length > 0 && !releasing;
   const title = record.title ?? formatDateTime(record.startedAt, language);
   const live = record.state === 'open';
+  const sessionTokenRecords = recordsForHistoryId(tokenHistory, record.id);
+  const notesTokenUsage = notesTokenUsageByRecord[record.id];
   // Its recording is being transcribed: it is not deleted, nor the record moved to the bin, until that ends.
   const inTranscription = job?.kind === 'transcribe' && job.recordId === record.id;
   const whileTranscribed = inTranscription ? t('history.file.blockedTranscribing', 'Available when this record is not being transcribed.') : undefined;
@@ -841,6 +847,13 @@ export const RecordPage: React.FC = () => {
                 is the record's, on the record's line (owner, 2026-11-18), not a bar over the columns. */}
             <TranscriptChooser />
           </span>
+          <div className="record-page__token-usage" aria-label={t('history.tokenUsage', 'Token usage')}>
+            <span className="record-page__token-label">{t('history.tokenUsage', 'Token usage')}</span>
+            {sessionTokenRecords.length > 0
+              ? <TokenUsageLine records={sessionTokenRecords} language={language} />
+              : <TokenUsageUnknown language={language} />}
+            {notesTokenUsage && <TokenUsageLine records={[notesTokenUsage]} language={language} prefix="notes" />}
+          </div>
         </div>
         <div className="record-page__actions" ref={actionsRef}>
           {result && <span className="record-page__result" role="status">{result}</span>}

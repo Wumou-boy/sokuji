@@ -11,7 +11,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { FrameSource, SessionContext } from '../../lib/contract/adapter';
 import { checkConformance } from '../../lib/contract/conformance';
-import { eventsFrom, type AdapterEvent } from '../../lib/contract/events';
+import { eventsFrom, recordEvents, type AdapterEvent } from '../../lib/contract/events';
 import { flush } from '../../lib/contract/testing/drive';
 import { fakeFrameSource, JPEG_A, JPEG_B } from '../../lib/contract/testing/fakeFrames';
 import { FakeSocket } from '../../lib/contract/testing/fakeSocket';
@@ -21,11 +21,12 @@ import { trackedClock } from '../../lib/contract/testing/trackedClock';
 import type { VirtualClock } from '../../lib/contract/clock';
 import type { LegName } from '../../lib/conversation/types';
 import { FLAP_WINDOW_MS, MAX_RECONNECTS, RECONNECT_BUDGET_MS, type DropInfo } from '../../lib/session/reconnect';
+import { trackRealtimeUsage } from '../../lib/usage/providerUsage';
 import type { RunShape } from '../../lib/session/types';
 import { CONNECTION_LOST, createQwenAdapter, ERROR_WORDS_MS, KEEPALIVE_IDLE_MS, NEVER_OPENED, QWEN_PROBE_MS, QWEN_STALL_MS, QWEN_TURN_ANSWER_MS, qwenDropAction, TURN_DONE_MS } from './adapter';
 import { createQwenLease } from './lease';
 import { QWEN_DEFAULTS, type QwenCredentials, type QwenReissue } from './settings';
-import { AUTO_CTX, configFor, KEY, MANUAL_CTX, openQwen, PARTICIPANT_CTX, probes, qwenHarness, qwenSession, SERVER, SHARED, turn } from './testing';
+import { answeringSockets, AUTO_CTX, configFor, KEY, MANUAL_CTX, openQwen, PARTICIPANT_CTX, probes, qwenHarness, qwenSession, SERVER, SHARED, turn } from './testing';
 
 const TOKEN_0 = 'st-token-0';
 const TOKEN_1 = 'st-token-1';
@@ -138,6 +139,48 @@ describe('qwenDropAction: what a live socket\'s close means (spec §4.1; open po
 });
 
 describe('the Qwen adapter reconnects: own key', () => {
+  it('starts a separate usage closure for each actual socket, including the reconnect', async () => {
+    const seam = fakeHeaderSockets(answeringSockets());
+    const clock = trackedClock().clock;
+    const snapshots: unknown[][] = [];
+    const deltas: unknown[] = [];
+    const { events } = recordEvents();
+    const adapter = createQwenAdapter({
+      openHeaderSocket: seam.open,
+      detect: async () => ({ endpoint: 'intl' }),
+      trackUsage: (config) => {
+        const socketSnapshots: unknown[] = [];
+        snapshots.push(socketSnapshots);
+        const track = trackRealtimeUsage(config.activity ?? 'meeting', 'qwencloud-singapore', config.model, (delta) => deltas.push(delta));
+        return (usage) => { socketSnapshots.push(usage); track(usage); };
+      },
+    });
+    const signal = new AbortController().signal;
+    const starting = adapter.start({ context: AUTO_CTX, config: configFor(AUTO_CTX), credentials: KEY, clock, signal }, events);
+    await flush();
+    const first = seam.sockets.last();
+    first.open();
+    await flush();
+    first.receive(SERVER.created());
+    first.receive(SERVER.updated());
+    const session = await starting;
+    first.receive(SERVER.responseDone());
+    first.serverClose(1011, 'Internal error');
+    await flush();
+    expect(seam.sockets.all).toHaveLength(2);
+    expect(snapshots).toHaveLength(2);
+    const second = seam.sockets.last();
+    second.open();
+    await flush();
+    second.receive(SERVER.created('sess_2'));
+    second.receive(SERVER.updated());
+    second.receive(SERVER.responseDone());
+    expect(snapshots.map((items) => items.length)).toEqual([1, 1]);
+    expect(deltas).toHaveLength(2);
+    expect(deltas).toEqual([expect.objectContaining({ inputTokens: 96, outputTokens: 101 }), expect.objectContaining({ inputTokens: 96, outputTokens: 101 })]);
+    await session.stop();
+  });
+
   it('a company workspace reconnect stays on the exact pinned route and resumes screen frames normally', async () => {
     const frames = fakeFrameSource({ inHand: JPEG_A });
     const h = await qwenSession({

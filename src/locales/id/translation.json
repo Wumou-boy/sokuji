@@ -1885,6 +1885,7 @@
       "audio": "Audio",
       "display": "Tampilan",
       "history": "Riwayat dan catatan",
+      "usage": "Kuota token",
       "general": "Umum"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "mikrofon, peredam bising, gema, speaker, headphone, monitor, passthrough, mikrofon virtual, audio sistem",
       "display": "fon, ukuran, warna, ringkas, subtitel, takarir, pratinjau",
       "history": "riwayat, catatan, folder",
+      "usage": "penggunaan, token, kuota, saldo",
       "general": "bahasa antarmuka, tampilan, tema, pembaruan, log, penyiapan, bantuan, versi"
     },
     "accounts": {

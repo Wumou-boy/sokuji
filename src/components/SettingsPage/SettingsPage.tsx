@@ -17,6 +17,7 @@ import { AudioCategory, ModelsCategory } from './DeviceCategories';
 import { DisplayCategory } from './DisplayCategory';
 import { GeneralCategory } from './GeneralCategory';
 import { HistoryCategory } from './HistoryCategory';
+import { UsageCategory } from './UsageCategory';
 import { WordsCategory } from './WordsCategory';
 import { useWideForm } from './useWideForm';
 import { reveal } from './reveal';
@@ -40,13 +41,14 @@ export const CATEGORY_BODIES: CategoryBodies = {
   audio: AudioCategory,
   display: DisplayCategory,
   history: HistoryCategory,
+  usage: UsageCategory,
   general: GeneralCategory,
 };
 
 
 const TITLES: Record<CategoryId, string> = {
   lineup: 'Languages and line-up', words: 'Word list and background', accounts: 'Accounts and keys', models: 'Models and storage',
-  audio: 'Audio', display: 'Display', history: 'History and notes', general: 'General',
+  audio: 'Audio', display: 'Display', history: 'History and notes', usage: 'Token quota', general: 'General',
 };
 /** The line under a category's title (the mock's): what the category is for. Categories without one show none. */
 const INTROS: Partial<Record<CategoryId, string>> = {

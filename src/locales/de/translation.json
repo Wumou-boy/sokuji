@@ -1885,6 +1885,7 @@
       "audio": "Audio",
       "display": "Anzeige",
       "history": "Verlauf und Notizen",
+      "usage": "Token-Kontingent",
       "general": "Allgemein"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "Mikrofon, Rauschunterdrückung, Echo, Lautsprecher, Kopfhörer, Mithören, Durchleitung, virtuelles Mikrofon, Systemaudio",
       "display": "Schrift, Größe, Farbe, kompakt, Untertitel, Captions, Vorschau",
       "history": "Verlauf, Notizen, Ordner",
+      "usage": "Nutzung, Token, Kontingent, Guthaben",
       "general": "Oberflächensprache, Erscheinungsbild, Design, Updates, Protokolle, Einrichtung, Hilfe, Version"
     },
     "accounts": {

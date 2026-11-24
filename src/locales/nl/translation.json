@@ -1885,6 +1885,7 @@
       "audio": "Audio",
       "display": "Weergave",
       "history": "Geschiedenis en notities",
+      "usage": "Tokenquotum",
       "general": "Algemeen"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "microfoon, ruisonderdrukking, echo, luidspreker, koptelefoon, meeluisteren, doorgifte, virtuele microfoon, systeemaudio",
       "display": "lettertype, grootte, kleur, compact, ondertitels, bijschriften, voorbeeld",
       "history": "geschiedenis, notities, map",
+      "usage": "gebruik, tokens, quotum, tegoed",
       "general": "interfacetaal, uiterlijk, thema, updates, logboeken, installatie, help, versie"
     },
     "accounts": {

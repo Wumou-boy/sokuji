@@ -72,6 +72,7 @@ import { StatusLine } from './StatusLine';
 import { useStatusLine } from './useStatusLine';
 import { toneOf } from '../../lib/view/tone';
 import { useLiveNotesShows } from '../../lib/notes/live/livePanel';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
 import './MainPanel.scss';
 
 /**
@@ -175,6 +176,7 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   const notes = usePanelNotes();
   const subtitleModeActive = useSubtitleModeActive();
   const mode = useMode();
+  const sessionTokens = useSessionTokenStore((state) => state.meeting);
   const setMode = useSetMode();
   const bothPopoverSeen = useBothPopoverSeen();
   const setBothPopoverSeen = useSetBothPopoverSeen();
@@ -329,6 +331,7 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
       canStart={subtitle.canStart}
       holdToTalk={speakerLive && subtitle.holdToTalk} held={ptt.held} micMuted={micMuted}
       pair={subtitle.pair} duration={duration} faceToFace={f2f.active} faceToFaceOffered={f2f.offered} ears={ears}
+      sessionTokens={sessionTokens}
       // Ruling 11: `session.start` is the one start every surface calls — never a start while the gate is shut, the button is off then; this also holds for a click that beat its render (as the takeover's Start).
       onStart={() => void session.start('button')}
       onStop={() => void runner.stop('button')}

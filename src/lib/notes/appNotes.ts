@@ -41,6 +41,8 @@ import { makeNotesFetch, notesEndpointOf } from './desktopFetch';
 import { BAILIAN_ENDPOINT_ID } from '../../providers/qwen_livetranslate/endpoints';
 
 import { textModelNotesChat } from './textModelChat';
+import { recordNotesUsage } from '../usage/providerUsage';
+import { BAILIAN_BEIJING } from '../usage/ledger';
 
 export const BAILIAN_NOTES_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
@@ -107,7 +109,19 @@ export async function notesChatFromStores(
     if (defaults.textModelsOffered && !GEMINI_KEY_HOLDERS.some((id) => useProviderStore.getState().entries[id])) await loaded(geminiTextProvider as AnyProvider);
   }
   const service = notesServiceOf(lineUp);
-  return notesChatForService(service, sessionRef, o);
+  const resolved = await notesChatForService(service, sessionRef, o);
+  if (!resolved) return null;
+  const provider = service === BAILIAN_NOTES ? BAILIAN_BEIJING : service === KIZUNA_NOTES ? 'kizuna-ai-relay' : service;
+  return {
+    ...resolved,
+    chat: (request) => resolved.chat({
+      ...request,
+      onAnswered: (info) => {
+        if (info.usage) recordNotesUsage(provider, resolved.model, info.usage, sessionRef);
+        request.onAnswered?.(info);
+      },
+    }),
+  };
 }
 
 /** Resolve a named route directly (also used by the settings connection check). */

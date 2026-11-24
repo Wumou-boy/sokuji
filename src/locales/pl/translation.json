@@ -1885,6 +1885,7 @@
       "audio": "Dźwięk",
       "display": "Wyświetlanie",
       "history": "Historia i notatki",
+      "usage": "Limit tokenów",
       "general": "Ogólne"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "mikrofon, tłumienie szumów, echo, głośnik, słuchawki, odsłuch, przekazywanie, wirtualny mikrofon, dźwięk systemowy",
       "display": "czcionka, rozmiar, kolor, kompaktowy, napisy, podpisy, podgląd",
       "history": "historia, notatki, folder",
+      "usage": "użycie, tokeny, limit, saldo",
       "general": "język interfejsu, wygląd, motyw, aktualizacje, logi, konfiguracja, pomoc, wersja"
     },
     "accounts": {

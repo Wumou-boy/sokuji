@@ -9,8 +9,25 @@ import { QwenSettingsView, QwenVoiceSummary } from './QwenSettings';
 import { QwenTurnDetectionControls, QwenTurnDetectionSummary } from './QwenTurnDetection';
 import { migrateQwenSettings, QWEN_DEFAULTS, qwenCredentials, qwenLanguages, type QwenCredentials, type QwenSettings } from './settings';
 import { SP, TR, TR_TL } from '../../lib/lineup/types';
+import { trackRealtimeUsage } from '../../lib/usage/providerUsage';
+import { BAILIAN_BEIJING, recordUsage } from '../../lib/usage/ledger';
+import { bindSessionTokens } from '../../lib/usage/sessionTokens';
 
-const adapter = createQwenAdapter({ openHeaderSocket: platformHeaderSocket, detect: detectEndpoint });
+const adapter = createQwenAdapter({
+  openHeaderSocket: platformHeaderSocket,
+  detect: detectEndpoint,
+  trackUsage: (config, route) => {
+    if (!config.activity) return () => {};
+    const provider = route.managed ? 'qwen-managed'
+      : route.workspaceId || route.endpoint === 'bailian-cn' ? BAILIAN_BEIJING
+        : route.endpoint === 'intl' ? 'qwencloud-singapore'
+          : route.endpoint === 'cn' ? 'qwencloud-beijing' : 'qwencloud-unknown';
+    return trackRealtimeUsage(config.activity, provider, config.model, (delta) => {
+      config.tokenSink?.(delta);
+      recordUsage(delta);
+    });
+  },
+});
 
 /**
  * Qwen LiveTranslate with the user's own key (spec 2026-10-13; issue
@@ -56,6 +73,10 @@ export const qwenLiveTranslateProvider: Provider<QwenSettings, QwenCredentials, 
 
     build: buildQwen,
     describe: describeQwen,
-    start: adapter.start,
+    start: (request, events) => {
+      const activity = request.config.activity;
+      const tokenSink = activity ? bindSessionTokens(activity) : undefined;
+      return adapter.start(tokenSink ? { ...request, config: { ...request.config, tokenSink } } : request, events);
+    },
   })],
 };

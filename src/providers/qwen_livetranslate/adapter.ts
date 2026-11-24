@@ -164,6 +164,8 @@ export interface QwenAdapterDeps {
   detect: DetectEndpoint;
   /** Workspace mode ships only in the Windows desktop app in this release; injectable for replay tests. */
   workspaceSupported?: () => boolean;
+  /** App-owned adapter opt-in. Called once per actual socket, including each reconnect attempt. */
+  trackUsage?: (config: QwenConfig, route: { endpoint: EndpointId | null; workspaceId: string | null; managed: boolean }) => (raw: unknown) => void;
 }
 
 type Phase = 'opening' | 'configuring' | 'live' | 'ended';
@@ -668,6 +670,9 @@ class QwenLeg implements AdapterSession {
   private connect(endpoint: EndpointId | null, workspaceId: string | null, signal: AbortSignal): Promise<WebSocket> {
     return new Promise<WebSocket>((resolve, reject) => {
       const { clock, config, credentials } = this.request;
+      // A response.done usage value is a cumulative snapshot for this socket only.
+      // Reconnects create a fresh closure and therefore cannot carry old totals forward.
+      const trackUsage = this.deps.trackUsage?.(config, { endpoint, workspaceId, managed: credentials.lease !== undefined });
       // A stop while the endpoint was being found: nothing opens.
       if (signal.aborted) {
         reject(signal.reason ?? new Error('aborted'));
@@ -751,7 +756,7 @@ class QwenLeg implements AdapterSession {
         socket.binaryType = 'arraybuffer';
         socket.onmessage = (e: MessageEvent) => {
           if (!settled) this.handshake(socket, e.data, settle, (id) => { created = id; report(); });
-          else if (socket === this.socket) this.onMessage(e.data);
+          else if (socket === this.socket) this.onMessage(e.data, trackUsage);
         };
         // A Logs line: the close that follows says what it did to the session.
         socket.onerror = () => this.frame('in', 'session.socket_error');
@@ -802,7 +807,7 @@ class QwenLeg implements AdapterSession {
     } else this.frame('in', 'session.unknown', { type: e.type });
   }
 
-  private onMessage(data: unknown): void {
+  private onMessage(data: unknown, trackUsage?: (raw: unknown) => void): void {
     if (this.phase !== 'live') return;
     this.heard();
     let e: ServerEvent;
@@ -867,6 +872,7 @@ class QwenLeg implements AdapterSession {
         return;
       case 'response.done': {
         const r = (typeof e.response === 'object' && e.response !== null ? e.response : {}) as { status?: unknown; usage?: unknown };
+        trackUsage?.(r.usage);
         // The session's running totals: what the live test reads the bill from.
         this.frame('in', e.type, { status: str(r.status), usage: r.usage ?? null });
         // Under push-to-talk, the end of the committed turn: the server takes audio again.

@@ -17,6 +17,7 @@ import type { FileRecognitionMissing, FileRecognitionService } from './file/serv
 import { trackTranslation, transcribedTracks, type TranscribePhase } from './file/transcribe';
 import type { HistoryPort } from './port';
 import { applyNotesEdit, undoNotesEdit, type NotesEdit, type NotesUndo } from '../notes/editNotes';
+import { removeHistoryTokens } from '../usage/sessionTokens';
 import type {
   FileTranscriptionOptions, HistoryCorrection,
   HistoryNotes, HistoryRecord, HistoryRecordRow, HistorySearchResult, HistorySentence, HistorySpeaker, HistoryStatus, HistoryUsage,
@@ -677,13 +678,17 @@ export function createHistoryPageStore(
       }),
 
       purge: (ids) => act(async () => {
-        await port.purgeRecords({ ids: [...ids] });
+        const { purged } = await port.purgeRecords({ ids: [...ids] });
+        removeHistoryTokens(purged);
         await reload();
       }),
 
       emptyBin: () => act(async () => {
         const bin = await port.listRecords({ binned: true, limit: BIN_PAGE });
-        if (bin.length > 0) await port.purgeRecords({ ids: bin.map((r) => r.id) });
+        if (bin.length > 0) {
+          const { purged } = await port.purgeRecords({ ids: bin.map((r) => r.id) });
+          removeHistoryTokens(purged);
+        }
         await reload();
       }),
 

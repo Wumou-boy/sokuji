@@ -44,6 +44,16 @@ describe('the body the notes are asked with', () => {
     expect(JSON.parse(init.body as string)).not.toHaveProperty('reasoning_effort');
   });
 
+  it('forwards valid compatible usage through onAnswered without changing the answer', async () => {
+    const usage = { prompt_tokens: 41, completion_tokens: 7, prompt_tokens_details: { cached_tokens: 9 } };
+    const fetch = vi.fn(async () => answer(200, { id: 'bailian-chat-1', usage, choices: [{ message: { content: '{"title":"T"}' } }] }));
+    const seen: unknown[] = [];
+    await compatibleChat({ baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen3.8-flash', apiKey: 'qwen-key', bailian: true, fetch })(
+      { ...R, prompt: 'whole-meeting', promptVersion: 2, signal: new AbortController().signal, onAnswered: (info) => seen.push(info) },
+    );
+    expect(seen).toEqual([{ usage }]);
+  });
+
   it('keeps code fences invalid for the strict OpenAI route', async () => {
     const fetch = vi.fn(async () => answer(200, { choices: [{ message: { content: '```json\n{"title":"T"}\n```' } }] }));
     await expect(ask(openAiChat({ ...base, fetch }))).rejects.toMatchObject({ code: 'not-json' });

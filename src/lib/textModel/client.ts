@@ -108,7 +108,7 @@ export interface ChatCompletionOptions extends Where {
 export type ReasoningAsk = 'lowest' | 'default' | { exact: string } | { preferred: string };
 
 /** `id`: the service's own id for the completion, where its answer names one. */
-export type ChatCompletionResult = { ok: true; text: string; id?: string } | { ok: false; failure: TextModelFailure };
+export type ChatCompletionResult = { ok: true; text: string; id?: string; usage?: unknown } | { ok: false; failure: TextModelFailure; id?: string; usage?: unknown };
 export type ListModelsResult = { ok: true; ids: string[] } | { ok: false; failure: TextModelFailure };
 export type ProbeResult = { ok: true } | { ok: false; failure: TextModelFailure };
 
@@ -246,20 +246,21 @@ function answerOf(raw: string, apiKey: string | undefined): ChatCompletionResult
   }
   if (!isRecord(parsed)) return failed('server', "The service's answer could not be read.");
   const choices = parsed.choices;
+  const id = stringOf(parsed.id);
+  const metadata = { ...(id === undefined ? {} : { id }), ...(parsed.usage === undefined ? {} : { usage: parsed.usage }) };
   if (!Array.isArray(choices)) {
     const refusal = refusalOf(raw);
-    return failed('server', spoken(refusal.message ?? '', apiKey) || "The service's answer held no choices.");
+    return { ...failed('server', spoken(refusal.message ?? '', apiKey) || "The service's answer held no choices."), ...metadata };
   }
   const message = isRecord(choices[0]) && isRecord(choices[0].message) ? choices[0].message : {};
   const { content } = message;
-  const id = stringOf(parsed.id);
-  const answered = (text: string): ChatCompletionResult => (id === undefined ? { ok: true, text } : { ok: true, text, id });
+  const answered = (text: string): ChatCompletionResult => ({ ok: true, text, ...metadata });
   if (typeof content === 'string') return answered(content);
   if (Array.isArray(content)) {
     return answered(content.map((part) => (isRecord(part) && typeof part.text === 'string' ? part.text : '')).join(''));
   }
   const refusal = stringOf(message.refusal);
-  if (refusal) return failed('refused', spoken(refusal, apiKey));
+  if (refusal) return { ...failed('refused', spoken(refusal, apiKey)), ...metadata };
   return answered('');
 }
 

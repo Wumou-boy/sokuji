@@ -26,11 +26,13 @@ import type { OpenSource } from '../lib/session/source';
 import { loadQwenVoiceProfiles } from '../providers/qwen_livetranslate/voiceProfileStorage';
 import { runQwenVoiceBenchmark } from '../providers/qwen_livetranslate/voiceBenchmark';
 import { getFaceToFaceDiagnostics, startFaceToFaceRuntime, stopFaceToFaceRuntime } from '../lib/faceToFace/runtime';
+import { billingMonth, remainingQuota, useUsageStore } from '../lib/usage/ledger';
+import { useSessionTokenStore } from '../lib/usage/sessionTokens';
 
 type ElectronBridge = Pick<Window['electron'], 'invoke' | 'receive' | 'removeListener'>;
 type Command = 'status' | 'view.set-mode' | 'audio.inputs' | 'audio.system-check' | 'session.start' | 'session.stop' | 'logs.enable' | 'logs.list' | 'captions.list'
   | 'provider.configure-qwen-beijing' | 'provider.configure-qwen-workspace' | 'provider.configure-qwen-defaults' | 'credentials.status' | 'notes.check'
-  | 'voice.benchmark' | 'face-to-face.start' | 'face-to-face.stop' | 'face-to-face.replay';
+  | 'voice.benchmark' | 'face-to-face.start' | 'face-to-face.stop' | 'face-to-face.replay' | 'usage.summary';
 type Request = { id: string; command: Command; args?: unknown };
 type Reply = { id: string; result: { ok: true; data: unknown } | { ok: false; error: { code: string; message: string } } };
 
@@ -58,7 +60,8 @@ function requestOf(value: unknown): Request | null {
     && command !== 'logs.enable' && command !== 'logs.list' && command !== 'captions.list'
     && command !== 'provider.configure-qwen-beijing' && command !== 'provider.configure-qwen-workspace'
     && command !== 'provider.configure-qwen-defaults' && command !== 'credentials.status' && command !== 'notes.check'
-    && command !== 'voice.benchmark' && command !== 'face-to-face.start' && command !== 'face-to-face.stop' && command !== 'face-to-face.replay') return null;
+    && command !== 'voice.benchmark' && command !== 'face-to-face.start' && command !== 'face-to-face.stop' && command !== 'face-to-face.replay'
+    && command !== 'usage.summary') return null;
   return { id: value.id, command, args: value.args };
 }
 
@@ -220,6 +223,26 @@ export function attachAgentControl(
           case 'status':
             reply(request.id, { ok: true, data: status() });
             return;
+          case 'usage.summary': {
+            const month = isObject(request.args) && typeof request.args.month === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(request.args.month)
+              ? request.args.month
+              : billingMonth();
+            const { rows, quotas } = useUsageStore.getState();
+            const tokens = useSessionTokenStore.getState();
+            reply(request.id, { ok: true, data: {
+              month,
+              usage: rows.filter((row) => row.month === month),
+              sessions: tokens.history.filter((session) => billingMonth(session.startedAt) === month).slice(0, 100),
+              current: { meeting: tokens.meeting, faceToFace: tokens['face-to-face'] },
+              quotaSnapshots: Object.entries(quotas).map(([model, snapshot]) => ({
+                model,
+                capturedAt: snapshot.capturedAt,
+                reportedRemainingTokens: snapshot.remainingTokens,
+                locallyEstimatedRemainingTokens: remainingQuota(rows, model, snapshot),
+              })),
+            } });
+            return;
+          }
           case 'audio.inputs': {
             const { audioInputDevices, selectedInputDevice, selectedParticipantSource, devicesLoaded, isMicMuted } = useAudioStore.getState();
             const browserDevices = await navigator.mediaDevices?.enumerateDevices().catch(() => []) ?? [];

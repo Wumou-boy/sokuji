@@ -59,6 +59,42 @@ describe('the Qwen LiveTranslate adapter: conformance', () => {
   });
 });
 
+describe('Qwen realtime usage forwarding', () => {
+  it('uses the app opt-in tracker before the existing response.done frame callback', async () => {
+    const seam = fakeHeaderSockets();
+    const order: string[] = [];
+    const snapshots: unknown[] = [];
+    const { events } = recordEvents();
+    const onFrame = events.frame;
+    events.frame = (frame) => {
+      if (frame.type === 'response.done') order.push('frame');
+      onFrame(frame);
+    };
+    const adapter = createQwenAdapter({
+      openHeaderSocket: seam.open,
+      detect: intl,
+      trackUsage: (_config, route) => {
+        expect(route).toEqual({ endpoint: 'intl', workspaceId: null, managed: false });
+        return (raw) => { snapshots.push(raw); order.push('usage'); };
+      },
+    });
+    const config = configFor(AUTO_CTX);
+    const signal = new AbortController().signal;
+    const starting = adapter.start({ context: AUTO_CTX, config, credentials: KEY, clock: trackedClock().clock, signal }, events);
+    await flush();
+    const socket = seam.sockets.last();
+    socket.open();
+    await flush();
+    socket.receive(SERVER.created());
+    socket.receive(SERVER.updated());
+    const session = await starting;
+    socket.receive(SERVER.responseDone());
+    expect(snapshots).toHaveLength(1);
+    expect(order.slice(-2)).toEqual(['usage', 'frame']);
+    await session.stop();
+  });
+});
+
 describe('the Qwen LiveTranslate adapter: the seeded lifecycles', () => {
   const lifecycles: LifecycleHarness<QwenConfig, QwenCredentials> = {
     adapter: (run) => createQwenAdapter({ openHeaderSocket: fakeHeaderSockets(run.sockets).open, detect: intl }),

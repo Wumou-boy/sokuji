@@ -1885,6 +1885,7 @@
       "audio": "Áudio",
       "display": "Exibição",
       "history": "Histórico e notas",
+      "usage": "Cota de tokens",
       "general": "Geral"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "microfone, supressão de ruído, eco, alto-falante, fones de ouvido, monitor, passagem direta, microfone virtual, áudio do sistema",
       "display": "fonte, tamanho, cor, compacto, legendas, legendas ao vivo, pré-visualização",
       "history": "histórico, notas, pasta",
+      "usage": "uso, tokens, cota, saldo",
       "general": "idioma da interface, aparência, tema, atualizações, registros, configuração, ajuda, versão"
     },
     "accounts": {

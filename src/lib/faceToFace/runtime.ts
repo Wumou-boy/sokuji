@@ -12,6 +12,8 @@ import { useFaceToFaceStore } from '../../stores/faceToFaceStore';
 import { getAppSession } from '../../app/session';
 import { FaceToFaceCaptions } from './captions';
 import { QwenTurnAudioBuffer, QwenTurnAudioError } from './audioBuffer';
+import { isElectron } from '../../utils/environment';
+import { beginSessionTokens, finishSessionTokens } from '../usage/sessionTokens';
 
 let activeStop: (() => Promise<void>) | null = null;
 type StartStage = 'provider' | 'microphone';
@@ -81,6 +83,7 @@ export async function startFaceToFaceRuntime(signal = new AbortController().sign
   if (activeStop) throw new Error('Face to Face is already starting or running.');
   const state = useFaceToFaceStore.getState();
   state.resetRun();
+  const tokenSession = beginSessionTokens('face-to-face', realClock.now(), isElectron() && !openSource);
   state.setPhase('starting');
   const run: FaceToFaceDiagnostics = {
     stage: 'provider', input: openSource ? 'replay' : 'microphone', failure: null, microphoneFrames: 0, inputSamples: 0, peak: 0,
@@ -147,6 +150,7 @@ export async function startFaceToFaceRuntime(signal = new AbortController().sign
       await Promise.allSettled([closing, releasing, replay?.stop()]);
       signal.removeEventListener('abort', abortFromOwner);
       if (activeStop === dispose) activeStop = null;
+      finishSessionTokens('face-to-face', tokenSession, realClock.now());
       useFaceToFaceStore.getState().setPhase('idle');
     })();
     return stopping;
@@ -178,6 +182,7 @@ export async function startFaceToFaceRuntime(signal = new AbortController().sign
       };
       const config = buildQwen(context, settings, shared);
       if ('refused' in config) throw new Error(config.refused);
+      config.activity = 'face-to-face';
       // Face to Face always needs diarization, regardless of the meeting-only speaker-label preference.
       config.person = true;
       config.detectIncomingLanguage = true;
@@ -208,6 +213,7 @@ export async function startFaceToFaceRuntime(signal = new AbortController().sign
       const replayContext: SessionContext = { direction: { source: 'auto', target: state.languages.second }, speech: false, turns: 'manual' };
       const replayConfig = buildQwen(replayContext, settings, shared);
       if ('refused' in replayConfig) throw new Error(replayConfig.refused);
+      replayConfig.activity = 'face-to-face';
       replayConfig.person = false;
       replayConfig.detectIncomingLanguage = false;
       replayConfig.skipSameLanguageText = false;

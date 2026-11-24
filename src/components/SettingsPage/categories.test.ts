@@ -67,7 +67,8 @@ describe('the settings categories', () => {
   });
 
   it('lists the categories in the agreed order', () => {
-    expect(CATEGORIES.map((c) => c.id)).toEqual(['lineup', 'words', 'accounts', 'models', 'audio', 'display', 'history', 'general']);
+    expect(CATEGORIES.map((c) => c.id)).toEqual(['lineup', 'words', 'accounts', 'models', 'audio', 'display', 'history', 'usage', 'general']);
+    expect(filterCategories('额度', t).map((c) => c.id)).toEqual(['usage']);
   });
 
   it('the settings categories load before any catalog is registered', async () => {

@@ -1885,6 +1885,7 @@
       "audio": "Audio",
       "display": "Display",
       "history": "Kasaysayan at mga tala",
+      "usage": "Quota ng token",
       "general": "Pangkalahatan"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "mikropono, pagpigil ng ingay, echo, speaker, headphones, monitor, passthrough, virtual na mikropono, audio ng system",
       "display": "font, laki, kulay, compact, subtitle, caption, preview",
       "history": "kasaysayan, mga tala, folder",
+      "usage": "paggamit, token, quota, balanse",
       "general": "wika ng interface, hitsura, tema, mga update, log, setup, tulong, bersyon"
     },
     "accounts": {

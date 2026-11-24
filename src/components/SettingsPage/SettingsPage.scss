@@ -1014,5 +1014,25 @@
 .settings-page .setting-row.highlight,
 .settings-page .accounts-row.highlight { @include vars.jump-hint; }
 
+.usage-category {
+  &__hint, &__error { margin: 0; font-size: 12px; line-height: 1.55; }
+  &__hint { margin-top: 6px; color: vars.$text-muted; }
+  &__error { margin-top: 7px; color: vars.$color-error; }
+  &__quota-form input {
+    min-width: 0; height: 30px; padding: 0 8px; border: 1px solid vars.$border-subtle; border-radius: 6px;
+    background: vars.$bg-control; color: vars.$text-primary; font: inherit;
+    &:focus-visible { @include vars.focus-ring; }
+  }
+  &__quota-form { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(150px, 1.3fr) auto; align-items: end; gap: 8px; margin-top: 9px; }
+  &__quota-form label { display: grid; gap: 4px; min-width: 0; font-size: 11.5px; color: vars.$text-tertiary; }
+  &__projection { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 9px; font-size: 12px; }
+  &__projection strong { color: vars.$text-primary; }
+  &__projection span { color: vars.$text-muted; }
+}
+
+@media (max-width: 540px) {
+  .usage-category__quota-form { grid-template-columns: 1fr; }
+}
+
 // The jump locator's run (vars.jump-hint), for this stylesheet's targets.
 @include vars.jump-hint-keyframes;

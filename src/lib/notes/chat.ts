@@ -22,6 +22,21 @@ export interface NotesUsage {
   prompt_tokens_details?: { cached_tokens?: number };
 }
 
+/** Narrows provider usage before it reaches live-session totals or the app ledger. */
+export function notesUsageOf(raw: unknown): NotesUsage | undefined {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return undefined;
+  const value = raw as Record<string, unknown>;
+  const count = (n: unknown) => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
+  if (!count(value.prompt_tokens) || !count(value.completion_tokens)) return undefined;
+  const usage: NotesUsage = { prompt_tokens: value.prompt_tokens as number, completion_tokens: value.completion_tokens as number };
+  const details = value.prompt_tokens_details;
+  if (typeof details === 'object' && details !== null && !Array.isArray(details)) {
+    const cached = (details as Record<string, unknown>).cached_tokens;
+    if (count(cached)) usage.prompt_tokens_details = { cached_tokens: cached as number };
+  }
+  return usage;
+}
+
 export type NotesPromptName = 'live-update' | 'whole-meeting' | 'meeting-part' | 'combine-parts' | 'check-names';
 
 export interface ChatRequest {
@@ -116,13 +131,17 @@ export function chatBody(model: string, r: Pick<ChatRequest, 'system' | 'user' |
   });
 }
 
-async function parseAnswer(response: Response, allowFence: boolean): Promise<object> {
-  let content: unknown;
+async function parseAnswer(response: Response, allowFence: boolean, onRead?: (usage: NotesUsage | undefined) => void): Promise<object> {
+  let body: { choices?: Array<{ message?: { content?: unknown } }>; usage?: unknown };
   try {
-    content = ((await response.json()) as { choices?: Array<{ message?: { content?: unknown } }> })?.choices?.[0]?.message?.content;
+    body = await response.json() as typeof body;
   } catch {
-    content = undefined;
+    onRead?.(undefined);
+    throw new ChatError('The notes model gave no answer', { code: 'no-answer' });
   }
+  const usage = notesUsageOf(body?.usage);
+  onRead?.(usage);
+  const content = body?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') throw new ChatError('The notes model gave no answer', { code: 'no-answer' });
   const fenced = allowFence ? content.match(/^\s*```(?:json)?\s*([\s\S]*?)\s*```\s*$/i) : null;
   let parsed: unknown;
@@ -184,8 +203,8 @@ function completions(
         signal,
       });
       const requestId = response.headers.get('x-request-id');
-      onAnswered?.(requestId ? { requestId } : {});
       if (!response.ok) {
+        onAnswered?.(requestId ? { requestId } : {});
         const refusal = await refusalOf(response);
         // Out of credit also comes as 429, and no wait helps it.
         const noCredit = refusal.code === 'insufficient_quota';
@@ -200,7 +219,7 @@ function completions(
           ...(noCredit ? { retryable: false } : {}),
         });
       }
-      return parseAnswer(response, allowFence);
+      return parseAnswer(response, allowFence, (usage) => onAnswered?.({ ...(requestId ? { requestId } : {}), ...(usage ? { usage } : {}) }));
     }
   };
 }

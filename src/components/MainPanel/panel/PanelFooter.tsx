@@ -13,6 +13,8 @@ import type { EarsLegendEntry } from '../useFaceToFace';
 import type { LanguagePair } from '../../../lib/run/types';
 import { LanguagePairText } from '../../LanguagePairText/LanguagePairText';
 import { parseCode } from '../../../lib/language/code';
+import type { SessionTokens } from '../../../lib/usage/sessionTokens';
+import { SessionTokenMeter } from '../SessionTokenMeter';
 
 export interface PanelFooterProps {
   site: 'basic' | 'advanced';
@@ -27,6 +29,7 @@ export interface PanelFooterProps {
   micMuted: boolean;
   pair: LanguagePair | null;
   duration: string | null;
+  sessionTokens?: SessionTokens | null;
   onStart(): void;
   onStop(): void;
   onPress(): void;
@@ -112,6 +115,7 @@ function ControlFooter(props: PanelFooterProps) {
     micMuted,
     pair,
     duration,
+    sessionTokens = null,
     onStart,
     onStop,
     onPress,
@@ -226,6 +230,8 @@ function ControlFooter(props: PanelFooterProps) {
           </button>
         </div>
 
+        <SessionTokenMeter session={sessionTokens} />
+
         <span className="footer-spacer" />
 
         <div className="footer-metadata">
@@ -313,6 +319,8 @@ function ControlFooter(props: PanelFooterProps) {
           </button>
         )}
       </div>
+
+      <SessionTokenMeter session={sessionTokens} />
 
       <span className="footer-spacer" />
 

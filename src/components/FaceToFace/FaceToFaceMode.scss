@@ -45,6 +45,8 @@
     gap: 10px;
   }
 
+  &__toolbar .session-token-meter { align-self: center; flex: 0 0 auto; }
+
   &__setup {
     display: grid;
     flex: 1 1 auto;
@@ -123,7 +125,8 @@
   .face-to-face-mode { padding: 10px 10px 8px; gap: 7px; }
   .face-to-face-mode__header { gap: 8px; }
   .face-to-face-mode h1 { font-size: 17px; }
-  .face-to-face-mode__toolbar { align-items: stretch; gap: 7px; }
+  .face-to-face-mode__toolbar { align-items: center; gap: 7px; }
+  .face-to-face-mode__toolbar .session-token-meter { flex-direction: column; align-items: flex-end; gap: 0; font-size: 10px; }
   .face-to-face-mode__setup { gap: 6px; }
   .face-to-face-mode__language { font-size: 10px; }
   .face-to-face-mode__language select { padding-inline: 5px; font-size: 11px; }
