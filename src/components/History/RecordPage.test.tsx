@@ -6,6 +6,7 @@ import type { Leg, Segment } from '../../lib/conversation/types';
 import type { HistoryPort } from '../../lib/history/port';
 import type { HistoryRecord, HistorySentence, HistorySpeaker } from '../../lib/history/types';
 import { createHistoryPageStore, type HitTarget } from '../../lib/history/historyPageStore';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
 import { conversationExporter, exportWords } from '../../lib/export/exporter';
 import { FULL_SCOPE } from '../../lib/export/transcript';
 import { createProjector, DEFAULT_PROJECTION } from '../../lib/projection/project';
@@ -102,6 +103,7 @@ async function renderRecord(at: HitTarget | null = null) {
 }
 
 beforeEach(() => {
+  useSessionTokenStore.setState({ history: [], notesByRecord: {} });
   record = {
     id: A, startedAt: START, endedAt: START + 65_000, state: 'closed', mode: 'both', myLanguage: 'en', targetLanguage: 'zh', title: null,
     titleByUser: false, binnedAt: null, sentences: 3, hasRecording: false, notesVersions: 0, notesState: null, notesComplete: false, audioBytes: 0,
@@ -136,6 +138,20 @@ function widePage(width = 1200) {
 }
 
 describe('a record', () => {
+  it('shows recorded session tokens separately from Notes token usage', async () => {
+    useSessionTokenStore.setState({
+      history: [{ id: 'session-token-1', activity: 'meeting', startedAt: START, endedAt: START + 65_000, historyId: A, inputTokens: 12, outputTokens: 30, totalTokens: 42, billableTokens: 42, reported: true }],
+      notesByRecord: { [A]: { inputTokens: 3, outputTokens: 5, totalTokens: 8, billableTokens: 8, reported: true } },
+    });
+    await renderRecord();
+    const usage = screen.getByLabelText('Token usage');
+    expect(within(usage).getByText('42 Tokens')).toBeInTheDocument();
+    expect(within(usage).getByText('Input 12')).toBeInTheDocument();
+    expect(within(usage).getByText('Output 30')).toBeInTheDocument();
+    expect(within(usage).getByText('Notes')).toBeInTheDocument();
+    expect(within(usage).getByText('8 Tokens')).toBeInTheDocument();
+  });
+
   it('shows the transcript with speakers, times and translations', async () => {
     await renderRecord();
     expect(screen.getByRole('button', { name: 'Back to the list' })).toBeInTheDocument();

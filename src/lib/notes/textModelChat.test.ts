@@ -79,6 +79,21 @@ describe('the notes by OpenAI with the default reasoning: what the notes sent be
     await ask(port('openai', service(object({ ok: 1 }, 'chatcmpl-7'))).chat, PART, undefined, (info) => seen.push(info));
     expect(seen).toEqual([{ requestId: 'chatcmpl-7' }]);
   });
+
+  it('forwards valid completion usage with the request id and ignores malformed usage', async () => {
+    const s = service({ status: 200, body: { ...object({ title: 'T' }, 'chatcmpl-usage').body, usage: { prompt_tokens: 12, completion_tokens: 3, prompt_tokens_details: { cached_tokens: 4 } } } });
+    const seen: unknown[] = [];
+    await ask(port('openai', s).chat, PART, undefined, (info) => seen.push(info));
+    expect(seen).toEqual([{ requestId: 'chatcmpl-usage', usage: { prompt_tokens: 12, completion_tokens: 3, prompt_tokens_details: { cached_tokens: 4 } } }]);
+    const malformed = service({ status: 200, body: { ...object({ title: 'T' }).body, usage: { prompt_tokens: -1, completion_tokens: 3 } } });
+    const invalidSeen: unknown[] = [];
+    await ask(port('openai', malformed).chat, PART, undefined, (info) => invalidSeen.push(info));
+    expect(invalidSeen).toEqual([{}]);
+    const billedWithoutChoices = service({ status: 200, body: { id: 'chatcmpl-empty', usage: { prompt_tokens: 5, completion_tokens: 1 }, choices: [] } });
+    const billedSeen: unknown[] = [];
+    await expect(ask(port('openai', billedWithoutChoices).chat, PART, undefined, (info) => billedSeen.push(info))).rejects.toMatchObject({ code: 'no-answer' });
+    expect(billedSeen).toEqual([{ requestId: 'chatcmpl-empty', usage: { prompt_tokens: 5, completion_tokens: 1 } }]);
+  });
 });
 
 describe('the notes by Gemini and by a compatible service', () => {

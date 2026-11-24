@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import i18n from '../../locales';
 import { useFaceToFaceStore } from '../../stores/faceToFaceStore';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
 import FaceToFaceMode from './FaceToFaceMode';
 
 vi.mock('../../lib/faceToFace/runtime', () => ({
@@ -36,7 +37,20 @@ async function mountScrollable() {
   return { view, el, box, update };
 }
 
-afterEach(() => { vi.useRealTimers(); });
+afterEach(() => {
+  vi.useRealTimers();
+  useSessionTokenStore.setState({ 'face-to-face': null });
+});
+
+it('shows Face to Face session token usage beside its start control', async () => {
+  await i18n.changeLanguage('en');
+  useSessionTokenStore.setState({ 'face-to-face': { inputTokens: 40, outputTokens: 12, totalTokens: 52, billableTokens: 48, reported: true } });
+  render(<FaceToFaceMode onExit={() => {}} />);
+
+  const meter = document.querySelector('.face-to-face-mode__toolbar .session-token-meter')!;
+  expect(meter.textContent).toContain('52');
+  expect(meter.getAttribute('title')).toBe('Session tokens: 52 total (40 input, 12 output; 48 billable)');
+});
 
 it('shows both languages in the chosen order for each automatically numbered speaker', async () => {
   await i18n.changeLanguage('en');

@@ -5,6 +5,7 @@ import { createVirtualClock, type VirtualClock } from '../../lib/contract/clock'
 import type { HistoryPort } from '../../lib/history/port';
 import type { HistoryRecord, HistoryRecordRow, HistorySearchResult, HistoryStatus } from '../../lib/history/types';
 import { createHistoryPageStore } from '../../lib/history/historyPageStore';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
 
 const env = vi.hoisted(() => ({ port: null as unknown }));
 vi.mock('../../utils/environment', async (importOriginal) => ({
@@ -94,6 +95,7 @@ beforeEach(() => {
   bin = [];
   found = [];
   usageBytes = 1_572_864;
+  useSessionTokenStore.setState({ history: [], notesByRecord: {} });
   port = fakePort();
   binAware(port);
   env.port = port;
@@ -104,6 +106,23 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('the History list', () => {
+  it('shows linked meeting totals and keeps unlinked Face to Face usage in the token summary', async () => {
+    useSessionTokenStore.setState({ history: [
+      { id: 'meeting-token-1', activity: 'meeting', startedAt: START, endedAt: START + 60_000, historyId: A, inputTokens: 12, outputTokens: 30, totalTokens: 42, billableTokens: 42, reported: true },
+      { id: 'face-token-1', activity: 'face-to-face', startedAt: START + DAY, endedAt: START + DAY + 60_000, inputTokens: 5, outputTokens: 7, totalTokens: 12, billableTokens: 12, reported: true },
+    ] });
+    await renderList();
+    const meeting = rowWith('Weekly sync');
+    expect(within(meeting).getByText('42 Tokens')).toBeInTheDocument();
+    expect(within(meeting).getByText('Input 12')).toBeInTheDocument();
+    expect(within(meeting).getByText('Output 30')).toBeInTheDocument();
+    const tokenHistory = screen.getByText('Token usage').closest('details') as HTMLDetailsElement;
+    expect(within(tokenHistory).getByText('54 Tokens')).toBeInTheDocument();
+    expect(within(tokenHistory).getByText('Face to face')).toBeInTheDocument();
+    expect(within(tokenHistory).getByText('12 Tokens')).toBeInTheDocument();
+    expect(within(tokenHistory).queryByText('Meeting')).toBeNull();
+  });
+
   it('lists records by day with their title, time, length, languages and what they have in words', async () => {
     records.push(rowOf(D, { title: 'Earlier call', startedAt: START - 2 * DAY, endedAt: START - 2 * DAY + 65_000, sentences: 1 }));
     await renderList();
@@ -120,6 +139,7 @@ describe('the History list', () => {
     expect(within(row).getByRole('img', { name: 'translated both ways' })).toHaveClass('lucide-arrow-right-left');
     expect(within(row).getByText('Transcript')).toBeInTheDocument();
     expect(within(row).getByText('Notes')).toBeInTheDocument();
+    expect(within(row).getByText('Token usage was not recorded')).toBeInTheDocument();
     expect(within(row).queryByText('Recording')).toBeNull();
     expect(screen.getByText('1.5 MB in 3 records')).toBeInTheDocument();
   });

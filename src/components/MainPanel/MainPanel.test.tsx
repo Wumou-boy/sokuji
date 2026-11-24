@@ -150,6 +150,7 @@ import { useRoutingStore } from '../../stores/routingStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useSubtitleStore } from '../../stores/subtitleStore';
 import { usePanelNotesStore } from '../../stores/panelNotesStore';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
 import { useScreenContextStore } from '../../stores/screenContextStore';
 import { useTurnModeStore } from '../../stores/turnModeStore';
 import type { Sampler, SamplerState } from '../../lib/screen/sampler';
@@ -234,6 +235,7 @@ beforeAll(async () => {
 afterEach(() => restoreCaseCanvas());
 
 beforeEach(async () => {
+  useSessionTokenStore.setState({ meeting: null, 'face-to-face': null });
   restoreCaseCanvas = stubCanvas();
   // The page's one session outlives each case: no run, no conversation, no last end.
   await runner().stop();
@@ -282,6 +284,17 @@ describe('MainPanel before its playback has loaded', () => {
 });
 
 describe('MainPanel', () => {
+  it('shows supported zero before usage arrives and updates the live meeting count', async () => {
+    const { container } = await renderPanel();
+    const meter = container.querySelector('.session-token-meter')!;
+    expect(meter.textContent).toContain('—');
+
+    act(() => useSessionTokenStore.setState({ meeting: { inputTokens: 0, outputTokens: 0, totalTokens: 0, billableTokens: 0, reported: false } }));
+    expect(meter.textContent).toContain('0');
+    act(() => useSessionTokenStore.setState({ meeting: { inputTokens: 20, outputTokens: 7, totalTokens: 27, billableTokens: 24, reported: true } }));
+    expect(meter.textContent).toContain('27');
+  });
+
   it('draws the empty state and a Start before anything has happened', async () => {
     const { container } = await renderPanel();
     expect(container.querySelector('.conversation-display .empty-state')?.textContent).toContain('simplePanel.startToBegin');

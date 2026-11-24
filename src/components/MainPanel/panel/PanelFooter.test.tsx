@@ -45,6 +45,25 @@ const baseProps = (site: 'basic' | 'advanced', over: Partial<PanelFooterProps> =
 const actionButton = (container: HTMLElement) =>
   container.querySelector('[data-tour="main-action"]') as HTMLButtonElement;
 
+describe('PanelFooter — session tokens', () => {
+  it.each(SITES)('%s: places the live session count immediately after Start controls and before language controls', (site) => {
+    const sessionTokens = { inputTokens: 1200, outputTokens: 300, totalTokens: 1500, billableTokens: 1450, reported: true };
+    const { container } = render(<PanelFooter {...baseProps(site, { sessionTokens })} />);
+    const meter = container.querySelector('.session-token-meter')!;
+    const actionCluster = container.querySelector('.action-cluster')!;
+    expect(actionCluster.nextElementSibling).toBe(meter);
+    expect(meter.textContent).toContain('1,500');
+    expect(meter.getAttribute('title')).toBe('mainPanel.sessionTokensDetail');
+  });
+
+  it.each(SITES)('%s: shows an unavailable dash until this provider has a session meter', (site) => {
+    const { container } = render(<PanelFooter {...baseProps(site, { sessionTokens: null })} />);
+    const meter = container.querySelector('.session-token-meter')!;
+    expect(meter.textContent).toContain('—');
+    expect(meter.getAttribute('title')).toBe('mainPanel.sessionTokensUnavailable');
+  });
+});
+
 describe('PanelFooter — tour anchor', () => {
   it.each(SITES)('%s: exactly one [data-tour="main-action"]', (site) => {
     const { container } = render(<PanelFooter {...baseProps(site)} />);

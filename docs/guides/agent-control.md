@@ -13,6 +13,7 @@ profile. The CLI defaults to the installed Windows profile.
 ```powershell
 sokuji-agent --json doctor
 sokuji-agent status
+sokuji-agent usage summary --month 2026-11
 sokuji-agent credentials status
 sokuji-agent notes check bailian
 sokuji-agent notes check compatible
@@ -22,6 +23,10 @@ sokuji-agent captions --limit 10
 sokuji-agent stop
 sokuji-agent logs list --limit 20
 ```
+
+`usage summary` reads the current month by default. It returns current and recent
+session Token counts, monthly use and the latest free-quota snapshots. It makes
+no provider requests.
 
 `start` uses incoming audio and turns off translated audio for that session.
 It opens the selected provider using the app's existing configuration.

@@ -1885,6 +1885,7 @@
       "audio": "Audio",
       "display": "Paparan",
       "history": "Sejarah dan nota",
+      "usage": "Kuota token",
       "general": "Umum"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "mikrofon, penindasan hingar, gema, pembesar suara, fon kepala, pantau, passthrough, mikrofon maya, audio sistem",
       "display": "fon, saiz, warna, padat, sari kata, kapsyen, pratonton",
       "history": "sejarah, nota, folder",
+      "usage": "penggunaan, token, kuota, baki",
       "general": "bahasa antara muka, rupa, tema, kemas kini, log, persediaan, bantuan, versi"
     },
     "accounts": {

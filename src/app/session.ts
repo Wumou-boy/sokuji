@@ -42,6 +42,7 @@ import type { SubtitleSession } from '../lib/subtitle/session';
 import type { AutoSaveNotifier } from '../lib/transcript/autoSave';
 import { PANEL_NOTE_CODES, panelNoteWriter, usePanelNotesStore } from '../stores/panelNotesStore';
 import { historyNote, shownRecordOf } from './historyNotes';
+import { beginSessionTokens, finishSessionTokens, linkSessionTokens, unlinkSessionTokens } from '../lib/usage/sessionTokens';
 import { appProjectionSettings } from '../lib/view/appViewSettings';
 import { createConversationView, type ConversationViewState, type Readable } from '../lib/view/conversationView';
 import { createKaraoke, type KaraokeState } from '../lib/view/karaoke';
@@ -184,6 +185,8 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
 
   // The recording hears what goes to recognition; the recorder takes it once History can encode it.
   const recordingTap: { recorder: HistoryRecorder | null } = { recorder: null };
+  const historyPortOrNull = options.history === undefined ? (isElectron() ? historyPort() : null) : options.history;
+  let tokenSession: string | null = null;
 
   const runner: Runner = createRunner({
     clock,
@@ -218,6 +221,8 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
     localModels,
     newSessionId: options.newSessionId ?? (() => crypto.randomUUID()),
     onRunEnded: async (legs) => {
+      const historyId = legs[0]?.session;
+      if (tokenSession && historyId && historyPortOrNull) linkSessionTokens('meeting', tokenSession, historyId);
       // The results of the auto-save are panel notes (spec 2026-10-05 §5): drawn
       // after the conversation, cleared by Clear and by the next start. The
       // writer is this run's: a save that outlives the runner's bound answers
@@ -235,7 +240,6 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
   // History (desktop): every run becomes a record while it runs, written by an observer of the runner.
   /** The record whose conversation is on screen: the run's session, until Clear after the run. */
   const shownRecord = shownRecordOf(runner.conversation, runner.state);
-  const historyPortOrNull = options.history === undefined ? (isElectron() ? historyPort() : null) : options.history;
   const historyRecorder = historyPortOrNull && options.historyEncoder !== null
     ? createHistoryRecorder({
       port: historyPortOrNull,
@@ -469,7 +473,10 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
       // The live notes end with the run, whether or not History keeps the record.
       onEnded: (recordId) => endLive(recordId, closedByApp.has(recordId)),
       // The live notes panel is told what became of the record, and whether its full notes are being written.
-      onNotKept: (recordId) => useLiveNotes.getState().closed(recordId, { kept: false, fullNotes: false }),
+      onNotKept: (recordId) => {
+        unlinkSessionTokens(recordId);
+        useLiveNotes.getState().closed(recordId, { kept: false, fullNotes: false });
+      },
       onCloseFailed: (recordId) => useLiveNotes.getState().closed(recordId, { kept: true, fullNotes: false }),
       onCloseSkipped: (recordId) => useLiveNotes.getState().closed(recordId, { kept: null, fullNotes: false }),
       onClosed: (recordId) => {
@@ -493,6 +500,13 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
   // The screen context lives as long as its run (spec 2026-10-22 §3.1): every way back to idle lets it go — a stop, a
   // leg's end, a start refused or failed, `abandon()` — not only the runs that went live, which alone reach `onRunEnded`.
   runner.state.subscribe((now, before) => {
+    if (now.phase === 'starting' && before.phase === 'idle') {
+      tokenSession = beginSessionTokens('meeting', clock.now(), Boolean(historyPortOrNull));
+    }
+    if (now.phase === 'idle' && before.phase !== 'idle' && tokenSession) {
+      finishSessionTokens('meeting', tokenSession, clock.now());
+      tokenSession = null;
+    }
     if (now.phase === 'idle' && before.phase !== 'idle') releaseScreenContext();
   });
 

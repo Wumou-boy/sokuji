@@ -16,7 +16,7 @@ const ctx = (source: string, target: string, patch: Partial<SessionContext> = {}
 describe("Qwen LiveTranslate's builder (spec §5)", () => {
   it('builds my leg: the endpoint the check found, the target, my preset, automatic turns, no person labels', () => {
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, SHARED)).toEqual({
-      model: QWEN_MODEL, connection: 'auto', workspaceId: null, endpoint: 'intl', target: 'en', speech: true, voice: { kind: 'preset', name: 'Tina' }, manual: false, person: false, detectIncomingLanguage: false, skipSameLanguageText: false,
+      model: QWEN_MODEL, activity: 'meeting', connection: 'auto', workspaceId: null, endpoint: 'intl', target: 'en', speech: true, voice: { kind: 'preset', name: 'Tina' }, manual: false, person: false, detectIncomingLanguage: false, skipSameLanguageText: false,
       phrases: {}, silenceMs: null, transport: 'websocket',
     });
   });

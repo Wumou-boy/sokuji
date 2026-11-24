@@ -8,6 +8,7 @@
  */
 import { wordsFor } from '../../lib/words/forService';
 import type { SessionContext } from '../../lib/contract/adapter';
+import type { UsageDelta } from '../../lib/usage/ledger';
 import type { QwenTurnAudioBuffer } from '../../lib/faceToFace/audioBuffer';
 import type { ProviderRefusal, SharedSettings } from '../../lib/run/types';
 import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, isEndpointId, normalizeBailianWorkspaceId, type EndpointId } from './endpoints';
@@ -20,6 +21,9 @@ export type QwenVoiceChoice = { kind: 'preset'; name: string } | { kind: 'clone'
 
 export interface QwenConfig {
   model: typeof QWEN_MODEL;
+  /** Set only for real app activity sessions; diagnostic adapters leave this absent. */
+  activity?: 'meeting' | 'face-to-face';
+  tokenSink?: (delta: UsageDelta) => void;
   /** Kept with the run so workspace sessions can be recognized without inspecting a secret. */
   connection: QwenSettings['connection'];
   /** A validated DNS label only for `bailian-workspace`; never a base URL. */
@@ -68,6 +72,7 @@ export function buildQwen(context: SessionContext, s: QwenSettings, shared: Shar
   const pause = Number.isFinite(s.pauseMs) ? Math.min(QWEN_PAUSE.max, Math.max(QWEN_PAUSE.min, Math.round(s.pauseMs))) : QWEN_PAUSE.default;
   return {
     model: QWEN_MODEL,
+    activity: 'meeting',
     connection: s.connection,
     workspaceId: workspace ? normalizeBailianWorkspaceId(s.workspaceId) : null,
     endpoint: isEndpointId(endpoint) ? endpoint : null,

@@ -13,7 +13,7 @@ import { realClock, type Clock } from '../contract/clock';
 import type { ReasoningChoice } from '../textModel/choice';
 import { chatCompletion, jsonObjectOf, type TextModelFailure, type TextModelMemo, type TextModelService, type TextModelTransport } from '../textModel/client';
 import { notesRequest } from '../textModel/notes';
-import { ChatError, RATE_LIMIT_WAITS, wait, type ChatPort } from './chat';
+import { ChatError, RATE_LIMIT_WAITS, wait, notesUsageOf, type ChatPort } from './chat';
 
 export interface TextModelNotesChatOptions {
   service: TextModelService;
@@ -90,7 +90,8 @@ export function textModelNotesChat(o: TextModelNotesChatOptions): ChatPort {
         reasoning,
         memo,
       });
-      r.onAnswered?.(result.ok && result.id ? { requestId: result.id } : {});
+      const usage = notesUsageOf(result.usage);
+      r.onAnswered?.({ ...(result.id ? { requestId: result.id } : {}), ...(usage ? { usage } : {}) });
       if (result.ok) return objectOf(result.text);
       if (result.failure.code === 'rate_limit' && waited < RATE_LIMIT_WAITS) {
         waited += 1;

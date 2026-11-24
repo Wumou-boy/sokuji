@@ -1885,6 +1885,7 @@
       "audio": "Âm thanh",
       "display": "Hiển thị",
       "history": "Lịch sử và ghi chú",
+      "usage": "Hạn mức token",
       "general": "Chung"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "micro, micrô, khử ồn, tiếng vang, loa, tai nghe, nghe lại, truyền thẳng, micro ảo, micrô ảo, âm thanh hệ thống",
       "display": "phông chữ, cỡ chữ, màu, gọn, phụ đề, chú thích, xem trước",
       "history": "lịch sử, ghi chú, thư mục",
+      "usage": "mức sử dụng, token, hạn mức, số dư",
       "general": "ngôn ngữ giao diện, giao diện, chủ đề, cập nhật, nhật ký, thiết lập, trợ giúp, phiên bản"
     },
     "accounts": {

@@ -274,6 +274,46 @@
   }
 }
 
+.history-token-line {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: vars.$space-2;
+  font-variant-numeric: tabular-nums;
+  color: vars.$text-secondary;
+  small { color: vars.$text-muted; }
+}
+
+.history-token-unknown { color: vars.$text-muted; }
+
+.history-token-history {
+  margin: 0 0 vars.$space-3;
+  border: 1px solid vars.$border-subtle;
+  border-radius: vars.$radius-md;
+  background: vars.$bg-surface;
+
+  > summary {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: vars.$space-2 vars.$space-3;
+    padding: vars.$space-2 vars.$space-3;
+    cursor: pointer;
+    font-weight: vars.$weight-medium;
+  }
+
+  &__total { color: vars.$text-secondary; font-size: vars.$font-caption; font-variant-numeric: tabular-nums; }
+  &__body { padding: 0 vars.$space-3 vars.$space-3; }
+  &__totals { display: flex; flex-wrap: wrap; gap: vars.$space-3; color: vars.$text-secondary; font-size: vars.$font-caption; }
+  &__empty { margin: vars.$space-2 0 0; color: vars.$text-muted; font-size: vars.$font-caption; }
+  &__rows { margin: vars.$space-2 0 0; padding: 0; list-style: none; }
+  &__rows li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: vars.$space-2 vars.$space-4; padding: vars.$space-2 0; border-top: 1px solid vars.$border-subtle; }
+  &__session, &__counts { display: flex; align-items: baseline; flex-wrap: wrap; gap: vars.$space-2; }
+  &__session { color: vars.$text-primary; }
+  time, small { color: vars.$text-muted; font-size: vars.$font-caption; }
+  &__counts { font-variant-numeric: tabular-nums; }
+}
+
 .history-confirm {
   display: flex;
   align-items: center;
@@ -316,6 +356,16 @@
     flex: 1 1 240px;
     min-width: 0;
   }
+
+  &__token-usage {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: vars.$space-1 vars.$space-2;
+    font-size: vars.$font-caption;
+  }
+
+  &__token-label { color: vars.$text-tertiary; }
 
   // The title at the settings page's level (18px); a quiet pencil says it can be renamed.
   &__h {

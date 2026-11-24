@@ -17,7 +17,7 @@ const MAX_CLIENT_TIMEOUT_MS = 60_000;
 const COMMANDS = new Set([
   'status', 'view.set-mode', 'audio.inputs', 'audio.system-check', 'session.start', 'session.stop', 'logs.enable', 'logs.list', 'captions.list',
   'provider.configure-qwen-beijing', 'provider.configure-qwen-workspace', 'provider.configure-qwen-defaults', 'credentials.status', 'notes.check',
-  'voice.benchmark', 'face-to-face.start', 'face-to-face.stop', 'face-to-face.replay',
+  'voice.benchmark', 'face-to-face.start', 'face-to-face.stop', 'face-to-face.replay', 'usage.summary',
 ]);
 
 function isPlainObject(value) {
@@ -47,6 +47,13 @@ function isWorkspaceKey(value) {
 function normalizeArgs(command, args) {
   if (args === undefined) args = {};
   if (!isPlainObject(args)) return { error: failure('BAD_ARGS', 'Command arguments must be an object.') };
+  if (command === 'usage.summary') {
+    if (!ownKeysOnly(args, ['month']) || (args.month !== undefined &&
+      (typeof args.month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(args.month)))) {
+      return { error: failure('BAD_ARGS', 'Use a billing month in YYYY-MM format.') };
+    }
+    return { args };
+  }
   if (command === 'voice.benchmark') {
     if (!ownKeysOnly(args, ['round']) || !Number.isInteger(args.round) || args.round < 1 || args.round > 9) {
       return { error: failure('BAD_ARGS', 'Choose a benchmark round from 1 to 9.') };

@@ -30,6 +30,7 @@ import { registerAuth } from '../../app/currentAuth';
 import { useAccountStore } from '../../stores/accountStore';
 import { setUseOwnBalance } from '../session/payerChoice';
 import { getBackendUrl } from '../../utils/environment';
+import { useUsageStore } from '../usage/ledger';
 
 const soniox = { transcription: 'soniox', translation: 'soniox', speech: 'soniox' };
 const PAIR = { source: 'en', target: 'ja' };
@@ -49,6 +50,7 @@ function fakeServices(ids: string[] = ['gpt-5-mini', 'gpt-6-luna']) {
 }
 
 beforeEach(() => {
+  useUsageStore.setState({ rows: [], quotas: {} });
   desktop.hosted = false;
   desktop.text = false;
   forgetTextModelLists();
@@ -59,6 +61,18 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('the notes service from the stores', () => {
+  it('records actual app notes usage once while preserving the caller callback', async () => {
+    const usage = { prompt_tokens: 100, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 15 } };
+    const fetch = vi.fn(async (url: string) => (String(url).endsWith('/models')
+      ? new Response(JSON.stringify({ data: [{ id: 'gpt-6-luna' }] }))
+      : new Response(JSON.stringify({ id: 'chatcmpl-app-notes', usage, choices: [{ message: { content: '{}' } }] }))));
+    vi.stubGlobal('fetch', fetch);
+    const service = await notesChatFromStores();
+    const answered: unknown[] = [];
+    await service!.chat({ ...REQUEST, onAnswered: (info) => answered.push(info) });
+    expect(answered).toEqual([{ requestId: 'chatcmpl-app-notes', usage }]);
+    expect(useUsageStore.getState().rows).toEqual([expect.objectContaining({ activity: 'notes', provider: 'openai', inputTokens: 100, outputTokens: 20, billableTokens: 120 })]);
+  });
   // Text models, part C: the notes with the user's own OpenAI key are OpenAI's text model's: its key, and the notes
   // model and reasoning chosen on the Notes card.
   it("is OpenAI's text model with the user's key, the notes model and the reasoning chosen for it", async () => {

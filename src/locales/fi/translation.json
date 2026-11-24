@@ -1885,6 +1885,7 @@
       "audio": "Ääni",
       "display": "Näkymä",
       "history": "Historia ja muistiinpanot",
+      "usage": "Tokenkiintiö",
       "general": "Yleiset"
     },
     "groups": {
@@ -1902,6 +1903,7 @@
       "audio": "mikrofoni, kohinanvaimennus, kaiku, kaiutin, kuulokkeet, kuuntelu, läpivienti, virtuaalimikrofoni, järjestelmän ääni",
       "display": "fontti, koko, väri, tiivis, tekstitys, kuvatekstit, esikatselu",
       "history": "historia, muistiinpanot, kansio",
+      "usage": "käyttö, tokenit, kiintiö, saldo",
       "general": "käyttöliittymän kieli, ulkoasu, teema, päivitykset, lokit, käyttöönotto, ohje, versio"
     },
     "accounts": {

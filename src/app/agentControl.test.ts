@@ -10,6 +10,8 @@ import { useRoutingStore } from '../stores/routingStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import useLogStore from '../stores/logStore';
 import { presentProviders } from '../providers/registry';
+import { useUsageStore } from '../lib/usage/ledger';
+import { useSessionTokenStore } from '../lib/usage/sessionTokens';
 
 vi.mock('../providers/registry', async (importOriginal) => {
   const registry = await importOriginal<typeof import('../providers/registry')>();
@@ -46,6 +48,8 @@ const initial = {
   routing: useRoutingStore.getState(),
   settings: useSettingsStore.getState(),
   logs: useLogStore.getState(),
+  usage: useUsageStore.getState(),
+  sessionTokens: useSessionTokenStore.getState(),
 };
 
 afterEach(() => {
@@ -57,6 +61,8 @@ afterEach(() => {
   useRoutingStore.setState(initial.routing, true);
   useSettingsStore.setState(initial.settings, true);
   useLogStore.setState(initial.logs, true);
+  useUsageStore.setState(initial.usage, true);
+  useSessionTokenStore.setState(initial.sessionTokens, true);
 });
 
 function setup() {
@@ -97,6 +103,28 @@ function setup() {
 }
 
 describe('agent control bridge', () => {
+  it('reads only the requested month and keeps quota projections separate from session counts', async () => {
+    const { handler, replies, detach } = setup();
+    const row = {
+      month: '2026-11', activity: 'meeting' as const, provider: 'bailian-beijing', model: 'example-model',
+      inputTokens: 4, outputTokens: 2, billableTokens: 6,
+    };
+    const tokens = { inputTokens: 4, outputTokens: 2, billableTokens: 6, totalTokens: 6, reported: true };
+    const session = { ...tokens, id: 'usage-example', activity: 'meeting' as const, startedAt: Date.parse('2026-11-04'), endedAt: Date.parse('2026-11-04') };
+    useUsageStore.setState({
+      rows: [row, { ...row, month: '2026-10' }],
+      quotas: { [row.model]: { remainingTokens: 20, capturedAt: 120, baselineTokens: 6 } },
+    });
+    useSessionTokenStore.setState({ meeting: tokens, history: [session, { ...session, id: 'previous', startedAt: Date.parse('2026-10-04') }] });
+    handler({ id: 'usage', command: 'usage.summary', args: { month: row.month } });
+    await vi.waitFor(() => expect(replies).toHaveLength(1));
+    expect(dataOf(replyFor(replies, 'usage'))).toEqual({
+      month: row.month, usage: [row], sessions: [session], current: { meeting: tokens, faceToFace: null },
+      quotaSnapshots: [{ model: row.model, capturedAt: 120, reportedRemainingTokens: 20, locallyEstimatedRemainingTokens: 14 }],
+    });
+    detach();
+  });
+
   it('registers and handshakes, returns safe status, and keeps caption text opt-in', async () => {
     const { handler, invoke, replies, detach } = setup();
     expect(invoke).toHaveBeenCalledWith('agent-control:ready');

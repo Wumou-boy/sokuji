@@ -9,6 +9,8 @@ const HELP = `Usage: sokuji-agent [--profile <userData>] [--json] <command>
 
   doctor                  Check the Windows connection and session status
   status                  Read the selected provider, input mode and session status
+  usage summary [--month YYYY-MM]
+                          Read session Token counts and local quota snapshots
   mode meeting            Show Online Meeting while idle
   mode face-to-face       Show Face to Face while idle
   face start              Start Face to Face with the selected microphone
@@ -40,6 +42,7 @@ Commands return JSON. Limits range from 1 to 100, with 20 as the default.`;
 const commands = {
   doctor: 'status',
   status: 'status',
+  'usage summary': 'usage.summary',
   'mode meeting': 'view.set-mode',
   'mode face-to-face': 'view.set-mode',
   'face start': 'face-to-face.start',
@@ -88,6 +91,7 @@ async function run(argv) {
       stdin: { type: 'boolean' },
       workspace: { type: 'string' },
       round: { type: 'string' },
+      month: { type: 'string' },
       json: { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
     } });
@@ -99,6 +103,10 @@ async function run(argv) {
   const command = Object.hasOwn(commands, requested) ? commands[requested] : undefined;
   if (!command) return failure('unknown_command', 'Choose a command from sokuji-agent --help.');
   const { profile, limit, 'include-text': includeText } = parsed.values;
+  const month = parsed.values.month;
+  if (month !== undefined && (command !== 'usage.summary' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month))) {
+    return failure('invalid_arguments', 'Use --month YYYY-MM with usage summary.');
+  }
   if (limit !== undefined && command !== 'logs.list' && command !== 'captions.list') {
     return failure('invalid_arguments', '--limit is available for logs list and captions.');
   }
@@ -115,6 +123,7 @@ async function run(argv) {
     || (process.env.APPDATA ? path.join(process.env.APPDATA, 'sokuji') : '');
   if (!profileDir) return failure('profile_required', 'Pass the Sokuji user-data path with --profile.');
   const args = {};
+  if (month !== undefined) args.month = month;
   if (command === 'voice.benchmark') {
     if (!/^[1-9]$/.test(parsed.values.round ?? '')) return failure('invalid_round', 'Use --round 1 through 9.');
     args.round = Number(parsed.values.round);

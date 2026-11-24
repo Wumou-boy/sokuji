@@ -80,6 +80,7 @@ describe('face-to-face runtime ownership', () => {
         return secondary;
       });
     const close = await startFaceToFaceRuntime();
+    expect(primaryConfig.activity).toBe('face-to-face');
     const turnAudio = primaryConfig.turnAudio!;
     turnAudio.append(pcm);
     primaryEvents.segmentOpened({ ref: 1, side: 'source', origin: 'japanese', person: 'j' });
@@ -96,7 +97,7 @@ describe('face-to-face runtime ownership', () => {
     await vi.waitFor(() => expect(useFaceToFaceStore.getState().captions[1].subtitles).toEqual({
       zh: '我们下午三点见。', ja: '午後三時に会いましょう。',
     }));
-    expect(mocks.startQwen.mock.calls[1][0]).toMatchObject({ context: { direction: { target: 'ja' }, turns: 'manual', speech: false } });
+    expect(mocks.startQwen.mock.calls[1][0]).toMatchObject({ context: { direction: { target: 'ja' }, turns: 'manual', speech: false }, config: { activity: 'face-to-face' } });
     const chunks = secondary.appendAudio.mock.calls.map(([chunk]) => chunk as Int16Array);
     expect(chunks.every((chunk) => chunk.length <= 2_400)).toBe(true);
     expect(Int16Array.from(chunks.flatMap((chunk) => Array.from(chunk)))).toEqual(pcm.slice(4_800, 19_200));

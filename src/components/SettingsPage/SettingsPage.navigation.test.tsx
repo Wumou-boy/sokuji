@@ -16,14 +16,14 @@ import useSettingsStore from '../../stores/settingsStore';
 import type { CategoryId } from './categories';
 
 // Each category's body stands in as a marker, so the test sees which body is showing.
-const IDS: CategoryId[] = ['lineup', 'words', 'accounts', 'models', 'audio', 'display', 'history', 'general'];
+const IDS: CategoryId[] = ['lineup', 'words', 'accounts', 'models', 'audio', 'display', 'history', 'usage', 'general'];
 const bodies: CategoryBodies = Object.fromEntries(IDS.map((id) => [id, () => <div data-testid={`body-${id}`} />]));
 
 const EN_GROUPS = [
   ['Session', ['Languages and line-up', 'Word list and background']],
   ['Providers and models', ['Accounts and keys', 'Models and storage']],
   ['Devices and display', ['Audio', 'Display']],
-  ['Data', ['History and notes']],
+  ['Data', ['History and notes', 'Token quota']],
   ['App', ['General']],
 ] as const;
 
@@ -48,12 +48,12 @@ afterEach(() => cleanup());
 afterAll(async () => { await i18n.changeLanguage('en'); });
 
 describe('settings categories and groups', () => {
-  // categories.ts shows all eight on the desktop, History and notes and Word list included; History is desktop-only
+  // categories.ts shows all nine on the desktop, History, Usage and Word list included; the first two are desktop-only
   // (absent in the extension), the word list is in both.
-  it('lists 8 categories on the desktop in 5 groups, in the agreed order, under their group titles', () => {
+  it('lists 9 categories on the desktop in 5 groups, in the agreed order, under their group titles', () => {
     render(<SettingsPage onClose={vi.fn()} bodies={bodies} />);
     expect(drawnGroups()).toEqual(EN_GROUPS.map(([g, cs]) => [g, [...cs]]));
-    expect(screen.getByRole('navigation').querySelectorAll('button[data-category]')).toHaveLength(8);
+    expect(screen.getByRole('navigation').querySelectorAll('button[data-category]')).toHaveLength(9);
   });
 
   it('names the groups in the interface language (Chinese)', async () => {
@@ -63,7 +63,7 @@ describe('settings categories and groups', () => {
       ['会话', ['语言与会话组成', '词表与背景']],
       ['服务商与模型', ['账号与密钥', '模型与存储']],
       ['设备与显示', ['音频', '显示']],
-      ['数据', ['历史与纪要']],
+      ['数据', ['历史与纪要', 'Token 额度']],
       ['应用', ['通用']],
     ]);
   });
@@ -154,7 +154,7 @@ describe('search in the settings', () => {
     render(<SettingsPage onClose={vi.fn()} bodies={bodies} />);
     fireEvent.change(search(), { target: { value: 'font' } });
     fireEvent.change(search(), { target: { value: '' } });
-    expect(listed()).toHaveLength(8);
+    expect(listed()).toHaveLength(9);
   });
 });
 

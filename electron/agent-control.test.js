@@ -90,6 +90,8 @@ describe('agent control transport', () => {
       .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
     await expect(rawCall(pipe, { token, command: 'session.start', args: { arbitrary: 'value' } }))
       .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
+    await expect(rawCall(pipe, { token, command: 'usage.summary', args: { month: '2026-13' } }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
     expect(dispatch).not.toHaveBeenCalled();
   });
 
@@ -106,6 +108,8 @@ describe('agent control transport', () => {
       .resolves.toEqual({ ok: true, data: { command: 'captions.list', args: { limit: 20, includeText: false } } });
     await expect(agentControlCommunicate({ profileDir, command: 'captions.list', args: { limit: 200, includeText: true } }))
       .resolves.toEqual({ ok: true, data: { command: 'captions.list', args: { limit: 100, includeText: true } } });
+    await expect(agentControlCommunicate({ profileDir, command: 'usage.summary', args: { month: '2026-11' } }))
+      .resolves.toEqual({ ok: true, data: { command: 'usage.summary', args: { month: '2026-11' } } });
   });
 
   it.skipIf(!isWindows)('allows one credential only for the explicit Bailian configuration command', async () => {

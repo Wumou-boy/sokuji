@@ -18,6 +18,8 @@ import { ImportPanel, myLanguageNow } from './FileJobs';
 import { dayLabel, formatBytes, formatDateTime, formatLength, formatTime, isComposing } from './format';
 import { useWideForm } from '../SettingsPage/useWideForm';
 import { LanguagePairText } from '../LanguagePairText/LanguagePairText';
+import HistoryTokenUsage, { TokenUsageLine, TokenUsageUnknown, recordsForHistoryId } from './TokenUsage';
+import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
 import '../SettingsPage/SettingsPage.scss';
 import './History.scss';
 
@@ -68,6 +70,7 @@ export const HistoryList: React.FC<HistoryListProps> = ({ hidden = false }) => {
   const results = useStore(store, (s) => s.results);
   const selected = useStore(store, (s) => s.selected);
   const usage = useStore(store, (s) => s.usage);
+  const tokenHistory = useSessionTokenStore((s) => s.history);
   const busy = useStore(store, (s) => s.busy);
   const more = useStore(store, (s) => s.more);
   const actions = store.getState();
@@ -94,6 +97,12 @@ export const HistoryList: React.FC<HistoryListProps> = ({ hidden = false }) => {
 
   const titleOf = (r: { title: string | null; startedAt: number }) => r.title ?? formatDateTime(r.startedAt, language);
   const searching = query.trim() !== '';
+  const tokenUsageFor = (historyId: string) => {
+    const records = recordsForHistoryId(tokenHistory, historyId);
+    return records.length > 0
+      ? <TokenUsageLine records={records} language={language} />
+      : <TokenUsageUnknown language={language} />;
+  };
 
   const back = (
     <button type="button" className="settings-page__back" onClick={onClose}>
@@ -163,6 +172,7 @@ export const HistoryList: React.FC<HistoryListProps> = ({ hidden = false }) => {
         ? <span className="history-row__live">{t('history.inProgress', 'In progress')}</span>
         : <span>{t('history.length', 'Length {{length}}', { length: formatLength(r.endedAt - r.startedAt) })}</span>}
       {r.mode !== 'import' && <span><LanguagePairText {...languageDirection(r, language, t)} /></span>}
+      {tokenUsageFor(r.id)}
     </span>
   );
 
@@ -378,6 +388,7 @@ export const HistoryList: React.FC<HistoryListProps> = ({ hidden = false }) => {
         {!searching && tab === 'bin' && <p className="settings-page__intro">{t('history.binNote', 'Records in the bin are deleted for good after 30 days.')}</p>}
       </header>
       <div className="settings-page__body">
+        {!searching && tab === 'records' && <HistoryTokenUsage language={language} />}
         {importing && <ImportPanel file={importing} myLanguage={myLanguageNow(language)} onClose={() => setImporting(null)} />}
         {usage && !spaceDismissed && usage.dbBytes + usage.audioBytes >= SPACE_NOTICE_BYTES && (
           <div className="history-notice" role="status">
