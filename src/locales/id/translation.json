@@ -12,6 +12,7 @@
     "signIn": "Masuk",
     "signUp": "Daftar",
     "signInRequired": "<signInLink>Masuk atau daftar</signInLink> untuk menggunakan Kizuna AI — tanpa kunci API.",
+    "checking": "Memeriksa...",
     "dismiss": "Abaikan",
     "none": "Tidak ada",
     "retry": "Coba lagi",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Laporkan bug atau dapatkan bantuan",
     "diagnosticLogs": "Log diagnostik",
     "diagnosticLogsTooltip": "Mencatat apa yang dilakukan aplikasi agar Anda dapat melampirkannya ke laporan bug. Nonaktif secara default. Saat aktif, tombol “Log” muncul di bilah judul, dan pengaturan tetap aktif setelah dimulai ulang.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Tampilan",
     "appearanceTooltip": "Tampilan aplikasi. “Sistem” memakai pengaturan terang atau gelap dari sistem operasi.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Suara kustom",
     "translateDetectParticipantLanguage": "Deteksi otomatis bahasa Mandarin, Jepang, dan Inggris lawan bicara",
     "translateDetectParticipantLanguageHelp": "Jika bahasa lawan bicara adalah Mandarin, Jepang, atau Inggris, bahasa setiap takarir dikenali dari teks asli. Bahasa target terjemahan tetap sesuai pilihan.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Menunggu sesi sebelumnya berakhir. Klik untuk membatalkan.",
     "clickToCancel": "Klik untuk membatalkan",
     "whatIHear": "Yang saya dengar",
-    "audioSettings": "Pengaturan audio",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Pengaturan audio"
   },
   "modePicker": {
     "modeYou": "Saya",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} tidak lagi tersedia di versi ini.",
     "noCandidate": "Tidak ada model {{stage}} yang tersedia untuk arah ini."
   },
-  "update": {
-    "available": "Versi baru v{{version}} tersedia",
-    "downloading": "Mengunduh pembaruan... {{percent}}%",
-    "downloadingIndeterminate": "Mengunduh pembaruan...",
-    "downloaded": "Pembaruan siap, mulai ulang untuk menyelesaikan",
-    "checkButton": "Periksa Pembaruan",
-    "checking": "Memeriksa...",
-    "upToDate": "Terbaru",
-    "notAvailable": "Anda menggunakan versi terbaru",
-    "downloadNow": "Unduh Sekarang",
-    "later": "Nanti",
-    "restartNow": "Mulai Ulang dan Perbarui",
-    "goToDownload": "Buka Unduhan",
-    "error": "Gagal memeriksa pembaruan",
-    "currentVersion": "Versi saat ini: v{{version}}",
-    "newVersion": "Versi baru: v{{version}}",
-    "autoUpdateNote": "AppImage mendukung pembaruan otomatis. Menginstal AppImage akan menggantikan instalasi Anda saat ini — tidak perlu menghapus instalasi lama secara terpisah.",
-    "downloadAppImage": "Unduh AppImage (disarankan)",
-    "downloadDeb": "Unduh .deb",
-    "linuxMigrateTitle": "Versi baru v{{version}} tersedia"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (alat baris perintah PulseAudio) tidak ditemukan, sehingga AED Translator tidak dapat menyiapkan mikrofon/speaker virtualnya. Instal, lalu coba lagi:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Suara sistem diputar melalui pengeras suara. Saat rapat daring, mikrofon dapat menangkap suara lawan bicara. Gunakan headphone untuk menghindari gema.",
     "ttsEcho": "Speaker Anda mengembalikan suara terjemahan AED Translator ke mikrofon.",
     "meetingEcho": "Audio rapat dari speaker Anda sampai ke mikrofon.",
     "farEndEcho": "Perangkat seorang peserta menggemakan terjemahan Anda kembali ke rapat.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Pilih model untuk terjemahan, atau ketik namanya, di “Bahasa dan susunan”.",
     "address_missing": "Masukkan alamat layanan yang kompatibel di “Akun dan kunci” sebelum memulai.",
     "address_invalid": "Alamat layanan yang kompatibel tidak dapat digunakan: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Pengaturan dasar",
       "maintenance": "Pemeliharaan dan bantuan",
-      "update": "Pembaruan",
-      "updateLine": "Anda memakai {{version}}.",
-      "version": "Versi",
-      "storeUpdates": "Toko browser menjaga ekstensi tetap terbaru.",
       "wizard": "Wizard penyiapan",
       "wizardLine": "Jalani wizard sekali lagi; yang sudah tersimpan langsung terpilih.",
       "rerun": "Jalankan lagi",

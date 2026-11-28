@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Loader2, Play, Square } from 'lucide-react';
+import { useLocalMediaOutput } from '../../../lib/audio/useLocalMediaOutput';
 
 /** `m:ss` readout for the custom player's time display; guards against
  *  NaN/Infinity before a real duration is known (pre-`loadedmetadata`, or a
@@ -112,6 +113,8 @@ const SonioxCloneReviewStep: React.FC<SonioxCloneReviewStepProps> = ({
   // in sync with what the element is actually doing (autoplay-policy
   // rejections, real seek completion, etc.).
   const audioRef = useRef<HTMLAudioElement>(null);
+  const players = useCallback(() => audioRef.current ? [audioRef.current] : [], []);
+  const outputReady = useLocalMediaOutput(players, audioUrl);
   const progressRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -133,7 +136,7 @@ const SonioxCloneReviewStep: React.FC<SonioxCloneReviewStepProps> = ({
 
   const togglePlay = () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !outputReady) return;
     if (isPlaying) {
       audio.pause();
     } else {
@@ -178,9 +181,10 @@ const SonioxCloneReviewStep: React.FC<SonioxCloneReviewStepProps> = ({
           <button
             type="button"
             className="voice-review__play-toggle"
+            disabled={!outputReady}
             onClick={togglePlay}
             aria-label={isPlaying ? t('voiceLibrary.stopPreview', 'Stop') : t('voiceLibrary.play', 'Play')}
-            title={isPlaying ? t('voiceLibrary.stopPreview', 'Stop') : t('voiceLibrary.play', 'Play')}
+            title={!outputReady ? t('common.localPlaybackUnavailable', 'Local playback is unavailable on the current audio route.') : isPlaying ? t('voiceLibrary.stopPreview', 'Stop') : t('voiceLibrary.play', 'Play')}
           >
             {isPlaying ? <Square size={14} /> : <Play size={14} />}
           </button>

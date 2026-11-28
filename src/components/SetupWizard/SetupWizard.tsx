@@ -12,7 +12,8 @@ import { useAnalytics } from '../../lib/analytics';
 import { useAuthOverlay } from '../../stores/settingsStore';
 import { useProviderStore } from '../../stores/providerStore';
 import { providerIdFromStored } from '../../lib/session/storedSettings';
-import { useSetupRecord, SetupPersistError } from '../../stores/setupStore';
+import { useSetupRecord, useSetupStore, SetupPersistError } from '../../stores/setupStore';
+import { ensureFaceToFaceSettings, useFaceToFaceStore } from '../../stores/faceToFaceStore';
 import { getScenario } from '../../lib/setup/scenarios';
 import { buildTourCtx } from '../Tour/tourContext';
 import { useTour } from '../Tour/TourProvider';
@@ -87,6 +88,25 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ variant, onClose }) => {
   });
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  const enterFace = isElectron() && draft.step === 1 && draft.scenario === 'face-to-face-text';
+  const openFace = async () => {
+    setFinishing(true);
+    setFinishError(null);
+    try {
+      await ensureFaceToFaceSettings();
+      if (!useLineUpStore.getState().lineUp) await useLineUpStore.getState().load();
+      const translation = useLineUpStore.getState().lineUp?.translation ?? '';
+      await useSetupStore.getState().completeSetup({
+        scenario: 'face-to-face-text', provider: translation, providerPath: pathOf(translation),
+      });
+      useFaceToFaceStore.getState().setMode('face-to-face');
+      onClose?.();
+    } catch {
+      setFinishError(t('setup.steps.finish.persistFailed', 'Could not save your setup. Please try again.'));
+    } finally {
+      setFinishing(false);
+    }
+  };
 
   // trackEvent is a fresh closure every render (useAnalytics is not memoized),
   // so it cannot sit in an effect's dependency array without refiring on every
@@ -210,6 +230,7 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ variant, onClose }) => {
       <main className="setup-wizard__body">
         {draft.step === 0 && <StepLanguage />}
         {draft.step === 1 && <StepScenario draft={draft} dispatch={dispatch} />}
+        {enterFace && finishError && <p role="alert">{finishError}</p>}
         {draft.step === 2 && <StepProviderPath draft={draft} dispatch={dispatch} />}
         {draft.step === 3 && <StepCredentials draft={draft} dispatch={dispatch} />}
         {draft.step === 4 && <StepLanguagePair draft={draft} dispatch={dispatch} />}
@@ -223,7 +244,9 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ variant, onClose }) => {
           </Button>
         )}
         <span className="setup-wizard__spacer" />
-        {draft.step < LAST_STEP ? (
+        {enterFace ? (
+          <Button variant="primary" onClick={() => void openFace()} disabled={finishing}>{t('faceToFace.openSubtitles', 'Open face-to-face subtitles')}</Button>
+        ) : draft.step < LAST_STEP ? (
           <Button variant="primary" onClick={() => dispatch({ type: 'next' })} disabled={!advance}>
             {t('setup.next', 'Next')}
           </Button>

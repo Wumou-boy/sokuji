@@ -133,7 +133,8 @@ export class AppAudioRecorder implements IParticipantAudioRecorder {
     }
     this.beginFailure = undefined;
     this.stopping = false;
-    const ready = deviceId === 'desktop-audio-loopback' && electron.osInfo?.platform === 'win32'
+    const ready = electron.osInfo?.platform === 'win32' &&
+      (deviceId === 'desktop-audio-loopback' || deviceId.startsWith('endpoint:'))
       ? waitForWindowsLoopback() : null;
 
     // Subscribe before starting, or the first PCM chunks are dropped.

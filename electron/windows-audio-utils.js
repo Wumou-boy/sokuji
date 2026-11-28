@@ -206,53 +206,15 @@ async function listSystemAudioSources({ host = audioHost } = {}) {
     deviceId: 'desktop-audio-loopback',
     label: 'System Audio (All Applications)'
   };
-  const apps = await host.listAppSources();
-  apps.unshift({ deviceId: 'auto-meeting-audio', label: 'Auto (Meeting app)', appKey: 'auto-meeting-audio' });
-  console.log(`[Sokuji] [Windows Audio] Listing system audio sources: ${apps.length} application(s)`);
-  return [system, ...apps];
-}
-
-const DIRECT_MEETING_APP = /teams|zoom|webex|skype|slack|discord|wemeet|tencent.?meeting|dingtalk|ding.?talk|feishu|lark|wecom|wxwork|腾讯会议|飞书|钉钉|企业微信/i;
-
-/** Sample active process-loopback streams in bounded batches until one audible source is found.
- * Returns no source when evidence is weak; callers must keep Auto disconnected rather than widen to system audio.
- */
-async function resolveAutoSystemAudioSource({ host = audioHost, wait = (ms) => new Promise((r) => setTimeout(r, ms)), samples = 2, intervalMs = 120 } = {}) {
-  const rows = await host.listAppSources({ activeOnly: true });
-  // The native list already contains only applications with active playback
-  // sessions. Keep named meeting clients first, then inspect every other active
-  // app too: managed desktops often have few unrelated audio sources, and the
-  // wider set also makes Auto useful for debugging unknown clients.
-  const candidates = rows.filter((row) => row.active !== false && row.deviceId)
-    .sort((a, b) => Number(DIRECT_MEETING_APP.test(`${b.label} ${b.appKey || ''}`)) - Number(DIRECT_MEETING_APP.test(`${a.label} ${a.appKey || ''}`)));
-  if (!candidates.length || typeof host.probeAppSource !== 'function') {
-    return { success: false, error: 'No audible meeting application was detected.' };
-  }
-  const probeCount = Math.max(1, Math.min(5, samples));
-  const minimumAudibleSamples = Math.min(2, probeCount);
-  for (let offset = 0; offset < candidates.length; offset += 8) {
-    const batch = candidates.slice(offset, offset + 8);
-    const peakRows = await Promise.all(batch.map(async (source) => {
-      const values = [];
-      for (let i = 0; i < probeCount; i++) {
-        values.push(await host.probeAppSource(source.deviceId, { durationMs: 260 }));
-        if (i + 1 < probeCount) await wait(intervalMs);
-      }
-      const audibleSamples = values.filter((v) => v >= 0.015).length;
-      const peak = Math.max(...values);
-      const direct = DIRECT_MEETING_APP.test(`${source.label} ${source.appKey || ''}`);
-      return { source, peak, audibleSamples, direct };
-    }));
-    const ranked = peakRows.filter((row) => row.direct
-      ? row.peak >= 0.012
-      : row.peak >= 0.025 && row.audibleSamples >= minimumAudibleSamples);
-    ranked.sort((a, b) => Number(b.direct) - Number(a.direct) || b.peak - a.peak || b.audibleSamples - a.audibleSamples);
-    const chosen = ranked[0];
-    if (chosen) {
-      return { success: true, source: { deviceId: chosen.source.deviceId, label: chosen.source.label, appKey: chosen.source.appKey }, peak: chosen.peak };
-    }
-  }
-  return { success: false, error: 'No audible meeting application was detected.' };
+  const [apps, endpoints] = await Promise.all([
+    host.listAppSources(),
+    typeof host.listRenderDevices === 'function' ? host.listRenderDevices() : Promise.resolve([]),
+  ]);
+  const physicalEndpoints = endpoints.filter((row) => row && row.physical === true
+    && typeof row.id === 'string' && row.id && typeof row.label === 'string' && row.label.trim())
+    .map((row) => ({ deviceId: `endpoint:${row.id}`, label: row.label, appKey: `endpoint:${row.id}` }));
+  console.log(`[Sokuji] [Windows Audio] Listing system audio sources: ${physicalEndpoints.length} endpoint(s), ${apps.length} application(s)`);
+  return [system, ...physicalEndpoints, ...apps];
 }
 
 /**
@@ -265,6 +227,14 @@ async function resolveAutoSystemAudioSource({ host = audioHost, wait = (ms) => n
  */
 async function connectSystemAudioSource(sourceId, { host = audioHost } = {}) {
   console.log(`[Sokuji] [Windows Audio] Connect system audio source: ${sourceId}`);
+  if (String(sourceId).startsWith('endpoint:')) {
+    const id = String(sourceId).slice('endpoint:'.length);
+    const endpoints = typeof host.listRenderDevices === 'function' ? await host.listRenderDevices() : [];
+    const listed = endpoints.some((row) => row && row.physical === true && row.id === id);
+    if (!id || !listed) return { success: false, error: 'The selected output endpoint is unavailable.' };
+    host.stopCapture();
+    return { success: true, capture: 'endpoint' };
+  }
   if (String(sourceId).startsWith('app:')) {
     return { success: true, capture: 'app' };
   }
@@ -296,7 +266,6 @@ module.exports = {
   // System audio capture functions
   supportsSystemAudioCapture,
   listSystemAudioSources,
-  resolveAutoSystemAudioSource,
   connectSystemAudioSource,
   disconnectSystemAudioSource,
   // Per-application capture helper control, used by main.js IPC handlers

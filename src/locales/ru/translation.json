@@ -12,6 +12,7 @@
     "signIn": "Войти",
     "signUp": "Регистрация",
     "signInRequired": "<signInLink>Войдите или зарегистрируйтесь</signInLink>, чтобы использовать Kizuna AI — API-ключ не нужен.",
+    "checking": "Проверка...",
     "dismiss": "Скрыть",
     "none": "Нет",
     "retry": "Повторить",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Сообщить об ошибке или получить помощь",
     "diagnosticLogs": "Диагностические журналы",
     "diagnosticLogsTooltip": "Записывает работу приложения, чтобы вы могли приложить журнал к сообщению об ошибке. По умолчанию выключено. Пока параметр включён, в заголовке окна есть кнопка «Логи», и он остаётся включённым после перезапуска.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Оформление",
     "appearanceTooltip": "Внешний вид приложения. «Система» берёт светлую или тёмную настройку операционной системы.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Пользовательский голос",
     "translateDetectParticipantLanguage": "Автоматически определять китайский, японский и английский язык собеседника",
     "translateDetectParticipantLanguageHelp": "Если собеседник говорит на китайском, японском или английском, язык каждого субтитра определяется по оригиналу. Выбранный язык перевода остается прежним.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Ожидание завершения предыдущего сеанса. Нажмите для отмены.",
     "clickToCancel": "Нажмите для отмены",
     "whatIHear": "Что я слышу",
-    "audioSettings": "Настройки звука",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Настройки звука"
   },
   "modePicker": {
     "modeYou": "Я",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} больше не доступна в этой версии.",
     "noCandidate": "Для этого направления нет модели для этапа «{{stage}}»."
   },
-  "update": {
-    "available": "Доступна новая версия v{{version}}",
-    "downloading": "Загрузка обновления... {{percent}}%",
-    "downloadingIndeterminate": "Загрузка обновления...",
-    "downloaded": "Обновление готово, перезапустите для завершения",
-    "checkButton": "Проверить обновления",
-    "checking": "Проверка...",
-    "upToDate": "Актуальная версия",
-    "notAvailable": "Вы используете последнюю версию",
-    "downloadNow": "Скачать сейчас",
-    "later": "Позже",
-    "restartNow": "Перезапустить и обновить",
-    "goToDownload": "Перейти к загрузке",
-    "error": "Не удалось проверить обновления",
-    "currentVersion": "Текущая версия: v{{version}}",
-    "newVersion": "Новая версия: v{{version}}",
-    "autoUpdateNote": "AppImage поддерживает автоматические обновления. Установка нового AppImage напрямую заменяет текущую версию — отдельное удаление не требуется.",
-    "downloadAppImage": "Скачать AppImage (рекомендуется)",
-    "downloadDeb": "Скачать .deb",
-    "linuxMigrateTitle": "Доступна новая версия v{{version}}"
-  },
   "audioSystem": {
     "pactlMissingBody": "Не найден pactl (инструменты командной строки PulseAudio), поэтому AED Translator не удалось настроить виртуальный микрофон/динамик. Установите его и повторите попытку:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Звук выводится через динамики. Во время встречи микрофон может улавливать голос собеседника. Используйте наушники, чтобы избежать эха.",
     "ttsEcho": "Динамики возвращают переведённую речь AED Translator обратно в микрофон.",
     "meetingEcho": "Звук встречи из динамиков попадает в микрофон.",
     "farEndEcho": "Устройство одного из участников возвращает ваш перевод эхом во встречу.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Выберите модель для перевода или введите её название в разделе «Языки и состав».",
     "address_missing": "Перед началом введите адрес совместимого сервиса в разделе «Аккаунты и ключи».",
     "address_invalid": "Адрес совместимого сервиса нельзя использовать: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Основное",
       "maintenance": "Обслуживание и помощь",
-      "update": "Обновления",
-      "updateLine": "У вас {{version}}.",
-      "version": "Версия",
-      "storeUpdates": "Магазин браузера сам обновляет расширение.",
       "wizard": "Мастер настройки",
       "wizardLine": "Пройти мастер заново; сохранённое уже будет выбрано.",
       "rerun": "Запустить снова",

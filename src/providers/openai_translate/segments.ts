@@ -14,7 +14,7 @@
  * stood at the frame's arrival — a range by arrival (ruling 6; choice 6).
  */
 import type { Clock } from '../../lib/contract/clock';
-import { meetingTranscriptLanguage } from '../../lib/language/meetingTranscript';
+import { meetingTranscriptLanguage, multilingualTranscriptLanguage } from '../../lib/language/meetingTranscript';
 import { ContinuousSegments, type CutSummary, type SegmentSink } from '../../lib/segmentation/continuousSegments';
 import type { TranslateConfig } from './config';
 import { isQuietFrame } from './wire';
@@ -24,6 +24,7 @@ export interface TranslateSegmentsOptions {
   silence: TranslateConfig['silence'];
   sink: SegmentSink;
   detectParticipantLanguage?: boolean;
+  sourceLanguageHints?: readonly string[];
   /** Each translation cut, for the Logs (translation cuts, choice 14). */
   cut?: (summary: CutSummary) => void;
 }
@@ -34,7 +35,11 @@ export class TranslateSegments {
   constructor(o: TranslateSegmentsOptions) {
     this.segments = new ContinuousSegments({
       ...o,
-      detectSourceLanguage: o.detectParticipantLanguage ? meetingTranscriptLanguage : undefined,
+      detectSourceLanguage: o.detectParticipantLanguage
+        ? o.sourceLanguageHints
+          ? (text) => multilingualTranscriptLanguage(text, o.sourceLanguageHints)
+          : meetingTranscriptLanguage
+        : undefined,
     });
   }
 

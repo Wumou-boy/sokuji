@@ -1,17 +1,17 @@
 import type { AdapterEventKind, AdapterEvents } from './adapter';
 
-type PayloadOf<K extends AdapterEventKind> = Parameters<AdapterEvents[K]>[0];
+export type AdapterEventPayload<K extends AdapterEventKind> = Parameters<NonNullable<AdapterEvents[K]>>[0];
 
 /**
  * One adapter event as a value: `{ kind, payload }`. What L1 folds. `lateSpeech` is not one of them: it is for a
  * voice outside the adapter, and nothing above the contract takes it.
  */
 export type AdapterEvent = {
-  [K in AdapterEventKind]: { kind: K; payload: PayloadOf<K> };
+  [K in AdapterEventKind]: { kind: K; payload: AdapterEventPayload<K> };
 }[AdapterEventKind];
 
 const KINDS = {
-  segmentOpened: true, segmentText: true, segmentClosed: true, audio: true, speechRanges: true,
+  segmentOpened: true, segmentSpeaker: true, segmentText: true, segmentClosed: true, audio: true, speechRanges: true,
   closed: true, reconnecting: true, reconnected: true, failed: true, degraded: true,
   loading: true, busy: true, frame: true,
 } satisfies Record<AdapterEventKind, true>;

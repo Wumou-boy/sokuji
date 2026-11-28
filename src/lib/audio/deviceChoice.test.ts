@@ -24,6 +24,22 @@ describe('chooseInput', () => {
     expect(chooseInput({ devices: [virtualMic, real('c')], savedId: 'virtual', currentId: null })?.deviceId).toBe('c');
   });
 
+  it('clears a stale current virtual device instead of silently switching to a physical microphone', () => {
+    expect(chooseInput({ devices: [virtualMic, real('c')], savedId: 'virtual', currentId: 'virtual' })).toBeNull();
+  });
+
+  it('uses a separate saved physical device when the current choice is virtual', () => {
+    expect(chooseInput({ devices: [virtualMic, real('c')], savedId: 'c', currentId: 'virtual' })?.deviceId).toBe('c');
+  });
+
+  it('does not retain a current virtual cable as the only microphone', () => {
+    expect(chooseInput({ devices: [virtualMic], savedId: 'virtual', currentId: 'virtual' })).toBeNull();
+  });
+
+  it('keeps an explicitly selected OS loopback input available', () => {
+    expect(chooseInput({ devices: [loopback, real('c')], savedId: 'loop', currentId: 'c' })?.deviceId).toBe('loop');
+  });
+
   it('skips inputs marked unusable, the saved and the current one included', () => {
     const devices = [real('a'), real('b'), real('c')];
     expect(chooseInput({ devices, savedId: 'a', currentId: 'b', unusable: new Set(['a', 'b']) })?.deviceId).toBe('c');
@@ -38,11 +54,12 @@ describe('chooseInput', () => {
 describe('chooseOutput', () => {
   const virtualSpeaker: AudioDevice = { deviceId: 'vs', label: 'Sokuji_Virtual_Speaker', isVirtual: true };
 
-  it('picks the saved output, then the current one, then the first non-virtual, then any', () => {
+  it('picks the saved physical output, then the current one, then the first physical output', () => {
     expect(chooseOutput({ devices: [real('b'), real('a')], savedId: 'a', currentId: 'b' })?.deviceId).toBe('a');
     expect(chooseOutput({ devices: [real('b')], savedId: 'a', currentId: 'b' })?.deviceId).toBe('b');
     expect(chooseOutput({ devices: [virtualSpeaker, real('c')], savedId: 'a', currentId: 'b' })?.deviceId).toBe('c');
-    expect(chooseOutput({ devices: [virtualSpeaker], savedId: null, currentId: null })?.deviceId).toBe('vs');
+    expect(chooseOutput({ devices: [virtualSpeaker], savedId: null, currentId: null })).toBeNull();
+    expect(chooseOutput({ devices: [virtualSpeaker, real('usb')], savedId: null, currentId: 'vs' })?.deviceId).toBe('usb');
     expect(chooseOutput({ devices: [], savedId: null, currentId: null })).toBeNull();
   });
 

@@ -116,7 +116,8 @@ class TranslateLeg implements AdapterSession {
       clock,
       silence: config.silence,
       sink: events,
-      detectParticipantLanguage: config.detectParticipantLanguage,
+      detectParticipantLanguage: config.detectParticipantLanguage || Boolean(config.sourceLanguageHints?.length),
+      sourceLanguageHints: config.sourceLanguageHints,
     };
     if (config.translateParticipantCaptions && !context.speech) {
       this.segments = new CaptionSegments({

@@ -12,7 +12,7 @@ import type { UsageDelta } from '../../lib/usage/ledger';
 import { AUTO } from '../../lib/provider/languages';
 import type { QwenTurnAudioBuffer } from '../../lib/faceToFace/audioBuffer';
 import type { ProviderRefusal, SharedSettings } from '../../lib/run/types';
-import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, isEndpointId, normalizeBailianWorkspaceId, type EndpointId } from './endpoints';
+import { BAILIAN_WORKSPACE_CONNECTION, isEndpointId, normalizeBailianWorkspaceId, type EndpointId } from './endpoints';
 import {
   QWEN_LANGUAGES, QWEN_MODEL, QWEN_PAUSE, QWEN_SPOKEN, qwenParticipantVoice, qwenSpeakerVoice, SPEAKER_CLONE, SPEAKER_CLONE_ONCE, QWEN_FIXED_VOICE_PREFIX, type QwenSettings,
 } from './settings';
@@ -38,10 +38,14 @@ export interface QwenConfig {
   voice: QwenVoiceChoice;
   /** Push-to-talk: no server turn detection; a release commits. */
   manual: boolean;
-  /** The participant leg, speaker labels on: each turn carries its speaker as `person`. */
+  /** Whether this leg's turns carry a speaker attribution as `person`. */
   person: boolean;
+  /** Run the optional on-device speaker model for this automatic-turn meeting leg. */
+  localSpeakerRecognition?: boolean;
   /** Locally labels incoming EN/JA/ZH source transcript text where unambiguous. */
   detectIncomingLanguage: boolean;
+  /** Face-to-face output languages may gently disambiguate local source-language ties. */
+  sourceLanguageHints?: readonly string[];
   /** Optional face-to-face replay source; populated only by the face-to-face runtime. */
   turnAudio?: QwenTurnAudioBuffer;
   /** Suppresses a same-language Chinese translation in incoming text-only captions. */
@@ -66,9 +70,10 @@ export function buildQwen(context: SessionContext, s: QwenSettings, shared: Shar
   const participant = shared.reversed(context.direction);
   const chosen = participant ? qwenParticipantVoice(s) : qwenSpeakerVoice(s);
   const workspace = s.connection === BAILIAN_WORKSPACE_CONNECTION;
-  const endpoint = workspace ? null : s.connection === BAILIAN_ENDPOINT_ID ? BAILIAN_ENDPOINT_ID : shared.models[0]?.id;
+  const endpoint = workspace ? null : isEndpointId(s.connection) ? s.connection : shared.models[0]?.id;
   const incomingTextOnlyZh = participant && !context.speech && target === 'zh';
   const manual = context.turns === 'manual';
+  const localSpeakerRecognition = s.speakerLabels && !manual && shared.localSpeakerRecognition === true;
   // The pause field is not in 3.8's documented update: it goes on the wire only when it changes something.
   const pause = Number.isFinite(s.pauseMs) ? Math.min(QWEN_PAUSE.max, Math.max(QWEN_PAUSE.min, Math.round(s.pauseMs))) : QWEN_PAUSE.default;
   return {
@@ -84,7 +89,10 @@ export function buildQwen(context: SessionContext, s: QwenSettings, shared: Shar
       : chosen === SPEAKER_CLONE_ONCE ? { kind: 'clone', frequency: 'once' }
         : { kind: 'preset', name: chosen },
     manual,
-    person: participant && s.speakerLabels,
+    // Keep the default wire behavior intact. When locally enabled, the same
+    // model also labels multiple speakers picked up by the outgoing mic.
+    person: s.speakerLabels && (participant || localSpeakerRecognition),
+    ...(localSpeakerRecognition ? { localSpeakerRecognition: true } : {}),
     detectIncomingLanguage: participant && (context.direction.source === AUTO || incomingTextOnlyZh),
     skipSameLanguageText: incomingTextOnlyZh,
     // The word list's translations (spec §9): the provider's own old hotwords are no longer read.

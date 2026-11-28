@@ -124,6 +124,8 @@ export interface AppSession {
   readonly frames: FrameLog;
   /** The page's playback and capture, loaded on the first call; a failed load is retried on the next. */
   audio(): Promise<LoadedAudio>;
+  /** The already-loaded playback and capture, without triggering a load. */
+  audioIfLoaded(): LoadedAudio | null;
   /**
    * The one start every surface calls (ruling 11): resolves without starting
    * unless `subtitle.get().canStart`, and otherwise forwards to
@@ -171,6 +173,7 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
   let playback: Playback | null = null;
   let openLeg: OpenSource | null = null;
   let loading: Promise<LoadedAudio> | null = null;
+  let loadedAudio: LoadedAudio | null = null;
   /** The runs' voice-idle listeners; the playback, once loaded, is subscribed once and forwards here. */
   const voiceIdleListeners = new Set<(voice: LegName) => void>();
   /** One live `attach()` at a time. */
@@ -570,7 +573,8 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
           // the real karaoke exists now, behind the same identity.
           notifyKaraoke();
         }
-        return { ...app, capture };
+        loadedAudio = { ...app, capture };
+        return loadedAudio;
       },
       (error: unknown) => {
         loading = null;
@@ -583,6 +587,7 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
   return {
     runner, view, karaoke, subtitle, punctuation, frames,
     audio,
+    audioIfLoaded: () => loadedAudio,
     start(method) {
       const faceToFace = useFaceToFaceStore.getState();
       if (faceToFace.mode !== 'meeting' || faceToFace.phase === 'starting' || faceToFace.phase === 'live' || faceToFace.phase === 'stopping') {
@@ -725,12 +730,17 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
         // Busy while a run is live or notes are being written: either holds a close for the page to answer.
         const notes = notesRunner();
         let runBusy = false;
+        const faceBusy = () => ['starting', 'live', 'stopping'].includes(useFaceToFaceStore.getState().phase);
         const sendBusy = () => {
-          const busy = runBusy || (notes?.running().length ?? 0) > 0;
+          const busy = runBusy || faceBusy() || (notes?.running().length ?? 0) > 0;
           void ipc.invoke('app:session-busy', busy).catch((error: unknown) =>
             reportWarning('AppSession', `Telling the app the session is ${busy ? 'busy' : 'idle'} failed: ${describeCause(error)}`, { cause: error, dedupeKey: 'session:busy' }));
         };
         offs.push(trackBusy(runner, (busy) => { runBusy = busy; sendBusy(); }));
+        if (faceBusy()) sendBusy();
+        offs.push(useFaceToFaceStore.subscribe((state, previous) => {
+          if (state.phase !== previous.phase) sendBusy();
+        }));
         if (notes) offs.push(notes.subscribe(sendBusy));
         if (ipc.receive) {
           // Electron's window close and update install (one channel): end the run,
@@ -755,6 +765,10 @@ export function createAppSession(options: AppSessionOptions = {}): AppSession {
               // A session the app's closing ends gets no notes, now or later (spec §5.1).
               const live = runner.conversation.snapshot()[0]?.session;
               if (live) closedByApp.add(live);
+              if (faceBusy()) {
+                const { stopFaceToFaceRuntime } = await import('../lib/faceToFace/runtime');
+                await stopFaceToFaceRuntime();
+              }
               await runner.stop('window');
               await runner.settled();
               await historySettled();

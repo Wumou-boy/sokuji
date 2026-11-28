@@ -12,6 +12,7 @@
     "signIn": "ورود",
     "signUp": "ثبت‌نام",
     "signInRequired": "<signInLink>وارد شوید یا ثبت‌نام کنید</signInLink> تا از Kizuna AI استفاده کنید — بدون نیاز به کلید API.",
+    "checking": "در حال بررسی...",
     "dismiss": "بستن",
     "none": "هیچ‌کدام",
     "retry": "تلاش مجدد",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "گزارش اشکال یا دریافت کمک",
     "diagnosticLogs": "گزارش‌های عیب‌یابی",
     "diagnosticLogsTooltip": "کارهای برنامه را ثبت می‌کند تا بتوانید آن را به گزارش خطا پیوست کنید. به‌طور پیش‌فرض خاموش است. وقتی روشن باشد، دکمهٔ «گزارش‌ها» در نوار عنوان نمایش داده می‌شود و این تنظیم پس از راه‌اندازی مجدد هم روشن می‌ماند.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "ظاهر",
     "appearanceTooltip": "ظاهر برنامه. «سیستم» تنظیم روشن یا تیره سیستم‌عامل را به کار می‌برد.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "صدای سفارشی",
     "translateDetectParticipantLanguage": "تشخیص خودکار چینی، ژاپنی و انگلیسی طرف مقابل",
     "translateDetectParticipantLanguageHelp": "اگر زبان طرف مقابل چینی، ژاپنی یا انگلیسی باشد، زبان هر زیرنویس از متن اصلی تشخیص داده می‌شود. زبان مقصد ترجمه همان زبان انتخاب‌شده می‌ماند.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "در انتظار پایان نشست قبلی. برای لغو کلیک کنید.",
     "clickToCancel": "برای لغو کلیک کنید",
     "whatIHear": "آنچه می‌شنوم",
-    "audioSettings": "تنظیمات صدا",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "تنظیمات صدا"
   },
   "modePicker": {
     "modeYou": "من",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} دیگر در این نسخه در دسترس نیست.",
     "noCandidate": "برای این جهت، هیچ مدل {{stage}} در دسترس نیست."
   },
-  "update": {
-    "available": "نسخه جدید v{{version}} موجود است",
-    "downloading": "در حال دانلود به‌روزرسانی... {{percent}}%",
-    "downloadingIndeterminate": "در حال دانلود به‌روزرسانی...",
-    "downloaded": "به‌روزرسانی آماده است، برای تکمیل مجدداً راه‌اندازی کنید",
-    "checkButton": "بررسی به‌روزرسانی‌ها",
-    "checking": "در حال بررسی...",
-    "upToDate": "به‌روز",
-    "notAvailable": "شما از آخرین نسخه استفاده می‌کنید",
-    "downloadNow": "اکنون دانلود کنید",
-    "later": "بعداً",
-    "restartNow": "راه‌اندازی مجدد و به‌روزرسانی",
-    "goToDownload": "رفتن به دانلود",
-    "error": "بررسی به‌روزرسانی ناموفق بود",
-    "currentVersion": "نسخه فعلی: v{{version}}",
-    "newVersion": "نسخه جدید: v{{version}}",
-    "autoUpdateNote": "AppImage از به‌روزرسانی خودکار پشتیبانی می‌کند. نصب AppImage جایگزین نسخه نصب‌شده فعلی شما می‌شود — نیازی به حذف جداگانه نیست.",
-    "downloadAppImage": "دانلود AppImage (پیشنهادی)",
-    "downloadDeb": "دانلود .deb",
-    "linuxMigrateTitle": "نسخه جدید v{{version}} موجود است"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (ابزارهای خط فرمان PulseAudio) یافت نشد، بنابراین AED Translator نتوانست میکروفون/بلندگوی مجازی خود را راه‌اندازی کند. آن را نصب کنید و سپس دوباره امتحان کنید:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "صدا از بلندگو پخش می‌شود. در جلسهٔ آنلاین ممکن است میکروفن صدای طرف مقابل را هم بگیرد. برای جلوگیری از پژواک از هدفون استفاده کنید.",
     "ttsEcho": "بلندگوهای شما گفتار ترجمه‌شدهٔ AED Translator را به میکروفون بازمی‌گردانند.",
     "meetingEcho": "صدای جلسه از بلندگوهای شما به میکروفون می‌رسد.",
     "farEndEcho": "دستگاه یکی از شرکت‌کنندگان ترجمهٔ شما را به‌صورت پژواک به جلسه بازمی‌گرداند.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "در «زبان‌ها و ترکیب» مدلی برای ترجمه انتخاب کنید یا نام آن را بنویسید.",
     "address_missing": "پیش از شروع، نشانی سرویس سازگار را در «حساب‌ها و کلیدها» وارد کنید.",
     "address_invalid": "نشانی سرویس سازگار قابل استفاده نیست: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "تنظیمات پایه",
       "maintenance": "نگهداری و راهنما",
-      "update": "به‌روزرسانی",
-      "updateLine": "نسخهٔ شما {{version}} است.",
-      "version": "نسخه",
-      "storeUpdates": "فروشگاه مرورگر افزونه را به‌روز نگه می‌دارد.",
       "wizard": "راه‌انداز تنظیمات",
       "wizardLine": "راه‌انداز را دوباره طی کنید؛ آنچه ذخیره کرده‌اید از پیش انتخاب شده است.",
       "rerun": "اجرای دوباره",

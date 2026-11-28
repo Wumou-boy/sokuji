@@ -41,14 +41,24 @@ export function chooseInput({ devices, savedId, currentId, unusable = new Set() 
   const usable = devices.filter((device) => !unusable.has(device.deviceId));
   // A saved virtual device is refused: an old auto-select bug persisted Sokuji's own virtual mic.
   const saved = savedId ? usable.find((device) => device.deviceId === savedId && !device.isVirtual) : undefined;
-  const current = currentId ? usable.find((device) => device.deviceId === currentId) : undefined;
-  return saved ?? current ?? pickDefaultInputDevice(usable);
+  // A stale/current selection is no safer than a saved one: an older build or
+  // a programmatic selection may have left Sokuji's virtual input selected.
+  // Keep deliberately selected OS loopback inputs (they are warned in the UI),
+  // but never silently retain this app's own virtual/cable endpoint.
+  const current = currentId ? usable.find((device) => device.deviceId === currentId && !device.isVirtual) : undefined;
+  const unsafeCurrent = currentId !== null && usable.some((device) => device.deviceId === currentId && device.isVirtual);
+  // A listed but unsafe current choice is an explicit bad selection, not a
+  // removed device. Clear it and let the caller show an empty picker instead
+  // of silently swapping to the first physical microphone. If the OS marks it
+  // unusable after an open failure, it is removed from `usable` and the usual
+  // device-lost fallback path can take over with its notice.
+  return saved ?? current ?? (unsafeCurrent ? null : pickDefaultInputDevice(usable));
 }
 
-/** The monitor output to use: the saved one, else the current one, else the first non-virtual, else any. */
+/** A local monitor must never use the meeting's virtual microphone as its speaker. */
 export function chooseOutput({ devices, savedId, currentId }: DeviceChoice): AudioDevice | null {
-  const byId = (id: string | null) => (id ? devices.find((device) => device.deviceId === id) : undefined);
-  // A saved virtual device is refused, as chooseInput does.
-  const saved = savedId ? devices.find((device) => device.deviceId === savedId && !device.isVirtual) : undefined;
-  return saved ?? byId(currentId) ?? devices.find((device) => !device.isVirtual) ?? devices[0] ?? null;
+  const local = devices.filter((device) => !device.isVirtual);
+  return local.find((device) => device.deviceId === savedId)
+    ?? local.find((device) => device.deviceId === currentId)
+    ?? local[0] ?? null;
 }

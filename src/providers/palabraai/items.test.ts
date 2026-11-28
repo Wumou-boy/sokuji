@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { AdapterEvents, SessionContext } from '../../lib/contract/adapter';
+import type { SessionContext } from '../../lib/contract/adapter';
 import { checkConformance } from '../../lib/contract/conformance';
-import { recordEvents, type AdapterEvent } from '../../lib/contract/events';
+import { recordEvents, type AdapterEvent, type AdapterEventPayload } from '../../lib/contract/events';
 import { PalabraItems } from './items';
 import { EN, JA, SENTENCE, SERVER } from './testing';
 import { decodeMessage, outputAudioOf, transcriptionOf } from './wire';
@@ -21,8 +21,8 @@ function items() {
     else if (m.type === 'output_audio_data') it.audio(outputAudioOf(m.data), pcm ?? new Int16Array(4_800));
   };
   /** The payloads of one kind of event, in order. */
-  const of = <K extends AdapterEvent['kind']>(kind: K): Array<Parameters<AdapterEvents[K]>[0]> =>
-    log.filter((e) => e.kind === kind).map((e) => e.payload as Parameters<AdapterEvents[K]>[0]);
+  const of = <K extends AdapterEvent['kind']>(kind: K): Array<AdapterEventPayload<K>> =>
+    log.filter((e) => e.kind === kind).map((e) => e.payload as AdapterEventPayload<K>);
   return { items: it, log, feed, of };
 }
 

@@ -246,11 +246,13 @@ describe('createAppSession', () => {
   it('builds no playback until asked, and builds it once', async () => {
     const { session } = await setup();
     expect(getAppAudio).not.toHaveBeenCalled();
+    expect(session.audioIfLoaded()).toBeNull();
     const first = session.audio();
     const second = session.audio();
     expect(second).toBe(first);
     const loaded = await first;
     expect(getAppAudio).toHaveBeenCalledTimes(1);
+    expect(session.audioIfLoaded()).toBe(loaded);
     expect(loaded.playback).toBe(playback);
     expect(loaded.capture).toMatchObject({ openSource: expect.any(Function), echo: expect.any(Object), levels: expect.any(Object) });
   });
@@ -1627,6 +1629,29 @@ describe('attach', () => {
       expect(askQuit).not.toHaveBeenCalled();
       expect(ipc.invoke).toHaveBeenCalledWith('app:close-ready');
       detach();
+    });
+
+    it('waits for the face-to-face microphone recording before letting the window close', async () => {
+      const face = await import('../lib/faceToFace/runtime');
+      let finish!: () => void;
+      const stopped = vi.spyOn(face, 'stopFaceToFaceRuntime').mockImplementation(() => new Promise<void>((resolve) => { finish = resolve; }));
+      const { ipc, closeRequested } = electronIpc();
+      const { session } = await setup({ ipc, notes: writingNotes([]), history: null });
+      const detach = session.attach();
+      try {
+        useFaceToFaceStore.setState({ phase: 'live' });
+        expect(ipc.invoke).toHaveBeenCalledWith('app:session-busy', true);
+        const closing = closeRequested();
+        await vi.waitFor(() => expect(stopped).toHaveBeenCalledOnce());
+        expect(ipc.invoke).not.toHaveBeenCalledWith('app:close-ready');
+        useFaceToFaceStore.setState({ phase: 'idle' });
+        finish();
+        await closing;
+        expect(ipc.invoke).toHaveBeenCalledWith('app:close-ready');
+      } finally {
+        stopped.mockRestore();
+        detach();
+      }
     });
   });
 

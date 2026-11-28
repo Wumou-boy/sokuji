@@ -16,28 +16,8 @@
 
   > :not(.face-to-face-mode__captions) { flex-shrink: 0; }
 
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  h1 { margin: 0; font-size: 19px; line-height: 1.25; }
   p { margin: 0; line-height: 1.4; }
   &__empty, &__pending { color: vars.$text-secondary; }
-
-  &__exit {
-    flex: 0 0 auto;
-    border: 1px solid vars.$border-default;
-    border-radius: 7px;
-    padding: 5px 10px;
-    background: vars.$bg-surface;
-    color: inherit;
-    font: inherit;
-    font-size: 12px;
-    cursor: pointer;
-  }
 
   &__toolbar {
     display: flex;
@@ -47,15 +27,46 @@
 
   &__toolbar .session-token-meter { align-self: center; flex: 0 0 auto; }
 
+  &__mic-meter {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex: 0 1 auto;
+    color: vars.$text-muted;
+    font-size: 11px;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  &__mic-meter-label { color: vars.$text-secondary; }
+  &__mic-meter-track {
+    display: inline-flex;
+    width: 34px;
+    height: 5px;
+    flex: 0 0 34px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: vars.$bg-dim;
+  }
+  &__mic-meter-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: vars.$text-secondary;
+    transition: width 80ms linear;
+  }
+  &__mic-meter-db { color: vars.$text-secondary; font-variant-numeric: tabular-nums; }
+
   &__setup {
     display: grid;
     flex: 1 1 auto;
     min-width: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
 
   &__language { display: grid; min-width: 0; gap: 3px; font-size: 11px; color: vars.$text-secondary; }
+  &__speaker-status { color: vars.$text-secondary; font-size: 11px; }
+  &__speaker-status { grid-column: 1 / -1; margin: 0; }
   &__language select {
     width: 100%;
     min-width: 0;
@@ -69,6 +80,8 @@
     font-size: 12px;
   }
   &__status { border-radius: 6px; padding: 6px 9px; background: vars.$bg-surface; font-size: 12px; }
+  &__settings-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
+  &__start:disabled { opacity: 0.55; cursor: default; }
   &__status--error { color: vars.$color-error; }
   &__start {
     flex: 0 0 auto;
@@ -121,13 +134,16 @@
   &__row-error { margin: 4px 0 0 30px !important; color: vars.$color-error; font-size: 11px; }
 }
 
+@media (max-width: 740px) {
+  .face-to-face-mode__toolbar { align-items: center; flex-wrap: wrap; gap: 7px; }
+  .face-to-face-mode__setup { flex-basis: 100%; }
+}
+
 @media (max-width: 520px) {
   .face-to-face-mode { padding: 10px 10px 8px; gap: 7px; }
-  .face-to-face-mode__header { gap: 8px; }
-  .face-to-face-mode h1 { font-size: 17px; }
-  .face-to-face-mode__toolbar { align-items: center; gap: 7px; }
   .face-to-face-mode__toolbar .session-token-meter { flex-direction: column; align-items: flex-end; gap: 0; font-size: 10px; }
-  .face-to-face-mode__setup { gap: 6px; }
+  .face-to-face-mode__mic-meter { font-size: 10px; }
+  .face-to-face-mode__setup { flex-basis: 100%; gap: 6px; }
   .face-to-face-mode__language { font-size: 10px; }
   .face-to-face-mode__language select { padding-inline: 5px; font-size: 11px; }
   .face-to-face-mode__start { padding-inline: 9px; }

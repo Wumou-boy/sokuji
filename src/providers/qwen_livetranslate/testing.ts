@@ -62,8 +62,8 @@ export const SERVER = {
   answerItem: (itemId: string, previous: string) =>
     event({ type: 'conversation.item.created', previous_item_id: previous, item: { id: itemId, type: 'message', role: 'assistant', content: [] } }),
   outputItem: (itemId: string) => event({ type: 'response.output_item.added', response_id: 'resp_1', output_index: 0, item: { id: itemId, type: 'message', role: 'assistant', content: [] } }),
-  sourceDelta: (itemId: string, delta: string) => event({ type: 'conversation.item.input_audio_transcription.delta', item_id: itemId, content_index: 0, delta }),
-  sourceDone: (itemId: string, transcript: string) => event({ type: 'conversation.item.input_audio_transcription.completed', item_id: itemId, content_index: 0, transcript }),
+  sourceDelta: (itemId: string, delta: string, language?: string) => event({ type: 'conversation.item.input_audio_transcription.delta', item_id: itemId, content_index: 0, delta, ...(language ? { language } : {}) }),
+  sourceDone: (itemId: string, transcript: string, language?: string) => event({ type: 'conversation.item.input_audio_transcription.completed', item_id: itemId, content_index: 0, transcript, ...(language ? { language } : {}) }),
   transcriptDelta: (itemId: string, delta: string) => event({ type: 'response.audio_transcript.delta', response_id: 'resp_1', item_id: itemId, delta }),
   transcriptDone: (itemId: string, transcript: string) => event({ type: 'response.audio_transcript.done', response_id: 'resp_1', item_id: itemId, transcript }),
   textDelta: (itemId: string, delta: string) => event({ type: 'response.text.delta', response_id: 'resp_1', item_id: itemId, delta }),
@@ -143,7 +143,7 @@ export function turn(n: number, o: { source: string; translation: string; speake
  * each liveness probe (`answeringSockets`) unless `answerProbes` is false; a
  * test may bring its own tracked clock.
  */
-export function startQwen(o: { context?: SessionContext; patch?: Partial<QwenSettings>; credentials?: QwenCredentials; shared?: SharedSettings; detect?: DetectEndpoint; requestIds?: string[]; holdClear?: boolean; frames?: FrameSource; answerProbes?: boolean; clock?: ReturnType<typeof trackedClock>; workspaceSupported?: () => boolean } = {}) {
+export function startQwen(o: { context?: SessionContext; patch?: Partial<QwenSettings>; config?: Partial<QwenConfig>; credentials?: QwenCredentials; shared?: SharedSettings; detect?: DetectEndpoint; requestIds?: string[]; holdClear?: boolean; frames?: FrameSource; answerProbes?: boolean; clock?: ReturnType<typeof trackedClock>; workspaceSupported?: () => boolean } = {}) {
   const seam = fakeHeaderSockets(o.answerProbes === false ? undefined : answeringSockets(), { requestIds: o.requestIds });
   /** Releases the first clear's answer, when the leg was started holding it. */
   const releaseClear = o.holdClear ? seam.holdNextClear() : () => {};
@@ -151,7 +151,7 @@ export function startQwen(o: { context?: SessionContext; patch?: Partial<QwenSet
   const { events, log } = recordEvents();
   const controller = new AbortController();
   const context = o.context ?? AUTO_CTX;
-  const config = configFor(context, o.patch, o.shared);
+  const config = { ...configFor(context, o.patch, o.shared), ...o.config };
   const detected: string[] = [];
   const detect: DetectEndpoint = o.detect ?? (async (apiKey) => { detected.push(apiKey); return { endpoint: 'intl' }; });
   const starting = createQwenAdapter({ openHeaderSocket: seam.open, detect, ...(o.workspaceSupported ? { workspaceSupported: o.workspaceSupported } : {}) }).start({ context, config, credentials: o.credentials ?? KEY, clock, signal: controller.signal, ...(o.frames ? { frames: o.frames } : {}) }, events);

@@ -38,11 +38,11 @@ import { ChatError, compatibleChat, type ChatPort } from './chat';
 import { relayChat, RELAY_NOTES_MODEL } from './relayChat';
 import { createNotesRunner, type NotesLanguage, type NotesRunner } from './runner';
 import { makeNotesFetch, notesEndpointOf } from './desktopFetch';
-import { BAILIAN_ENDPOINT_ID } from '../../providers/qwen_livetranslate/endpoints';
+import { BAILIAN_ENDPOINT_ID, BAILIAN_WORKSPACE_CONNECTION, bailianWorkspaceNotesBaseUrl } from '../../providers/qwen_livetranslate/endpoints';
 
 import { textModelNotesChat } from './textModelChat';
 import { recordNotesUsage } from '../usage/providerUsage';
-import { BAILIAN_BEIJING } from '../usage/ledger';
+import { BAILIAN_BEIJING, BAILIAN_WORKSPACE_BEIJING } from '../usage/ledger';
 
 export const BAILIAN_NOTES_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
@@ -52,6 +52,7 @@ export { KIZUNA_NOTES } from './notesService';
 export interface NotesChat {
   chat: ChatPort;
   model: string;
+  usageProvider?: string;
   /** The line-up's notes service: who wrote them. */
   service: string;
 }
@@ -111,7 +112,7 @@ export async function notesChatFromStores(
   const service = notesServiceOf(lineUp);
   const resolved = await notesChatForService(service, sessionRef, o);
   if (!resolved) return null;
-  const provider = service === BAILIAN_NOTES ? BAILIAN_BEIJING : service === KIZUNA_NOTES ? 'kizuna-ai-relay' : service;
+  const provider = resolved.usageProvider ?? (service === KIZUNA_NOTES ? 'kizuna-ai-relay' : service);
   return {
     ...resolved,
     chat: (request) => resolved.chat({
@@ -148,14 +149,18 @@ export async function notesChatForService(
       await useProviderStore.getState().load(qwenLiveTranslateProvider);
     }
     const entry = useProviderStore.getState().entries.qwen_livetranslate;
-    const settings = entry?.settings as { connection?: unknown } | undefined;
-    // The Qwen key is never sent to a custom endpoint and only belongs to Bailian when the connection says so.
-    if (settings?.connection !== BAILIAN_ENDPOINT_ID) return null;
-    const apiKey = String(entry?.credentials.apiKey ?? '').trim();
-    if (!apiKey) return null;
+    const settings = entry?.settings as { connection?: unknown; workspaceId?: unknown } | undefined;
+    const workspace = settings?.connection === BAILIAN_WORKSPACE_CONNECTION;
+    if (!workspace && settings?.connection !== BAILIAN_ENDPOINT_ID) return null;
+    const baseUrl = workspace ? bailianWorkspaceNotesBaseUrl(settings?.workspaceId) : BAILIAN_NOTES_BASE_URL;
+    const apiKey = String(entry?.credentials[workspace ? 'workspaceApiKey' : 'apiKey'] ?? '').trim();
+    if (!baseUrl || !apiKey) return null;
     const storedModel = useSettingsStore.getState().notesBailianModel;
     const model = typeof storedModel === 'string' && storedModel.trim() ? storedModel.trim() : DEFAULT_NOTES_BAILIAN_MODEL;
-    return { chat: compatibleChat({ baseUrl: BAILIAN_NOTES_BASE_URL, apiKey, model, bailian: true, fetch: o.fetch ?? makeNotesFetch() }), model, service };
+    return {
+      chat: compatibleChat({ baseUrl, apiKey, model, bailian: true, fetch: o.fetch ?? makeNotesFetch() }), model, service,
+      usageProvider: workspace ? BAILIAN_WORKSPACE_BEIJING : BAILIAN_BEIJING,
+    };
   }
   if (service === LEGACY_COMPATIBLE_NOTES) {
     const config = useSettingsStore.getState().notesCompatible;

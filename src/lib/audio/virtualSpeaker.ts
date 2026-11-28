@@ -1,6 +1,10 @@
 import { isLinux, isWindows } from '../../utils/environment';
 
 const STANDARD_VB_CABLE_INPUT = /^cable input(?: \((?:\d+-\s*)?vb-audio virtual cable\))?$/i;
+const SEPARATE_VB_CABLE_OUTPUT = /^cable-[abcd] output\s*\((?:\d+-\s*)?vb-audio cable [abcd]\)$/i;
+
+/** Additional cable pairs reserved for incoming meeting audio. Standard VB-CABLE carries our outgoing voice. */
+export const isDedicatedMeetingInput = (label: string) => SEPARATE_VB_CABLE_OUTPUT.test(label.trim());
 
 /**
  * The output device a meeting app hears as a microphone (Electron), found by

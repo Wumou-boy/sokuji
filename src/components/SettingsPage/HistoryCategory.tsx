@@ -13,6 +13,7 @@ import { notesEndpointOf } from '../../lib/notes/notesEndpoint';
 import type { CompatibleNotesSettings } from '../../stores/settingsStore';
 import type { HistoryStatus, HistoryUsage } from '../../lib/history/types';
 import { useLineUpStore } from '../../stores/lineUpStore';
+import { useProviderStore } from '../../stores/providerStore';
 import {
   useLiveNotesExplained, useLiveNotesSetting, useNavigateToSettings, useNotesAfterSession, useNotesExplained, useSetLiveNotes,
   useSetLiveNotesExplained, useSetNotesAfterSession, useSetNotesExplained,
@@ -52,6 +53,7 @@ export function HistoryCategory(_props: CategoryBodyProps) {
   // Always a service (owner, 2026-11-17: no "None" in the line-up): the switches alone decide whether notes are written.
   const service = useLineUpStore((s) => notesServiceOf(s.lineUp));
   const serviceName = notesServiceName(t, service);
+  const bailianConnection = useProviderStore(s => (s.entries.qwen_livetranslate?.settings as { connection?: string } | undefined)?.connection);
   const notesOn = useNotesAfterSession();
   const explained = useNotesExplained();
   const setNotesOn = useSetNotesAfterSession();
@@ -193,7 +195,10 @@ export function HistoryCategory(_props: CategoryBodyProps) {
           // Kizuna AI writes with the one model its relay allows: nothing to choose.
           <Row name={modelName} line={t('history.notesModelKizuna', 'Kizuna AI writes the notes with {{model}}.', { model: RELAY_NOTES_MODEL })}>{null}</Row>
         ) : service === BAILIAN_NOTES ? (
-          <Row name={modelName} line={modelLine}>
+          <Row name={modelName} line={<>{modelLine}<br />{bailianConnection === 'bailian-workspace'
+            ? t('history.notesWorkspaceApi', 'Company workspace API')
+            : bailianConnection === 'bailian-cn' ? t('history.notesSharedApi', 'Shared Bailian endpoint · standard API key')
+            : t('history.notesChooseBailian', 'Select a shared Bailian endpoint or company workspace in Accounts and keys.')}</>}>
             <FormInput aria-label={modelName} value={bailianDraft ?? ''}
               onChange={(e) => setBailianDraft(e.target.value)} onBlur={() => {
                 void setBailianModel(bailianDraft ?? '').then(() => setBailianDraft(useSettingsStore.getState().notesBailianModel));

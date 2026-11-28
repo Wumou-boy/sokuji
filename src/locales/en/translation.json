@@ -1,5 +1,6 @@
 {
   "common": {
+    "localPlaybackUnavailable": "Local playback is unavailable on the current audio route.",
     "cancel": "Cancel",
     "close": "Close",
     "collapsePanel": "Close panel",
@@ -12,6 +13,7 @@
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "signInRequired": "<signInLink>Sign in or sign up</signInLink> to use Kizuna AI — no API key needed.",
+    "checking": "Checking...",
     "dismiss": "Dismiss",
     "none": "None",
     "retry": "Retry",
@@ -21,11 +23,12 @@
     "translatedBothWays": "translated both ways"
   },
   "settings": {
+    "speakerModelFile": "Offline speaker model",
+    "speakerModelReady": "Verified and available on this computer.",
+    "speakerModelInvalid": "This file does not match the supported CAM++ model.",
+    "speakerModelError": "Could not read or save the model on this computer.",
+    "speakerModelImport": "Import ONNX file",
     "title": "Settings",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "tabs": {
       "general": "General",
       "audio": "Audio",
@@ -120,6 +123,10 @@
     "helpEmailTooltip": "Report bugs or get help",
     "diagnosticLogs": "Diagnostic logs",
     "diagnosticLogsTooltip": "Record what the app does, so you can attach it to a bug report. Off by default. While on, a “Logs” button appears in the title bar, and the setting stays on after a restart.",
+
+    "localSpeakerRecognition": "Local speaker recognition",
+
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Appearance",
     "appearanceTooltip": "How the app looks. System follows the operating system's light or dark setting.",
     "appearanceMode": {
@@ -596,15 +603,18 @@
       "voiceDesktopOnly": "Recording and enrollment are available in the AED Translator Windows desktop app.",
       "voiceListError": "Could not load voice profiles saved in this app profile.",
       "voiceCreateFailed": "Could not create this voice. Check the Bailian connection and try again.",
-      "keyRegion": "Key region: {{region}}",
+      "keyRegion": "Key region: {{region}} · {{availability}}",
+      "bailianEndpoint": "Endpoint: Alibaba Bailian (Beijing shared) · Available in mainland China",
       "connectionPersonal": "Personal QwenCloud",
+      "connectionQwenBeijing": "QwenCloud · Beijing (mainland China)",
+      "connectionQwenInternational": "QwenCloud · Singapore (international)",
       "connectionBailianShared": "Bailian shared",
       "connectionBailianWorkspace": "Company workspace",
       "workspaceApiKey": "Company workspace API key",
       "workspaceId": "Bailian workspace ID",
       "workspaceKeyNote": "Your company API key is stored separately from your personal Qwen key. Switching connections does not replace or delete the other key; changes apply to the next connection.",
       "workspaceDesktopOnly": "Dedicated workspace connections are available in the Windows desktop app only.",
-      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace)",
+      "bailianWorkspaceEndpoint": "Endpoint: Alibaba Bailian (dedicated Beijing workspace) · Available in mainland China",
       "screenContext": "Screen context",
       "screenContextTooltip": "Lets the model see one window, tab or screen you choose, so the names and terms on it are recognized and translated as written. Everything inside that area is sent to Alibaba Cloud's Qwen service, in the region of this session, as pictures; Kizuna AI never receives them. It adds to the charge for every second of speech while it is on — on your Alibaba Cloud bill with your own key, or on your account's pricing page with a Kizuna AI account; in Both mode each direction's session is billed.",
       "screenContextPicked": "The model will see: {{name}}",
@@ -614,7 +624,7 @@
       "screenContextNone": "No window chosen yet: you'll be asked when the session starts.",
       "screenContextChoose": "Choose…",
       "speakerLabels": "Speaker labels",
-      "speakerLabelsTooltip": "Numbers the other side's people — Speaker 1, Speaker 2… — once more than one voice is heard.\n\nIt can mistake one person for several. Disabled: no numbers are shown.\n\nApplies from the next session."
+      "speakerLabelsTooltip": "Numbers the speakers heard on supported automatic meeting streams — Speaker 1, Speaker 2… — once more than one voice is heard. With local speaker recognition enabled, this also applies to people sharing your microphone.\n\nIt can mistake one person for several. Disabled: no numbers are shown.\n\nApplies from the next session."
     },
     "local_inference": {
       "name": "This device",
@@ -672,9 +682,6 @@
     "logsCopied": "Copied!"
   },
   "mainPanel": {
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}",
     "subtitleTakeover": "Translations are showing in the subtitle overlay",
     "payer": {
       "paidBy": "Paid by {{name}}",
@@ -826,14 +833,27 @@
     "otherSideBesideHint": "Two people at one microphone"
   },
   "faceToFace": {
+    "singleMicSetup": "Use one microphone and choose two or three subtitle languages.",
+    "openSubtitles": "Open face-to-face subtitles",
     "modeGroup": "Translation mode",
     "onlineMeeting": "Online meeting",
+    "confirmModeSwitch": "End the current session and switch modes?",
+    "sharedServiceUnsupported": "Choose Qwen LiveTranslate or OpenAI Realtime Translate in Settings to use face-to-face subtitles.",
+    "openTranslationSettings": "Translation settings",
+    "sharedMicrophoneOff": "Select an active microphone in Audio settings to start listening.",
+    "openMicrophoneSettings": "Microphone settings",
     "title": "Face to face",
     "intro": "Choose two subtitle languages and take turns speaking into one microphone.",
     "backToMeeting": "Online meeting",
     "languageChoices": "Reading languages",
     "firstLanguage": "First subtitle language",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
     "secondLanguage": "Second subtitle language",
+      "thirdLanguage": "Third subtitle language",
+      "speakerModelLoading": "Loading local speaker recognition…",
+      "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session.",
     "subtitleOnly": "Subtitles only. No speech is synthesized.",
     "speakerNumber": "Speaker {{number}}",
     "speaker": "Speaker",
@@ -856,8 +876,12 @@
     "assignSpeakers": "Who is speaking?",
     "detectedSpeaker": "Detected speaker {{id}}",
     "captions": "Conversation subtitles",
+    "recordingFailed": "The microphone recording could not be saved in full.",
+    "recordingNotice": "When you start listening, the microphone recording and subtitles are saved in History on this computer.",
+    "historyPartial": "Some captions could not be saved. The live subtitles are still available until this session ends.",
+    "historyNotKept": "No captions or recording to save.",
     "waiting": "Subtitles will appear here as you speak.",
-    "speakerUnknown": "Speaker unassigned",
+    "speakerUnknown": "Speaker not identified",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
     "assignToTranslate": "Assign this speaker to choose the translation direction.",
@@ -1346,27 +1370,6 @@
     "notInCatalog": "{{from}} is no longer available in this version.",
     "noCandidate": "No {{stage}} model is available for this direction."
   },
-  "update": {
-    "available": "New version v{{version}} available",
-    "downloading": "Downloading update... {{percent}}%",
-    "downloadingIndeterminate": "Downloading update...",
-    "downloaded": "Update ready, restart to complete",
-    "checkButton": "Check for Updates",
-    "checking": "Checking...",
-    "upToDate": "Up to date",
-    "notAvailable": "You're running the latest version",
-    "downloadNow": "Download Now",
-    "later": "Later",
-    "restartNow": "Restart and Update",
-    "goToDownload": "Go to Download",
-    "error": "Failed to check for updates",
-    "currentVersion": "Current version: v{{version}}",
-    "newVersion": "New version: v{{version}}",
-    "autoUpdateNote": "AppImage supports automatic updates. Installing the AppImage replaces your current installation — no separate uninstall needed.",
-    "downloadAppImage": "Download AppImage (recommended)",
-    "downloadDeb": "Download .deb",
-    "linuxMigrateTitle": "New version v{{version}} available"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudio command-line tools) was not found, so AED Translator couldn't set up its virtual microphone/speaker. Install it, then retry:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1610,6 +1613,7 @@
     "refreshList": "Refresh voice list"
   },
   "echoNotice": {
+    "startupSpeakers": "Your system output is set to speakers. In online meetings, your microphone may pick up the other person. Use headphones to avoid echo.",
     "ttsEcho": "Your speakers are feeding AED Translator's translated speech back into the microphone.",
     "meetingEcho": "Meeting audio from your speakers is reaching the microphone.",
     "farEndEcho": "A participant's device is echoing your translation back into the meeting.",
@@ -1639,7 +1643,6 @@
     "no_legs": "Choose what to translate before starting.",
     "turn_mode_unsupported": "This provider doesn't offer the chosen talk mode.",
     "participant_source_unavailable": "Translating other participants isn't available here.",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "participant_unsupported": "This provider can't translate the other participants for this language pair.",
     "credentials_missing": "Enter your API key in Settings before starting.",
     "not_ready": "The provider is not ready: {{detail}}",
@@ -1924,6 +1927,10 @@
       "internalModel": "Company network and PGX text models",
       "bailianModel": "Alibaba Cloud Model Studio · real-time translation",
       "internalModelHint": "Choose or enter the model name under Languages and line-up.",
+      "endpointDomestic": "Available in mainland China",
+      "endpointInternational": "International availability (only in regions supported by the provider)",
+      "endpointDependsOnUrl": "Availability depends on the endpoint URL.",
+      "qwenRegionDetected": "QwenCloud key region is detected when you check the key.",
       "addKey": "Add key",
       "keySaved": "Key saved",
       "local": "Runs on this computer",
@@ -2084,10 +2091,6 @@
     "general": {
       "basics": "Basics",
       "maintenance": "Maintenance and help",
-      "update": "Updates",
-      "updateLine": "You have {{version}}.",
-      "version": "Version",
-      "storeUpdates": "The browser's store keeps the extension up to date.",
       "wizard": "Setup wizard",
       "wizardLine": "Go through the wizard again; what you have saved comes pre-selected.",
       "rerun": "Run again",
@@ -2130,6 +2133,9 @@
     }
   },
   "history": {
+    "notesChooseBailian": "Select a shared Bailian endpoint or company workspace in Accounts and keys.",
+    "notesWorkspaceApi": "Company workspace API",
+    "notesSharedApi": "Shared Bailian endpoint · standard API key",
     "title": "History",
     "back": "Back",
     "search": "Search History",

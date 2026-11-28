@@ -1,7 +1,6 @@
 // The main window shows the app's own page and nothing else.
 //
-// A link the page renders without a target (the release notes in the update
-// dialog are GitHub's HTML, full of them) would otherwise navigate the main
+// A link the page renders without a target would otherwise navigate the main
 // window itself: the app's interface gone, no frame and no Back button to
 // return with, and the page it went to still holding the preload's
 // `window.electron.invoke`. setWindowOpenHandler (popover-windows.js) governs

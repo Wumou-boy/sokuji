@@ -50,6 +50,16 @@ describe("Qwen LiveTranslate's builder (spec §5)", () => {
     expect(buildQwen(ctx('zh', 'en'), off, SHARED)).toMatchObject({ person: false });
   });
 
+  it('uses the shared local speaker preference on both automatic meeting legs only when labels are enabled', () => {
+    const shared = { ...SHARED, localSpeakerRecognition: true };
+    expect(buildQwen(ctx('en', 'zh'), QWEN_DEFAULTS, shared)).toMatchObject({ localSpeakerRecognition: true });
+    expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, shared)).toMatchObject({ person: true, localSpeakerRecognition: true });
+    expect(buildQwen(ctx('en', 'zh', { turns: 'manual' }), QWEN_DEFAULTS, shared)).not.toHaveProperty('localSpeakerRecognition');
+    expect(buildQwen(ctx('zh', 'en', { turns: 'manual' }), QWEN_DEFAULTS, shared)).not.toHaveProperty('localSpeakerRecognition');
+    expect(buildQwen(ctx('zh', 'en'), { ...QWEN_DEFAULTS, speakerLabels: false }, shared)).toMatchObject({ person: false });
+    expect(buildQwen(ctx('zh', 'en'), { ...QWEN_DEFAULTS, speakerLabels: false }, shared)).not.toHaveProperty('localSpeakerRecognition');
+  });
+
   it('reads the endpoint from the models the check found, and none from anything else', () => {
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, { ...SHARED, models: [{ id: 'cn' }] })).toMatchObject({ endpoint: 'cn' });
     expect(buildQwen(ctx('zh', 'en'), QWEN_DEFAULTS, { ...SHARED, models: [] })).toMatchObject({ endpoint: null });

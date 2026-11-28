@@ -80,6 +80,23 @@ describe('records', () => {
     expect(s.getRecord('imp-0002-bbbb')).toEqual(expect.objectContaining({ state: 'closed', hasRecording: true }));
   });
 
+  it('a face-to-face microphone track is kept without captions, including after recovery; other tracks alone are not', () => {
+    const piece = { offsetMs: 0, durationMs: 1000, data: new Uint8Array([1, 2, 3]) };
+    s.openRecord(rec({ id: 'face-0001-aaaa', mode: 'face-to-face' }));
+    s.appendTrack({ recordId: 'face-0001-aaaa', source: 'speaker', ...piece });
+    expect(s.closeRecord({ id: 'face-0001-aaaa', endedAt: 5000 })).toEqual({ kept: true });
+    expect(s.getRecord('face-0001-aaaa')).toEqual(expect.objectContaining({ state: 'closed', hasRecording: true, transcripts: [] }));
+    expect(s.getRecord('face-0001-aaaa').notes).toEqual([]);
+
+    s.openRecord(rec({ id: 'face-0002-bbbb', mode: 'face-to-face' }));
+    s.appendTrack({ recordId: 'face-0002-bbbb', source: 'speaker', ...piece });
+    s.openRecord(rec({ id: 'face-0003-cccc', mode: 'face-to-face' }));
+    s.appendTrack({ recordId: 'face-0003-cccc', source: 'participant', ...piece });
+    expect(s.recoverOpenRecords()).toEqual({ closed: ['face-0002-bbbb'], dropped: ['face-0003-cccc'] });
+    expect(s.getRecord('face-0002-bbbb')).toEqual(expect.objectContaining({ state: 'closed', hasRecording: true }));
+    expect(s.getRecord('face-0003-cccc')).toBeNull();
+  });
+
   it('closing a record without content removes it and its folder', () => {
     s.openRecord(rec());
     mkdirSync(s.recordDir(ID), { recursive: true });
@@ -205,8 +222,9 @@ describe('transcripts and sentences', () => {
 
   it('text can be revised while the record is open, and not after', () => {
     s.appendSentences({ transcriptId: t, sentences: [sent(1)] });
-    s.reviseSentences({ transcriptId: t, revisions: [{ n: 1, text: 'Hello, world.' }] });
-    expect(s.getSentences({ transcriptId: t })[0]).toEqual(expect.objectContaining({ n: 1, text: 'Hello, world.', startMs: 1000 }));
+    s.reviseSentences({ transcriptId: t, revisions: [{ n: 1, text: 'Hello, world.', startMs: 900, endMs: 1800, timeKind: 'given' }] });
+    expect(s.getSentences({ transcriptId: t })[0]).toEqual(expect.objectContaining({ n: 1, text: 'Hello, world.', startMs: 900, endMs: 1800, timeKind: 'given' }));
+    expect(() => s.reviseSentences({ transcriptId: t, revisions: [{ n: 1, text: 'x', startMs: 1900 }] })).toThrow(expect.objectContaining({ code: 'BAD_INPUT' }));
     expect(() => s.reviseSentences({ transcriptId: t, revisions: [{ n: 7, text: 'x' }] })).toThrow(expect.objectContaining({ code: 'NO_SENTENCE' }));
     s.closeRecord({ id: ID, endedAt: 99 });
     expect(() => s.reviseSentences({ transcriptId: t, revisions: [{ n: 1, text: 'x' }] })).toThrow(expect.objectContaining({ code: 'RECORD_CLOSED' }));

@@ -3,5 +3,4 @@ export { default as AudioDeviceSection } from './AudioDeviceSection';
 export { default as SystemAudioSection } from './SystemAudioSection';
 export { default as VoiceLibrarySection } from './VoiceLibrarySection';
 export { default as SpeechOutputSection } from './SpeechOutputSection';
-export { default as UpdateSection } from './UpdateSection';
 export { default as HelpSection } from './HelpSection';

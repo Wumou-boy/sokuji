@@ -72,7 +72,6 @@ describe('colour roles', () => {
     expect(rule(css('components/LogsPanel/LogsPanel.scss'), '.separator-line')).toMatch(/background-color:\s*var\(--sk-line-subtle\)/);
     expect(rule(css('components/LogsPanel/LogsPanel.scss'), '.icon-container')).toMatch(/background-color:\s*var\(--sk-line-subtle\)/);
     expect(rule(css('components/Auth/UserAccountInfo.scss'), '.quota-bar ')).toMatch(/background:\s*var\(--sk-line-subtle\)/);
-    expect(rule(css('components/UpdateDialog/UpdateDialog.scss'), '.progress-bar')).toMatch(/background-color:\s*var\(--sk-line-subtle\)/);
     expect(rule(css('components/Settings/sections/EngineSection.scss'), '__bar')).toMatch(/background:\s*var\(--sk-line-subtle\)/);
     expect(rule(css('components/Display/DisplaySettingsPopover.scss'), '__bar')).toMatch(/background:\s*var\(--sk-line-subtle\)/);
   });

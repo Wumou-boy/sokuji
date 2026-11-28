@@ -92,7 +92,7 @@ export const QWEN_VOICES: readonly QwenVoice[] = [
 
 export interface QwenSettings {
   /** Which key and route to use. `auto` preserves personal QwenCloud region detection. */
-  connection: 'auto' | typeof BAILIAN_ENDPOINT_ID | typeof BAILIAN_WORKSPACE_CONNECTION;
+  connection: 'auto' | EndpointId | typeof BAILIAN_WORKSPACE_CONNECTION;
   /** Required only for the dedicated Bailian company route. A single DNS label, never a URL. */
   workspaceId: string;
   /** My leg's voice: one of `QWEN_VOICES`, `SPEAKER_CLONE` or `SPEAKER_CLONE_ONCE`. */
@@ -120,7 +120,7 @@ export const QWEN_DEFAULTS: QwenSettings = {
 
 /** What was stored, made valid field by field: the region narrowed, the rest as typed or defaulted. Nothing is written back. */
 export function migrateQwenSettings(stored: Readonly<Record<string, unknown>>): QwenSettings {
-  const connection = stored.connection === BAILIAN_ENDPOINT_ID || stored.connection === BAILIAN_WORKSPACE_CONNECTION ? stored.connection : 'auto';
+  const connection = stored.connection === 'cn' || stored.connection === 'intl' || stored.connection === BAILIAN_ENDPOINT_ID || stored.connection === BAILIAN_WORKSPACE_CONNECTION ? stored.connection : 'auto';
   const workspaceId = normalizeBailianWorkspaceId(stored.workspaceId) ?? '';
   const str = (k: 'voice' | 'participantVoice') => (typeof stored[k] === 'string' ? (stored[k] as string) : QWEN_DEFAULTS[k]);
   const pauseMs = typeof stored.pauseMs === 'number' && Number.isFinite(stored.pauseMs) ? stored.pauseMs : QWEN_DEFAULTS.pauseMs;
@@ -218,6 +218,8 @@ export const qwenCredentials: Provider<QwenSettings, QwenCredentials, never>['cr
     setting: 'connection',
     options: [
       { value: 'auto', labelKey: 'providers.qwen_livetranslate.connectionPersonal' },
+      { value: 'cn', labelKey: 'providers.qwen_livetranslate.connectionQwenBeijing' },
+      { value: 'intl', labelKey: 'providers.qwen_livetranslate.connectionQwenInternational' },
       { value: BAILIAN_ENDPOINT_ID, labelKey: 'providers.qwen_livetranslate.connectionBailianShared' },
       { value: BAILIAN_WORKSPACE_CONNECTION, labelKey: 'providers.qwen_livetranslate.connectionBailianWorkspace' },
     ],

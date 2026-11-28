@@ -4,6 +4,43 @@ import { QwenTurnAudioBuffer, QwenTurnAudioError } from './audioBuffer';
 describe('Qwen turn audio buffer', () => {
   afterEach(() => vi.useRealTimers());
 
+  it('maps provider ranges to absolute time across a pause and resets its clock on reconnect', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const buffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 2_000);
+
+    vi.advanceTimersByTime(1_000);
+    buffer.append(new Int16Array(1_000));
+    buffer.speechStarted('first', 250);
+    vi.advanceTimersByTime(5_000);
+    buffer.append(new Int16Array(1_000));
+    buffer.speechStopped('first', 1_250);
+    expect(buffer.timeRange('first')).toEqual({ startAt: 250, endAt: 5_250, timeKind: 'given' });
+
+    buffer.resetStream();
+    expect(buffer.timeRange('first')).toEqual({ timeKind: 'unknown' });
+    vi.advanceTimersByTime(1_000);
+    buffer.append(new Int16Array(1_000));
+    buffer.speechStarted('after-reconnect', 300);
+    buffer.speechStopped('after-reconnect', 900);
+    expect(buffer.timeRange('after-reconnect')).toEqual({ startAt: 6_300, endAt: 6_900, timeKind: 'given' });
+    buffer.dispose();
+  });
+
+  it('labels arrival-offset fallback ranges as estimated', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const buffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 2_000);
+    vi.advanceTimersByTime(500);
+    buffer.append(new Int16Array(500));
+    buffer.speechStarted('estimated', Number.NaN);
+    vi.advanceTimersByTime(1_000);
+    buffer.append(new Int16Array(500));
+    buffer.speechStopped('estimated', undefined);
+    expect(buffer.timeRange('estimated')).toEqual({ startAt: 500, endAt: 1_500, timeKind: 'estimated' });
+    buffer.dispose();
+  });
+
   it('slices exact sample offsets from appended wire PCM and returns a detached copy', async () => {
     const buffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 2_000);
     buffer.append(new Int16Array(10).fill(1));
@@ -65,14 +102,14 @@ describe('Qwen turn audio buffer', () => {
     buffer.dispose();
   });
 
-  it('fails explicitly if stop metadata arrives behind audio already released past the guard', async () => {
+  it('clips a delayed stop behind already released PCM and completes the stream', async () => {
     const buffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 2_000);
     buffer.append(new Int16Array(1_000).fill(9));
     buffer.speechStarted('late-stop', 0);
     const iterator = buffer.stream('late-stop', new AbortController().signal)[Symbol.asyncIterator]();
     expect((await iterator.next()).value?.length).toBe(600);
     buffer.speechStopped('late-stop', 500);
-    await expect(iterator.next()).rejects.toMatchObject({ code: 'invalid_range' });
+    expect(await iterator.next()).toEqual({ value: undefined, done: true });
     buffer.dispose();
   });
 
@@ -136,25 +173,60 @@ describe('Qwen turn audio buffer', () => {
     buffer.dispose();
   });
 
-  it('surfaces missing timestamps and rejects ranges longer than the live segment limit', async () => {
-    const missingBuffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 5);
-    missingBuffer.speechStopped('missing-live', undefined);
-    const missingIterator = missingBuffer.stream('missing-live', new AbortController().signal)[Symbol.asyncIterator]();
-    await expect(missingIterator.next()).rejects.toMatchObject({ code: 'missing_timestamp' });
-    missingBuffer.dispose();
+  it('uses local offsets for missing or malformed event timestamps', async () => {
+    const buffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 5);
+    buffer.append(new Int16Array([1, 2, 3]));
+    buffer.speechStarted('fallback', Number.NaN);
+    buffer.append(new Int16Array([4, 5]));
+    buffer.speechStopped('fallback', undefined);
+    expect(buffer.timingOf('fallback')).toBe('estimated');
+    await expect(buffer.read('fallback')).resolves.toEqual(new Int16Array([4, 5]));
+    buffer.dispose();
+  });
 
+  it('streams long speech as bounded PCM chunks without dropping the turn', async () => {
+    const buffer = new QwenTurnAudioBuffer(1_000, 60_000, 100, 5_000);
+    buffer.append(new Int16Array(35_000).fill(7));
+    buffer.speechStarted('long-live', 0);
+    buffer.speechStopped('long-live', 35_000);
+    const iterator = buffer.stream('long-live', new AbortController().signal)[Symbol.asyncIterator]();
+    let total = 0;
+    let largest = 0;
+    for (;;) {
+      const next = await iterator.next();
+      if (next.done) break;
+      total += next.value.length;
+      largest = Math.max(largest, next.value.length);
+    }
+    expect(total).toBe(35_000);
+    expect(largest).toBeLessThanOrEqual(4_096);
+    buffer.dispose();
+  });
+
+  it('clips a start ahead of sent PCM to the current local boundary', async () => {
+    const buffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 5);
+    buffer.append(new Int16Array([1, 2, 3]));
+    buffer.speechStarted('ahead', 20);
+    buffer.append(new Int16Array([4, 5]));
+    buffer.speechStopped('ahead', 5);
+    await expect(buffer.read('ahead')).resolves.toEqual(new Int16Array([4, 5]));
+    buffer.dispose();
+  });
+
+  it('rejects ranges longer than the bounded read limit', async () => {
     const longBuffer = new QwenTurnAudioBuffer(1_000, 10_000, 100, 5);
+    longBuffer.append(new Int16Array(10));
     longBuffer.speechStarted('long-live', 0);
     longBuffer.speechStopped('long-live', 10);
-    const longIterator = longBuffer.stream('long-live', new AbortController().signal)[Symbol.asyncIterator]();
-    await expect(longIterator.next()).rejects.toMatchObject({ code: 'too_long' });
+    await expect(longBuffer.read('long-live')).rejects.toMatchObject({ code: 'too_long' });
     longBuffer.dispose();
   });
 
   it('fails explicitly for missing timestamps, expired history, overlong ranges, and a missing stop', async () => {
     const missing = new QwenTurnAudioBuffer(1_000, 100, 10, 50);
     missing.speechStarted('missing', undefined);
-    await expect(missing.read('missing')).rejects.toMatchObject({ code: 'missing_timestamp' });
+    missing.speechStopped('missing', undefined);
+    await expect(missing.read('missing')).rejects.toMatchObject({ code: 'invalid_range' });
 
     const expired = new QwenTurnAudioBuffer(1_000, 10, 10, 50);
     expired.append(new Int16Array(10));

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { EventEmitter } from 'events';
-import { listAppSources, probeAppSource, startCapture, stopCapture, ensureUnityGain } from './audio-host.js';
+import { listAppSources, listRenderDevices, startCapture, stopCapture, ensureUnityGain } from './audio-host.js';
 import { makeSelfIdentity } from './own-app-source.js';
 
 // Every call names the running app's identity. Left out, it defaults to
@@ -22,7 +22,7 @@ const resolvePath = () => 'C:\\app\\sokuji-audio-host.exe';
 
 // The module holds the running child in module scope; leaving one behind makes
 // the next test's stopCapture() assertion see a stale kill.
-afterEach(() => stopCapture());
+afterEach(stopCapture);
 
 describe('listAppSources', () => {
   it('parses the JSON array and prefixes ids with app:', async () => {
@@ -165,19 +165,18 @@ describe('listAppSources', () => {
   });
 });
 
-describe('probeAppSource', () => {
-  it('measures PCM peaks from a bounded per-application loopback probe', async () => {
+describe('startCapture', () => {
+  it('passes an explicit endpoint target only on Windows', () => {
     const child = fakeChild();
     const spawn = vi.fn(() => child);
-    const pending = probeAppSource('app:pid:42', { spawn, resolvePath, durationMs: 100 });
-    child.stdout.emit('data', Buffer.from([0, 64, 0, 32]));
-    expect(await pending).toBeCloseTo(0.5, 3);
-    expect(spawn.mock.calls[0][1]).toEqual(['--target', 'pid:42']);
-    expect(child.kill).toHaveBeenCalled();
+    expect(startCapture('endpoint:{0.0.0.0001}', vi.fn(), vi.fn(), {
+      selfIdentity: SELF, spawn, resolvePath, platform: 'win32',
+    })).toBe(true);
+    expect(spawn.mock.calls[0][1]).toEqual(['--target', 'endpoint:{0.0.0.0001}']);
+    expect(startCapture('endpoint:{0.0.0.0001}', vi.fn(), vi.fn(), {
+      selfIdentity: SELF, spawn: vi.fn(), resolvePath, platform: 'darwin',
+    })).toBe(false);
   });
-});
-
-describe('startCapture', () => {
   it('spawns with the app: prefix stripped and forwards PCM', () => {
     const child = fakeChild();
     const spawn = vi.fn(() => child);

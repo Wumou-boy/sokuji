@@ -12,6 +12,7 @@
     "signIn": "సైన్ ఇన్",
     "signUp": "సైన్ అప్",
     "signInRequired": "<signInLink>సైన్ ఇన్ లేదా సైన్ అప్ చేయండి</signInLink> — API కీ లేకుండానే Kizuna AI ఉపయోగించవచ్చు.",
+    "checking": "తనిఖీ చేస్తోంది...",
     "dismiss": "విస్మరించు",
     "none": "ఏదీ లేదు",
     "retry": "మళ్ళీ ప్రయత్నించండి",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "బగ్‌లను నివేదించండి లేదా సహాయం పొందండి",
     "diagnosticLogs": "డయాగ్నస్టిక్ లాగ్‌లు",
     "diagnosticLogsTooltip": "బగ్ నివేదికకు జత చేయడానికి, యాప్ ఏమి చేస్తోందో నమోదు చేస్తుంది. డిఫాల్ట్‌గా ఆఫ్‌లో ఉంటుంది. ఆన్‌లో ఉన్నప్పుడు టైటిల్ బార్‌లో “లాగ్స్” బటన్ కనిపిస్తుంది, రీస్టార్ట్ తర్వాత కూడా ఆన్‌లోనే ఉంటుంది.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "రూపం",
     "appearanceTooltip": "యాప్ ఎలా కనిపిస్తుందో. “సిస్టమ్” ఆపరేటింగ్ సిస్టమ్ లైట్ లేదా డార్క్ సెట్టింగ్‌ను తీసుకుంటుంది.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "అనుకూల వాయిస్",
     "translateDetectParticipantLanguage": "ఎదుటివారి చైనీస్, జపనీస్, ఇంగ్లీష్‌ను స్వయంచాలకంగా గుర్తించండి",
     "translateDetectParticipantLanguageHelp": "ఎదుటివారి భాష చైనీస్, జపనీస్ లేదా ఇంగ్లీష్ అయితే, ప్రతి శీర్షిక భాషను అసలు మాటల నుంచి గుర్తిస్తుంది. అనువాద లక్ష్య భాష ఎంచుకున్నదే ఉంటుంది.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "మునుపటి సెషన్ ముగిసే వరకు వేచి ఉంది. రద్దు చేయడానికి క్లిక్ చేయండి.",
     "clickToCancel": "రద్దు చేయడానికి క్లిక్ చేయండి",
     "whatIHear": "నేను వినేది",
-    "audioSettings": "ఆడియో సెట్టింగ్‌లు",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "ఆడియో సెట్టింగ్‌లు"
   },
   "modePicker": {
     "modeYou": "నేను",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} ఈ వెర్షన్‌లో ఇక అందుబాటులో లేదు.",
     "noCandidate": "ఈ దిశ కోసం ఏ {{stage}} మోడల్ అందుబాటులో లేదు."
   },
-  "update": {
-    "available": "కొత్త వెర్షన్ v{{version}} అందుబాటులో ఉంది",
-    "downloading": "అప్‌డేట్ డౌన్‌లోడ్ అవుతోంది... {{percent}}%",
-    "downloadingIndeterminate": "అప్‌డేట్ డౌన్‌లోడ్ అవుతోంది...",
-    "downloaded": "అప్‌డేట్ సిద్ధం, పూర్తి చేయడానికి పునఃప్రారంభించండి",
-    "checkButton": "అప్‌డేట్‌లు తనిఖీ చేయండి",
-    "checking": "తనిఖీ చేస్తోంది...",
-    "upToDate": "తాజాగా ఉంది",
-    "notAvailable": "మీరు తాజా వెర్షన్‌ని ఉపయోగిస్తున్నారు",
-    "downloadNow": "ఇప్పుడే డౌన్‌లోడ్ చేయండి",
-    "later": "తర్వాత",
-    "restartNow": "పునఃప్రారంభించి అప్‌డేట్ చేయండి",
-    "goToDownload": "డౌన్‌లోడ్‌కు వెళ్ళండి",
-    "error": "అప్‌డేట్‌లు తనిఖీ చేయడం విఫలమైంది",
-    "currentVersion": "ప్రస్తుత వెర్షన్: v{{version}}",
-    "newVersion": "కొత్త వెర్షన్: v{{version}}",
-    "autoUpdateNote": "AppImage స్వయంచాలక అప్‌డేట్‌లకు మద్దతు ఇస్తుంది. AppImage ఇన్‌స్టాల్ చేయడం మీ ప్రస్తుత ఇన్‌స్టాలేషన్‌ను భర్తీ చేస్తుంది — విడిగా అన్‌ఇన్‌స్టాల్ చేయాల్సిన అవసరం లేదు.",
-    "downloadAppImage": "AppImage డౌన్‌లోడ్ చేయండి (సిఫార్సు)",
-    "downloadDeb": ".deb డౌన్‌లోడ్ చేయండి",
-    "linuxMigrateTitle": "కొత్త వెర్షన్ v{{version}} అందుబాటులో ఉంది"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudio కమాండ్-లైన్ సాధనాలు) కనుగొనబడలేదు, కాబట్టి AED Translator తన వర్చువల్ మైక్రోఫోన్/స్పీకర్‌ను సెటప్ చేయలేకపోయింది. దీన్ని ఇన్‌స్టాల్ చేసి, ఆపై మళ్లీ ప్రయత్నించండి:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "సిస్టమ్ శబ్దం స్పీకర్ల ద్వారా వస్తోంది. ఆన్‌లైన్ సమావేశంలో మైక్రోఫోన్ అవతలి వ్యక్తి మాటలను కూడా గ్రహించవచ్చు. ప్రతిధ్వనిని నివారించడానికి హెడ్‌ఫోన్‌లు వాడండి.",
     "ttsEcho": "మీ స్పీకర్లు AED Translator అనువాద స్వరాన్ని మైక్రోఫోన్‌లోకి తిరిగి పంపుతున్నాయి.",
     "meetingEcho": "స్పీకర్ల నుంచి సమావేశ ఆడియో మైక్రోఫోన్‌కు చేరుతోంది.",
     "farEndEcho": "ఒక పాల్గొనేవారి పరికరం మీ అనువాదాన్ని ప్రతిధ్వనిగా సమావేశానికి తిరిగి పంపుతోంది.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "“భాషలు, లైన్-అప్”లో అనువాదం కోసం ఒక మోడల్‌ను ఎంచుకోండి, లేదా దాని పేరు టైప్ చేయండి.",
     "address_missing": "ప్రారంభించే ముందు “ఖాతాలు, కీలు”లో అనుకూల సేవ చిరునామాను నమోదు చేయండి.",
     "address_invalid": "అనుకూల సేవ చిరునామాను ఉపయోగించలేము: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "ప్రాథమిక సెట్టింగ్‌లు",
       "maintenance": "నిర్వహణ, సహాయం",
-      "update": "అప్‌డేట్‌లు",
-      "updateLine": "మీ వద్ద {{version}} ఉంది.",
-      "version": "వెర్షన్",
-      "storeUpdates": "బ్రౌజర్ స్టోర్ ఎక్స్‌టెన్షన్‌ను తాజాగా ఉంచుతుంది.",
       "wizard": "సెటప్ విజార్డ్",
       "wizardLine": "విజార్డ్‌ను మళ్లీ నడపండి; సేవ్ చేసినవి ముందే ఎంచుకుని ఉంటాయి.",
       "rerun": "మళ్లీ నడపండి",

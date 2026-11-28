@@ -150,7 +150,7 @@ export const RecordPage: React.FC = () => {
   const rows = useMemo(
     () => (open
       // An imported file's sides do not say who spoke (everyone is on one track): its speakers are numbered.
-      ? recordRows({ sentences: open.sentences, legs: open.legs, textKind, labels, sidesKnown: open.record.mode !== 'import' })
+      ? recordRows({ sentences: open.sentences, legs: open.legs, textKind, labels, sidesKnown: open.record.mode !== 'import' && open.record.mode !== 'face-to-face' })
       : []),
     [open, textKind, labels],
   );

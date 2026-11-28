@@ -12,6 +12,7 @@
     "signIn": "Đăng nhập",
     "signUp": "Đăng ký",
     "signInRequired": "<signInLink>Đăng nhập hoặc đăng ký</signInLink> để sử dụng Kizuna AI — không cần khóa API.",
+    "checking": "Đang kiểm tra...",
     "dismiss": "Bỏ qua",
     "none": "Không có",
     "retry": "Thử lại",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Báo lỗi hoặc nhận trợ giúp",
     "diagnosticLogs": "Nhật ký chẩn đoán",
     "diagnosticLogsTooltip": "Ghi lại hoạt động của ứng dụng để bạn đính kèm vào báo cáo lỗi. Tắt theo mặc định. Khi bật, nút “Nhật ký” xuất hiện trên thanh tiêu đề và cài đặt vẫn bật sau khi khởi động lại.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Giao diện",
     "appearanceTooltip": "Giao diện của ứng dụng. “Hệ thống” dùng thiết lập sáng hoặc tối của hệ điều hành.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Giọng tùy chỉnh",
     "translateDetectParticipantLanguage": "Tự động nhận diện tiếng Trung, tiếng Nhật và tiếng Anh của người đối thoại",
     "translateDetectParticipantLanguageHelp": "Nếu người đối thoại dùng tiếng Trung, tiếng Nhật hoặc tiếng Anh, ngôn ngữ của từng phụ đề sẽ được nhận diện từ bản gốc. Ngôn ngữ đích đã chọn vẫn được giữ nguyên.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Đang chờ phiên trước kết thúc. Nhấp để hủy.",
     "clickToCancel": "Nhấp để hủy",
     "whatIHear": "Những gì tôi nghe",
-    "audioSettings": "Cài đặt âm thanh",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Cài đặt âm thanh"
   },
   "modePicker": {
     "modeYou": "Tôi",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} không còn khả dụng trong phiên bản này.",
     "noCandidate": "Không có mô hình {{stage}} nào khả dụng cho chiều dịch này."
   },
-  "update": {
-    "available": "Phiên bản mới v{{version}} khả dụng",
-    "downloading": "Đang tải bản cập nhật... {{percent}}%",
-    "downloadingIndeterminate": "Đang tải bản cập nhật...",
-    "downloaded": "Bản cập nhật đã sẵn sàng, khởi động lại để hoàn tất",
-    "checkButton": "Kiểm tra cập nhật",
-    "checking": "Đang kiểm tra...",
-    "upToDate": "Đã cập nhật",
-    "notAvailable": "Bạn đang sử dụng phiên bản mới nhất",
-    "downloadNow": "Tải ngay",
-    "later": "Để sau",
-    "restartNow": "Khởi động lại và cập nhật",
-    "goToDownload": "Đi tới tải xuống",
-    "error": "Không thể kiểm tra cập nhật",
-    "currentVersion": "Phiên bản hiện tại: v{{version}}",
-    "newVersion": "Phiên bản mới: v{{version}}",
-    "autoUpdateNote": "AppImage hỗ trợ cập nhật tự động. Cài đặt AppImage sẽ thay thế bản cài đặt hiện tại của bạn — không cần gỡ cài đặt riêng.",
-    "downloadAppImage": "Tải AppImage (khuyến nghị)",
-    "downloadDeb": "Tải .deb",
-    "linuxMigrateTitle": "Phiên bản mới v{{version}} khả dụng"
-  },
   "audioSystem": {
     "pactlMissingBody": "Không tìm thấy pactl (công cụ dòng lệnh của PulseAudio), vì vậy AED Translator không thể thiết lập micro/loa ảo. Hãy cài đặt rồi thử lại:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Âm thanh hệ thống đang phát qua loa. Trong cuộc họp trực tuyến, micrô có thể thu cả giọng của người bên kia. Hãy dùng tai nghe để tránh tiếng vọng.",
     "ttsEcho": "Loa của bạn đang đưa giọng dịch của AED Translator quay lại micro.",
     "meetingEcho": "Âm thanh cuộc họp từ loa đang lọt vào micro.",
     "farEndEcho": "Thiết bị của một người tham gia đang dội bản dịch của bạn trở lại cuộc họp.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Chọn mô hình cho bản dịch, hoặc nhập tên mô hình, trong “Ngôn ngữ và cách phối hợp”.",
     "address_missing": "Nhập địa chỉ của dịch vụ tương thích trong “Tài khoản và khóa” trước khi bắt đầu.",
     "address_invalid": "Không thể dùng địa chỉ của dịch vụ tương thích: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Cài đặt cơ bản",
       "maintenance": "Bảo trì và trợ giúp",
-      "update": "Cập nhật",
-      "updateLine": "Bạn đang dùng {{version}}.",
-      "version": "Phiên bản",
-      "storeUpdates": "Cửa hàng của trình duyệt tự cập nhật tiện ích.",
       "wizard": "Trình hướng dẫn thiết lập",
       "wizardLine": "Đi lại trình hướng dẫn; những gì đã lưu được chọn sẵn.",
       "rerun": "Chạy lại",

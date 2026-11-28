@@ -12,6 +12,7 @@
     "signIn": "התחבר",
     "signUp": "הרשמה",
     "signInRequired": "<signInLink>התחבר או הירשם</signInLink> כדי להשתמש ב-Kizuna AI — ללא צורך במפתח API.",
+    "checking": "בודק...",
     "dismiss": "התעלם",
     "none": "ללא",
     "retry": "נסה שוב",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "דווח על באגים או קבל עזרה",
     "diagnosticLogs": "יומני אבחון",
     "diagnosticLogsTooltip": "מתעד את פעולת האפליקציה כדי שתוכלו לצרף אותו לדיווח על באג. כבוי כברירת מחדל. כשהוא מופעל, מופיע בשורת הכותרת כפתור „יומנים”, וההגדרה נשארת פעילה גם אחרי הפעלה מחדש.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "מראה",
     "appearanceTooltip": "איך האפליקציה נראית. „מערכת” משתמש בהגדרת הבהיר או הכהה של מערכת ההפעלה.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "קול מותאם אישית",
     "translateDetectParticipantLanguage": "זיהוי אוטומטי של סינית, יפנית ואנגלית אצל הצד השני",
     "translateDetectParticipantLanguageHelp": "כאשר שפת הצד השני היא סינית, יפנית או אנגלית, שפת כל כתובית מזוהה מתוך המקור. שפת היעד לתרגום נשארת כפי שנבחרה.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "ממתינים לסיום ההפעלה הקודמת. לחץ כדי לבטל.",
     "clickToCancel": "לחץ כדי לבטל",
     "whatIHear": "מה שאני שומע",
-    "audioSettings": "הגדרות שמע",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "הגדרות שמע"
   },
   "modePicker": {
     "modeYou": "אני",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} כבר אינו זמין בגרסה זו.",
     "noCandidate": "אין מודל {{stage}} זמין לכיוון זה."
   },
-  "update": {
-    "available": "גרסה חדשה v{{version}} זמינה",
-    "downloading": "מוריד עדכון... {{percent}}%",
-    "downloadingIndeterminate": "מוריד עדכון...",
-    "downloaded": "העדכון מוכן, הפעל מחדש להשלמה",
-    "checkButton": "בדוק עדכונים",
-    "checking": "בודק...",
-    "upToDate": "מעודכן",
-    "notAvailable": "אתה משתמש בגרסה העדכנית ביותר",
-    "downloadNow": "הורד עכשיו",
-    "later": "מאוחר יותר",
-    "restartNow": "הפעל מחדש ועדכן",
-    "goToDownload": "עבור להורדה",
-    "error": "בדיקת עדכונים נכשלה",
-    "currentVersion": "גרסה נוכחית: v{{version}}",
-    "newVersion": "גרסה חדשה: v{{version}}",
-    "autoUpdateNote": "AppImage תומך בעדכונים אוטומטיים. התקנת ה-AppImage מחליפה את ההתקנה הנוכחית שלך — אין צורך בהסרה נפרדת.",
-    "downloadAppImage": "הורד AppImage (מומלץ)",
-    "downloadDeb": "הורד .deb",
-    "linuxMigrateTitle": "גרסה חדשה v{{version}} זמינה"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (כלי שורת הפקודה של PulseAudio) לא נמצא, ולכן AED Translator לא הצליח להגדיר את המיקרופון/הרמקול הווירטואליים שלו. התקן אותו ולאחר מכן נסה שוב:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "השמע מושמע ברמקולים. בפגישה מקוונת המיקרופון עלול לקלוט גם את הצד השני. מומלץ להשתמש באוזניות כדי למנוע הד.",
     "ttsEcho": "הרמקולים שלך מחזירים את הדיבור המתורגם של AED Translator אל המיקרופון.",
     "meetingEcho": "שמע הפגישה מהרמקולים מגיע אל המיקרופון.",
     "farEndEcho": "מכשיר של משתתף מהדהד את התרגום שלך בחזרה לפגישה.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "בחרו מודל לתרגום, או הקלידו את שמו, ב„שפות והרכב”.",
     "address_missing": "הזינו את כתובת השירות התואם ב„חשבונות ומפתחות” לפני ההתחלה.",
     "address_invalid": "אי אפשר להשתמש בכתובת השירות התואם: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "הגדרות בסיסיות",
       "maintenance": "תחזוקה ועזרה",
-      "update": "עדכונים",
-      "updateLine": "הגרסה שלך היא {{version}}.",
-      "version": "גרסה",
-      "storeUpdates": "חנות הדפדפן מעדכנת את התוסף.",
       "wizard": "אשף ההגדרה",
       "wizardLine": "לעבור שוב על האשף; מה ששמרת מסומן מראש.",
       "rerun": "הפעלה מחדש",

@@ -25,6 +25,8 @@ import { routesFor } from './routes';
 import { FakeAudioContext, FakeSink, FakeWorkletNode } from './fakeWebAudio';
 
 const AUDIO = {
+  devicesLoaded: true,
+  outputLabelsKnown: true,
   isRealVoicePassthroughEnabled: true,
   realVoicePassthroughVolume: 0.3,
   selectedMonitorDevice: { deviceId: 'monitor-1', label: 'Headphones' },
@@ -44,7 +46,7 @@ describe('readRouting', () => {
       faceToFace: false,
       speak: SPEAK,
       passthrough: { on: true, ratio: 0.3 },
-      sinks: { virtual: 'cable-1', other: { device: 'monitor-1' }, me: { device: 'monitor-1' }, them: { device: 'monitor-1' } },
+      sinks: { virtual: 'cable-1', requireLocalDevice: true, other: { device: 'monitor-1' }, me: { device: 'monitor-1' }, them: { device: 'monitor-1' } },
     });
   });
 
@@ -70,14 +72,28 @@ describe('readRouting', () => {
     expect(readRouting(AUDIO, SPEAK, true, 'electron', 'auto', false).sinks.other).toEqual({ device: 'monitor-1' });
   });
 
-  it('no default device: the outlets fall to the browser default', () => {
-    expect(readRouting({ ...AUDIO, selectedMonitorDevice: null }, SPEAK, true, 'electron', 'auto').sinks.me).toEqual({});
+  it('binds an available physical monitor when the Windows default might be a cable', () => {
+    expect(readRouting({ ...AUDIO, selectedMonitorDevice: null }, SPEAK, true, 'electron', 'auto').sinks.me.device).toBe('monitor-1');
+    const cable = AUDIO.audioMonitorDevices[2];
+    const { sinks } = readRouting({ ...AUDIO, audioMonitorDevices: [cable], selectedMonitorDevice: cable }, SPEAK, true, 'electron', 'auto');
+    expect(sinks).toMatchObject({ requireLocalDevice: true, virtual: 'cable-1', me: {}, them: {} });
+    expect(sinks.me.device).toBeUndefined();
+    expect(readRouting({ ...AUDIO, selectedMonitorDevice: null, audioMonitorDevices: [AUDIO.audioMonitorDevices[0]] }, SPEAK, true, 'electron', 'auto').sinks.me).toEqual({});
   });
 
   it('looks for a virtual speaker device only in Electron', () => {
     expect(readRouting(AUDIO, SPEAK, true, 'extension', 'auto').sinks.virtual).toBeUndefined();
     expect(readRouting(AUDIO, SPEAK, true, 'web', 'auto').sinks.virtual).toBeUndefined();
     expect(readRouting({ ...AUDIO, audioMonitorDevices: [AUDIO.audioMonitorDevices[0]] }, SPEAK, true, 'electron', 'auto').sinks.virtual).toBeUndefined();
+  });
+
+  it('keeps local monitoring disconnected until output labels identify the real speakers', () => {
+    for (const flags of [{ devicesLoaded: false }, { outputLabelsKnown: false }]) {
+      const { sinks } = readRouting({ ...AUDIO, ...flags }, SPEAK, true, 'electron', 'auto');
+      expect(sinks.requireLocalDevice).toBe(true);
+      for (const bus of ['me', 'them', 'other'] as const) expect(sinks[bus].device).toBeUndefined();
+    }
+    expect(readRouting(AUDIO, SPEAK, true, 'electron', 'auto').sinks.me.device).toBe('monitor-1');
   });
 
   it('forces the original voice on at full level under push-to-translate, whatever the toggle says, open while idle (1e-3 ruling 4)', () => {

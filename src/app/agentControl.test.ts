@@ -5,7 +5,6 @@ import useAudioStore from '../stores/audioStore';
 import { useLineUpStore } from '../stores/lineUpStore';
 import { useFaceToFaceStore } from '../stores/faceToFaceStore';
 import * as systemAudio from '../lib/audio/capture/systemAudio';
-import * as micCapture from '../lib/audio/capture/mic';
 import { useProviderStore } from '../stores/providerStore';
 import { useRoutingStore } from '../stores/routingStore';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -14,6 +13,7 @@ import { presentProviders } from '../providers/registry';
 import { useUsageStore } from '../lib/usage/ledger';
 import { useSessionTokenStore } from '../lib/usage/sessionTokens';
 import * as environment from '../utils/environment';
+import * as faceToFaceRuntime from '../lib/faceToFace/runtime';
 
 vi.mock('../providers/registry', async (importOriginal) => {
   const registry = await importOriginal<typeof import('../providers/registry')>();
@@ -79,6 +79,7 @@ function setup() {
   const start = vi.fn(async () => {});
   const stop = vi.fn(async () => {});
   const session = {
+    audioIfLoaded: () => null,
     subtitle: { get: () => ({ phase: 'idle', canStart: true, idle: { kind: 'ready' } }) },
     runner: {
       state: { getState: () => ({ phase: 'idle' }) },
@@ -101,10 +102,32 @@ function setup() {
   useSettingsStore.setState({ settingsLoaded: true });
   useLogStore.setState({ enabled: true, allLogs: [{ id: 1, timestamp: 't', message: 'do not return this', eventType: 'caption.translation.failed', clientId: 'participant', events: [{ type: 'caption.translation.failed', data: { request: 4, elapsedMs: 80, kind: 'http', status: 429, text: 'private transcript' } }] }] as never });
   const detach = attachAgentControl(session, electron);
-  return { handler, invoke, replies, start, stop, detach };
+  return { handler, invoke, replies, start, stop, detach, session };
 }
 
 describe('agent control bridge', () => {
+  it('passes a temporary third target to replay and rejects unsupported or duplicate targets', async () => {
+    const { handler, replies, detach } = setup();
+    useFaceToFaceStore.setState({ mode: 'face-to-face', phase: 'idle', languages: { first: 'zh', second: 'ja' } });
+    useLineUpStore.setState({ lineUp: { transcription: 'qwen_livetranslate', translation: 'qwen_livetranslate', speech: 'qwen_livetranslate', summarisation: null }, stored: true });
+    const startReplay = vi.spyOn(faceToFaceRuntime, 'startFaceToFaceRuntime').mockResolvedValue(async () => {});
+    const pcm = Buffer.alloc(48_000).toString('base64');
+    handler({ id: 'replay-third', command: 'face-to-face.replay', args: { pcm, thirdLanguage: 'de' } });
+    await vi.waitFor(() => expect(startReplay).toHaveBeenCalledOnce());
+    expect(startReplay).toHaveBeenCalledWith(undefined, expect.any(Function), {
+      replayLocalSpeakers: false, replayThirdLanguage: 'de',
+    });
+    expect(useFaceToFaceStore.getState().languages).toEqual({ first: 'zh', second: 'ja' });
+
+    handler({ id: 'bad-language', command: 'face-to-face.replay', args: { pcm, thirdLanguage: 'xx' } });
+    handler({ id: 'duplicate-language', command: 'face-to-face.replay', args: { pcm, thirdLanguage: 'ja' } });
+    await vi.waitFor(() => expect(replies).toHaveLength(3));
+    expect(replyFor(replies, 'bad-language').result).toMatchObject({ ok: false, error: { code: 'face_replay_bad_language' } });
+    expect(replyFor(replies, 'duplicate-language').result).toMatchObject({ ok: false, error: { code: 'face_replay_bad_language' } });
+    expect(startReplay).toHaveBeenCalledOnce();
+    detach();
+  });
+
   it('reads only the requested month and keeps quota projections separate from session counts', async () => {
     const { handler, replies, detach } = setup();
     const row = {
@@ -145,6 +168,31 @@ describe('agent control bridge', () => {
     await vi.waitFor(() => expect(replies).toHaveLength(3));
     const shown = dataOf(replyFor(replies, '3'));
     expect(shown.items[0]).toMatchObject({ source: { text: 'Hello' }, translation: { text: '你好' } });
+    detach();
+  });
+
+  it('reports the current line-up translation service and whether Face to Face can use it', async () => {
+    const { handler, replies, detach } = setup();
+    useFaceToFaceStore.setState({ mode: 'face-to-face' });
+    useLineUpStore.setState({ lineUp: { transcription: 'soniox', translation: 'soniox', speech: 'edge', summarisation: null }, stored: true });
+    handler({ id: 'unsupported', command: 'status' });
+    await vi.waitFor(() => expect(replies).toHaveLength(1));
+    expect(dataOf(replyFor(replies, 'unsupported'))).toMatchObject({
+      faceToFaceProvider: null,
+      faceToFaceTranslationService: 'soniox',
+      faceToFaceUnavailableReason: 'unsupported_translation_service',
+      faceToFaceService: { supported: false, readiness: null },
+    });
+
+    useLineUpStore.setState({ lineUp: { transcription: 'openai_translate', translation: 'openai_translate', speech: 'openai_translate', summarisation: null }, stored: true });
+    handler({ id: 'supported', command: 'status' });
+    await vi.waitFor(() => expect(replies).toHaveLength(2));
+    expect(dataOf(replyFor(replies, 'supported'))).toMatchObject({
+      faceToFaceProvider: 'openai_translate',
+      faceToFaceTranslationService: 'openai_translate',
+      faceToFaceUnavailableReason: null,
+      faceToFaceService: { supported: true, readiness: { state: 'ready' } },
+    });
     detach();
   });
 
@@ -222,7 +270,7 @@ describe('agent control bridge', () => {
   });
 
   it('reports the configured microphone and Windows default without device IDs or opening audio', async () => {
-    const { handler, replies, detach } = setup();
+    const { handler, replies, detach, session } = setup();
     const selected = { deviceId: 'hardware-token', label: 'Microphone (Headset)' };
     const cable = { deviceId: 'cable-token', label: 'CABLE Input (VB-Audio Virtual Cable)', isVirtual: true };
     const getUserMedia = vi.fn();
@@ -235,6 +283,9 @@ describe('agent control bridge', () => {
       getUserMedia,
     } });
     try {
+      const audioIfLoaded = vi.spyOn(session, 'audioIfLoaded').mockReturnValue({
+        capture: {},
+      } as never);
       useAudioStore.setState({
         mode: 'both', isMonitorMuted: true, selectedInputDevice: selected,
         audioInputDevices: [selected],
@@ -245,7 +296,6 @@ describe('agent control bridge', () => {
         devicesLoaded: true,
         participantSources: [
           { deviceId: 'desktop-audio-loopback', label: 'System Audio' },
-          { deviceId: 'auto-meeting-audio', label: 'Auto' },
           { deviceId: 'app:123', label: 'Meeting app' },
           { deviceId: 'app:456', label: 'Internal audio client' },
         ],
@@ -265,9 +315,24 @@ describe('agent control bridge', () => {
       expect(result.participantSource).toEqual({ scope: 'application', label: 'Meeting app' });
       expect(result.participantApplications).toEqual(['Meeting app', 'Internal audio client']);
       expect(result.participantCaptureWidened).toBe(true);
+      expect(result.participantPcmRuntime).toBeNull();
       expect(result.speechRoutes).toEqual({ outgoingToMeeting: true, outgoingToLocalMonitor: false, incomingToLocalPlayback: false });
       expect(result.inputs).toEqual([{ label: 'Microphone (Headset)', virtual: false }]);
       expect(getUserMedia).not.toHaveBeenCalled();
+
+      const participantPcmRuntime = {
+        sampleRate: 24_000, threshold: 0.012, totalSamples: 48_000,
+        blocksAtOrAboveThreshold: 20, samplesInThresholdBlocks: 48_000,
+        thresholdBlockDurationMs: 2_000,
+      };
+      audioIfLoaded.mockReturnValue({
+        capture: {
+          participantPcmRuntime: () => participantPcmRuntime,
+        },
+      } as never);
+      handler({ id: 'audio-with-pcm', command: 'audio.inputs' });
+      await vi.waitFor(() => expect(replies).toHaveLength(2));
+      expect(dataOf(replyFor(replies, 'audio-with-pcm')).participantPcmRuntime).toEqual(participantPcmRuntime);
     } finally {
       detach();
       vi.unstubAllGlobals();
@@ -294,79 +359,34 @@ describe('agent control bridge', () => {
     detach();
   });
 
-  it('checks the automatically detected app without retargeting the saved source', async () => {
-    const { handler, replies, start, detach } = setup();
+  it('measures an exact Windows playback source without changing the saved choice', async () => {
+    const { handler, invoke, replies, start, detach } = setup();
+    const endpoint = { deviceId: 'endpoint:speakers', label: 'Speakers (Realtek)' };
+    const previous = invoke.getMockImplementation();
+    invoke.mockImplementation(async (channel, data) => {
+      if (channel === 'list-system-audio-sources') return [endpoint] as never;
+      return previous?.(channel, data);
+    });
     const release = vi.fn(async () => {});
-    let connectMeeting: () => void = () => {};
-    let publishLevel: (pcm: Int16Array) => void = () => {};
-    const open = vi.spyOn(systemAudio, 'openSystemAudio').mockImplementation(async (settings) => {
-      expect(settings.sourceId()).toBe('auto-meeting-audio');
+    vi.spyOn(systemAudio, 'openSystemAudio').mockImplementation(async (settings) => {
+      expect(settings.sourceId()).toBe(endpoint.deviceId);
       expect(settings.muted()).toBe(false);
-      connectMeeting = () => {
-        settings.captureStarted?.('app');
-        settings.autoResolved?.({ deviceId: 'app:456', label: 'Meeting browser' });
-        publishLevel(Int16Array.of(8192));
-      };
+      settings.captureStarted?.('endpoint');
       return {
         stop: release,
-        onPcm: (listener) => { publishLevel = listener; return () => {}; },
+        onPcm: (listener) => { listener(Int16Array.of(4096)); return () => {}; },
         onEnded: vi.fn(),
         onDegraded: vi.fn(),
       };
     });
-    useAudioStore.setState({ selectedParticipantSource: { deviceId: 'app:123', label: 'Manual source' } });
-    handler({ id: 'auto', command: 'audio.system-check', args: { auto: true } });
-    await vi.waitFor(() => expect(open).toHaveBeenCalledOnce());
-    expect(replies).toHaveLength(0);
-    connectMeeting();
-    await vi.waitFor(() => expect(replies).toHaveLength(1));
-    expect(dataOf(replyFor(replies, 'auto'))).toEqual({ captureOpened: true, backend: 'app', resolvedApp: 'Meeting browser', peakLevel: 0.25 });
+    useAudioStore.setState({ selectedParticipantSource: { deviceId: 'app:123', label: 'Saved app' } });
+    handler({ id: 'endpoint', command: 'audio.system-check', args: { endpointLabel: endpoint.label } });
+    await vi.waitFor(() => expect(replies).toHaveLength(1), { timeout: 2_000 });
+    expect(dataOf(replyFor(replies, 'endpoint'))).toEqual({ captureOpened: true, backend: 'endpoint', peakLevel: 0.125 });
     expect(useAudioStore.getState().selectedParticipantSource?.deviceId).toBe('app:123');
     expect(release).toHaveBeenCalledOnce();
     expect(start).not.toHaveBeenCalled();
     detach();
-  });
-
-  it('measures a local auto-app echo sample on the selected or exact-label mic without starting a session', async () => {
-    vi.useFakeTimers();
-    const { handler, replies, start, detach } = setup();
-    const selected = { deviceId: 'headset-mic', label: 'INZONE Headset', isVirtual: false };
-    const physical = { deviceId: 'realtek-mic', label: 'Realtek Microphone', isVirtual: false };
-    useAudioStore.setState({ selectedInputDevice: selected, audioInputDevices: [selected, physical], selectedParticipantSource: { deviceId: 'saved-app', label: 'Saved source' }, echoCancellationMode: 'all' });
-    const stopMic = vi.fn(async () => {});
-    const stopSystem = vi.fn(async () => {});
-    let micListener: ((pcm: Int16Array) => void) | undefined;
-    let systemListener: ((pcm: Int16Array) => void) | undefined;
-    let listenersReady!: () => void;
-    const attached = new Promise<void>((resolve) => { listenersReady = resolve; });
-    vi.spyOn(micCapture, 'openMic').mockImplementation(async (settings) => {
-      expect(settings.deviceId()).toBe('realtek-mic');
-      settings.captureStarted?.('all', true);
-      return { stop: stopMic, onPcm: (listener: (pcm: Int16Array) => void) => { micListener = listener; if (systemListener) listenersReady(); return () => {}; }, onEnded: () => () => {}, onDegraded: vi.fn() } as never;
-    });
-    vi.spyOn(systemAudio, 'openSystemAudio').mockImplementation(async (settings) => {
-      expect(settings.sourceId()).toBe('auto-meeting-audio');
-      settings.captureStarted?.('app');
-      settings.autoResolved?.({ deviceId: 'app:bili', label: '哔哩哔哩' });
-      return { stop: stopSystem, onPcm: (listener: (pcm: Int16Array) => void) => { systemListener = listener; if (micListener) listenersReady(); return () => {}; }, onEnded: vi.fn(), onDegraded: vi.fn() } as never;
-    });
-    handler({ id: 'echo', command: 'audio.echo-check', args: { micLabel: 'Realtek Microphone' } });
-    await attached;
-    const pcm = Int16Array.from({ length: 480 }, (_, i) => Math.round(8_000 * Math.sin(i * 0.08)));
-    systemListener?.(pcm);
-    micListener?.(pcm);
-    await vi.advanceTimersByTimeAsync(5_500);
-    await vi.runAllTicks();
-    expect(replies).toHaveLength(1);
-    expect(dataOf(replyFor(replies, 'echo'))).toMatchObject({ selectedApp: '哔哩哔哩', microphone: 'Realtek Microphone', configuredAec: 'all', appliedAec: true, durationMs: 5_500 });
-    expect(dataOf(replyFor(replies, 'echo')).referenceRms).toBeGreaterThan(0);
-    expect(stopMic).toHaveBeenCalledOnce();
-    expect(stopSystem).toHaveBeenCalledOnce();
-    expect(useAudioStore.getState().selectedInputDevice?.deviceId).toBe('headset-mic');
-    expect(useAudioStore.getState().selectedParticipantSource?.deviceId).toBe('saved-app');
-    expect(start).not.toHaveBeenCalled();
-    detach();
-    vi.useRealTimers();
   });
 
   it('opens an idle mode without starting audio and guards a running face-to-face session', async () => {
@@ -424,7 +444,7 @@ describe('agent control bridge', () => {
     handler({ id: 'qwen-defaults', command: 'provider.configure-qwen-defaults' });
     await vi.waitFor(() => expect(replies).toHaveLength(1));
 
-    expect(setNotesModel).toHaveBeenCalledExactlyOnceWith('qwen3.8-flash');
+    expect(setNotesModel).not.toHaveBeenCalled();
     expect(choose).toHaveBeenCalledExactlyOnceWith('summarisation', 'bailian_notes');
     expect(useProviderStore.getState().entries.qwen_livetranslate).toBe(qwen);
     expect(dataOf(replyFor(replies, 'qwen-defaults'))).toMatchObject({ notesConfigured: true });

@@ -91,12 +91,7 @@ export const DEFAULT_PARTICIPANT_SOURCE: AudioDevice = {
   label: 'System Audio (All Applications)',
 };
 
-/** Windows-only opt-in selector; the runner resolves this to a real app before capture starts. */
-export const AUTO_MEETING_PARTICIPANT_SOURCE: AudioDevice = {
-  deviceId: 'auto-meeting-audio',
-  label: 'Auto (Meeting app)',
-  appKey: 'auto-meeting-audio',
-};
+const LEGACY_AUTO_PARTICIPANT_KEYS = new Set(['auto-meeting-audio', 'auto-meeting-audio-endpoint']);
 
 interface AudioStore {
   // State
@@ -106,8 +101,6 @@ interface AudioStore {
   selectedMonitorDevice: AudioDevice | null;
   participantSources: AudioDevice[];
   selectedParticipantSource: AudioDevice | null;
-  /** Actual application resolved for the current Auto meeting capture, when known. */
-  autoMeetingResolvedSource: AudioDevice | null;
   /** Saved app key from a previous run, used to re-find the app on startup. */
   persistedParticipantAppKey: string | null;
   /** The user's own picks, as persisted: the devices the choice returns to (spec 2026-10-04 §1). */
@@ -170,7 +163,6 @@ interface AudioStore {
   selectMonitorDevice: (device: AudioDevice) => void;
   setParticipantSources: (sources: AudioDevice[]) => void;
   selectParticipantSource: (source: AudioDevice) => void;
-  setAutoMeetingResolvedSource: (source: AudioDevice | null) => void;
   toggleRealVoicePassthrough: () => void;
   setRealVoicePassthroughVolume: (volume: number) => void;
   setNoiseSuppressionMode: (mode: NoiseSuppressionMode) => void;
@@ -231,7 +223,6 @@ const useAudioStore = create<AudioStore>()(
     selectedMonitorDevice: null,
     participantSources: [],
     selectedParticipantSource: DEFAULT_PARTICIPANT_SOURCE,
-    autoMeetingResolvedSource: null,
     persistedParticipantAppKey: null,
     savedInputDeviceId: null,
     savedMonitorDeviceId: null,
@@ -288,8 +279,14 @@ const useAudioStore = create<AudioStore>()(
       // by its stable key. Without this the selection silently reverted to
       // whole-system capture on every launch, which on macOS then demanded
       // Screen Recording for a feature that does not need it.
-      const wantedKey = (hasRealSelection ? current!.appKey : null)
+      const selectedKey = (hasRealSelection ? current!.appKey : null)
         || state.persistedParticipantAppKey;
+      // Older builds persisted Auto as though it were an application. Restore
+      // those preferences to the original whole-system source.
+      if (selectedKey && LEGACY_AUTO_PARTICIPANT_KEYS.has(selectedKey)) {
+        return { participantSources: sources, selectedParticipantSource: DEFAULT_PARTICIPANT_SOURCE, persistedParticipantAppKey: null };
+      }
+      const wantedKey = selectedKey;
       if (wantedKey) {
         const matches = sources.filter((s) => s.appKey && s.appKey === wantedKey);
         // A process key can identify several running instances (for example,
@@ -299,6 +296,24 @@ const useAudioStore = create<AudioStore>()(
         if (byKey) {
           console.info(`[Sokuji] [AudioStore] Re-matched participant source by key: ${byKey.label} (${byKey.deviceId})`);
           return { participantSources: sources, selectedParticipantSource: byKey };
+        }
+
+        // Windows endpoint capture is an explicit source with a restart-stable
+        // native identity. Keep that choice visible when the endpoint is
+        // temporarily absent; falling back to whole-system capture would
+        // silently broaden what Sokuji records.
+        if (wantedKey.startsWith('endpoint:') || wantedKey.startsWith('cable:')) {
+          const unavailable: AudioDevice = {
+            deviceId: wantedKey,
+            label: current?.deviceId === wantedKey
+              ? `${current.label.replace(/ — unavailable$/i, '')} — unavailable`
+              : wantedKey.startsWith('cable:') ? 'Meeting audio cable unavailable' : `Windows audio endpoint unavailable (${wantedKey.slice('endpoint:'.length)})`,
+            appKey: wantedKey,
+          };
+          return {
+            participantSources: [...sources.filter((s) => s.deviceId !== wantedKey), unavailable],
+            selectedParticipantSource: unavailable,
+          };
         }
       }
 
@@ -314,7 +329,6 @@ const useAudioStore = create<AudioStore>()(
       // Persist the stable key, not the deviceId: its pid is gone next launch.
       void persistSetting(STORAGE_KEYS.SELECTED_PARTICIPANT_APP_KEY, source.appKey ?? '');
     },
-    setAutoMeetingResolvedSource: (source) => set({ autoMeetingResolvedSource: source }),
     selectInputDevice: (device) => {
       console.info(`[Sokuji] [AudioStore] Selected input device: ${device.label} (${device.deviceId})`);
       set({
@@ -489,7 +503,10 @@ const useAudioStore = create<AudioStore>()(
           // re-find the application, whose pid differs from last launch.
           const savedAppKey = await ServiceFactory.getSettingsService()
             .getSetting<string>(STORAGE_KEYS.SELECTED_PARTICIPANT_APP_KEY, '');
-          if (savedAppKey) {
+          if (savedAppKey && LEGACY_AUTO_PARTICIPANT_KEYS.has(savedAppKey)) {
+            set({ persistedParticipantAppKey: null });
+            void persistSetting(STORAGE_KEYS.SELECTED_PARTICIPANT_APP_KEY, '');
+          } else if (savedAppKey) {
             set({ persistedParticipantAppKey: savedAppKey });
           }
           get().setParticipantSources(await listSystemAudioSources());
@@ -764,7 +781,6 @@ export const useParticipantSources = () => useAudioStore((state) => state.partic
 export const useRefreshParticipantSources = () => useAudioStore((state) => state.refreshParticipantSources);
 export const useParticipantCaptureWidened = () => useAudioStore((state) => state.participantCaptureWidened);
 export const useSelectedParticipantSource = () => useAudioStore((state) => state.selectedParticipantSource);
-export const useAutoMeetingResolvedSource = () => useAudioStore((state) => state.autoMeetingResolvedSource);
 export const useSelectParticipantSource = () => useAudioStore((state) => state.selectParticipantSource);
 export const useToggleRealVoicePassthrough = () => useAudioStore((state) => state.toggleRealVoicePassthrough);
 export const useSetRealVoicePassthroughVolume = () => useAudioStore((state) => state.setRealVoicePassthroughVolume);

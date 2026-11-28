@@ -41,8 +41,9 @@ describe('acquireSingleInstanceLock', () => {
     acquireSingleInstanceLock(app, { env: {}, onSecondInstance });
 
     expect(app.on).toHaveBeenCalledWith('second-instance', expect.any(Function));
-    app.handlers['second-instance']();
-    expect(onSecondInstance).toHaveBeenCalledOnce();
+    const argv = ['AED Translator.exe', '--meeting-diagnostics'];
+    app.handlers['second-instance']({}, argv);
+    expect(onSecondInstance).toHaveBeenCalledWith(argv);
   });
 
   it('does not register second-instance on the loser, whose event loop is about to die', () => {

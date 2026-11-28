@@ -92,6 +92,36 @@ describe("Qwen LiveTranslate's segments (spec §6)", () => {
     expect(japanese.log.find((e) => e.kind === 'segmentText' && 'language' in e.payload)?.payload).toMatchObject({ language: 'ja' });
   });
 
+  it('detects an unselected German source and lets the full final transcript correct a streaming label on the same row', () => {
+    const { s, seen } = segments(false, undefined, {
+      detectIncomingLanguage: true,
+      sourceLanguageHints: ['zh', 'en'],
+    });
+    s.heard('h-de');
+    s.text('h-de', 'source', 'The meeting starts now.');
+    const partialEvents = seen();
+    expect(partialEvents[partialEvents.length - 1]).toEqual(['segmentText', { ref: 1, text: 'The meeting starts now.', language: 'en' }]);
+
+    s.done('h-de', 'source', 'Der Besprechungsraum ist rechts.');
+    expect(seen().filter(([kind]) => kind === 'segmentText')).toEqual([
+      ['segmentText', { ref: 1, text: 'The meeting starts now.', language: 'en' }],
+      ['segmentText', { ref: 1, text: 'Der Besprechungsraum ist rechts.', language: 'de' }],
+    ]);
+    expect(seen().filter(([kind]) => kind === 'segmentOpened')).toEqual([
+      ['segmentOpened', { ref: 1, side: 'source', origin: 'h-de' }],
+    ]);
+  });
+
+  it('prefers a reported provider source-language tag over local inference and keeps its script and region', () => {
+    const { s, seen } = segments(false, undefined, { detectIncomingLanguage: true, sourceLanguageHints: ['en'] });
+    s.heard('h-hant');
+    s.text('h-hant', 'source', '這是一個會議。', 'zh-Hant-TW');
+    s.done('h-hant', 'source', '這是一個會議。', 'zh-Hant-TW');
+    expect(seen().filter(([kind]) => kind === 'segmentText')).toEqual([
+      ['segmentText', { ref: 1, text: '這是一個會議。', language: 'zh-Hant-TW' }],
+    ]);
+  });
+
   it('keeps a linked text translation paired and suppresses only a confidently same-language zh→zh duplicate', () => {
     const translated = segments(false, undefined, { detectIncomingLanguage: true, skipSameLanguageText: true, targetLanguage: 'zh' });
     translated.s.heard('h-ja');
@@ -129,7 +159,7 @@ describe("Qwen LiveTranslate's segments (spec §6)", () => {
     s.text('translation', 'translation', '今天我们会讨论会议安排。');
     expect(seen()).toEqual([]);
     s.text('source', 'source', 'Today we will discuss the schedule.');
-    expect(seen().at(-1)).toEqual(['segmentText', { ref: 2, text: '今天我们会讨论会议安排。' }]);
+    expect(seen().slice(-1)).toEqual([['segmentText', { ref: 2, text: '今天我们会讨论会议安排。' }]]);
     s.done('translation', 'translation', '今天我们会讨论会议安排。');
     s.done('source', 'source', '今天我们讨论会议安排和测试结果。');
     expect(seen().slice(-2)).toEqual([

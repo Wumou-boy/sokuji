@@ -15,7 +15,6 @@ vi.mock('../../lib/analytics', () => ({ useAnalytics: () => ({ trackEvent }) }))
 
 import { Banners } from '../Banner/useBanners';
 import useAudioSystemStore from '../../stores/audioSystemStore';
-import useUpdateStore from '../../stores/updateStore';
 import { useProviderStore } from '../../stores/providerStore';
 import { useLineUpStore } from '../../stores/lineUpStore';
 import { runsOn } from '../../stores/lineUpStore.testing';
@@ -39,7 +38,6 @@ beforeEach(() => {
   trackEvent.mockReset();
   localStorage.clear();
   useAudioSystemStore.setState({ status: 'ok', dismissed: false });
-  useUpdateStore.setState({ status: 'idle', bannerDismissed: false } as never);
   seed();
 });
 afterEach(cleanup);

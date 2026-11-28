@@ -8,6 +8,7 @@
 // own key (text models, part C): OpenAI's, Gemini's or a compatible service's,
 // with its notes model and reasoning folded under the choice.
 import { useWordList } from '../../lib/words/list';
+import { bailianWorkspaceNotesBaseUrl } from '../../providers/qwen_livetranslate/endpoints';
 import { modelTakesWords, wordServiceOf, wordsFor } from '../../lib/words/forService';
 import { effectiveGeminiModel } from '../../providers/gemini/settings';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -224,8 +225,11 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
   // during a session (the owner, 2026-11-17: "Key not verified" for ever otherwise).
   const notesReadiness = useNotesReadiness(notesProvider && !notesMissing ? notesProvider : undefined, auth, locked);
   const notesPricing = useNotesPricing(kizunaOffered);
-  const bailianEntry = entries.qwen_livetranslate as { settings?: { connection?: string }; credentials?: { apiKey?: string } } | undefined;
-  const bailianReady = bailianEntry?.settings?.connection === 'bailian-cn' && Boolean(bailianEntry.credentials?.apiKey?.trim());
+  const bailianEntry = entries.qwen_livetranslate as { settings?: { connection?: string; workspaceId?: string }; credentials?: { apiKey?: string; workspaceApiKey?: string } } | undefined;
+  const workspaceNotes = bailianEntry?.settings?.connection === 'bailian-workspace';
+  const bailianReady = workspaceNotes
+    ? Boolean(bailianWorkspaceNotesBaseUrl(bailianEntry?.settings?.workspaceId) && bailianEntry?.credentials?.workspaceApiKey?.trim())
+    : bailianEntry?.settings?.connection === 'bailian-cn' && Boolean(bailianEntry.credentials?.apiKey?.trim());
   const legacyCompatible = useSettingsStore((s) => s.notesCompatible);
   const legacyCompatibleReady = Boolean(legacyCompatible.baseUrl.trim() && legacyCompatible.model.trim());
   const providerName = (id: string, fallback: string) => t(`providers.${id}.name`, fallback);
@@ -265,6 +269,7 @@ export function LineUpCategory({ locked }: CategoryBodyProps) {
     })),
     ...(isElectron() ? [{
       id: BAILIAN_NOTES, name: 'Qwen / Bailian',
+      description: workspaceNotes ? t('history.notesWorkspaceApi', 'Company workspace API') : t('history.notesSharedApi', 'Shared Bailian endpoint · standard API key'),
       icon: providers.find((p) => p.id === 'qwen_livetranslate')?.icon,
       ...notesNeeds(bailianReady ? null : 'key'),
     }] : []),

@@ -32,6 +32,7 @@ interface UsageStore extends UsageData {
 
 const KEY = 'aed.tokenUsage.v2';
 export const BAILIAN_BEIJING = 'bailian-beijing';
+export const BAILIAN_WORKSPACE_BEIJING = 'bailian-workspace-beijing';
 const CHINA_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 export function billingMonth(now = Date.now()): string {

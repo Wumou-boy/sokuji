@@ -187,4 +187,5 @@ describe('ModernAudioRecorder.begin — asks to cancel all system playout', () =
   it('leaves the minimal profile off whatever the choice', async () => {
     expect(await echoCancellationWith('app', 'minimal')).toBe(false);
   });
+
 });

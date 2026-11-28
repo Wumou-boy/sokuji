@@ -379,6 +379,18 @@ describe('the Qwen LiveTranslate adapter: the session (spec §6)', () => {
     await h.session.stop();
   });
 
+  it('forwards a Qwen-reported original language tag to source captions when the server provides one', async () => {
+    const h = await qwenSession({ context: PARTICIPANT_CTX, config: { detectIncomingLanguage: true, sourceLanguageHints: ['zh', 'ja', 'en'] } });
+    h.socket().receive(SERVER.heardItem('german-source'));
+    h.socket().receive(SERVER.sourceDelta('german-source', 'Der Besprechungsraum ist rechts.', 'de-DE'));
+    h.socket().receive(SERVER.sourceDone('german-source', 'Der Besprechungsraum ist rechts.', 'de-DE'));
+
+    expect(h.of('segmentText').filter((event) => event.payload.ref === 1).map((event) => event.payload.language)).toEqual([
+      'de-DE',
+    ]);
+    await h.session.stop();
+  });
+
   it('uses the actual outgoing stream clock after push-to-talk quiet is held back', async () => {
     const h = await qwenSession({ context: MANUAL_CTX });
     const buffer = new QwenTurnAudioBuffer();

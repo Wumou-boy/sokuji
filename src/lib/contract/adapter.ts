@@ -131,6 +131,8 @@ export interface AdapterFrame extends FromStage {
 export interface AdapterEvents {
   /** `person`: who said it, an adapter-scoped label (diarization), the same on a source and its translation. Absent: the adapter cannot tell. */
   segmentOpened(e: { ref: Ref; side: Side; origin?: string; person?: string }): void;
+  /** Updates speaker attribution without revising the text, including after the segment closes. */
+  segmentSpeaker?(e: { ref: Ref; person?: string }): void;
   /** Always the whole text; a snapshot, never a delta. A defined `person` replaces the segment's. */
   /** `heard`: when its words were heard, if the adapter knows; a defined one replaces the segment's. */
   /** `stableLen`: on a translation segment, the first `stableLen` characters of `text` will not change. Absent: nothing is known to be stable until the segment closes. */

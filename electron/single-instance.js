@@ -59,10 +59,10 @@ function acquireSingleInstanceLock(app, { onSecondInstance, env = process.env } 
     return false;
   }
 
-  app.on('second-instance', () => {
+  app.on('second-instance', (_event, argv) => {
     // The user asked for Sokuji again; the honest answer to that is the window
     // they already have, brought to the front.
-    if (onSecondInstance) onSecondInstance();
+    if (onSecondInstance) onSecondInstance(argv);
   });
 
   return true;

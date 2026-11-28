@@ -113,16 +113,13 @@ export function createPlayback(graph: AudioGraph, routing: RoutingSource, clock:
     const settings = routing.get();
     if (themOn && !settings.speak.them) queues.participant.clear();
     themOn = settings.speak.them;
-    edges = [
-      ...routesFor(settings, held),
-      { from: 'replay', to: replayOutlet, gain: 1 },
-      { from: 'preview', to: previewOutlet, gain: 1 },
-    ];
+    edges = routesFor(settings, held);
+    edges.push({ from: 'replay', to: replayOutlet, gain: 1 }, { from: 'preview', to: previewOutlet, gain: 1 });
     const open = edges.some((e) => e.from === 'passthrough');
     if (passthroughOpen && !open) passthroughStream.clear();
     passthroughOpen = open;
-    graph.route(edges);
     void graph.setSinks(settings.sinks);
+    graph.route(edges);
   };
   apply();
   const unsubscribeRouting = routing.subscribe(apply);

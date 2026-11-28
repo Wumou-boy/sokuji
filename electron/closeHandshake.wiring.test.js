@@ -8,7 +8,6 @@ import { join } from 'node:path';
 
 const main = readFileSync(join(__dirname, 'main.js'), 'utf8');
 const preload = readFileSync(join(__dirname, 'preload.js'), 'utf8');
-const updater = readFileSync(join(__dirname, 'update-manager.js'), 'utf8');
 
 /** Index of `needle` in `text`; fails (rather than returning -1) when it is gone. */
 function at(text, needle) {
@@ -58,22 +57,6 @@ describe('close handshake wiring', () => {
       const body = handler(main, channel);
       expect(at(body, SENDER_CHECK), channel).toBeLessThan(at(body, call));
     }
-  });
-
-  it('ends a running session before an update installs', () => {
-    const rest = main.slice(at(main, 'new UpdateManager('));
-    const call = rest.slice(0, at(rest, ');'));
-    expect(call).toContain('beforeInstall:');
-    expect(call).toContain('closeHandshake.endSessionThen(');
-  });
-
-  it('awaits beforeInstall ahead of both install paths', () => {
-    const rest = updater.slice(at(updater, "ipcMain.handle('update-install'"));
-    const body = rest.slice(0, at(rest, '\n    });'));
-    const hook = at(body, 'await new Promise((resolve) => this.beforeInstall(resolve));');
-    expect(hook).toBeLessThan(at(body, 'autoUpdater.quitAndInstall()'));
-    expect(hook).toBeLessThan(at(body, 'this._installUpdate()'));
-    expect(updater).toContain('this.beforeInstall = beforeInstall;');
   });
 
   it('lets the renderer hear app:close-requested', () => {

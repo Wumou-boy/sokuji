@@ -36,6 +36,11 @@ function bailianWorkspaceHost(value: unknown): string | null {
   return id ? `${id}${BAILIAN_BEIJING_WORKSPACE_SUFFIX}` : null;
 }
 
+export function bailianWorkspaceNotesBaseUrl(value: unknown): string | null {
+  const host = bailianWorkspaceHost(value);
+  return host ? `https://${host}/compatible-mode/v1` : null;
+}
+
 /** The model is fixed by Sokuji; callers cannot supply a host, path or query. */
 export function bailianWorkspaceSocketUrl(value: unknown, model: string): string {
   const host = bailianWorkspaceHost(value);

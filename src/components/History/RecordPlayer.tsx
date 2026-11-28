@@ -4,12 +4,13 @@
 // record's clock: each starts once the position reaches its offset. While a track is playing with data in hand, the
 // position is read from it (the first such track leads) and the others are kept within 150 ms of it; before that, a
 // wall clock at the chosen speed carries the position. The page is told the position and highlights the row.
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pause, Play } from 'lucide-react';
 import { playable, recordLength, trackUrl } from '../../lib/history/playback';
 import type { HistoryTrack } from '../../lib/history/types';
 import { formatLength } from './format';
+import { useLocalMediaOutput } from '../../lib/audio/useLocalMediaOutput';
 
 export type SeekFn = (ms: number, play: boolean) => void;
 
@@ -55,6 +56,8 @@ export const RecordPlayer: React.FC<RecordPlayerProps> = ({ recordId, tracks, on
   useEffect(() => { setFailed(new Set()); }, [recordId]);
   const markFailed = (source: string) => setFailed((prev) => (prev.has(source) ? prev : new Set(prev).add(source)));
   const audio = useRef(new Map<string, HTMLAudioElement>());
+  const players = useCallback(() => Array.from(audio.current.values()), []);
+  const outputReady = useLocalMediaOutput(players, kept);
   const started = useRef(new Set<HTMLAudioElement>());
   /** The position at `at` (Date.now()); it moves at `speed` while playing. */
   const clock = useRef({ base: 0, at: 0, playing: false, speed });
@@ -106,7 +109,7 @@ export const RecordPlayer: React.FC<RecordPlayerProps> = ({ recordId, tracks, on
   const move = (pos: number, play: boolean) => {
     const at = Math.min(Math.max(0, pos), length);
     // A recording none of whose tracks loaded does not play: the clock would run on silence.
-    clock.current = { ...clock.current, base: at, at: Date.now(), playing: play && at < length && !unplayableRef.current };
+    clock.current = { ...clock.current, base: at, at: Date.now(), playing: play && outputReady && at < length && !unplayableRef.current };
     setPosition(at);
     setPlaying(clock.current.playing);
     report.current(at);
@@ -121,10 +124,10 @@ export const RecordPlayer: React.FC<RecordPlayerProps> = ({ recordId, tracks, on
 
   // Every track failed while playing: stop where it is.
   useEffect(() => {
-    if (unplayable && playing) move(now(), false);
+    if ((unplayable || !outputReady) && playing) move(now(), false);
     // `move` and `now` read refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unplayable, playing]);
+  }, [unplayable, outputReady, playing]);
 
   useEffect(() => {
     if (!playing) return undefined;
@@ -208,6 +211,8 @@ export const RecordPlayer: React.FC<RecordPlayerProps> = ({ recordId, tracks, on
       <button
         type="button"
         className="history-button history-button--icon record-player__play"
+        disabled={!outputReady}
+        title={!outputReady ? t('common.localPlaybackUnavailable', 'Local playback is unavailable on the current audio route.') : undefined}
         aria-label={playing ? t('history.pause', 'Pause') : t('history.play', 'Play')}
         onClick={() => move(playing ? now() : position >= length ? 0 : position, !playing)}
       >

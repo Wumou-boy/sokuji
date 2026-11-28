@@ -16,6 +16,13 @@ const token: CredentialField = { key: 'accessToken', labelKey: 'setup.credential
 const unknown = { state: 'unknown' } as const;
 
 describe('CredentialForm', () => {
+  it('shows the endpoint-region hint without changing the entered credentials', () => {
+    const onChange = vi.fn();
+    render(<CredentialForm fields={[token]} values={{ accessToken: 't1' }} readiness={unknown} onChange={onChange} endpointRegion="official" />);
+    expect(screen.getByText('settingsPage.accounts.endpointInternational')).toBeInTheDocument();
+    expect(screen.getByLabelText('setup.credentials.accessToken')).toHaveValue('t1');
+    expect(onChange).not.toHaveBeenCalled();
+  });
   it('draws one input per field, masking secrets, and reports typing by key', () => {
     const onChange = vi.fn();
     render(<CredentialForm fields={[appId, token]} values={{ appId: 'a1', accessToken: '' }} readiness={unknown} onChange={onChange} onCheck={vi.fn()} />);

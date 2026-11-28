@@ -38,6 +38,7 @@ export interface ModelOption { id: string }
 
 /** What a builder may read beyond its own settings; a builder never reaches into a store. The system instructions are each provider's own setting (`instructions.ts`; Stage 2 Gemini, ruling 4). */
 export interface SharedSettings {
+  localSpeakerRecognition?: boolean;
   /** The segmentation pauses, in seconds, as stored. */
   pauses: { sourceSeconds: number; translationSeconds: number };
   /** This is the participant's direction: the pair's reverse. A run answers it by leg, so a same-language pair (en → en), one direction for both legs, still tells them apart. */

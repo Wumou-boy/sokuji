@@ -104,6 +104,30 @@ describe('Qwen face replay transport', () => {
     }
   });
 
+  it('splits a continuous source longer than 30 seconds into serialized bounded turns', async () => {
+    const h = harness();
+    async function* source() {
+      yield new Int16Array(QWEN_FACE_REPLAY_MAX_SAMPLES + 4_800).fill(1);
+    }
+    const pending = h.replay.translateStream(source(), new AbortController().signal, () => {});
+    await waitFor(() => h.calls.filter((call) => call === 'end').length === 1);
+    const firstTurnSamples = h.calls
+      .slice(1)
+      .filter((call) => call.startsWith('audio:'))
+      .reduce((sum, call) => sum + Number(call.slice('audio:'.length)), 0);
+    expect(firstTurnSamples).toBeLessThan(QWEN_FACE_REPLAY_MAX_SAMPLES);
+    h.translation(1, 'first part');
+    h.done();
+
+    await waitFor(() => h.calls.filter((call) => call === 'end').length === 2);
+    h.translation(2, 'second part');
+    h.done();
+    await expect(pending).resolves.toBe('first part second part');
+    expect(h.start).toHaveBeenCalledTimes(1);
+    expect(h.calls.filter((call) => call === 'begin')).toHaveLength(2);
+    await h.replay.stop();
+  });
+
   it('aborts while the async audio source is still producing and retires that partial turn', async () => {
     const h = harness();
     const controller = new AbortController();

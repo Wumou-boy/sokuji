@@ -48,12 +48,15 @@ const sizeOf = (file) => { try { return fs.statSync(file).size; } catch { return
 /**
  * A record has content when one of its transcripts has a sentence or one of its segments has text that is not blank;
  * an imported file's record, also when it keeps its recording (it is transcribed after it is stored, and may stay
- * untranscribed after a failure, to be transcribed later).
+ * untranscribed after a failure, to be transcribed later). Face-to-face keeps a nonempty microphone (speaker) track
+ * when recognition yields no captions, so spoken audio survives an ASR failure; ordinary live records still need
+ * transcript or segment text.
  */
 const HAS_CONTENT = `(
   exists (select 1 from sentences s join transcripts t on t.id = s.transcript_id where t.record_id = r.id)
   or exists (select 1 from segments g where g.record_id = r.id and trim(g.text) <> '')
   or (r.mode = 'import' and exists (select 1 from tracks k where k.record_id = r.id and k.gone_at is null))
+  or (r.mode = 'face-to-face' and exists (select 1 from tracks k where k.record_id = r.id and k.source = 'speaker' and k.gone_at is null and k.bytes > 0))
 )`;
 
 const ROW_COLUMNS = `
@@ -488,12 +491,26 @@ function openHistory({ dir, now = () => Date.now() }) {
     reviseSentences({ transcriptId, revisions } = {}) {
       const t = transcriptOrFail(transcriptId);
       if (t.state !== 'open') fail('RECORD_CLOSED', `Record ${t.record_id} is closed`);
-      if (!Array.isArray(revisions) || revisions.some((v) => !isPlainObject(v) || !isInt(v.n) || !isString(v.text))) {
-        fail('BAD_INPUT', 'revisions must be { n, text }');
+      if (!Array.isArray(revisions) || revisions.some((v) => !isPlainObject(v) || !isInt(v.n) || !isString(v.text)
+        || (v.translation !== undefined && v.translation !== null && !isString(v.translation))
+        || (v.speaker !== undefined && !isString(v.speaker))
+        || (v.language !== undefined && v.language !== null && !isString(v.language))
+        || ((v.startMs !== undefined || v.endMs !== undefined || v.timeKind !== undefined)
+          && (!isInt(v.startMs) || v.startMs < 0 || !isInt(v.endMs) || v.endMs < v.startMs
+            || !['given', 'spread', 'estimated'].includes(v.timeKind))))) {
+        fail('BAD_INPUT', 'revisions need { n, text } and may include translation, speaker, language, or a complete timing');
       }
       transaction(db, () => {
         for (const v of revisions) {
-          const { changes } = run('update sentences set text = ? where transcript_id = ? and n = ?', v.text, transcriptId, v.n);
+          const columns = ['text = ?'];
+          const values = [v.text];
+          if (v.translation !== undefined) { columns.push('translation = ?'); values.push(v.translation); }
+          if (v.speaker !== undefined) { columns.push('speaker = ?'); values.push(v.speaker); }
+          if (v.language !== undefined) { columns.push('language = ?'); values.push(v.language); }
+          if (v.startMs !== undefined) { columns.push('start_ms = ?'); values.push(v.startMs); }
+          if (v.endMs !== undefined) { columns.push('end_ms = ?'); values.push(v.endMs); }
+          if (v.timeKind !== undefined) { columns.push('time_kind = ?'); values.push(v.timeKind); }
+          const { changes } = run(`update sentences set ${columns.join(', ')} where transcript_id = ? and n = ?`, ...values, transcriptId, v.n);
           if (Number(changes) === 0) fail('NO_SENTENCE', `No sentence ${v.n}`);
         }
       });

@@ -87,7 +87,6 @@ ipcMain.handle('notes-http:abort', (event, args) => {
   if (isMainPageSender(event.sender) && event.senderFrame === event.sender.mainFrame) notesHttp.abort(event.sender.id, args);
 });
 
-const { UpdateManager } = require('./update-manager');
 const { NativeHostManager } = require('./native-host-manager');
 const nativeHost = new NativeHostManager();
 
@@ -185,7 +184,12 @@ let isDuplicateInstance = false;
 // createFocusRelay for why that is the common case rather than the rare one.
 const focusRelay = createFocusRelay(() => mainWindow);
 if (!acquireSingleInstanceLock(app, {
-  onSecondInstance: () => {
+  onSecondInstance: (argv) => {
+    if (process.platform === 'win32' && argv?.includes('--meeting-diagnostics')
+        && argv[0]?.toLowerCase() === process.execPath.toLowerCase()) {
+      openMeetingControl();
+      return;
+    }
     console.log('[Sokuji] [Main] Second launch detected; focusing the existing window');
     focusRelay.onSecondInstance();
   },
@@ -281,6 +285,20 @@ if (sandboxRecovery) {
 let mainWindow;
 const agentControlEnabled = process.platform === 'win32' && process.argv.includes('--agent-control');
 let agentControl;
+let openingAgentControl;
+let agentControlClosing = false;
+const meetingDiagnosticCommands = new Set(['status', 'audio.inputs', 'logs.enable', 'logs.list']);
+function openMeetingControl() {
+  if (agentControl || openingAgentControl || agentControlClosing) return;
+  openingAgentControl = startAgentControl({ profileDir: app.getPath('userData'), dispatch(command, args) {
+    if (agentControlEnabled || meetingDiagnosticCommands.has(command)) return dispatchAgentCommand(command, args);
+    return agentError('diagnostics_only', 'This endpoint is limited to meeting diagnostics.');
+  } }).then(async (control) => {
+    if (agentControlClosing) await control.close();
+    else agentControl = control;
+  }).catch(() => console.warn('[Sokuji] Could not open the local diagnostics connection.'))
+    .finally(() => { openingAgentControl = null; });
+}
 let agentPage = null;
 let nextAgentRequest = 0;
 const agentRequests = new Map();
@@ -298,7 +316,7 @@ function dispatchAgentCommand(command, args) {
     return dispatchAudioFixture(command, args, 'voice-benchmark-pcm', 8, 'benchmark');
   }
   if (command === 'face-to-face.replay') {
-    return dispatchAudioFixture(command, args, 'face-replay-pcm', 30, 'face_replay');
+    return dispatchAudioFixture(command, args, 'face-replay-pcm', 180, 'face_replay');
   }
   return dispatchToAgentPage(command, args);
 }
@@ -347,13 +365,13 @@ function dispatchToAgentPage(command, args) {
 }
 
 ipcMain.handle('agent-control:ready', (event) => {
-  if (!agentControlEnabled || !isMainPageSender(event.sender) || event.senderFrame !== event.sender.mainFrame) return false;
+  if (process.platform !== 'win32' || !isMainPageSender(event.sender) || event.senderFrame !== event.sender.mainFrame) return false;
   agentPage = event.sender;
   return true;
 });
 
 ipcMain.handle('agent-control:response', (event, response) => {
-  if (!agentControlEnabled || !isMainPageSender(event.sender) || event.senderFrame !== event.sender.mainFrame) return;
+  if (!agentControl || !isMainPageSender(event.sender) || event.senderFrame !== event.sender.mainFrame) return;
   const request = typeof response?.id === 'string' ? agentRequests.get(response.id) : undefined;
   if (!request || request.sender !== event.sender) return;
   const result = response.result;
@@ -443,7 +461,7 @@ function createApplicationMenu() {
               type: 'info',
               title: `About ${PRODUCT_NAME}`,
               message: PRODUCT_NAME,
-              detail: `Version: ${__APP_RELEASE__}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
+              detail: `AI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
               buttons: ['OK'],
               icon: iconAsset('icon.png')
             });
@@ -540,19 +558,10 @@ function createApplicationMenu() {
               type: 'info',
               title: `About ${PRODUCT_NAME}`,
               message: PRODUCT_NAME,
-              detail: `Version: ${__APP_RELEASE__}\n\nAI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
+              detail: `AI-powered real-time translation application\n\n© 2026 Kizuna AI Lab`,
               buttons: ['OK'],
               icon: iconAsset('icon.png')
             });
-          }
-        },
-        { type: 'separator' }]),
-        ...(__AED_PORTABLE__ ? [] : [{
-          label: 'Check for Updates...',
-          click: () => {
-            if (global.updateManager) {
-              global.updateManager.checkForUpdatesByUser();
-            }
           }
         },
         { type: 'separator' }]),
@@ -641,7 +650,7 @@ function createWindow() {
   // A reload keeps the window: a question the old page was asking will never be answered.
   mainWindow.webContents.on('did-navigate', () => closeHandshake.pageReplaced());
   mainWindow.webContents.on('did-start-navigation', (_event, _url, isInPlace, isMainFrame) => {
-    if (agentControlEnabled && isMainFrame && !isInPlace) resetAgentPage();
+    if (isMainFrame && !isInPlace) resetAgentPage();
   });
   mainWindow.webContents.on('render-process-gone', resetAgentPage);
   mainWindow.on('close', (event) => closeHandshake.onWindowClose(event));
@@ -841,22 +850,7 @@ app.whenReady().then(async () => {
 
   createWindow();
 
-  if (agentControlEnabled) {
-    startAgentControl({ profileDir: app.getPath('userData'), dispatch: dispatchAgentCommand })
-      .then((control) => { agentControl = control; })
-      .catch(() => console.warn('[Sokuji] Could not start the local agent control endpoint.'));
-  }
-
-  // Initialize auto-update manager. An install ends a running session first:
-  // the updater quits the app itself, and holding that quit for the session
-  // keeps this instance alive while the new one starts.
-  // The internal portable ZIP has its own version series and release packages.
-  if (!__AED_PORTABLE__) {
-    global.updateManager = new UpdateManager(mainWindow, {
-      beforeInstall: (fn) => closeHandshake.endSessionThen(fn),
-    });
-    if (!IS_E2E) global.updateManager.checkAfterDelay(5000);
-  }
+  if (agentControlEnabled || (process.platform === 'win32' && process.argv.includes('--meeting-diagnostics'))) openMeetingControl();
 
   // electron-audio-loopback handles setDisplayMediaRequestHandler automatically via initMain()
 });
@@ -864,6 +858,7 @@ app.whenReady().then(async () => {
 // Ensure cleanup happens before app exits
 const cleanupAndExit = () => {
   if (isDuplicateInstance) return;
+  agentControlClosing = true;
   resetAgentPage();
   if (agentControl) {
     void agentControl.close().catch(() => {});
@@ -908,10 +903,6 @@ app.on('activate', function () {
   // On macOS, recreate the window when the dock icon is clicked
   if (mainWindow === null) {
     createWindow();
-    // Update the manager's window reference so IPC messages reach the new renderer
-    if (global.updateManager) {
-      global.updateManager.setMainWindow(mainWindow);
-    }
   }
 });
 
@@ -1042,7 +1033,6 @@ ipcMain.handle('sidecar-bundle:remove', () => {
   return { ok: true };
 });
 
-ipcMain.handle('get-app-version', () => app.getVersion());
 ipcMain.handle('get-distribution-channel', () => getDistributionChannel());
 
 // IPC handler for the renderer to pull the current virtual-audio-device status.
@@ -1249,15 +1239,6 @@ ipcMain.handle('list-system-audio-sources', async () => {
     return await listSystemAudioSources();
   }
   return [];
-});
-
-ipcMain.handle('resolve-auto-system-audio-source', async () => {
-  if (process.platform !== 'win32') return { success: false, error: 'Automatic meeting audio selection is available on Windows only.' };
-  try {
-    return await require('./windows-audio-utils').resolveAutoSystemAudioSource();
-  } catch (error) {
-    return { success: false, error: error?.message || 'Could not inspect active application audio.' };
-  }
 });
 
 ipcMain.handle('connect-system-audio-source', async (event, sinkName) => {

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { HelpCircle, RefreshCw, Check, CircleAlert, Mail, MessageSquare, Globe, Wand2, SunMoon } from 'lucide-react';
+import { HelpCircle, Mail, MessageSquare, Globe, Wand2, SunMoon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Tooltip from '../../Tooltip/Tooltip';
-import { isElectron } from '../../../utils/environment';
-import { openExternalUrl, useInterfaceLanguageChange, useUpdateCheck } from './helpActions';
+import { openExternalUrl, useInterfaceLanguageChange } from './helpActions';
 import { useStartBasicsTour } from '../../Tour/useStartBasicsTour';
 import { useSetSetupWizardOpen } from '../../../stores/layoutStore';
 import { useDiagnosticLogs, useSetDiagnosticLogs, useThemeSetting, useSetThemeSetting } from '../../../stores/settingsStore';
@@ -26,7 +25,6 @@ const HelpSection: React.FC<HelpSectionProps> = ({ toggleSettings, isSessionActi
   const [appearanceFocused, setAppearanceFocused] = useState(false);
   const startTour = useStartBasicsTour();
   const setSetupWizardOpen = useSetSetupWizardOpen();
-  const { status: updateStatus, result: checkResult, check: checkForUpdates } = useUpdateCheck();
   const changeLanguage = useInterfaceLanguageChange('HelpSection');
   const diagnosticLogs = useDiagnosticLogs();
   const setDiagnosticLogs = useSetDiagnosticLogs();
@@ -45,7 +43,6 @@ const HelpSection: React.FC<HelpSectionProps> = ({ toggleSettings, isSessionActi
       <h3>
         <HelpCircle size={18} />
         <span>{t('settings.help', 'Help')}</span>
-        <span className="version-label">{__APP_RELEASE__}</span>
       </h3>
       <div className="help-links">
         <button
@@ -62,29 +59,6 @@ const HelpSection: React.FC<HelpSectionProps> = ({ toggleSettings, isSessionActi
           <HelpCircle size={13} />
           <span>{t('tour.restart', 'Restart Setup Guide')}</span>
         </button>
-        {isElectron() && !__AED_PORTABLE__ && (
-          <button
-            type="button"
-            className={[
-              'help-link',
-              updateStatus === 'checking' ? 'disabled' : '',
-              checkResult === 'not-available' ? 'help-link--ok' : '',
-              checkResult === 'error' ? 'help-link--error' : '',
-            ].filter(Boolean).join(' ')}
-            onClick={checkForUpdates}
-          >
-            {updateStatus === 'checking' ? <RefreshCw size={13} className="spinning" />
-              : checkResult === 'not-available' ? <Check size={13} />
-              : checkResult === 'error' ? <CircleAlert size={13} />
-              : <RefreshCw size={13} />}
-            <span>
-              {updateStatus === 'checking' ? t('update.checking')
-                : checkResult === 'not-available' ? t('update.upToDate')
-                : checkResult === 'error' ? t('update.error')
-                : t('update.checkButton')}
-            </span>
-          </button>
-        )}
         {/*
           Interface language, at the weight of a link rather than a section of
           its own. It is set once and never revisited, and by its own

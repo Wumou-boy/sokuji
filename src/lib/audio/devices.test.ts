@@ -83,6 +83,19 @@ describe('listAudioDevices', () => {
     expect(devices.outputs.map(d => d.deviceId)).toEqual(['spk-1']);
   });
 
+  it('uses concrete microphone IDs and keeps the OS default aliases out of the shared selection', async () => {
+    const enumerateDevices = vi.fn(async () => [
+      { deviceId: 'default', kind: 'audioinput', label: 'Default - Built-in Microphone', groupId: 'g1' },
+      { deviceId: 'communications', kind: 'audioinput', label: 'Communications - Headset', groupId: 'g2' },
+      { deviceId: 'mic-1', kind: 'audioinput', label: 'Built-in Microphone', groupId: 'g1' },
+    ]);
+    setMediaDevices(vi.fn(async () => makeStream()), enumerateDevices);
+
+    const devices = await listAudioDevices();
+
+    expect(devices.inputs.map((device) => device.deviceId)).toEqual(['mic-1']);
+  });
+
   it('still returns the enumerated devices when the warm-up mic fails (broken default device), and reports a warning with the permission toast shown', async () => {
     const notReadable = Object.assign(new Error('Could not start audio source'), {
       name: 'NotReadableError',

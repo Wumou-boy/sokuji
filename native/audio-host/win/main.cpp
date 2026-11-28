@@ -35,12 +35,17 @@
 //         {"event":"format","sampleRate":24000,"channels":1,"encoding":"s16le"}
 //         {"event":"error","code":"..."}
 //
+//   sokuji-audio-host.exe --target endpoint:<IMMDevice id>
+//       Captures only that active physical render endpoint. It never falls
+//       back to the current default endpoint.
+//
 // Exit codes: 0 clean, 1 runtime failure, 2 bad usage.
 //
 // stdout carries ONLY PCM. Everything else goes to stderr, or the audio stream
 // is corrupted. Built with plain MSVC — deliberately no WIL and no Media
 // Foundation, unlike the Microsoft ApplicationLoopback sample this is based on.
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 #include <mmdeviceapi.h>
 // initguid.h makes the property-key header below define its keys instead of
@@ -51,17 +56,21 @@
 #include <audioclient.h>
 #include <audioclientactivationparams.h>
 #include <audiopolicy.h>
+#include <endpointvolume.h>
 #include <devicetopology.h>
 #include <tlhelp32.h>
 #include <winver.h>
 #include <fcntl.h>
 #include <io.h>
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <string>
 #include <vector>
 #include <map>
+#include <cmath>
+#include <cstdint>
 
 // The pipeline consumes 24 kHz mono s16 and nothing else, so the format is not
 // configurable. WASAPI converts from whatever the app renders via
@@ -428,6 +437,90 @@ static int ListSources() {
     return 0;
 }
 
+// One-shot session meters used only for explicit endpoint opt-in. No PCM,
+// process command lines, or window titles are emitted by this mode.
+static int ListRenderSessions() {
+    IMMDeviceEnumerator* en = nullptr;
+    if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                                __uuidof(IMMDeviceEnumerator), (void**)&en))) {
+        printf("[]"); return 0;
+    }
+    IMMDeviceCollection* devices = nullptr;
+    if (FAILED(en->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &devices))) {
+        printf("[]"); en->Release(); return 0;
+    }
+    const ProcessTable procs = BuildProcessTable();
+    struct MeterRow {
+        std::string endpointId, endpointLabel, exe, rootExe;
+        DWORD pid = 0, rootPid = 0;
+        bool active = false, sharedKnown = false, shared = false, peakKnown = false, system = false;
+        float peak = 0;
+        IAudioMeterInformation* meter = nullptr;
+    };
+    std::vector<MeterRow> rows;
+    UINT n = 0; devices->GetCount(&n);
+    for (UINT d = 0; d < n; ++d) {
+        IMMDevice* dev = nullptr; if (FAILED(devices->Item(d, &dev))) continue;
+        LPWSTR rawId = nullptr; std::string endpointId, endpointLabel;
+        if (SUCCEEDED(dev->GetId(&rawId)) && rawId) { endpointId = Utf8(rawId); CoTaskMemFree(rawId); }
+        IPropertyStore* props = nullptr;
+        if (SUCCEEDED(dev->OpenPropertyStore(STGM_READ, &props))) {
+            PROPVARIANT value; PropVariantInit(&value);
+            if (SUCCEEDED(props->GetValue(PKEY_Device_FriendlyName, &value)) && value.vt == VT_LPWSTR && value.pwszVal)
+                endpointLabel = Utf8(value.pwszVal);
+            PropVariantClear(&value); props->Release();
+        }
+        IAudioSessionManager2* mgr = nullptr;
+        if (SUCCEEDED(dev->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, nullptr, (void**)&mgr))) {
+            IAudioSessionEnumerator* sessions = nullptr; int count = 0;
+            if (SUCCEEDED(mgr->GetSessionEnumerator(&sessions))) sessions->GetCount(&count);
+            for (int i = 0; i < count; ++i) {
+                IAudioSessionControl* ctl = nullptr; if (FAILED(sessions->GetSession(i, &ctl))) continue;
+                IAudioSessionControl2* ctl2 = nullptr;
+                if (SUCCEEDED(ctl->QueryInterface(__uuidof(IAudioSessionControl2), (void**)&ctl2))) {
+                    MeterRow row{}; HRESULT pidHr = ctl2->GetProcessId(&row.pid);
+                    row.endpointId = endpointId; row.endpointLabel = endpointLabel;
+                    row.shared = pidHr == static_cast<HRESULT>(0x0889000D) || pidHr == static_cast<HRESULT>(0x8889000D);
+                    row.sharedKnown = SUCCEEDED(pidHr) || row.shared;
+                    row.system = (pidHr == S_OK && row.pid == 0) || ctl2->IsSystemSoundsSession() == S_OK;
+                    row.exe = ImageOf(row.pid, procs);
+                    row.rootPid = row.pid ? AppRootPid(row.pid, procs) : 0;
+                    row.rootExe = ImageOf(row.rootPid, procs);
+                    AudioSessionState state = AudioSessionStateInactive;
+                    row.active = SUCCEEDED(ctl->GetState(&state)) && state == AudioSessionStateActive;
+                    ctl->QueryInterface(__uuidof(IAudioMeterInformation), (void**)&row.meter);
+                    rows.push_back(row); ctl2->Release();
+                }
+                ctl->Release();
+            }
+            if (sessions) sessions->Release(); mgr->Release();
+        }
+        dev->Release();
+    }
+    for (int sample = 0; sample < 4; ++sample) {
+        for (auto& row : rows) if (row.meter) {
+            float value = 0;
+            if (SUCCEEDED(row.meter->GetPeakValue(&value)) && value >= 0.0f && value <= 1.0f) {
+                if (!row.peakKnown || value > row.peak) row.peak = value;
+                row.peakKnown = true;
+            }
+        }
+        if (sample < 3) Sleep(75);
+    }
+    printf("[");
+    for (size_t i = 0; i < rows.size(); ++i) {
+        const auto& r = rows[i];
+        printf("%s{\"endpointId\":\"%s\",\"endpointLabel\":\"%s\",\"pid\":%lu,\"exe\":\"%s\",\"rootPid\":%lu,\"rootExe\":\"%s\",\"active\":%s,\"shared\":%s,\"peak\":%s,\"system\":%s}",
+            i ? "," : "", JsonEscape(r.endpointId).c_str(), JsonEscape(r.endpointLabel).c_str(),
+            (unsigned long)r.pid, JsonEscape(r.exe).c_str(), (unsigned long)r.rootPid, JsonEscape(r.rootExe).c_str(),
+            r.active ? "true" : "false", r.sharedKnown ? (r.shared ? "true" : "false") : "null",
+            r.peakKnown ? std::to_string(r.peak).c_str() : "null", r.system ? "true" : "false");
+    }
+    printf("]"); fflush(stdout);
+    for (auto& row : rows) if (row.meter) row.meter->Release();
+    devices->Release(); en->Release(); return 0;
+}
+
 // PKEY_AudioEndpoint_FormFactor lives in mmdeviceapi.h, which is included above
 // without initguid.h, so that header only declares the key. The fmtid and pid
 // are the documented ones.
@@ -457,6 +550,23 @@ static bool ReadUIntProp(IPropertyStore* props, const PROPERTYKEY& key, unsigned
     }
     PropVariantClear(&v);
     return ok;
+}
+
+// Keep endpoint capture fail-closed. IMMDevice lists software and virtual
+// endpoints alongside hardware; only known physical bus enumerators qualify.
+static bool IsPhysicalEndpoint(const std::string& enumerator, const std::string& label, const std::string& id) {
+    const std::string known[] = {"HDAUDIO", "INTELAUDIO", "USB", "BTHENUM", "BTHHFENUM", "PCI", "ACPI"};
+    // Intel SoundWire laptop speakers report the exact SOUNDWIRE enumerator.
+    const bool knownBus = _stricmp(enumerator.c_str(), "SOUNDWIRE") == 0 ||
+        std::any_of(std::begin(known), std::end(known), [&](const auto& prefix) {
+            return _strnicmp(enumerator.c_str(), prefix.c_str(), prefix.size()) == 0;
+        });
+    if (!knownBus) return false;
+    std::string identity = enumerator + " " + label + " " + id;
+    std::transform(identity.begin(), identity.end(), identity.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    const char* virtualMarkers[] = {"virtual", "vb-audio", "voicemeeter", "cable input", "cable in"};
+    for (const char* marker : virtualMarkers) if (identity.find(marker) != std::string::npos) return false;
+    return true;
 }
 
 // The physical device behind an endpoint, found the way Chromium's
@@ -558,6 +668,7 @@ static int ListDevices() {
 
         // The browser can only be matched by its label, so build the one it shows.
         const std::string browserLabel = hasLabel ? label + ChromiumLabelSuffix(DeviceInstanceId(dev, en)) : std::string();
+        const bool physical = hasEnumerator && IsPhysicalEndpoint(enumerator, label, idUtf8);
 
         if (!first) out += ",";
         first = false;
@@ -566,6 +677,7 @@ static int ListDevices() {
         out += hasForm ? std::to_string(form) : std::string("null");
         out += ",\"enumerator\":";
         out += hasEnumerator ? "\"" + JsonEscape(enumerator) + "\"" : std::string("null");
+        out += ",\"physical\":" + std::string(physical ? "true" : "false");
         out += "}";
         dev->Release();
     }
@@ -620,6 +732,13 @@ static BOOL WINAPI OnConsoleCtrl(DWORD) {
     return TRUE;
 }
 
+// Check for queued packets even on timeout. An invalidated loopback endpoint
+// can stop signalling its event; the error must reach Electron so it can rebind.
+static bool WaitForCaptureTick(HANDLE ready) {
+    const DWORD wait = WaitForSingleObject(ready, 500);
+    return wait == WAIT_OBJECT_0 || wait == WAIT_TIMEOUT;
+}
+
 static int CaptureClient(IAudioClient* client, HANDLE target) {
     HANDLE ready = nullptr;
     IAudioCaptureClient* cap = nullptr;
@@ -660,12 +779,15 @@ static int CaptureClient(IAudioClient* client, HANDLE target) {
             rc = 1;
             break;
         }
-        if (WaitForSingleObject(ready, 500) != WAIT_OBJECT_0) continue;
+        if (!WaitForCaptureTick(ready)) { EmitError("initialize_failed"); rc = 1; break; }
 
         for (;;) {
             BYTE* data = nullptr;
             UINT32 frames = 0;
             DWORD flags = 0;
+            hr = cap->GetNextPacketSize(&frames);
+            if (FAILED(hr)) { EmitError("initialize_failed"); rc = 1; g_stop = TRUE; break; }
+            if (frames == 0) break;
             hr = cap->GetBuffer(&data, &frames, &flags, nullptr, nullptr);
             if (FAILED(hr)) {
                 // Endpoint changes and driver failures invalidate the stream;
@@ -675,10 +797,7 @@ static int CaptureClient(IAudioClient* client, HANDLE target) {
                 g_stop = TRUE;
                 break;
             }
-            if (hr == AUDCLNT_S_BUFFER_EMPTY || frames == 0) {
-                if (SUCCEEDED(hr) && frames == 0) cap->ReleaseBuffer(0);
-                break;
-            }
+            if (hr == AUDCLNT_S_BUFFER_EMPTY) break;
 
             size_t bytes = static_cast<size_t>(frames) * blockAlign;
             if (flags & AUDCLNT_BUFFERFLAGS_SILENT) {
@@ -706,6 +825,177 @@ cleanup:
     if (started) client->Stop();
     if (cap) cap->Release();
     if (ready) CloseHandle(ready);
+    return rc;
+}
+
+// Endpoint loopback supplies the endpoint mix format. Keep the decoder explicit
+// instead of assuming it matches the format requested by a process-loopback
+// client: endpoint drivers commonly expose float32 or multichannel PCM.
+struct EndpointMixDecoder {
+    UINT32 rate = 0;
+    WORD channels = 0;
+    WORD bits = 0;
+    WORD validBits = 0;
+    bool floatingPoint = false;
+    UINT32 blockAlign = 0;
+    double windowRemaining = 0;
+    double windowSum = 0;
+    double inputPerOutput = 0;
+
+    bool Configure(const WAVEFORMATEX* fmt) {
+        if (!fmt || fmt->nSamplesPerSec == 0 || fmt->nChannels == 0 || fmt->nBlockAlign == 0) return false;
+        rate = fmt->nSamplesPerSec;
+        channels = fmt->nChannels;
+        blockAlign = fmt->nBlockAlign;
+        bits = fmt->wBitsPerSample;
+        validBits = bits;
+        WORD tag = fmt->wFormatTag;
+        if (tag == WAVE_FORMAT_EXTENSIBLE) {
+            if (fmt->cbSize < sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX)) return false;
+            const auto* ext = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(fmt);
+            const GUID& sub = ext->SubFormat;
+            const bool pcm = sub.Data1 == WAVE_FORMAT_PCM && sub.Data2 == 0 && sub.Data3 == 0x0010
+                && sub.Data4[0] == 0x80 && sub.Data4[1] == 0x00 && sub.Data4[2] == 0x00
+                && sub.Data4[3] == 0xaa && sub.Data4[4] == 0x00 && sub.Data4[5] == 0x38
+                && sub.Data4[6] == 0x9b && sub.Data4[7] == 0x71;
+            const bool ieee = sub.Data1 == WAVE_FORMAT_IEEE_FLOAT && sub.Data2 == 0 && sub.Data3 == 0x0010
+                && sub.Data4[0] == 0x80 && sub.Data4[1] == 0x00 && sub.Data4[2] == 0x00
+                && sub.Data4[3] == 0xaa && sub.Data4[4] == 0x00 && sub.Data4[5] == 0x38
+                && sub.Data4[6] == 0x9b && sub.Data4[7] == 0x71;
+            if (!pcm && !ieee) return false;
+            floatingPoint = ieee;
+            validBits = ext->Samples.wValidBitsPerSample;
+            if (validBits == 0) validBits = bits;
+        } else if (tag == WAVE_FORMAT_IEEE_FLOAT) {
+            floatingPoint = true;
+        } else if (tag != WAVE_FORMAT_PCM) {
+            return false;
+        }
+        if (floatingPoint) {
+            if (bits != 32) return false;
+        } else if ((bits != 16 && bits != 24 && bits != 32) || validBits == 0 || validBits > bits) {
+            return false;
+        }
+        const UINT32 bytesPerSample = (bits + 7) / 8;
+        if (blockAlign < static_cast<UINT32>(channels) * bytesPerSample) return false;
+        inputPerOutput = static_cast<double>(rate) / static_cast<double>(kSampleRate);
+        windowRemaining = inputPerOutput;
+        return inputPerOutput > 0;
+    }
+
+    double DecodeSample(const BYTE* p) const {
+        if (floatingPoint) {
+            float value = 0;
+            memcpy(&value, p, sizeof(value));
+            return std::isfinite(value) ? std::max(-1.0, std::min(1.0, static_cast<double>(value))) : 0.0;
+        }
+        int64_t value = 0;
+        if (bits == 16) {
+            int16_t v = 0; memcpy(&v, p, sizeof(v)); value = v;
+        } else if (bits == 24) {
+            value = static_cast<int32_t>(static_cast<uint32_t>(p[0])
+                | (static_cast<uint32_t>(p[1]) << 8) | (static_cast<uint32_t>(p[2]) << 16));
+            if (value & 0x800000) value |= ~static_cast<int64_t>(0xFFFFFF);
+        } else {
+            int32_t v = 0; memcpy(&v, p, sizeof(v)); value = v;
+        }
+        const WORD shift = bits - validBits;
+        if (shift) value >>= shift;
+        return static_cast<double>(value) / std::ldexp(1.0, validBits - 1);
+    }
+
+    void Convert(const BYTE* data, UINT32 frames, bool silent, std::vector<int16_t>* out) {
+        const UINT32 bytesPerSample = (bits + 7) / 8;
+        for (UINT32 frame = 0; frame < frames; ++frame) {
+            double mono = 0;
+            if (!silent) {
+                const BYTE* base = data + static_cast<size_t>(frame) * blockAlign;
+                for (WORD channel = 0; channel < channels; ++channel) {
+                    mono += DecodeSample(base + static_cast<size_t>(channel) * bytesPerSample);
+                }
+                mono /= channels;
+            }
+
+            // Stateful box resampling. Each input frame spans one source-rate
+            // unit; output windows span rate/24000 units, and partial windows
+            // carry across WASAPI buffers. For downsampling this averages each
+            // covered interval, reducing aliasing without external libraries.
+            double frameRemaining = 1.0;
+            while (frameRemaining > 1e-12) {
+                const double take = std::min(frameRemaining, windowRemaining);
+                windowSum += mono * take;
+                frameRemaining -= take;
+                windowRemaining -= take;
+                if (windowRemaining <= 1e-12) {
+                    const double normalized = std::max(-1.0, std::min(1.0, windowSum / inputPerOutput));
+                    const double scaled = normalized < 0 ? normalized * 32768.0 : normalized * 32767.0;
+                    out->push_back(static_cast<int16_t>(std::lrint(scaled)));
+                    windowSum = 0;
+                    windowRemaining = inputPerOutput;
+                }
+            }
+        }
+    }
+};
+
+static int CaptureEndpointClient(IAudioClient* client) {
+    HANDLE ready = nullptr;
+    IAudioCaptureClient* cap = nullptr;
+    WAVEFORMATEX* mixFormat = nullptr;
+    bool started = false;
+    int rc = 1;
+    EndpointMixDecoder decoder;
+
+    HRESULT hr = client->GetMixFormat(&mixFormat);
+    if (FAILED(hr) || !mixFormat || !decoder.Configure(mixFormat)) {
+        EmitError("unsupported_mix_format");
+        goto cleanup;
+    }
+    hr = client->Initialize(AUDCLNT_SHAREMODE_SHARED,
+        AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+        0, 0, mixFormat, nullptr);
+    if (FAILED(hr)) { EmitError("initialize_failed"); goto cleanup; }
+
+    ready = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    if (!ready || FAILED(client->SetEventHandle(ready))) { EmitError("initialize_failed"); goto cleanup; }
+    if (FAILED(client->GetService(__uuidof(IAudioCaptureClient), (void**)&cap))) {
+        EmitError("initialize_failed"); goto cleanup;
+    }
+    if (FAILED(client->Start())) { EmitError("initialize_failed"); goto cleanup; }
+    started = true;
+    rc = 0;
+    EmitEvent("{\"event\":\"format\",\"sampleRate\":24000,\"channels\":1,\"encoding\":\"s16le\"}");
+
+    while (!g_stop) {
+        if (!WaitForCaptureTick(ready)) { EmitError("initialize_failed"); rc = 1; break; }
+        for (;;) {
+            BYTE* data = nullptr;
+            UINT32 frames = 0;
+            DWORD flags = 0;
+            hr = cap->GetNextPacketSize(&frames);
+            if (FAILED(hr)) { EmitError("initialize_failed"); rc = 1; g_stop = TRUE; break; }
+            if (frames == 0) break;
+            hr = cap->GetBuffer(&data, &frames, &flags, nullptr, nullptr);
+            if (FAILED(hr)) {
+                EmitError("initialize_failed"); rc = 1; g_stop = TRUE; break;
+            }
+            if (hr == AUDCLNT_S_BUFFER_EMPTY) break;
+            std::vector<int16_t> pcm;
+            pcm.reserve(static_cast<size_t>(frames) * kSampleRate / decoder.rate + 2);
+            decoder.Convert(data, frames, (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0, &pcm);
+            cap->ReleaseBuffer(frames);
+            if (!pcm.empty()) {
+                fwrite(pcm.data(), sizeof(int16_t), pcm.size(), stdout);
+                if (fflush(stdout) != 0) { g_stop = TRUE; break; }
+            }
+        }
+    }
+
+cleanup:
+    if (started) client->Stop();
+    if (cap) cap->Release();
+    if (ready) CloseHandle(ready);
+    if (mixFormat) CoTaskMemFree(mixFormat);
     return rc;
 }
 
@@ -768,6 +1058,61 @@ static int CaptureSystem() {
     return rc;
 }
 
+static int CaptureEndpoint(const wchar_t* id) {
+    IMMDeviceEnumerator* en = nullptr;
+    IMMDevice* endpoint = nullptr;
+    IAudioClient* client = nullptr;
+    HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                                  __uuidof(IMMDeviceEnumerator), (void**)&en);
+    if (SUCCEEDED(hr)) hr = en->GetDevice(id, &endpoint);
+    if (FAILED(hr) || !endpoint) {
+        EmitError("endpoint_not_found");
+        if (en) en->Release();
+        return 1;
+    }
+
+    DWORD state = 0;
+    IMMEndpoint* endpointInfo = nullptr;
+    hr = endpoint->GetState(&state);
+    if (SUCCEEDED(hr)) hr = endpoint->QueryInterface(__uuidof(IMMEndpoint), (void**)&endpointInfo);
+    EDataFlow flow = eAll;
+    if (SUCCEEDED(hr)) hr = endpointInfo->GetDataFlow(&flow);
+    if (endpointInfo) endpointInfo->Release();
+    if (FAILED(hr) || state != DEVICE_STATE_ACTIVE || flow != eRender) {
+        EmitError(state != DEVICE_STATE_ACTIVE ? "endpoint_not_active" : "endpoint_not_render");
+        endpoint->Release(); en->Release(); return 1;
+    }
+
+    std::string enumerator;
+    IPropertyStore* props = nullptr;
+    std::string label, endpointId;
+    LPWSTR endpointIdWide = nullptr;
+    if (SUCCEEDED(endpoint->GetId(&endpointIdWide)) && endpointIdWide) {
+        endpointId = Utf8(endpointIdWide);
+        CoTaskMemFree(endpointIdWide);
+    }
+    const bool hasProps = SUCCEEDED(endpoint->OpenPropertyStore(STGM_READ, &props));
+    bool hasEnumerator = false;
+    if (hasProps) {
+        hasEnumerator = ReadStringProp(props, PKEY_Device_EnumeratorName, &enumerator);
+        ReadStringProp(props, PKEY_Device_FriendlyName, &label);
+    }
+    if (props) props->Release();
+    if (!hasEnumerator || !IsPhysicalEndpoint(enumerator, label, endpointId)) {
+        EmitError("endpoint_unsupported");
+        endpoint->Release(); en->Release(); return 1;
+    }
+
+    hr = endpoint->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, (void**)&client);
+    int rc = 1;
+    if (FAILED(hr) || !client) EmitError("activation_failed");
+    else rc = CaptureEndpointClient(client);
+    if (client) client->Release();
+    endpoint->Release();
+    en->Release();
+    return rc;
+}
+
 // --------------------------------------------------------------------- main
 
 static void Usage() {
@@ -775,7 +1120,8 @@ static void Usage() {
         "usage:\n"
         "  sokuji-audio-host.exe --list\n"
         "  sokuji-audio-host.exe --devices\n"
-        "  sokuji-audio-host.exe --target pid:<processId>|system\n");
+        "  sokuji-audio-host.exe --sessions\n"
+        "  sokuji-audio-host.exe --target pid:<processId>|system|endpoint:<IMMDevice id>\n");
 }
 
 int wmain(int argc, wchar_t** argv) {
@@ -793,10 +1139,14 @@ int wmain(int argc, wchar_t** argv) {
         rc = ListSources();
     } else if (wcscmp(argv[1], L"--devices") == 0) {
         rc = ListDevices();
+    } else if (wcscmp(argv[1], L"--sessions") == 0) {
+        rc = ListRenderSessions();
     } else if (wcscmp(argv[1], L"--target") == 0 && argc >= 3) {
         SetConsoleCtrlHandler(OnConsoleCtrl, TRUE);
         if (wcscmp(argv[2], L"system") == 0) {
             rc = CaptureSystem();
+        } else if (wcsncmp(argv[2], L"endpoint:", 9) == 0 && argv[2][9] != L'\0') {
+            rc = CaptureEndpoint(argv[2] + 9);
         } else if (wcsncmp(argv[2], L"pid:", 4) != 0) { EmitError("bad_target"); rc = 2; }
         else {
             DWORD pid = static_cast<DWORD>(_wtoi(argv[2] + 4));

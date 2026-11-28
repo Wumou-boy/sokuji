@@ -1,15 +1,15 @@
-import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { settleReports } from '../../diagnostics/report';
 import { SourceOpenError } from '../../session/source';
 import useLogStore from '../../../stores/logStore';
 import { TRACK_ENDED } from './core';
 import {
-  APP_CAPTURE_LOST, APP_MONITOR_MISSING, AUTO_MEETING_SOURCE, LOOPBACK_DENIED, LOOPBACK_MEETING_OUTPUT, SILENT_NO_PERMISSION, electronSystemAudio, openSystemAudio,
+  APP_CAPTURE_LOST, APP_MONITOR_MISSING, LOOPBACK_DENIED, LOOPBACK_ENDPOINT_UNAVAILABLE, LOOPBACK_MEETING_OUTPUT, SILENT_NO_PERMISSION, electronSystemAudio, openSystemAudio,
   type ParticipantCapture, type SystemAudioDeps, type SystemAudioSettings,
 } from './systemAudio';
 
 /** A participant recorder that records its calls; `push` delivers a chunk while it records. */
-function fakeCapture(o: { begins?: boolean; started?: Promise<boolean>; stream?: MediaStream; failure?: unknown } = {}) {
+function fakeCapture(o: { begins?: boolean; started?: Promise<boolean>; ending?: Promise<void>; stream?: MediaStream; failure?: unknown } = {}) {
   let callback: ((data: { mono: Int16Array }) => void) | null = null;
   const capture = {
     begun: [] as Array<{ deviceId?: string } | undefined>,
@@ -30,6 +30,7 @@ function fakeCapture(o: { begins?: boolean; started?: Promise<boolean>; stream?:
       capture.ended += 1;
       // A helper killed by its own teardown reports an exit; `onLost` must be detached by now.
       capture.onLost?.();
+      await o.ending;
       callback = null;
     },
     getStream: () => o.stream ?? null,
@@ -40,12 +41,12 @@ function fakeCapture(o: { begins?: boolean; started?: Promise<boolean>; stream?:
 
 function setup(o: {
   answer?: unknown;
-  resolution?: unknown;
   devices?: Array<{ kind: string; label: string; deviceId: string; groupId?: string }>;
   app?: ReturnType<typeof fakeCapture>;
   device?: ReturnType<typeof fakeCapture>;
   loopback?: ReturnType<typeof fakeCapture>;
   nativeLoopback?: ReturnType<typeof fakeCapture>;
+  enumerateDevices?: SystemAudioDeps['enumerateDevices'];
   sourceId?: string;
   screenRecording?: string;
 } = {}) {
@@ -61,10 +62,9 @@ function setup(o: {
     invoke: async (channel, data) => {
       invoked.push([channel, data]);
       if (channel === 'connect-system-audio-source') return answers.length > 1 ? answers.shift() : answers[0];
-      if (channel === 'resolve-auto-system-audio-source') return typeof o.resolution === 'function' ? o.resolution() : o.resolution ?? { success: false };
       return { success: true };
     },
-    enumerateDevices: async () => (o.devices ?? []) as MediaDeviceInfo[],
+    enumerateDevices: o.enumerateDevices ?? (async () => (o.devices ?? []) as MediaDeviceInfo[]),
     wait,
     app: () => app,
     device: () => device,
@@ -82,7 +82,6 @@ function setup(o: {
   const listeners = new Set<() => void>();
   const audioSeen = vi.fn();
   const widened = vi.fn();
-  const autoResolved = vi.fn();
   const settings: SystemAudioSettings = {
     sourceId: () => current.sourceId,
     muted: () => current.muted,
@@ -92,95 +91,48 @@ function setup(o: {
     },
     audioSeen,
     widened,
-    autoResolved,
   };
   const set = (patch: Partial<typeof current>) => {
     current = { ...current, ...patch };
     for (const listener of listeners) listener();
   };
-  return { deps, settings, set, invoked, app, device, loopback, wait, audioSeen, widened, autoResolved, screenRecording, appQuit, appLostListeners };
+  return { deps, settings, set, invoked, app, device, loopback, wait, audioSeen, widened, screenRecording, appQuit, appLostListeners };
 }
 
 const settle = async () => {
   for (let i = 0; i < 8; i++) await new Promise((resolve) => setTimeout(resolve, 0));
 };
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
 const live = () => new AbortController().signal;
 
-describe('automatic meeting audio', () => {
-  const zoom = { deviceId: 'app:pid:42', label: 'Zoom', appKey: 'Zoom.exe' };
-  const teams = { deviceId: 'app:pid:43', label: 'Teams', appKey: 'ms-teams.exe' };
-  const scan = ['resolve-auto-system-audio-source', undefined];
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
-
-  it('opens silently, then attaches when a later scan hears a meeting app', async () => {
-    const resolution = vi.fn()
-      .mockResolvedValueOnce({ success: false })
-      .mockResolvedValueOnce({ success: false })
-      .mockResolvedValue({ success: true, source: zoom });
-    const s = setup({ sourceId: AUTO_MEETING_SOURCE, answer: { success: true, capture: 'app' }, resolution });
+describe('dedicated meeting audio cable', () => {
+  it('opens the additional cable as a local input without widening', async () => {
+    const s = setup({ sourceId: 'cable:teams', nativeLoopback: fakeCapture(), devices: [
+      { kind: 'audioinput', label: 'CABLE-A Output (VB-Audio Cable A)', deviceId: 'teams' },
+    ] });
     const source = await openSystemAudio(s.settings, live(), s.deps);
-    const heard = vi.fn();
-    const ended = vi.fn();
-    source.onPcm(heard);
-    source.onEnded(ended);
-    await vi.advanceTimersByTimeAsync(1_500);
-    expect(s.invoked).toEqual([scan, scan]);
-    expect(ended).not.toHaveBeenCalled();
-    expect(s.app.begun).toHaveLength(0);
-    expect(s.autoResolved).toHaveBeenLastCalledWith(null);
-
-    await vi.advanceTimersByTimeAsync(1_500);
-    expect(s.app.begun).toEqual([{ deviceId: zoom.deviceId }]);
-    expect(s.autoResolved).toHaveBeenLastCalledWith(zoom);
-    s.app.push();
-    expect(heard).toHaveBeenCalledOnce();
-    await vi.advanceTimersByTimeAsync(4_500);
-    expect(resolution).toHaveBeenCalledTimes(3);
-
+    expect(s.device.begun).toEqual([{ deviceId: 'teams' }]);
+    expect(s.invoked).toEqual([]);
+    expect(s.appLostListeners.size).toBe(0);
     await source.stop();
-    expect(s.autoResolved).toHaveBeenLastCalledWith(null);
-    expect(s.loopback.begun).toHaveLength(0);
+    expect(s.device.ended).toBe(1);
+    expect(s.loopback.begun).toEqual([]);
   });
 
-  it('returns to waiting when the chosen app exits and attaches to a later app', async () => {
-    const resolution = vi.fn()
-      .mockResolvedValueOnce({ success: true, source: zoom })
-      .mockResolvedValueOnce({ success: false })
-      .mockResolvedValue({ success: true, source: teams });
-    const s = setup({ sourceId: AUTO_MEETING_SOURCE, answer: { success: true, capture: 'app' }, resolution });
-    const source = await openSystemAudio(s.settings, live(), s.deps);
-    const ended = vi.fn();
-    source.onEnded(ended);
-    await vi.advanceTimersByTimeAsync(0);
-    s.app.onLost?.();
-    await vi.advanceTimersByTimeAsync(1);
-    expect(s.autoResolved).toHaveBeenLastCalledWith(null);
-    await vi.advanceTimersByTimeAsync(1_500);
-    expect(s.app.begun).toEqual([{ deviceId: zoom.deviceId }, { deviceId: teams.deviceId }]);
-    expect(s.autoResolved).toHaveBeenLastCalledWith(teams);
-    expect(s.loopback.begun).toHaveLength(0);
-    expect(ended).not.toHaveBeenCalled();
-    await source.stop();
-  });
-
-  it('cancels search when stopped and ignores a probe overtaken by a manual choice', async () => {
-    let resolveProbe: (result: unknown) => void = () => {};
-    const resolution = vi.fn(() => new Promise((resolve) => { resolveProbe = resolve; }));
-    const s = setup({ sourceId: AUTO_MEETING_SOURCE, resolution });
-    const source = await openSystemAudio(s.settings, live(), s.deps);
-    await vi.advanceTimersByTimeAsync(0);
-    s.set({ sourceId: 'desktop-audio-loopback' });
-    resolveProbe({ success: true, source: zoom });
-    await vi.advanceTimersByTimeAsync(1_500);
-    expect(resolution).toHaveBeenCalledOnce();
-    expect(s.app.begun).toHaveLength(0);
-    expect(s.loopback.begun).toHaveLength(1);
-    s.set({ sourceId: AUTO_MEETING_SOURCE });
-    await source.stop();
-    await vi.advanceTimersByTimeAsync(10_000);
-    expect(resolution).toHaveBeenCalledOnce();
+  it('refuses the standard outgoing cable as a dedicated incoming input', async () => {
+    const s = setup({ sourceId: 'cable:outgoing', nativeLoopback: fakeCapture(), devices: [
+      { kind: 'audioinput', label: 'CABLE Output (VB-Audio Virtual Cable)', deviceId: 'outgoing' },
+    ] });
+    await expect(openSystemAudio(s.settings, live(), s.deps)).rejects.toThrow('meeting audio cable is unavailable');
+    expect(s.device.begun).toEqual([]);
+    expect(s.loopback.begun).toEqual([]);
   });
 });
 
@@ -189,20 +141,6 @@ describe('openSystemAudio — opening', () => {
     { kind: 'audiooutput', label: 'Default - CABLE Input', deviceId: 'default', groupId: 'same-endpoint' },
     { kind: 'audiooutput', label: 'CABLE Input', deviceId: 'send-to-meeting', groupId: 'same-endpoint' },
   ];
-
-  it('keeps Auto closed if the connected source does not affirm app-scoped capture', async () => {
-    const s = setup({
-      sourceId: 'auto-meeting-audio',
-      resolution: { success: true, source: { deviceId: 'app:pid:42', label: 'Zoom', appKey: 'Zoom.exe' } },
-      answer: { success: true, capture: 'system' },
-    });
-    const source = await openSystemAudio(s.settings, live(), s.deps);
-    await vi.waitFor(() => expect(s.invoked).toContainEqual(['connect-system-audio-source', 'app:pid:42']));
-    await source.stop();
-    expect(s.invoked).toContainEqual(['connect-system-audio-source', 'app:pid:42']);
-    expect(s.loopback.begun).toHaveLength(0);
-    expect(s.autoResolved).toHaveBeenLastCalledWith(null);
-  });
 
   it('blocks Windows system capture if it would capture the same endpoint as the outgoing translation', async () => {
     const s = setup({ devices: cableDefault, nativeLoopback: fakeCapture() });
@@ -254,6 +192,33 @@ describe('openSystemAudio — opening', () => {
     expect(heard).toHaveBeenCalledOnce();
     await source.stop();
     expect(nativeLoopback.ended).toBe(1);
+  });
+
+  it('opens the chosen Windows playback endpoint and closes that source when it is lost', async () => {
+    const endpoint = 'endpoint:{0.0.0.00000000}.{00000000-0000-0000-0000-000000000018}';
+    const nativeLoopback = fakeCapture();
+    const s = setup({ sourceId: endpoint, answer: { success: true, capture: 'endpoint' }, nativeLoopback, devices: cableDefault });
+    const captureStarted = vi.fn();
+    const source = await openSystemAudio({ ...s.settings, captureStarted, meetingOutput: () => 'send-to-meeting' }, live(), s.deps);
+    const heard = vi.fn();
+    const ended = vi.fn();
+    source.onPcm(heard);
+    source.onEnded(ended);
+    nativeLoopback.push(new Int16Array([10, 20]));
+    expect(nativeLoopback.begun).toEqual([{ deviceId: endpoint }]);
+    expect(captureStarted).toHaveBeenCalledWith('endpoint');
+    expect(heard).toHaveBeenCalledWith(new Int16Array([10, 20]));
+    nativeLoopback.onLost?.();
+    expect(ended).toHaveBeenCalledWith(expect.stringContaining('Windows playback device'));
+    expect(s.loopback.begun).toHaveLength(0);
+    expect(s.widened).not.toHaveBeenCalledWith(true);
+    await source.stop();
+  });
+
+  it('rejects an unrecognized playback endpoint without opening the system mix', async () => {
+    const s = setup({ sourceId: 'endpoint:stale', nativeLoopback: fakeCapture() });
+    await expect(openSystemAudio(s.settings, live(), s.deps)).rejects.toMatchObject({ code: LOOPBACK_ENDPOINT_UNAVAILABLE });
+    expect(s.loopback.begun).toHaveLength(0);
   });
 
   it('keeps the chosen application scope when a capture cannot open', async () => {
@@ -442,6 +407,30 @@ describe('openSystemAudio — running', () => {
     expect(s.loopback.begun).toEqual([undefined]);
   });
 
+  it('does not start a stale whole-system fallback when the app source changes during teardown', async () => {
+    const endRecorder = deferred<void>();
+    const app = fakeCapture({ ending: endRecorder.promise });
+    const s = setup({ sourceId: 'app:old', answer: [
+      { success: true, capture: 'app' },
+      { success: true, capture: 'app' },
+    ], app });
+    const source = await openSystemAudio(s.settings, live(), s.deps);
+    const degraded = vi.fn();
+    source.onDegraded(degraded);
+
+    app.onLost?.();
+    await vi.waitFor(() => expect(app.ended).toBe(1));
+    s.set({ sourceId: 'app:new' });
+    expect(s.widened).toHaveBeenLastCalledWith(false);
+    endRecorder.resolve();
+    await settle();
+
+    expect(s.loopback.begun).toHaveLength(0);
+    expect(app.begun).toEqual([{ deviceId: 'app:old' }, { deviceId: 'app:new' }]);
+    expect(degraded).not.toHaveBeenCalled();
+    await source.stop();
+  });
+
   it('falls back to whole-system capture, visibly, when the application a PipeWire tap follows quits (#617)', async () => {
     const s = setup({
       sourceId: 'app:pid:7',
@@ -552,6 +541,63 @@ describe('openSystemAudio — running', () => {
       'connect-system-audio-source:app:9',
     ]);
     expect(s.app.begun).toEqual([{ deviceId: 'app:9' }]);
+  });
+
+  it('does not let an obsolete app monitor lookup widen a newer manual source', async () => {
+    const monitorLookup = deferred<MediaDeviceInfo[]>();
+    const monitorLookupStarted = deferred<void>();
+    const s = setup({
+      answer: [
+        { success: true, capture: 'system' },
+        { success: true, capture: 'system', monitorLabel: 'Old app tap' },
+        { success: true, capture: 'app' },
+      ],
+      enumerateDevices: async () => {
+        monitorLookupStarted.resolve();
+        return monitorLookup.promise;
+      },
+    });
+    const source = await openSystemAudio(s.settings, live(), s.deps);
+
+    s.set({ sourceId: 'app:old' });
+    await vi.waitFor(() => expect(s.invoked).toContainEqual(['connect-system-audio-source', 'app:old']));
+    await monitorLookupStarted.promise;
+    s.set({ sourceId: 'app:new' });
+    monitorLookup.resolve([]);
+    await settle();
+
+    expect(s.widened).not.toHaveBeenCalledWith(true);
+    expect(s.app.begun).toEqual([{ deviceId: 'app:new' }]);
+    await source.stop();
+  });
+
+  it('ignores a rejected connect for a source superseded while its IPC was pending', async () => {
+    const pendingConnect = deferred<unknown>();
+    const s = setup({ answer: [
+      { success: true, capture: 'system' },
+      { success: true, capture: 'app' },
+    ] });
+    const invoke = s.deps.invoke;
+    s.deps.invoke = async (channel, data) => {
+      if (channel === 'connect-system-audio-source' && data === 'app:slow') {
+        s.invoked.push([channel, data]);
+        return pendingConnect.promise;
+      }
+      return invoke(channel, data);
+    };
+    const source = await openSystemAudio(s.settings, live(), s.deps);
+    const ended = vi.fn();
+    source.onEnded(ended);
+
+    s.set({ sourceId: 'app:slow' });
+    await vi.waitFor(() => expect(s.invoked).toContainEqual(['connect-system-audio-source', 'app:slow']));
+    s.set({ sourceId: 'app:next' });
+    pendingConnect.reject(new Error('obsolete source failed'));
+    await settle();
+
+    expect(ended).not.toHaveBeenCalled();
+    expect(s.app.begun).toEqual([{ deviceId: 'app:next' }]);
+    await source.stop();
   });
 
   it('ignores a helper death from a recorder a queued switch has already replaced, and raises no APP_CAPTURE_LOST', async () => {

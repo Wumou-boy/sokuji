@@ -22,6 +22,12 @@ export interface Edge {
   gain: number;
 }
 
+export type PlaybackSinks = Record<OutletName, OutletSink> & {
+  virtual?: string;
+  /** A listed meeting cable may be the OS default. Bind local outlets before sending any samples. */
+  requireLocalDevice?: boolean;
+};
+
 export interface RoutingSettings {
   /** Speaker translation → the virtual device: the meeting hears it. On by default (a dev switch). */
   meeting: boolean;
@@ -37,7 +43,7 @@ export interface RoutingSettings {
    */
   passthrough: { on: boolean; ratio: number; gate?: 'idle' | 'held' };
   /** The virtual speaker where one exists (Electron), and each outlet resolved. */
-  sinks: { virtual?: string } & Record<OutletName, OutletSink>;
+  sinks: PlaybackSinks;
 }
 
 /** Every live edge the settings ask for. `held`: a manual turn's key is down, which the passthrough's `gate` reads. */

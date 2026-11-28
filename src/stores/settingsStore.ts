@@ -85,6 +85,8 @@ export interface CommonSettings {
   uiMode: 'basic' | 'advanced';
   /** Appearance: follow the OS, or light or dark (spec 2026-10-22 §4). */
   theme: ThemeSetting;
+  /** Use the local speaker model when the active audio provider supports it. */
+  localSpeakerRecognition: boolean;
   textOnly: boolean;
   keepReplayAudio: boolean;
   autoSaveOnStop: boolean;
@@ -202,6 +204,7 @@ const defaultCommonSettings: CommonSettings = {
   keepReplayAudio: false,
   autoSaveOnStop: false,
   diagnosticLogs: false,
+  localSpeakerRecognition: false,
   notesAfterSession: false,
   notesModel: DEFAULT_NOTES_MODEL,
   notesBailianModel: DEFAULT_NOTES_BAILIAN_MODEL,
@@ -289,6 +292,7 @@ export interface SettingsStore {
   // Diagnostic logs (Help). Opt-in: while off, logStore records nothing and
   // the title bar offers no logs button.
   diagnosticLogs: boolean;
+  localSpeakerRecognition: boolean;
   /** Appearance: follow the OS, or light or dark (spec 2026-10-22 §4). */
   theme: ThemeSetting;
 
@@ -334,6 +338,7 @@ export interface SettingsStore {
   setLiveNotes: (on: boolean) => Promise<void>;
   setLiveNotesExplained: (explained: boolean) => Promise<void>;
   setDiagnosticLogs: (diagnosticLogs: boolean) => Promise<void>;
+  setLocalSpeakerRecognition: (enabled: boolean) => Promise<void>;
   setTheme: (theme: ThemeSetting) => Promise<void>;
   setSegmentationMode: (mode: SegmentationMode) => Promise<void>;
   setSentenceSegmentationChunkSentences: (n: number) => Promise<void>;
@@ -581,6 +586,15 @@ const useSettingsStore = create<SettingsStore>()(
       }
     },
 
+    setLocalSpeakerRecognition: async (localSpeakerRecognition) => {
+      const previous = get().localSpeakerRecognition;
+      set({ localSpeakerRecognition });
+      if (!await persistSetting('settings.common.localSpeakerRecognition', localSpeakerRecognition)
+        && get().localSpeakerRecognition === localSpeakerRecognition) {
+        set({ localSpeakerRecognition: previous });
+      }
+    },
+
     setTheme: async (theme) => {
       const previous = get().theme;
       set({theme});
@@ -783,6 +797,7 @@ const useSettingsStore = create<SettingsStore>()(
         // off, which is the default.
         const diagnosticLogs = await service.getSetting('settings.common.diagnosticLogs', defaultCommonSettings.diagnosticLogs);
         useLogStore.getState().setEnabled(diagnosticLogs);
+        const localSpeakerRecognition = await service.getSetting('settings.common.localSpeakerRecognition', defaultCommonSettings.localSpeakerRecognition) === true;
 
         // Load common settings
         const provider = await service.getSetting('settings.common.provider', defaultCommonSettings.provider);
@@ -857,6 +872,7 @@ const useSettingsStore = create<SettingsStore>()(
           liveNotes,
           liveNotesExplained,
           diagnosticLogs,
+          localSpeakerRecognition,
           segmentationMode,
           sentenceSegmentationChunkSentences,
           segmentationSourcePause,
@@ -986,6 +1002,8 @@ export const useKeepReplayAudio = () => useSettingsStore((state) => state.keepRe
 export const useAutoSaveOnStop = () => useSettingsStore((state) => state.autoSaveOnStop);
 export const useDiagnosticLogs = () => useSettingsStore((state) => state.diagnosticLogs);
 export const useSetDiagnosticLogs = () => useSettingsStore((state) => state.setDiagnosticLogs);
+export const useLocalSpeakerRecognition = () => useSettingsStore((state) => state.localSpeakerRecognition);
+export const useSetLocalSpeakerRecognition = () => useSettingsStore((state) => state.setLocalSpeakerRecognition);
 export const useThemeSetting = () => useSettingsStore((state) => state.theme);
 export const useSetThemeSetting = () => useSettingsStore((state) => state.setTheme);
 export const useSegmentationMode = () => useSettingsStore((state) => state.segmentationMode);

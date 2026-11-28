@@ -387,7 +387,11 @@ function parseWinDevices(text) {
       // A virtual device's form factor describes no hardware (VB-CABLE says Speakers).
       let formFactor = 'unknown';
       if (transport !== 'virtual') {
-        if (form === WIN_FORM_SPEAKERS) formFactor = 'speakers';
+        // Some headset drivers expose the game output as Speakers (including Sony INZONE H9/H7).
+        if ((transport === 'usb' || transport === 'bluetooth') &&
+            /(?:\bhead(?:phones?|set)\b|\bear(?:phones?|buds?)\b|\bINZONE H[3579]\b|耳机|耳機|ヘッドホン|ヘッドセット|イヤホン)/i.test(r.label || '')) {
+          formFactor = 'headphones';
+        } else if (form === WIN_FORM_SPEAKERS) formFactor = 'speakers';
         else if (WIN_FORM_HEADPHONES.has(form)) formFactor = 'headphones';
       }
       return {

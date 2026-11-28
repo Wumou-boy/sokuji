@@ -12,9 +12,16 @@ vi.mock('../../services/ServiceFactory', () => ({
   },
 }));
 
-const opened = vi.hoisted(() => ({ calls: [] as string[], sources: [] as FakeSource[] }));
-vi.mock('./capture/mic', () => ({ openMic: vi.fn(async () => { opened.calls.push('mic'); return opened.sources[opened.sources.length - 1]; }) }));
-vi.mock('./capture/systemAudio', () => ({ openSystemAudio: vi.fn(async () => { opened.calls.push('system'); return opened.sources[opened.sources.length - 1]; }) }));
+const opened = vi.hoisted(() => ({ calls: [] as string[], sources: [] as FakeSource[], overrides: [] as FakeSource[] }));
+vi.mock('./capture/mic', () => ({ openMic: vi.fn(async (settings) => {
+  opened.calls.push('mic');
+  settings.captureStarted?.(settings.echoCancellation(), false);
+  return opened.overrides.shift() ?? opened.sources[opened.sources.length - 1];
+}) }));
+vi.mock('./capture/systemAudio', () => ({ openSystemAudio: vi.fn(async () => {
+  opened.calls.push('system');
+  return opened.overrides.shift() ?? opened.sources[opened.sources.length - 1];
+}) }));
 vi.mock('./capture/tab', () => ({ openTab: vi.fn(async () => { opened.calls.push('tab'); return opened.sources[opened.sources.length - 1]; }) }));
 
 const watch = vi.hoisted(() => ({ attached: [] as string[], detached: [] as string[] }));
@@ -43,39 +50,38 @@ const live = () => new AbortController().signal;
 beforeEach(() => {
   opened.calls = [];
   opened.sources = [createFakeSource(clock, { voiced: true })];
+  opened.overrides = [];
   watch.attached = [];
   watch.detached = [];
 });
 
+function controlledSource() {
+  const pcmListeners = new Set<(pcm: Int16Array) => void>();
+  const endedListeners = new Set<(reason: string) => void>();
+  const degradedListeners = new Set<(notice: never) => void>();
+  let stopped = false;
+  const source: FakeSource = {
+    onPcm(listener) { pcmListeners.add(listener); return () => pcmListeners.delete(listener); },
+    onEnded(listener) { endedListeners.add(listener); return () => endedListeners.delete(listener); },
+    onDegraded(listener) { degradedListeners.add(listener); return () => degradedListeners.delete(listener); },
+    async stop() { stopped = true; },
+    setVoiced() {},
+    end(reason) { for (const listener of endedListeners) listener(reason); },
+    degrade() {},
+    get stopped() { return stopped; },
+  };
+  return { source, emit(pcm: Int16Array) { for (const listener of pcmListeners) listener(pcm); } };
+}
+
+const tone = (frequency: number, amplitude: number) => Int16Array.from(
+  { length: 2_400 },
+  (_, sample) => Math.round(amplitude * Math.sin(2 * Math.PI * frequency * sample / 24_000)),
+);
+const farTone = tone(440, 6_000);
+const nearWhisper = tone(233, 240);
+const overlappingSpeech = Int16Array.from(farTone, (sample, index) => sample + nearWhisper[index]);
+
 describe('createAppCapture', () => {
-  it('uses the other side as an echo reference before the Windows mic feeds translation and passthrough', async () => {
-    const original = useAudioStore.getState();
-    vi.stubGlobal('electron', { osInfo: { platform: 'win32' } });
-    useAudioStore.setState({ mode: 'both', echoCancellationMode: 'all', selectedInputDevice: { deviceId: 'mic', label: 'Laptop Microphone' } });
-    const playback = fakePlayback();
-    const capture = createAppCapture(playback, 'electron');
-    const participant = await capture.openSource('participant', live());
-    opened.sources.push(createFakeSource(clock, { voiced: true }));
-    const speaker = await capture.openSource('speaker', live());
-    const sent = vi.fn();
-    speaker.onPcm(sent);
-    try {
-      clock.advance(100);
-      const reduced = sent.mock.calls[0][0] as Int16Array;
-      expect(reduced.reduce((energy, sample) => energy + sample ** 2, 0)).toBeLessThan(0.1 * synthPcm(100).reduce((energy, sample) => energy + sample ** 2, 0));
-      expect(playback.passthrough).toHaveBeenLastCalledWith(reduced);
-
-      useAudioStore.setState({ echoCancellationMode: 'app' });
-      clock.advance(100);
-      expect(sent).toHaveBeenLastCalledWith(synthPcm(100));
-    } finally {
-      await speaker.stop();
-      await participant.stop();
-      useAudioStore.setState(original, true);
-      vi.unstubAllGlobals();
-    }
-  });
-
   it('opens the microphone for the speaker and feeds its chunks to passthrough', async () => {
     const playback = fakePlayback();
     const capture = createAppCapture(playback, 'electron');
@@ -86,6 +92,32 @@ describe('createAppCapture', () => {
     expect(watch.attached).toEqual(['speaker']);
   });
 
+  it.each([
+    ['quiet near speech', new Int16Array(2_400), new Int16Array(2_400).fill(180)],
+    ['far-end reference identical to the mic', farTone, farTone.slice()],
+    ['overlapping near and far speech', farTone, overlappingSpeech],
+  ])('passes %s through unchanged within the same tick', async (_case, farPcm, micPcm) => {
+    const farEnd = controlledSource();
+    const microphone = controlledSource();
+    opened.overrides.push(farEnd.source, microphone.source);
+    const playback = fakePlayback();
+    const capture = createAppCapture(playback, 'electron');
+    const participant = await capture.openSource('participant', live());
+    const speaker = await capture.openSource('speaker', live());
+    const delivered = vi.fn();
+    speaker.onPcm(delivered);
+
+    farEnd.emit(farPcm);
+    microphone.emit(micPcm);
+
+    expect(delivered).toHaveBeenCalledTimes(1);
+    expect(delivered.mock.calls[0][0]).toBe(micPcm);
+    expect([...delivered.mock.calls[0][0]]).toEqual([...micPcm]);
+    expect(playback.passthrough).toHaveBeenCalledWith(micPcm);
+    await speaker.stop();
+    await participant.stop();
+  });
+
   it("opens the system audio for the participant in Electron and the tab in the extension, and never passes it through", async () => {
     const playback = fakePlayback();
     await createAppCapture(playback, 'electron').openSource('participant', live());
@@ -94,6 +126,27 @@ describe('createAppCapture', () => {
     expect(opened.calls).toEqual(['system', 'tab']);
     expect(playback.passthrough).not.toHaveBeenCalled();
     expect(watch.attached).toEqual(['participant', 'participant']);
+  });
+
+  it('reports participant PCM levels without changing the samples sent onward', async () => {
+    const capture = createAppCapture(fakePlayback(), 'electron', { meterGate: () => false });
+    const participant = await capture.openSource('participant', live());
+    const received = vi.fn();
+    participant.onPcm(received);
+
+    clock.advance(100);
+
+    expect(received).toHaveBeenCalledWith(synthPcm(100));
+    expect(capture.participantPcmRuntime()).toMatchObject({
+      sampleRate: 24_000,
+      threshold: 0.012,
+      totalSamples: 2_400,
+      blocksAtOrAboveThreshold: 1,
+      samplesInThresholdBlocks: 2_400,
+      thresholdBlockDurationMs: 100,
+    });
+    await participant.stop();
+    expect(capture.participantPcmRuntime()).toBeNull();
   });
 
   it('refuses a participant source in the web build', async () => {

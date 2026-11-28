@@ -92,6 +92,14 @@ describe("Qwen LiveTranslate's endpoints", () => {
     });
     expect(openHeaderSocket).not.toHaveBeenCalled();
   });
+
+  it('checks only the chosen QwenCloud region even when the key is refused', async () => {
+    const fetch = vi.fn(async () => refused());
+    const result = await createQwenCheck({ fetch })(K, { ...QWEN_DEFAULTS, connection: 'cn' }, ctx);
+    expect(result).toMatchObject({ ok: false, code: 'auth' });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0]).toEqual([expect.stringContaining('maas.qianwenaiapi.com'), expect.anything()]);
+  });
 });
 
 describe("Qwen LiveTranslate's check (spec §2)", () => {

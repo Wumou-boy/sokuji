@@ -1,7 +1,7 @@
 import type { AdapterEvents, Side } from '../../lib/contract/adapter';
 import type { Clock } from '../../lib/contract/clock';
 import { baseLang } from '../../lib/segmentation/sentenceEnd';
-import { meetingTranscriptLanguage } from '../../lib/language/meetingTranscript';
+import { meetingTranscriptLanguage, multilingualTranscriptLanguage } from '../../lib/language/meetingTranscript';
 import { TranslateSegments } from './segments';
 import type { TranslateConfig } from './config';
 
@@ -17,6 +17,7 @@ export interface CaptionSegmentsOptions {
   sink: AdapterEvents;
   detectParticipantLanguage: boolean;
   targetLanguage: string;
+  sourceLanguageHints?: readonly string[];
   translate: CaptionTranslator;
   onFailure?: () => void;
 }
@@ -72,9 +73,11 @@ export class CaptionSegments {
 
         // Recheck the final text even when source badges are disabled. Short,
         // ambiguous text remains translatable via automatic source detection.
-        const detected = source.language && source.language !== 'und'
-          ? source.language
-          : meetingTranscriptLanguage(text);
+        const detected = this.options.sourceLanguageHints?.length
+          ? multilingualTranscriptLanguage(text, this.options.sourceLanguageHints)
+          : source.language && source.language !== 'und'
+            ? source.language
+            : meetingTranscriptLanguage(text);
         const language = detected === 'und' ? 'auto' : detected;
         if (language !== 'auto' && baseLang(language) === baseLang(this.options.targetLanguage)) return;
 
@@ -89,6 +92,7 @@ export class CaptionSegments {
       silence: options.silence,
       sink: sourceSink,
       detectParticipantLanguage: options.detectParticipantLanguage,
+      sourceLanguageHints: options.sourceLanguageHints,
     });
   }
 

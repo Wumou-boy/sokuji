@@ -15,8 +15,8 @@ import { realClock, type Clock } from '../contract/clock';
 import { describeCause, reportError, reportWarning } from '../diagnostics/report';
 import type { AudioTimeline } from './clipQueue';
 import { createPcmTap, TAP_CHUNK_SAMPLES, type PcmTap } from './pcmTap';
-import { OUTLET_NAMES, type OutletName, type OutletSink } from './outlets';
-import type { Edge, Feed, Outlet } from './routes';
+import { OUTLET_NAMES, type OutletName } from './outlets';
+import type { Edge, Feed, Outlet, PlaybackSinks } from './routes';
 
 /** An output: a context sink for an outlet, an `HTMLAudioElement` for the virtual bus. */
 export interface SinkElement {
@@ -66,7 +66,7 @@ export interface AudioGraph {
   /** Makes the edges exactly these; an edge to a bus this platform lacks is ignored. */
   route(edges: readonly Edge[]): void;
   /** Points each element at its device and gives each outlet its pan; the virtual one stays silent until it has a device. A bus switches one device at a time and ends on the last one asked for; the promise settles once this call's switches have run, and never for a switch that never settles. */
-  setSinks(sinks: { virtual?: string } & Record<OutletName, OutletSink>): Promise<void>;
+  setSinks(sinks: PlaybackSinks): Promise<void>;
   /** The translated speech the graph plays (speaker, participant, replay), before any route: the echo monitor's reference. */
   readonly ttsTap: PcmTap;
   /**
@@ -235,6 +235,7 @@ export async function createAudioGraph(deps: GraphDeps): Promise<AudioGraph> {
   // sets `applied`, or forgets `requested` when it fails.
   const requested: Partial<Record<Outlet, string>> = {};
   const applied: Partial<Record<Outlet, string>> = {};
+  let requireLocalDevice = false;
   // An output that will not start is reported once per failing streak, not once per chunk/resume.
   const playFailing: Partial<Record<Outlet, boolean>> = {};
   const play = (bus: Outlet) => {
@@ -281,7 +282,10 @@ export async function createAudioGraph(deps: GraphDeps): Promise<AudioGraph> {
   const applyRoute = (next: readonly Edge[]) => {
     const { ctx, feeds, buses } = current;
     const wanted = new Map<string, Edge>();
-    for (const edge of next) if (buses[edge.to]) wanted.set(`${edge.from}>${edge.to}`, edge);
+    for (const edge of next) {
+      if (edge.to !== 'virtual' && requireLocalDevice && (!requested[edge.to] || applied[edge.to] !== requested[edge.to])) continue;
+      if (buses[edge.to]) wanted.set(`${edge.from}>${edge.to}`, edge);
+    }
     for (const [id, edge] of edges) {
       if (wanted.has(id)) continue;
       feeds[edge.from].disconnect(edge.node);
@@ -363,6 +367,11 @@ export async function createAudioGraph(deps: GraphDeps): Promise<AudioGraph> {
         // Switch to the newest request again.
         if (overran && closing === null) {
           const newest = requested[bus];
+          if (requireLocalDevice && bus !== 'virtual') {
+            applied[bus] = undefined;
+            applyRoute(lastRoute);
+            if (!newest) return;
+          }
           if (bus === 'virtual') {
             // Never play the meeting's audio on a device it was not asked for (F1).
             applied.virtual = undefined;
@@ -374,6 +383,7 @@ export async function createAudioGraph(deps: GraphDeps): Promise<AudioGraph> {
         return;
       }
       applied[bus] = id;
+      if (requireLocalDevice && bus !== 'virtual') applyRoute(lastRoute);
       play(bus);
     };
     // `run` never rejects, so the chain never breaks. The next switch waits
@@ -526,6 +536,9 @@ export async function createAudioGraph(deps: GraphDeps): Promise<AudioGraph> {
     },
 
     async setSinks(sinks) {
+      const previouslyRequired = requireLocalDevice;
+      requireLocalDevice = sinks.requireLocalDevice === true;
+      let refreshRoutes = previouslyRequired !== requireLocalDevice;
       const switches: Promise<void>[] = [];
       for (const bus of ['virtual', ...OUTLET_NAMES] as const) {
         const element = elements[bus];
@@ -540,6 +553,11 @@ export async function createAudioGraph(deps: GraphDeps): Promise<AudioGraph> {
         const id = bus === 'virtual' ? sinks.virtual : sinks[bus].device;
         if (id === requested[bus]) continue;
         requested[bus] = id;
+        if (requireLocalDevice && bus !== 'virtual') {
+          refreshRoutes = true;
+          applied[bus] = undefined;
+          if (!id || !element.setSinkId) continue;
+        }
         if (bus === 'virtual') {
           // Never play the meeting's audio on whatever device the element is
           // on while a switch is pending or absent (F1).
@@ -554,6 +572,7 @@ export async function createAudioGraph(deps: GraphDeps): Promise<AudioGraph> {
         }
         switches.push(switchBus(bus, element, id));
       }
+      if (refreshRoutes) applyRoute(lastRoute);
       await Promise.all(switches);
     },
 

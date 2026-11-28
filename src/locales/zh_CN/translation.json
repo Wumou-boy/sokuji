@@ -1,5 +1,6 @@
 {
   "common": {
+    "localPlaybackUnavailable": "当前收音或输出设备不适合本地播放。",
     "cancel": "取消",
     "close": "关闭",
     "collapsePanel": "关闭面板",
@@ -12,6 +13,7 @@
     "signIn": "登录",
     "signUp": "注册",
     "signInRequired": "<signInLink>登录或注册</signInLink>即可使用 Kizuna AI，无需 API key。",
+    "checking": "检查中...",
     "dismiss": "忽略",
     "none": "无",
     "retry": "重试",
@@ -21,11 +23,12 @@
     "translatedBothWays": "互译"
   },
   "settings": {
+    "speakerModelFile": "离线说话人模型",
+    "speakerModelReady": "校验通过，已保存在本机。",
+    "speakerModelInvalid": "文件与支持的 CAM++ 模型不匹配。",
+    "speakerModelError": "无法在本机读取或保存模型。",
+    "speakerModelImport": "导入 ONNX 文件",
     "title": "设置",
-    "autoMeetingResolved": "自动正在监听 {{app}}",
-    "autoMeetingWaiting": "可以先启动会话，不必等会议音频出现。自动选择会持续检查有声音的应用，检测到会议音频后开始采集。浏览器来源可能包含其他标签页；如果选错声音，请手动选择会议应用。",
-    "autoMeetingWaitingShort": "自动（等待会议音频）",
-    "autoMeetingLabel": "自动（会议应用）",
     "tabs": {
       "general": "常规",
       "audio": "音频",
@@ -120,6 +123,8 @@
     "helpEmailTooltip": "报告问题或获取帮助",
     "diagnosticLogs": "诊断日志",
     "diagnosticLogsTooltip": "记录应用的运行情况，方便附在问题反馈里。默认关闭；打开后标题栏会出现“日志”按钮，重启后仍保持打开。",
+    "localSpeakerRecognition": "本地说话人识别",
+    "localSpeakerRecognitionHint": "在线会议或面对面模式使用 Qwen 自动轮次时，在本机运行说话人识别。",
     "appearance": "外观",
     "appearanceTooltip": "应用的配色。「跟随系统」采用操作系统的浅色或深色设置。",
     "appearanceMode": {
@@ -596,15 +601,17 @@
       "voiceDesktopOnly": "录音和音色入库功能仅在 AED Translator Windows 桌面版中提供。",
       "voiceListError": "无法读取此应用配置中保存的音色。",
       "voiceCreateFailed": "无法创建音色。请检查百炼连接后重试。",
-      "keyRegion": "密钥所属区域：{{region}}",
+      "keyRegion": "密钥所属区域：{{region}} · {{availability}}",
       "connectionPersonal": "个人 QwenCloud",
+      "connectionQwenBeijing": "QwenCloud · 北京（中国大陆）",
+      "connectionQwenInternational": "QwenCloud · 新加坡（国际）",
       "connectionBailianShared": "百炼共享端点",
       "connectionBailianWorkspace": "公司工作空间",
       "workspaceApiKey": "公司工作空间 API Key",
       "workspaceId": "百炼工作空间 ID",
       "workspaceKeyNote": "公司 API Key 与个人 Qwen 密钥分别保存。切换连接不会替换或删除另一把密钥；更改将在下一次连接时生效。",
       "workspaceDesktopOnly": "专属工作空间连接目前仅在 Windows 桌面版可用。",
-      "bailianWorkspaceEndpoint": "端点：阿里云百炼（北京专属工作空间）",
+      "bailianWorkspaceEndpoint": "端点：阿里云百炼（北京专属工作空间）· 中国大陆可用",
       "screenContext": "屏幕上下文",
       "screenContextTooltip": "让模型看到你选择的一个窗口、标签页或屏幕，使其中的名称和术语按原文被识别和翻译。该区域内的所有内容都会以图片形式发送到 Alibaba Cloud 的 Qwen 服务（位于本次会话所在的区域）；Kizuna AI 永远不会收到这些图片。开启期间，每一秒语音的费用都会增加——使用自己的密钥时计入你的 Alibaba Cloud 账单，使用 Kizuna AI 账户时按你账户定价页面上的说明计费；在「两者」模式下，每个方向的会话分别计费。",
       "screenContextPicked": "模型将看到：{{name}}",
@@ -614,7 +621,7 @@
       "screenContextNone": "尚未选择窗口：会话开始时会询问你。",
       "screenContextChoose": "选择…",
       "speakerLabels": "说话人标签",
-      "speakerLabelsTooltip": "为对方的人编号（说话人 1、说话人 2…），听到不止一个声音时显示。\n\n可能会把一个人误认成几个人。禁用：不显示编号。\n\n将在下次会话生效。"
+      "speakerLabelsTooltip": "为支持自动轮次的会议音频来源中的说话人编号（说话人 1、说话人 2…），听到不止一个声音时显示。开启本地说话人识别后，也会标记共用本机麦克风的人。\n\n可能会把一个人误认成几个人。禁用：不显示编号。\n\n将在下次会话生效。"
     },
     "local_inference": {
       "name": "本机",
@@ -672,9 +679,6 @@
     "logsCopied": "已复制！"
   },
   "mainPanel": {
-    "autoAudioReady": "自动音频",
-    "autoAudioWaiting": "自动音频 · 正在查找",
-    "autoAudioCapturing": "自动音频：{{app}} · {{db}}",
     "subtitleTakeover": "翻译内容正在字幕浮层中显示",
     "payer": {
       "paidBy": "由 {{name}} 付费",
@@ -1079,27 +1083,6 @@
     "notInCatalog": "{{from}} 在此版本中已不再提供。",
     "noCandidate": "没有可用于此方向的{{stage}}模型。"
   },
-  "update": {
-    "available": "新版本 v{{version}} 可用",
-    "downloading": "正在下载更新... {{percent}}%",
-    "downloadingIndeterminate": "正在下载更新...",
-    "downloaded": "更新已就绪，重启以完成",
-    "checkButton": "检查更新",
-    "checking": "检查中...",
-    "upToDate": "已是最新",
-    "notAvailable": "您正在使用最新版本",
-    "downloadNow": "立即下载",
-    "later": "稍后",
-    "restartNow": "重启并更新",
-    "goToDownload": "前往下载",
-    "error": "检查更新失败",
-    "currentVersion": "当前版本：v{{version}}",
-    "newVersion": "新版本：v{{version}}",
-    "autoUpdateNote": "AppImage 支持自动更新。安装新版 AppImage 会直接替换当前版本 — 无需先卸载。",
-    "downloadAppImage": "下载 AppImage（推荐）",
-    "downloadDeb": "下载 .deb",
-    "linuxMigrateTitle": "有新版本 v{{version}}"
-  },
   "audioSystem": {
     "pactlMissingBody": "未检测到 pactl（PulseAudio 命令行工具），AED Translator 无法创建虚拟麦克风/扬声器。请安装后重试：",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1326,7 @@
     }
   },
   "echoNotice": {
+    "startupSpeakers": "当前系统声音通过扬声器播放。在线会议时，麦克风可能把对方的声音也收进去，建议使用耳机。",
     "ttsEcho": "您的扬声器正把 AED Translator 的翻译语音送回麦克风。",
     "meetingEcho": "扬声器播放的会议声音正进入麦克风。",
     "farEndEcho": "某位参会者的设备正把您的翻译回声传回会议。",
@@ -1592,7 +1576,6 @@
     "no_legs": "开始前请选择要翻译的内容。",
     "turn_mode_unsupported": "该提供商不支持所选的通话模式。",
     "participant_source_unavailable": "此处无法翻译对方。",
-    "auto_meeting_not_detected": "自动选择未能检测到会议应用的声音。请让对方先说话后重试，或手动选择会议应用。",
     "participant_unsupported": "该提供商无法为此语言对翻译对方。",
     "credentials_missing": "开始前请在设置中输入您的API密钥。",
     "not_ready": "提供商尚未就绪：{{detail}}",
@@ -1778,14 +1761,27 @@
     "errorListen": "没能开启分享：{{reason}}"
   },
   "faceToFace": {
+    "singleMicSetup": "使用一支麦克风，选择两种或三种字幕语言。",
+    "openSubtitles": "打开面对面字幕",
     "modeGroup": "翻译模式",
     "onlineMeeting": "在线会议",
+    "confirmModeSwitch": "结束当前会话并切换模式吗？",
+    "sharedServiceUnsupported": "面对面字幕支持 Qwen LiveTranslate 和 OpenAI Realtime Translate，请在设置中选择其中一项。",
+    "openTranslationSettings": "打开翻译设置",
+    "sharedMicrophoneOff": "请在音频设置中启用麦克风，再开始收音。",
+    "openMicrophoneSettings": "打开麦克风设置",
     "title": "面对面",
     "intro": "选择两种字幕语言，再轮流对着同一个麦克风说话。",
     "backToMeeting": "在线会议",
     "languageChoices": "阅读语言",
     "firstLanguage": "第一字幕语言",
+    "provider": "翻译服务",
+    "microphone": "麦克风",
+    "selectMic": "选择麦克风",
     "secondLanguage": "第二字幕语言",
+    "thirdLanguage": "第三字幕语言",
+    "speakerModelLoading": "正在加载本地说话人识别…",
+    "speakerRecognitionUnavailable": "本次会话无法使用本地说话人识别。",
     "subtitleOnly": "仅显示字幕，不合成语音。",
     "speakerNumber": "说话人 {{number}}",
     "speaker": "说话人",
@@ -1808,8 +1804,12 @@
     "assignSpeakers": "谁在说话？",
     "detectedSpeaker": "检测到的说话人 {{id}}",
     "captions": "对话字幕",
+    "recordingFailed": "本场麦克风录音未能完整保存。",
+    "recordingNotice": "开始收音后，麦克风原声和字幕会保存在这台电脑的「历史」里。",
+    "historyPartial": "部分字幕未能保存；本场结束前仍可在当前窗口查看实时字幕。",
+    "historyNotKept": "本场没有可保存的字幕或录音。",
     "waiting": "说话后，字幕会显示在这里。",
-    "speakerUnknown": "说话人待确认",
+    "speakerUnknown": "说话人未确定",
     "languageUnknown": "语种未识别",
     "textRoute": "文本翻译",
     "assignToTranslate": "请确认说话人，以便选择翻译方向。",
@@ -1923,6 +1923,10 @@
     "accounts": {
       "internalModel": "公司内网与 PGX 文本模型",
       "bailianModel": "阿里云百炼 · 实时翻译",
+      "endpointDomestic": "中国大陆可用",
+      "endpointInternational": "国际端点（限服务商支持的地区）",
+      "endpointDependsOnUrl": "可用地区取决于填写的服务地址。",
+      "qwenRegionDetected": "验证密钥时自动识别 QwenCloud 的地区。",
       "internalModelHint": "在「语言与会话组成」里选择或填写模型名称。",
       "addKey": "添加密钥",
       "keySaved": "已保存密钥",
@@ -2084,10 +2088,6 @@
     "general": {
       "basics": "基本设置",
       "maintenance": "维护与帮助",
-      "update": "更新",
-      "updateLine": "现在是 {{version}}。",
-      "version": "版本",
-      "storeUpdates": "扩展由浏览器的商店自动更新。",
       "wizard": "设置向导",
       "wizardLine": "从头再走一遍向导；已经存好的选择会预先选上。",
       "rerun": "重新运行",
@@ -2130,6 +2130,9 @@
     }
   },
   "history": {
+    "notesChooseBailian": "请在「账号与密钥」选择百炼共享端点或公司工作空间。",
+    "notesWorkspaceApi": "公司百炼工作空间 API",
+    "notesSharedApi": "百炼共享端点 · 普通 API Key",
     "title": "历史",
     "back": "返回",
     "search": "搜索历史",

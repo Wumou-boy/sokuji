@@ -555,3 +555,12 @@ describe('chromiumRedactedLabel', () => {
     expect(linux.label).toBe('AirPods');
   });
 });
+
+it('distinguishes a USB headset exposing a Speakers endpoint from actual USB speakers', () => {
+  const result = parseWinDevices(JSON.stringify([
+    { label: '扬声器 (INZONE H9 / INZONE H7 - Game)', formFactor: 1, enumerator: 'USB', isDefault: true },
+    { label: 'USB Desktop Speakers', formFactor: 1, enumerator: 'USB' },
+    { label: 'Headphones', formFactor: 1, enumerator: 'SWD' },
+  ]));
+  expect(result.map((device) => device.formFactor)).toEqual(['headphones', 'speakers', 'unknown']);
+});

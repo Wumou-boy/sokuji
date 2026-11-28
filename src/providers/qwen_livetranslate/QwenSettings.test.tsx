@@ -176,9 +176,9 @@ describe('QwenSettingsView (spec §4, §7)', () => {
   // A key belongs to a region, not to the console it was made in (probe 2026-10-23): either console's key works on its region's host.
   it('names the region the check found the key in, as the region picker does, and nothing before a check', () => {
     const { rerender } = render(<QwenSettingsView {...props({ models: [{ id: 'cn' }] })} />);
-    expect(screen.getByText('Key region: 北京 (Beijing)')).toBeTruthy();
+    expect(screen.getByText('Key region: 北京 (Beijing) · Available in mainland China')).toBeTruthy();
     rerender(<QwenSettingsView {...props({ models: [{ id: 'intl' }] })} />);
-    expect(screen.getByText('Key region: Singapore')).toBeTruthy();
+    expect(screen.getByText('Key region: Singapore · International availability (only in regions supported by the provider)')).toBeTruthy();
     expect(screen.queryByText(/QwenCloud|千问云/)).toBeNull();
     rerender(<QwenSettingsView {...props({ models: [] })} />);
     expect(screen.queryByText(/^Key region/)).toBeNull();
@@ -213,7 +213,7 @@ describe('QwenSettingsView, speaker labels', () => {
     const section = labelsSection() as HTMLElement;
     expect(section).toHaveClass('settings-section');
     expect(section.querySelector('h2')?.textContent).toBe('Speaker labels');
-    expect(section.querySelector('h2 [data-tooltip]')?.getAttribute('data-tooltip')).toMatch(/^Numbers the other side's people .*It can mistake one person for several\. Disabled: no numbers are shown\.\n\nApplies from the next session\.$/s);
+    expect(section.querySelector('h2 [data-tooltip]')?.getAttribute('data-tooltip')).toMatch(/^Numbers the speakers heard on supported automatic meeting streams .*With local speaker recognition enabled, this also applies to people sharing your microphone\.\n\nIt can mistake one person for several\. Disabled: no numbers are shown\.\n\nApplies from the next session\.$/s);
     expect(section.querySelectorAll('.setting-item > .turn-detection-options > button.option-button')).toHaveLength(2);
   });
 

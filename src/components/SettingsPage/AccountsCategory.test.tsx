@@ -29,7 +29,7 @@ afterEach(cleanup);
 describe('company accounts and keys', () => {
   it('shows only the approved setup rows and preserves previously saved credentials', () => {
     render(<AccountsCategory locked={false} />);
-    expect(screen.getAllByRole('group')).toEqual([qwen(), compatible()]);
+    expect(screen.getAllByRole('group')).toEqual([qwen(), screen.getByRole('group', { name: 'OpenAI' }), compatible()]);
     expect(useProviderStore.getState().entries.openai?.credentials.apiKey).toBe('test-previously-saved');
   });
 
@@ -49,6 +49,17 @@ describe('company accounts and keys', () => {
     expect(within(compatible()).getByLabelText('API key (optional)')).toHaveValue('');
     expect(within(compatible()).getByRole('button', { name: 'Find models' })).toBeEnabled();
     expect(within(compatible()).getByText(/model name under Languages and line-up/)).toBeInTheDocument();
+    expect(within(compatible()).getByText('Availability depends on the endpoint URL.')).toBeInTheDocument();
+  });
+
+  it('labels the detected QwenCloud domestic endpoint and the Bailian Beijing endpoint', () => {
+    useProviderStore.setState({ models: { qwen_livetranslate: [{ id: 'cn' }] } } as never);
+    const view = render(<AccountsCategory locked={false} openedBy="provider:qwen_livetranslate" />);
+    expect(within(qwen()).getByText('Available in mainland China')).toBeInTheDocument();
+    useProviderStore.setState({ models: { qwen_livetranslate: [] } } as never);
+    view.rerender(<AccountsCategory locked={false} openedBy="provider:qwen_livetranslate" />);
+    // The saved connection itself explicitly selects Bailian Beijing.
+    expect(within(qwen()).getByText('Available in mainland China')).toBeInTheDocument();
   });
 
   it('lets a user reveal both rows during an active session while locking their credential fields', () => {

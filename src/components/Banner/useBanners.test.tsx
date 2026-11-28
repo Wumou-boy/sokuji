@@ -1,9 +1,9 @@
 // src/components/Banner/useBanners.test.tsx
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { Banners } from './useBanners';
+import { act, render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { Banners, MeetingHeadphonesNotice } from './useBanners';
+import useAudioStore from '../../stores/audioStore';
 import useAudioSystemStore from '../../stores/audioSystemStore';
-import useUpdateStore from '../../stores/updateStore';
 
 // t(key) renders the key itself, so these assertions pin which keys the
 // banners use, not their English copy.
@@ -18,12 +18,8 @@ const unavailable = (reason: string, extra: Record<string, unknown> = {}) =>
     status: 'unavailable', platform: reason === 'mac-driver-not-loaded' ? 'darwin' : 'linux',
     reason: reason as never, message: null, dismissed: false, retrying: false, repairing: false, repairFailed: false, ...extra,
   });
-const update = (extra: Partial<ReturnType<typeof useUpdateStore.getState>>) =>
-  useUpdateStore.setState({ status: 'idle', newVersion: '0.43.0', downloadProgress: 0, errorMessage: null, errorFrom: null, supportsAutoUpdate: true, bannerDismissed: false, ...extra });
-
 beforeEach(() => {
   useAudioSystemStore.setState({ status: 'ok', dismissed: false, retry: vi.fn(async () => {}), repair: vi.fn(async () => {}) });
-  update({ downloadUpdate: vi.fn(), installUpdate: vi.fn(), openDialog: vi.fn(), dismissBanner: vi.fn() });
 });
 
 describe('Banners — the audio system (today’s AudioSystemBanner cases)', () => {
@@ -64,109 +60,22 @@ describe('Banners — the audio system (today’s AudioSystemBanner cases)', () 
   });
 });
 
-describe('Banners — the update (spec 2026-10-05 §4)', () => {
-  it('available: brand tone, update.available, Download Now starts the download, dismissible', () => {
-    update({ status: 'available' });
-    const { container } = render(<Banners />);
-    expect(container.querySelector('.banner--brand')).not.toBeNull();
-    expect(screen.getByText('update.available')).toBeTruthy();
-    fireEvent.click(screen.getByText('update.downloadNow'));
-    expect(useUpdateStore.getState().downloadUpdate).toHaveBeenCalled();
-    fireEvent.click(container.querySelector('.banner__dismiss')!);
-    expect(useUpdateStore.getState().dismissBanner).toHaveBeenCalled();
-  });
-  it("pressing the update's words opens its notes, whatever the update's state; the audio banner opens nothing", () => {
-    for (const status of ['available', 'downloading', 'downloaded'] as const) {
-      update({ status });
-      const { container, unmount } = render(<Banners />);
-      fireEvent.click(container.querySelector('.banner--brand .banner__text')!);
-      unmount();
-    }
-    expect(useUpdateStore.getState().openDialog).toHaveBeenCalledTimes(3);
-  });
-  it('available without auto-update: the Linux title and Go to Download opens the dialog', () => {
-    update({ status: 'available', supportsAutoUpdate: false });
-    render(<Banners />);
-    expect(screen.getByText('update.linuxMigrateTitle')).toBeTruthy();
-    fireEvent.click(screen.getByText('update.goToDownload'));
-    expect(useUpdateStore.getState().openDialog).toHaveBeenCalled();
-  });
-  it('downloading: progress, no action, no dismiss', () => {
-    update({ status: 'downloading', downloadProgress: 37 });
-    const { container } = render(<Banners />);
-    expect(screen.getByText('update.downloading')).toBeTruthy();
-    expect((container.querySelector('.banner__progress-fill') as HTMLElement).style.width).toBe('37%');
-    expect(container.querySelector('.banner__btn')).toBeNull();
-    expect(container.querySelector('.banner__dismiss')).toBeNull();
-  });
-  it('downloaded: Restart and Update installs', () => {
-    update({ status: 'downloaded' });
-    render(<Banners />);
-    fireEvent.click(screen.getByText('update.restartNow'));
-    expect(useUpdateStore.getState().installUpdate).toHaveBeenCalled();
-  });
-  // Spec §4's table: only `downloading` cannot be dismissed; the next `available` re-arms (the store's reset).
-  it('a dismissed banner stays hidden except while downloading', () => {
-    update({ status: 'available', bannerDismissed: true });
-    expect(render(<Banners />).container.querySelector('.banner')).toBeNull();
-    cleanup();
-    update({ status: 'downloaded', bannerDismissed: true });
-    expect(render(<Banners />).container.querySelector('.banner')).toBeNull();
-    cleanup();
-    update({ status: 'downloading', bannerDismissed: true });
-    expect(render(<Banners />).container.querySelector('.banner')).not.toBeNull();
-  });
-  it('downloaded: the X dismisses it', () => {
-    update({ status: 'downloaded' });
-    const { container } = render(<Banners />);
-    fireEvent.click(container.querySelector('.banner__dismiss')!);
-    expect(useUpdateStore.getState().dismissBanner).toHaveBeenCalled();
-  });
-  // Ruling 9: no error banner, but a failure keeps a way back. A download that failed is
-  // `available` again (Download Now is the retry); an install that failed keeps `downloaded`.
-  it('an error while downloading draws the available banner again, with Download Now', () => {
-    update({ status: 'error', errorFrom: 'downloading', errorMessage: 'net::ERR' });
-    const { container } = render(<Banners />);
-    expect(container.querySelector('.banner--brand')).not.toBeNull();
-    expect(screen.getByText('update.available')).toBeTruthy();
-    fireEvent.click(screen.getByText('update.downloadNow'));
-    expect(useUpdateStore.getState().downloadUpdate).toHaveBeenCalled();
-  });
-  it('an error while downloaded keeps the downloaded banner, with Restart and Update', () => {
-    update({ status: 'error', errorFrom: 'downloaded', errorMessage: 'install failed' });
-    render(<Banners />);
-    expect(screen.getByText('update.downloaded')).toBeTruthy();
-    fireEvent.click(screen.getByText('update.restartNow'));
-    expect(useUpdateStore.getState().installUpdate).toHaveBeenCalled();
-  });
-  it('an error while checking draws nothing, and no error banner ever', () => {
-    update({ status: 'error', errorFrom: 'checking' });
-    const { container } = render(<Banners />);
-    expect(container.querySelector('.banner')).toBeNull();
-  });
-  it('error, idle, checking and not-available draw nothing', () => {
-    for (const status of ['error', 'idle', 'checking', 'not-available'] as const) {
-      update({ status });
-      expect(render(<Banners />).container.querySelector('.banner'), status).toBeNull();
-      cleanup();
-    }
-  });
-  it('attention sits above brand', () => {
-    unavailable('pulseaudio-unavailable');
-    update({ status: 'available' });
-    const { container } = render(<Banners />);
-    const tones = Array.from(container.querySelectorAll('.banner')).map((el) => el.className);
-    expect(tones).toEqual(['banner banner--attention', 'banner banner--brand']);
-  });
-});
-
-describe('update banner, download without byte counts (Squirrel on Windows)', () => {
-  it('says it is downloading without a percentage and draws no bar', () => {
-    update({ status: 'downloading', downloadProgress: 0, downloadIndeterminate: true } as any);
-    const { container } = render(<Banners />);
-    expect(screen.getByText('update.downloadingIndeterminate')).toBeTruthy();
-    expect(screen.queryByText('update.downloading')).toBeNull();
-    expect(container.querySelector('.banner__progress')).toBeNull();
-    expect(container.querySelector('.banner__dismiss')).toBeNull();
-  });
+it('warns for the current speaker route and remembers dismissal during this launch', () => {
+  useAudioStore.setState({ nativeFormsCurrent: false, defaultOutputForm: { formFactor: 'speakers', transport: 'builtin' } });
+  const { rerender, unmount } = render(<MeetingHeadphonesNotice visible />);
+  const notice = () => screen.queryByText('echoNotice.startupSpeakers');
+  expect(notice()).toBeNull();
+  act(() => useAudioStore.setState({ nativeFormsCurrent: true }));
+  expect(notice()).toBeVisible();
+  act(() => useAudioStore.setState({ defaultOutputForm: { formFactor: 'headphones', transport: 'usb' } }));
+  expect(notice()).toBeNull();
+  act(() => useAudioStore.setState({ defaultOutputForm: { formFactor: 'speakers', transport: 'builtin' } }));
+  fireEvent.click(screen.getByRole('button', { name: 'common.dismiss' }));
+  rerender(<MeetingHeadphonesNotice visible={false} />);
+  rerender(<MeetingHeadphonesNotice visible />);
+  expect(notice()).toBeNull();
+  unmount();
+  render(<MeetingHeadphonesNotice visible />);
+  expect(notice()).toBeVisible();
+  act(() => useAudioStore.setState({ nativeFormsCurrent: false }));
 });

@@ -8,7 +8,6 @@ import rnnoiseWasmPath from '@sapphi-red/web-noise-suppressor/rnnoise.wasm?url';
 import rnnoiseSimdWasmPath from '@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url';
 
 type PerformanceMode = 'high_quality' | 'performance' | 'minimal';
-
 interface ModernAudioRecorderOptions {
   sampleRate?: number;
   enablePassthrough?: boolean;
@@ -124,7 +123,6 @@ export class ModernAudioRecorder extends BaseAudioRecorder {
 
     const profileName = this.performanceMode.toUpperCase().replace(' ', '_') as keyof typeof AUDIO_CONSTRAINT_PROFILES;
     const profile = AUDIO_CONSTRAINT_PROFILES[profileName] || AUDIO_CONSTRAINT_PROFILES.HIGH_QUALITY;
-
     // 'all' cancels every sound the system plays, which silences a loopback
     // input such as BlackHole: its signal is that sound (-20 → -63 dBFS on macOS,
     // Chromium 152). Choosing 'app' asks for `true`, which cancels only what this

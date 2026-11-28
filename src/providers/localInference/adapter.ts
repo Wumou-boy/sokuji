@@ -12,6 +12,7 @@ import {
 } from '../../lib/contract/adapter';
 import { createSentClock, type SentClock } from '../../lib/contract/sentClock';
 import { framePayload } from '../../lib/contract/framePayload';
+import type { AdapterEventPayload } from '../../lib/contract/events';
 import { fillIn, type Punctuator } from '../../lib/conversation/fillIn';
 import type { ClientDiagnosticCode } from '../../lib/diagnostics/clientDiagnostics';
 import { describeCause } from '../../lib/diagnostics/describeCause';
@@ -813,8 +814,8 @@ class LocalSession implements AdapterSession {
     this.emit('frame', { direction, type, payload: framePayload(payload) });
   }
 
-  private emit<K extends AdapterEventKind>(kind: K, payload: Parameters<AdapterEvents[K]>[0]): void {
+  private emit<K extends AdapterEventKind>(kind: K, payload: AdapterEventPayload<K>): void {
     if (this.ended) return;
-    (this.events[kind] as (p: typeof payload) => void)(payload);
+    (this.events[kind] as ((p: typeof payload) => void) | undefined)?.(payload);
   }
 }
