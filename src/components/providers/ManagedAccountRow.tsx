@@ -18,7 +18,7 @@ export function ManagedAccountRow({ auth }: { auth: AuthContext }) {
     return (
       <div className="api-key-info">
         <span className="spinner" />
-        <span>{t('update.checking', 'Checking...')}</span>
+        <span>{t('common.checking', 'Checking...')}</span>
       </div>
     );
   }

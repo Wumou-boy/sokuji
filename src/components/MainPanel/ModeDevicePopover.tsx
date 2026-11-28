@@ -18,7 +18,7 @@ import {
   useAudioContext,
   useIsMicMuted, useIsMonitorMuted, useIsParticipantMuted,
   useSetMicMuted, useSetMonitorMuted, useSetParticipantMuted,
-  useParticipantCaptureWidened, useParticipantSources, useSelectedParticipantSource, useSelectParticipantSource, useAutoMeetingResolvedSource,
+  useParticipantCaptureWidened, useParticipantSources, useSelectedParticipantSource, useSelectParticipantSource,
   useOutlets, useSetOutletDevice, useSetOutletChannel, useSelectedMonitorDevice, useRefreshParticipantSources,
 } from '../../stores/audioStore';
 import { useFaceToFace } from './useFaceToFace';
@@ -93,7 +93,6 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
   const isParticipantMuted = useIsParticipantMuted();
   const participantSources = useParticipantSources();
   const selectedParticipantSource = useSelectedParticipantSource();
-  const autoResolvedSource = useAutoMeetingResolvedSource();
   const selectParticipantSource = useSelectParticipantSource();
   const refreshParticipantSources = useRefreshParticipantSources();
   const setMicMuted = useSetMicMuted();
@@ -278,11 +277,8 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
         key: 'participant',
         icon: AudioLines,
         label: t('modePicker.deviceParticipantAudio', "Other's audio"),
-        devices: canPickSource ? participantSources.map((source) => source.deviceId === 'auto-meeting-audio'
-          ? { ...source, label: t('settings.autoMeetingLabel', 'Auto (Meeting app)') } : source) : [],
-        selectedDevice: canPickSource && selectedParticipantSource?.deviceId === 'auto-meeting-audio'
-          ? { ...selectedParticipantSource, label: t('settings.autoMeetingLabel', 'Auto (Meeting app)') }
-          : canPickSource ? selectedParticipantSource : null,
+        devices: canPickSource ? participantSources : [],
+        selectedDevice: canPickSource ? selectedParticipantSource : null,
         subtitle: canPickSource
           ? undefined
           : isExtension()
@@ -324,7 +320,7 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
     mode, beside, f2f.me, f2f.other, languageName, locked, speech, participantOffered, textOnly, outlets, defaultDevice, participantSpeech, heard, runSpeech,
     audioInputDevices, selectedInputDevice, isMicMuted,
     audioMonitorDevices, isMonitorMuted,
-    isParticipantMuted, participantSources, selectedParticipantSource, autoResolvedSource, participantCaptureWidened,
+    isParticipantMuted, participantSources, selectedParticipantSource, participantCaptureWidened,
     selectInputDevice, selectParticipantSource,
     setMicMuted, setMonitorMuted, setParticipantMuted,
     setOutletDevice, setOutletChannel, setParticipantSpeech,
@@ -340,9 +336,6 @@ const ModeDevicePopover: React.FC<ModeDevicePopoverProps> = ({ mode, open, ancho
       : t('modePicker.popoverHeaderBoth', 'Both — devices');
 
   const summaryText = (row: ChannelRowSpec): { text: string; cls: string } => {
-    if (row.key === 'participant' && selectedParticipantSource?.deviceId === 'auto-meeting-audio') {
-      return { text: autoResolvedSource?.label || t('settings.autoMeetingWaitingShort', 'Auto (waiting for meeting audio)'), cls: '' };
-    }
     if (row.key === 'participant' && participantCaptureWidened && !row.isMuted) {
       return { text: t('popover.participantCaptureWidened', 'Capture fell back to all system audio'), cls: 'mode-device-popover__summary--warning' };
     }

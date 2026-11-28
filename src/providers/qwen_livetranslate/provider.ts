@@ -10,7 +10,7 @@ import { QwenTurnDetectionControls, QwenTurnDetectionSummary } from './QwenTurnD
 import { migrateQwenSettings, QWEN_DEFAULTS, qwenCredentials, qwenLanguages, type QwenCredentials, type QwenSettings } from './settings';
 import { SP, TR, TR_TL } from '../../lib/lineup/types';
 import { trackRealtimeUsage } from '../../lib/usage/providerUsage';
-import { BAILIAN_BEIJING, recordUsage } from '../../lib/usage/ledger';
+import { BAILIAN_BEIJING, BAILIAN_WORKSPACE_BEIJING, recordUsage } from '../../lib/usage/ledger';
 import { bindSessionTokens } from '../../lib/usage/sessionTokens';
 
 const adapter = createQwenAdapter({
@@ -19,7 +19,7 @@ const adapter = createQwenAdapter({
   trackUsage: (config, route) => {
     if (!config.activity) return () => {};
     const provider = route.managed ? 'qwen-managed'
-      : route.workspaceId || route.endpoint === 'bailian-cn' ? BAILIAN_BEIJING
+      : route.workspaceId ? BAILIAN_WORKSPACE_BEIJING : route.endpoint === 'bailian-cn' ? BAILIAN_BEIJING
         : route.endpoint === 'intl' ? 'qwencloud-singapore'
           : route.endpoint === 'cn' ? 'qwencloud-beijing' : 'qwencloud-unknown';
     return trackRealtimeUsage(config.activity, provider, config.model, (delta) => {

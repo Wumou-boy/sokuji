@@ -50,7 +50,6 @@ export const NOTICE_WORDS: Readonly<Record<string, string>> = {
   no_legs: 'Choose what to translate before starting.',
   turn_mode_unsupported: "This provider doesn't offer the chosen talk mode.",
   participant_source_unavailable: "Translating other participants isn't available here.",
-  auto_meeting_not_detected: 'Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.',
   participant_unsupported: "This provider can't translate the other participants for this language pair.",
   credentials_missing: 'Enter your API key in Settings before starting.',
   not_ready: 'The provider is not ready: {{detail}}',

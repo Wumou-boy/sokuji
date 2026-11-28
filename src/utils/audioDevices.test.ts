@@ -27,6 +27,9 @@ describe('isVirtualMic', () => {
 describe('isLoopbackInput', () => {
   it('matches OS loopback-style inputs', () => {
     expect(isLoopbackInput(d('Stereo Mix (Realtek High Definition Audio)'))).toBe(true);
+    expect(isLoopbackInput(d('立体声混音 (Realtek(R) Audio)'))).toBe(true);
+    expect(isLoopbackInput(d('立體聲混音 (Realtek)'))).toBe(true);
+    expect(isLoopbackInput(d('ステレオ ミキサー (Realtek)'))).toBe(true);
     expect(isLoopbackInput(d('What U Hear (Sound Blaster Z)'))).toBe(true);
     expect(isLoopbackInput(d('What You Hear (Sound Blaster)'))).toBe(true);
     expect(isLoopbackInput(d('Wave Out Mix (C-Media Audio)'))).toBe(true);

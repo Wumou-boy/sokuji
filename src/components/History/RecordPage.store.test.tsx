@@ -150,15 +150,15 @@ describe('an imported record\'s speakers', () => {
     real.store.openRecord({ id: F, startedAt: START, mode: 'face-to-face', myLanguage: 'en', targetLanguage: 'zh', services: { provider: 'soniox', models: {} }, appVersion: '1.2.3' });
     const transcriptId = real.store.createTranscript({ recordId: F, origin: { service: 'soniox', kind: 'live' } });
     real.store.appendSentences({ transcriptId, sentences: [
-      { ...sentence(1, 'mine', 'Shall we start?'), sideCertain: false },
-      { ...sentence(2, 'other', 'Yes, please.'), sideCertain: false },
+      { ...sentence(1, 'other', 'Shall we start?', '1'), sideCertain: false, track: 'microphone' },
+      { ...sentence(2, 'other', 'Yes, please.', '2'), sideCertain: false, track: 'microphone' },
     ] });
     real.store.closeRecord({ id: F, endedAt: START + 10_000 });
     await act(() => store.getState().openRecord(F));
     await settle();
-    expect(speakerOf(1)).toBe('Me');
-    expect(speakerOf(2)).toBe('Other');
-    expect(within(drawer()).getByText('Your side')).toBeInTheDocument();
-    expect(within(drawer()).getByText('The other side')).toBeInTheDocument();
+    expect(speakerOf(1)).toBe('Speaker 1');
+    expect(speakerOf(2)).toBe('Speaker 2');
+    expect(within(drawer()).getAllByText('Speaker 1').length).toBeGreaterThan(0);
+    expect(within(drawer()).getAllByText('Speaker 2').length).toBeGreaterThan(0);
   });
 });

@@ -11,18 +11,18 @@ import useAudioStore from '../../stores/audioStore';
 import useLogStore from '../../stores/logStore';
 import { useScreenContextStore } from '../../stores/screenContextStore';
 import { getEnvironment } from '../../utils/environment';
-import { isLoopbackInput, isVirtualMic } from '../../utils/audioDevices';
 import { createEchoWatch, type EchoWatch } from './capture/echoWatch';
-import { createSourceCore } from './capture/core';
-import { createMeetingEchoReduction } from './capture/meetingEcho';
 import { openMic, type MicSettings } from './capture/mic';
 import { silentSource } from './capture/silent';
 import { openSystemAudio, type SystemAudioSettings } from './capture/systemAudio';
 import { openTab, type TabSettings } from './capture/tab';
 import { createLevelMeter, type LevelMeter } from './levelMeter';
-import { createAppRouting } from './appAudio';
 import type { Playback } from './playback';
 import { targetTabIdFromSearch } from './tabMicrophone';
+import { SAMPLE_RATE } from '../contract/adapter';
+
+const PARTICIPANT_PCM_THRESHOLD = 0.012;
+const PARTICIPANT_PCM_THRESHOLD_INT16 = Math.ceil(PARTICIPANT_PCM_THRESHOLD * 32768);
 
 export interface AppCapture {
   openSource: OpenSource;
@@ -30,6 +30,23 @@ export interface AppCapture {
   echo: EchoWatch;
   /** Each leg's input spectrum for the footer's waveform: the output strip's frequency bars, over the chunks it delivers while `meterGate` lets them through. */
   levels: Readonly<Record<LegName, LevelMeter>>;
+  /** Read-only participant signal diagnostics; samples continue unchanged to the provider. */
+  participantPcmRuntime(): ParticipantPcmRuntimeSnapshot | null;
+}
+
+export interface ParticipantPcmRuntimeSnapshot {
+  sampleRate: number;
+  threshold: number;
+  totalSamples: number;
+  blocksAtOrAboveThreshold: number;
+  samplesInThresholdBlocks: number;
+  thresholdBlockDurationMs: number;
+}
+
+interface MutableParticipantPcmRuntime {
+  totalSamples: number;
+  blocksAtOrAboveThreshold: number;
+  samplesInThresholdBlocks: number;
 }
 
 const audio = () => useAudioStore.getState();
@@ -50,6 +67,7 @@ async function appsUsing(label: string): Promise<string[] | null> {
 export function micSettings(): MicSettings {
   // Windows desktop: the preload's `osInfo` says so (it is absent in the extension and on the web).
   return {
+    devicesLoaded: () => audio().devicesLoaded,
     deviceId: () => audio().selectedInputDevice?.deviceId,
     deviceLabel: () => audio().selectedInputDevice?.label,
     isListed: (id) => audio().audioInputDevices.some((device) => device.deviceId === id),
@@ -78,15 +96,6 @@ export function systemAudioSettings(): SystemAudioSettings {
     captureStarted: (backend) => {
       const type = 'audio.capture.participant';
       useLogStore.getState().addRealtimeEvent({ type, data: { backend } }, 'client', type);
-    },
-    autoResolved: (source) => audio().setAutoMeetingResolvedSource(source ? {
-      deviceId: source.deviceId,
-      label: source.label,
-      appKey: source.appKey ?? null,
-    } : null),
-    meetingOutput: () => {
-      const route = createAppRouting('electron').get();
-      return audio().mode === 'both' && route.meeting && route.speak.other ? route.sinks.virtual : undefined;
     },
   };
 }
@@ -131,26 +140,14 @@ export function createAppCapture(playback: Playback, platform: Platform = getEnv
   const { meterGate, participantBeside } = options;
   const echo = createEchoWatch(playback.ttsTap);
   const levels: Record<LegName, LevelMeter> = { speaker: createLevelMeter(), participant: createLevelMeter() };
-  const meetingEcho = platform === 'electron' && windowsDesktop() ? createMeetingEchoReduction() : null;
+  let activeParticipantPcm: MutableParticipantPcmRuntime | null = null;
 
-  const micWithEchoReduction = (source: Source, reduction: NonNullable<typeof meetingEcho>): Source => {
-    const core = createSourceCore({
-      muted: () => false,
-      release: async () => { off(); await source.stop(); },
-    });
-    const off = source.onPcm((pcm) => {
-      const { mode, echoCancellationMode, selectedInputDevice } = audio();
-      const input = selectedInputDevice;
-      const physical = input && !input.isVirtual && !isVirtualMic(input) && !isLoopbackInput(input);
-      core.deliver(mode === 'both' && echoCancellationMode === 'all' && physical ? reduction.reduce(pcm) : pcm);
-    });
-    return { ...source, onPcm: core.onPcm, stop: core.stop };
-  };
-
-  const open = (leg: LegName, signal: AbortSignal): Promise<Source> => {
+  const open = async (leg: LegName, signal: AbortSignal): Promise<Source> => {
     if (leg === 'speaker') return openMic(micSettings(), signal);
     if (participantBeside?.()) return Promise.resolve(silentSource());
-    if (platform === 'electron') return openSystemAudio(systemAudioSettings(), signal);
+    if (platform === 'electron') {
+      return openSystemAudio(systemAudioSettings(), signal);
+    }
     if (platform === 'extension') return openTab(tabSettings(), signal);
     return Promise.reject(new Error('This build has no participant source.'));
   };
@@ -158,10 +155,34 @@ export function createAppCapture(playback: Playback, platform: Platform = getEnv
   return {
     echo,
     levels,
+    participantPcmRuntime() {
+      const current = activeParticipantPcm;
+      if (!current) return null;
+      return {
+        sampleRate: SAMPLE_RATE,
+        threshold: PARTICIPANT_PCM_THRESHOLD,
+        totalSamples: current.totalSamples,
+        blocksAtOrAboveThreshold: current.blocksAtOrAboveThreshold,
+        samplesInThresholdBlocks: current.samplesInThresholdBlocks,
+        thresholdBlockDurationMs: current.samplesInThresholdBlocks / SAMPLE_RATE * 1000,
+      };
+    },
     async openSource(leg, signal) {
-      const raw = await open(leg, signal);
-      const source = leg === 'speaker' && meetingEcho ? micWithEchoReduction(raw, meetingEcho) : raw;
-      const offReference = leg === 'participant' && meetingEcho ? source.onPcm(meetingEcho.pushReference) : undefined;
+      const source = await open(leg, signal);
+      // Observe the gated participant stream without changing any provider PCM.
+      const participantPcm = leg === 'participant'
+        ? { totalSamples: 0, blocksAtOrAboveThreshold: 0, samplesInThresholdBlocks: 0 }
+        : null;
+      if (participantPcm) activeParticipantPcm = participantPcm;
+      const offParticipantPcm = participantPcm
+        ? source.onPcm((pcm) => {
+            participantPcm.totalSamples += pcm.length;
+            if (pcm.some((sample) => Math.abs(sample) >= PARTICIPANT_PCM_THRESHOLD_INT16)) {
+              participantPcm.blocksAtOrAboveThreshold++;
+              participantPcm.samplesInThresholdBlocks += pcm.length;
+            }
+          })
+        : () => {};
       // The processed microphone is the original voice under the translation.
       const offPassthrough = leg === 'speaker' ? source.onPcm((pcm) => playback.passthrough(pcm)) : () => {};
       // A gate that shuts flattens the meter at its next chunk, not a stale
@@ -178,8 +199,8 @@ export function createAppCapture(playback: Playback, platform: Platform = getEnv
       });
       const detach = echo.attach(leg, source);
       return withCleanup(source, () => {
-        offReference?.();
-        if (leg === 'participant') meetingEcho?.reset();
+        offParticipantPcm();
+        if (activeParticipantPcm === participantPcm) activeParticipantPcm = null;
         offPassthrough();
         offLevel();
         levels[leg].reset();

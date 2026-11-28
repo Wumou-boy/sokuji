@@ -26,6 +26,13 @@ export const LEVEL_BARS = FFT_SIZE / 2;
 /** No chunk for this long: the meter reads flat. */
 export const LEVEL_STALE_MS = 300;
 
+/** Unsigned peak amplitude of one signed PCM16 chunk, in sample units (0..32768). */
+export function pcm16Peak(pcm: Int16Array): number {
+  let peak = 0;
+  for (const sample of pcm) peak = Math.max(peak, Math.abs(sample));
+  return peak;
+}
+
 const WINDOW = Float64Array.from({ length: FFT_SIZE }, (_, n) => {
   const a0 = (1 - BLACKMAN_ALPHA) / 2;
   const a2 = BLACKMAN_ALPHA / 2;
@@ -130,9 +137,7 @@ export function createLevelMeter(clock: Pick<Clock, 'now'> = realClock): LevelMe
 
     readPeak() {
       if (clock.now() - lastAt > LEVEL_STALE_MS) return 0;
-      let peak = 0;
-      for (const sample of latest) peak = Math.max(peak, Math.abs(sample));
-      return peak / 32768;
+      return pcm16Peak(latest) / 32768;
     },
 
     reset() {

@@ -8,7 +8,6 @@
  * the user two "Participant audio" sections whose lock state disagreed. The
  * picker belongs here, in the one real participant section.
  */
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SystemAudioSection from './SystemAudioSection';
@@ -41,7 +40,6 @@ vi.mock('../../../stores/audioStore', () => ({
   useSetParticipantMuted: () => store.setMuted,
   useParticipantSources: () => store.sources,
   useSelectedParticipantSource: () => store.selected,
-  useAutoMeetingResolvedSource: () => null,
   useSelectParticipantSource: () => store.select,
   useRefreshDevices: () => store.refresh,
   useIsAudioLoading: () => false,

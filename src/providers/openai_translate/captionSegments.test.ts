@@ -51,6 +51,27 @@ describe('CaptionSegments', () => {
     expect(h.translate).toHaveBeenCalledWith('好', 'auto', expect.any(AbortSignal));
   });
 
+  it('detects and routes an unselected German source with the local multilingual detector', async () => {
+    const h = captions({ sourceLanguageHints: ['zh', 'en'] });
+    h.value.input('Der Besprechungsraum ist rechts.');
+    expect(h.log.some((event) => event.kind === 'segmentText' && event.payload.language === 'de')).toBe(true);
+    h.clock.advance(500);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(h.translate).toHaveBeenCalledWith('Der Besprechungsraum ist rechts.', 'de', expect.any(AbortSignal));
+  });
+
+  it('keeps short ambiguous speech unknown when selected languages do not resolve the local tie', async () => {
+    const h = captions({ sourceLanguageHints: ['zh', 'en'] });
+    h.value.input('Guten Morgen.');
+    h.clock.advance(500);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(h.translate).toHaveBeenCalledWith('Guten Morgen.', 'auto', expect.any(AbortSignal));
+  });
+
   it('aborts pending translation on stop and preserves the closed source', async () => {
     let resolve!: (text: string) => void;
     let signal: AbortSignal | undefined;

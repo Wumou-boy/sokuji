@@ -6,36 +6,23 @@ import { render, screen, fireEvent, cleanup, within } from '@testing-library/rea
 vi.mock('../../services/ServiceFactory', () => ({
   ServiceFactory: { getSettingsService: () => ({ getSetting: async (_k: string, d: unknown) => d, setSetting: async () => ({ success: true }) }) },
 }));
-const env = vi.hoisted(() => ({ electron: true, extension: false }));
-vi.mock('../../utils/environment', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../utils/environment')>()),
-  isElectron: () => env.electron,
-  isExtension: () => env.extension,
-}));
 const tour = vi.hoisted(() => ({ start: vi.fn() }));
 vi.mock('../Tour/useStartBasicsTour', () => ({ useStartBasicsTour: () => tour.start }));
-const help = vi.hoisted(() => ({ change: vi.fn(), check: vi.fn(), open: vi.fn(), status: 'idle', result: null as null | string }));
+const help = vi.hoisted(() => ({ change: vi.fn(), open: vi.fn() }));
 vi.mock('../Settings/sections/helpActions', () => ({
   useInterfaceLanguageChange: () => help.change,
-  useUpdateCheck: () => ({ status: help.status, result: help.result, check: help.check }),
   openExternalUrl: help.open,
 }));
 
-vi.stubGlobal('__APP_RELEASE__', 'V0.2.3');
 
 import { GeneralCategory } from './GeneralCategory';
 import { useLayoutStore } from '../../stores/layoutStore';
 import useSettingsStore from '../../stores/settingsStore';
 
 beforeEach(() => {
-  vi.stubGlobal('__AED_PORTABLE__', false);
-  env.electron = true;
-  env.extension = false;
-  help.status = 'idle';
-  help.result = null;
-  for (const f of [tour.start, help.change, help.check, help.open]) f.mockClear();
+  for (const f of [tour.start, help.change, help.open]) f.mockClear();
   useLayoutStore.setState({ setupWizardOpen: false });
-  useSettingsStore.setState({ theme: 'system', diagnosticLogs: false } as never);
+  useSettingsStore.setState({ theme: 'system', diagnosticLogs: false, localSpeakerRecognition: false } as never);
 });
 afterEach(() => cleanup());
 
@@ -62,37 +49,25 @@ describe('general', () => {
     expect(useSettingsStore.getState().theme).toBe('dark');
   });
 
+  it('offers the shared local speaker preference in Basics and locks it during a session', () => {
+    render(<GeneralCategory locked={false} />);
+    const recognitionRow = row('Local speaker recognition');
+    expect(within(recognitionRow).getByText(/online meetings or Face to Face/)).toBeInTheDocument();
+    const toggle = within(recognitionRow).getByRole('switch');
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(toggle);
+    expect(useSettingsStore.getState().localSpeakerRecognition).toBe(true);
+
+    cleanup();
+    render(<GeneralCategory locked />);
+    expect(within(row('Local speaker recognition')).getByRole('switch')).toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('turns the diagnostic logs on with a switch, saying what they are under the name', () => {
     render(<GeneralCategory locked={false} />);
     expect(within(row('Diagnostic logs')).getByText(/attach it to a bug report/)).toBeInTheDocument();
     fireEvent.click(within(row('Diagnostic logs')).getByRole('switch'));
     expect(useSettingsStore.getState().diagnosticLogs).toBe(true);
-  });
-
-  it('on the desktop, checks for updates and says how the check went', () => {
-    const first = render(<GeneralCategory locked={false} />);
-    expect(within(row('Updates')).getByText('You have V0.2.3.')).toBeInTheDocument();
-    fireEvent.click(within(row('Updates')).getByRole('button'));
-    expect(help.check).toHaveBeenCalled();
-    first.unmount();
-    help.result = 'not-available';
-    render(<GeneralCategory locked={false} />);
-    expect(within(row('Updates')).getByRole('button')).toHaveTextContent('Up to date');
-  });
-
-  it('shows the AED release version in the portable build', () => {
-    vi.stubGlobal('__AED_PORTABLE__', true);
-    render(<GeneralCategory locked={false} />);
-    expect(within(row('Version')).getByText('V0.2.3')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Check for Updates' })).toBeNull();
-  });
-
-  it('in the extension, shows the version only: the store keeps it up to date', () => {
-    env.electron = false;
-    env.extension = true;
-    render(<GeneralCategory locked={false} />);
-    expect(screen.queryByText('Updates', { selector: '.general-row__name' })).toBeNull();
-    expect(within(row('Version')).getByText(/store keeps the extension up to date/)).toBeInTheDocument();
   });
 
   it('runs the setup wizard again, but not during a session', () => {

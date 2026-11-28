@@ -32,6 +32,7 @@ export interface EventData {
     | 'audio.echo.warning'
     | 'audio.capture.mic'
     | 'audio.capture.participant'
+    | 'audio.capture.aec'
     // OpenAI server events
     | 'session.created' | 'session.updated'
     | 'conversation.created'

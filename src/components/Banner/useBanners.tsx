@@ -1,25 +1,18 @@
 // src/components/Banner/useBanners.tsx
-import { Download, RefreshCw, TriangleAlert, Wrench } from 'lucide-react';
+import { useState } from 'react';
+import { useOutputFormFactor } from '../../lib/audio/formFactor';
+import { RefreshCw, TriangleAlert, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   useAudioSystemDismiss, useAudioSystemDismissed, useAudioSystemReason, useAudioSystemRepair, useAudioSystemRepairFailed,
   useAudioSystemRepairing, useAudioSystemRetry, useAudioSystemRetrying, useAudioSystemStatus,
 } from '../../stores/audioSystemStore';
-import {
-  useDismissBanner, useDownloadUpdate, useInstallUpdate, useOpenUpdateDialog, useShownUpdateStatus, useUpdateBannerDismissed,
-  useUpdateNewVersion, useUpdateProgressPercent,
-  useUpdateProgressIndeterminate, useUpdateSupportsAutoUpdate,
-} from '../../stores/updateStore';
 import { useRegionHint } from '../Region/useRegionHint';
 import { Banner, type BannerProps } from './Banner';
 
 /**
- * The app-level banners to draw, in order (spec 2026-10-05 §4): the audio
- * system (attention) above the update (brand), then the region hint (brand,
- * spec 2026-11-14 §B5) pushed last. An update's failure is never a
- * banner of its own: a failed check is the Help link's, a failed download
- * draws `available` again (Download Now is the retry) and a failed install
- * keeps `downloaded` (Ruling 9).
+ * The app-level banners to draw, in order: audio system (attention), then the
+ * region hint (brand, spec 2026-11-14 §B5).
  */
 export function useBanners(): BannerProps[] {
   const { t } = useTranslation();
@@ -55,42 +48,6 @@ export function useBanners(): BannerProps[] {
     });
   }
 
-  // A failed download is `available` again; a failed install stays `downloaded`; any other error draws nothing.
-  const status = useShownUpdateStatus();
-  const newVersion = useUpdateNewVersion();
-  const percent = useUpdateProgressPercent();
-  const indeterminate = useUpdateProgressIndeterminate();
-  const bannerDismissed = useUpdateBannerDismissed();
-  const supportsAutoUpdate = useUpdateSupportsAutoUpdate();
-  const dismissBanner = useDismissBanner();
-  const openDialog = useOpenUpdateDialog();
-  const downloadUpdate = useDownloadUpdate();
-  const installUpdate = useInstallUpdate();
-  // Only `downloading` cannot be dismissed; the next `available` re-arms a dismissed banner (the store).
-  const shown = !bannerDismissed || status === 'downloading';
-  if (shown && status === 'available') {
-    banners.push({
-      id: 'update', tone: 'brand', icon: <Download size={14} aria-hidden="true" />,
-      text: supportsAutoUpdate ? t('update.available', { version: newVersion }) : t('update.linuxMigrateTitle', { version: newVersion }),
-      // Auto-update builds download here; the others open the dialog, which holds the AppImage/deb links.
-      // Pressing the words opens the dialog with the update's notes, in every state of the update.
-      action: supportsAutoUpdate ? { label: t('update.downloadNow'), onClick: downloadUpdate } : { label: t('update.goToDownload'), onClick: openDialog },
-      onDismiss: dismissBanner, dismissLabel, onOpen: openDialog,
-    });
-  } else if (shown && status === 'downloading') {
-    // Squirrel on Windows reports no byte counts: say so without a percentage and draw no bar.
-    const text = indeterminate ? t('update.downloadingIndeterminate') : t('update.downloading', { percent: Math.round(percent) });
-    const progress = indeterminate ? undefined : Math.min(100, Math.max(0, percent));
-    banners.push({
-      id: 'update', tone: 'brand', icon: <RefreshCw size={14} aria-hidden="true" className="spinning" />,
-      text, progress, dismissLabel, onOpen: openDialog,
-    });
-  } else if (shown && status === 'downloaded') {
-    banners.push({
-      id: 'update', tone: 'brand', icon: <RefreshCw size={14} aria-hidden="true" />, text: t('update.downloaded'),
-      action: { label: t('update.restartNow'), onClick: installUpdate }, onDismiss: dismissBanner, dismissLabel, onOpen: openDialog,
-    });
-  }
   const regionHint = useRegionHint();
   if (regionHint) banners.push(regionHint);
   return banners;
@@ -100,4 +57,19 @@ export function useBanners(): BannerProps[] {
 export function Banners() {
   const banners = useBanners();
   return <>{banners.map((banner) => <Banner key={banner.id} {...banner} />)}</>;
+}
+
+export function MeetingHeadphonesNotice({ visible }: { visible: boolean }) {
+  const { t } = useTranslation();
+  const output = useOutputFormFactor();
+  const [dismissed, setDismissed] = useState(false);
+  if (!visible || output.formFactor !== 'speakers' || dismissed) return null;
+  return <Banner
+    id="meeting-headphones"
+    tone="attention"
+    icon={<TriangleAlert size={14} aria-hidden="true" />}
+    text={t('echoNotice.startupSpeakers', 'Your system output is set to speakers. In online meetings, your microphone may pick up the other person. Use headphones to avoid echo.')}
+    onDismiss={() => setDismissed(true)}
+    dismissLabel={t('common.dismiss', 'Dismiss')}
+  />;
 }

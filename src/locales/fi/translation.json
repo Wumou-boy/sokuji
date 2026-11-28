@@ -12,6 +12,7 @@
     "signIn": "Kirjaudu sisään",
     "signUp": "Rekisteröidy",
     "signInRequired": "<signInLink>Kirjaudu sisään tai rekisteröidy</signInLink> käyttääksesi Kizuna AI:ta — API-avainta ei tarvita.",
+    "checking": "Tarkistetaan...",
     "dismiss": "Hylkää",
     "none": "Ei mitään",
     "retry": "Yritä uudelleen",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Ilmoita virheistä tai pyydä apua",
     "diagnosticLogs": "Diagnostiikkalokit",
     "diagnosticLogsTooltip": "Tallentaa sovelluksen toiminnan, jotta voit liittää sen virheraporttiin. Oletuksena pois päältä. Kun asetus on päällä, otsikkorivillä näkyy ”Lokit”-painike, ja asetus pysyy päällä uudelleenkäynnistyksen jälkeen.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Ulkoasu",
     "appearanceTooltip": "Sovelluksen ulkoasu. ”Järjestelmä” käyttää käyttöjärjestelmän vaaleaa tai tummaa asetusta.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Mukautettu ääni",
     "translateDetectParticipantLanguage": "Tunnista keskustelukumppanin kiina, japani ja englanti automaattisesti",
     "translateDetectParticipantLanguageHelp": "Kun keskustelukumppanin kieli on kiina, japani tai englanti, tekstityksen kieli tunnistetaan alkuperäisestä puheesta. Käännöksen kohdekieli pysyy valittuna.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Odotetaan edellisen istunnon päättymistä. Napsauta peruuttaaksesi.",
     "clickToCancel": "Napsauta peruuttaaksesi",
     "whatIHear": "Mitä kuulen",
-    "audioSettings": "Ääniasetukset",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Ääniasetukset"
   },
   "modePicker": {
     "modeYou": "Minä",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} ei ole enää saatavilla tässä versiossa.",
     "noCandidate": "Tälle suunnalle ei ole saatavilla {{stage}}-mallia."
   },
-  "update": {
-    "available": "Uusi versio v{{version}} saatavilla",
-    "downloading": "Ladataan päivitystä... {{percent}}%",
-    "downloadingIndeterminate": "Ladataan päivitystä...",
-    "downloaded": "Päivitys valmis, käynnistä uudelleen viimeistelläksesi",
-    "checkButton": "Tarkista päivitykset",
-    "checking": "Tarkistetaan...",
-    "upToDate": "Ajan tasalla",
-    "notAvailable": "Käytät uusinta versiota",
-    "downloadNow": "Lataa nyt",
-    "later": "Myöhemmin",
-    "restartNow": "Käynnistä uudelleen ja päivitä",
-    "goToDownload": "Siirry lataukseen",
-    "error": "Päivitysten tarkistus epäonnistui",
-    "currentVersion": "Nykyinen versio: v{{version}}",
-    "newVersion": "Uusi versio: v{{version}}",
-    "autoUpdateNote": "AppImage tukee automaattisia päivityksiä. AppImagen asentaminen korvaa nykyisen asennuksesi — erillistä poistoa ei tarvita.",
-    "downloadAppImage": "Lataa AppImage (suositeltu)",
-    "downloadDeb": "Lataa .deb",
-    "linuxMigrateTitle": "Uusi versio v{{version}} saatavilla"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudion komentorivityökalut) ei löytynyt, joten AED Translator ei voinut määrittää virtuaalista mikrofonia/kaiutinta. Asenna se ja yritä sitten uudelleen:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Järjestelmän ääni kuuluu kaiuttimista. Mikrofoni voi poimia toisen osallistujan puheen verkkokokouksessa. Käytä kuulokkeita kaiun välttämiseksi.",
     "ttsEcho": "Kaiuttimesi syöttävät Sokujin käännetyn puheen takaisin mikrofoniin.",
     "meetingEcho": "Kokouksen ääni kaiuttimista kantautuu mikrofoniin.",
     "farEndEcho": "Osallistujan laite kaiuttaa käännöksesi takaisin kokoukseen.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Valitse käännökselle malli tai kirjoita sen nimi kohdassa ”Kielet ja kokoonpano”.",
     "address_missing": "Syötä yhteensopivan palvelun osoite kohdassa ”Tilit ja avaimet” ennen aloittamista.",
     "address_invalid": "Yhteensopivan palvelun osoitetta ei voi käyttää: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Perusasetukset",
       "maintenance": "Ylläpito ja ohje",
-      "update": "Päivitykset",
-      "updateLine": "Sinulla on {{version}}.",
-      "version": "Versio",
-      "storeUpdates": "Selaimen kauppa pitää laajennuksen ajan tasalla.",
       "wizard": "Ohjattu määritys",
       "wizardLine": "Käy ohjattu toiminto läpi uudelleen; tallentamasi on valmiiksi valittuna.",
       "rerun": "Suorita uudelleen",

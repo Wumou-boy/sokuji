@@ -161,6 +161,7 @@ export function ProviderPicker({ providers, auth, disabled, openSlot }: Provider
           fields={provider.credentials.fields(entry.settings)}
           values={entry.credentials}
           readiness={readiness}
+          endpointRegion={provider.id === 'openai' || provider.id === 'openai_translate' || provider.id === 'openai_live' || provider.id === 'openai_text' ? 'official' : provider.id === 'openai_compatible' ? 'custom' : undefined}
           onChange={(key, value) => setCredential(provider, key, value)}
           // F4: which fields show is a setting, written as any settings edit is (the readiness driver re-checks the other fields).
           choice={credentialChoice && {

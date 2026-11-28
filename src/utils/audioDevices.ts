@@ -83,9 +83,10 @@ export const isVirtualMic = (device: LabeledDevice): boolean => {
  * all — they appear in hardware people record with ("MixPre-3", mixers).
  */
 export const isLoopbackInput = (device: LabeledDevice): boolean => {
-  const label = device.label.toLowerCase();
+  const label = device.label.normalize('NFKC').toLowerCase();
   return label.startsWith('monitor of ') ||
          label.includes('stereo mix') ||
+         /立[体體][声聲]混音|ステレオ[\s・]*ミキサー/.test(label) ||
          label.includes('what u hear') ||
          label.includes('what you hear') ||
          label.includes('wave out mix') ||

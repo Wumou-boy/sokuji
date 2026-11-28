@@ -12,6 +12,7 @@
     "signIn": "साइन इन",
     "signUp": "साइन अप",
     "signInRequired": "<signInLink>साइन इन या साइन अप करें</signInLink> और Kizuna AI का उपयोग करें — किसी API कुंजी की आवश्यकता नहीं।",
+    "checking": "जाँच हो रही है...",
     "dismiss": "खारिज करें",
     "none": "कोई नहीं",
     "retry": "पुनः प्रयास करें",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "बग रिपोर्ट करें या सहायता लें",
     "diagnosticLogs": "डायग्नोस्टिक लॉग",
     "diagnosticLogsTooltip": "ऐप क्या कर रहा है उसे दर्ज करता है, ताकि आप इसे बग रिपोर्ट के साथ जोड़ सकें। डिफ़ॉल्ट रूप से बंद। चालू रहने पर शीर्षक पट्टी में “लॉग्स” बटन दिखता है, और रीस्टार्ट के बाद भी यह चालू रहता है।",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "रूप",
     "appearanceTooltip": "ऐप कैसा दिखता है। “सिस्टम” ऑपरेटिंग सिस्टम की लाइट या डार्क सेटिंग अपनाता है।",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "कस्टम आवाज़",
     "translateDetectParticipantLanguage": "सामने वाले की चीनी, जापानी और अंग्रेज़ी भाषा अपने आप पहचानें",
     "translateDetectParticipantLanguageHelp": "अगर सामने वाले की भाषा चीनी, जापानी या अंग्रेज़ी है, तो हर कैप्शन की भाषा मूल पाठ से पहचानी जाती है। अनुवाद की चुनी हुई लक्ष्य भाषा बनी रहती है।",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "पिछले सत्र के समाप्त होने की प्रतीक्षा की जा रही है। रद्द करने के लिए क्लिक करें।",
     "clickToCancel": "रद्द करने के लिए क्लिक करें",
     "whatIHear": "मैं क्या सुनता हूँ",
-    "audioSettings": "ऑडियो सेटिंग्स",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "ऑडियो सेटिंग्स"
   },
   "modePicker": {
     "modeYou": "मैं",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} अब इस वर्शन में उपलब्ध नहीं है।",
     "noCandidate": "इस दिशा के लिए कोई {{stage}} मॉडल उपलब्ध नहीं है।"
   },
-  "update": {
-    "available": "नया संस्करण v{{version}} उपलब्ध है",
-    "downloading": "अपडेट डाउनलोड हो रहा है... {{percent}}%",
-    "downloadingIndeterminate": "अपडेट डाउनलोड हो रहा है...",
-    "downloaded": "अपडेट तैयार है, पूरा करने के लिए पुनः आरंभ करें",
-    "checkButton": "अपडेट की जाँच करें",
-    "checking": "जाँच हो रही है...",
-    "upToDate": "अप टू डेट",
-    "notAvailable": "आप नवीनतम संस्करण चला रहे हैं",
-    "downloadNow": "अभी डाउनलोड करें",
-    "later": "बाद में",
-    "restartNow": "पुनः आरंभ करें और अपडेट करें",
-    "goToDownload": "डाउनलोड पर जाएँ",
-    "error": "अपडेट की जाँच विफल",
-    "currentVersion": "वर्तमान संस्करण: v{{version}}",
-    "newVersion": "नया संस्करण: v{{version}}",
-    "autoUpdateNote": "AppImage स्वचालित अपडेट का समर्थन करता है। AppImage इंस्टॉल करने से आपकी मौजूदा इंस्टॉलेशन बदल जाती है — अलग से अनइंस्टॉल करने की ज़रूरत नहीं।",
-    "downloadAppImage": "AppImage डाउनलोड करें (अनुशंसित)",
-    "downloadDeb": ".deb डाउनलोड करें",
-    "linuxMigrateTitle": "नया संस्करण v{{version}} उपलब्ध है"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudio कमांड-लाइन टूल्स) नहीं मिला, इसलिए AED Translator अपना वर्चुअल माइक्रोफ़ोन/स्पीकर सेट अप नहीं कर सका। इसे इंस्टॉल करें, फिर पुनः प्रयास करें:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "सिस्टम की आवाज़ स्पीकर से आ रही है। ऑनलाइन मीटिंग में माइक्रोफ़ोन सामने वाले की आवाज़ भी पकड़ सकता है। गूँज से बचने के लिए हेडफ़ोन इस्तेमाल करें।",
     "ttsEcho": "आपके स्पीकर AED Translator की अनुवादित आवाज़ को वापस माइक्रोफ़ोन में भेज रहे हैं।",
     "meetingEcho": "स्पीकर से मीटिंग की आवाज़ माइक्रोफ़ोन तक पहुँच रही है।",
     "farEndEcho": "किसी प्रतिभागी का डिवाइस आपके अनुवाद को मीटिंग में गूँज के रूप में लौटा रहा है।",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "“भाषाएँ और लाइन-अप” में अनुवाद के लिए एक मॉडल चुनें, या उसका नाम लिखें।",
     "address_missing": "शुरू करने से पहले “खाते और कुंजियाँ” में संगत सेवा का पता दर्ज करें।",
     "address_invalid": "संगत सेवा का पता इस्तेमाल नहीं किया जा सकता: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "बुनियादी सेटिंग्स",
       "maintenance": "रखरखाव और सहायता",
-      "update": "अपडेट",
-      "updateLine": "आपके पास {{version}} है।",
-      "version": "संस्करण",
-      "storeUpdates": "ब्राउज़र का स्टोर एक्सटेंशन को अपडेट रखता है।",
       "wizard": "सेटअप विज़ार्ड",
       "wizardLine": "विज़ार्ड फिर से चलाएँ; जो सहेजा है वह पहले से चुना रहेगा।",
       "rerun": "फिर से चलाएँ",

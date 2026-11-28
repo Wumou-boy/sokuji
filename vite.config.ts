@@ -11,8 +11,6 @@ import { workerManualChunks } from './vite.worker-chunks'
 
 const aedVersionDefines = {
   __APP_VERSION__: JSON.stringify(pkg.aedVersion),
-  __APP_RELEASE__: JSON.stringify(`V${pkg.aedVersion.replace(/\.0$/, '')}`),
-  __AED_PORTABLE__: JSON.stringify(process.platform === 'win32' && process.env.AED_WINDOWS_PORTABLE === '1'),
 }
 
 /**
@@ -174,7 +172,6 @@ export default defineConfig(({ command, mode }) => {
             'own-app-source': 'electron/own-app-source.js',
             'vb-cable-installer': 'electron/vb-cable-installer.js',
             'squirrel-events': 'electron/squirrel-events.js',
-            'squirrel-update': 'electron/squirrel-update.js',
             'topmost-level': 'electron/topmost-level.js',
             'subtitle-window': 'electron/subtitle-window.js',
             'popover-windows': 'electron/popover-windows.js',
@@ -190,9 +187,6 @@ export default defineConfig(({ command, mode }) => {
             'notes-http': 'electron/notes-http.js',
             'close-handshake': 'electron/close-handshake.js',
             'exit-handler': 'electron/exit-handler.js',
-            'update-install-windows': 'electron/update-install-windows.js',
-            'update-manager': 'electron/update-manager.js',
-            'update-payload': 'electron/update-payload.js',
             'window-caption-dblclick': 'electron/window-caption-dblclick.js',
             'window-caption-menu': 'electron/window-caption-menu.js',
             'ws-header-rules': 'electron/ws-header-rules.js'
@@ -209,11 +203,12 @@ export default defineConfig(({ command, mode }) => {
               sourcemap,
               minify: isBuild,
               outDir: 'dist-electron',
+              emptyOutDir: isBuild,
               // Vite 8 reads `rolldownOptions`; `rollupOptions` is silently
               // ignored here because vite-plugin-electron already normalizes the
               // main config onto the rolldown key. Putting `external` under the
-              // old key bundles electron-updater/electron-conf/the native
-              // electron-audio-loopback straight into dist-electron.
+              // old key bundles dependencies such as electron-audio-loopback
+              // straight into dist-electron.
               rolldownOptions: {
                 external: [
                   'electron',

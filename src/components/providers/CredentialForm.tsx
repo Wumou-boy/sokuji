@@ -15,6 +15,8 @@ interface CredentialFormProps {
   disabled?: boolean;
   /** The provider's credential choice (F4), drawn above the fields: its options, the setting's current value, and how to change it. */
   choice?: { options: CredentialChoice['options']; value: string; onChange(value: string): void };
+  /** Region availability of the endpoint whose key is being entered. */
+  endpointRegion?: 'official' | 'custom';
 }
 
 /**
@@ -23,7 +25,7 @@ interface CredentialFormProps {
  * multi-field credential groups; a credential choice (F4) is its Palabra
  * group's segmented control above them (`CredentialChoiceControl`).
  */
-export function CredentialForm({ fields, values, readiness, onChange, onCheck, disabled, choice }: CredentialFormProps) {
+export function CredentialForm({ fields, values, readiness, onChange, onCheck, disabled, choice, endpointRegion }: CredentialFormProps) {
   const { t } = useTranslation();
   const checking = readiness.state === 'checking';
   const status = readiness.state === 'ready' ? 'valid' : readiness.state === 'not-ready' ? 'invalid' : '';
@@ -61,6 +63,13 @@ export function CredentialForm({ fields, values, readiness, onChange, onCheck, d
       )}
       {readiness.state === 'not-ready' && (
         <div className="validation-message error">{noticeText(t, { code: readiness.code, params: readiness.params, message: readiness.reason })}</div>
+      )}
+      {endpointRegion && (
+        <p className="api-key-endpoint-region">
+          {endpointRegion === 'official'
+            ? t('settingsPage.accounts.endpointInternational', 'International availability (only in regions supported by the provider)')
+            : t('settingsPage.accounts.endpointDependsOnUrl', 'Availability depends on the endpoint URL.')}
+        </p>
       )}
     </>
   );

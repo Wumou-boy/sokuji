@@ -26,10 +26,10 @@ async function started() {
 }
 
 describe('AppAudioRecorder.begin', () => {
-  it('waits for Windows system capture to report its format before announcing success', async () => {
+  it.each(['desktop-audio-loopback', 'endpoint:test-speakers'])('waits for %s to report its format before announcing success', async (deviceId) => {
     (window as any).electron.osInfo = { platform: 'win32' };
     const rec = new AppAudioRecorder(24000);
-    const pending = rec.begin({ deviceId: 'desktop-audio-loopback' });
+    const pending = rec.begin({ deviceId });
     await Promise.resolve();
     expect(rec.getStatus()).toBe('ended');
     handlers['app-audio:event']({ event: 'format' });

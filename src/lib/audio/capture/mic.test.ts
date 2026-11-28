@@ -102,6 +102,7 @@ function settingsFixture(initial: { deviceId?: string; noiseSuppression?: NoiseS
   const unusable: string[] = [];
   const listeners = new Set<() => void>();
   const settings: MicSettings = {
+    devicesLoaded: () => true,
     deviceId: () => current.deviceId,
     deviceLabel: () => (current.deviceId === undefined ? undefined : labels[current.deviceId] ?? current.deviceId),
     isListed: (id) => listed.has(id),

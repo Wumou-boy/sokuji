@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, RefreshCw, TriangleAlert, Wrench } from 'lucide-react';
+import { RefreshCw, TriangleAlert, Wrench } from 'lucide-react';
 import { changeLanguageWithLoad } from '../../locales';
 import type { EchoCause, EchoNoticeState } from '../../lib/modern-audio/EchoMonitor';
 import { BALANCE_BELOW_FLOOR, NO_MICROPHONE, QUOTA_PENDING } from '../../lib/session/shape';
@@ -127,11 +127,7 @@ export const BANNER_CASE_LABELS = [
   'audio · macOS driver not loaded → Repair',
   'audio · macOS repairing (busy)',
   'audio · macOS repair failed → Repair',
-  'update · available → Download Now',
-  'update · available, no auto-update (Linux deb / AppImage) → Go to Download',
-  'update · downloading 42% (no dismiss)',
-  'update · downloaded → Restart and Update',
-  'both · attention above brand',
+  'audio · attention above region hint',
 ] as const;
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
@@ -147,9 +143,8 @@ function bannerCases(t: Translate): BannerProps[][] {
   });
   const retry = (busy: boolean): BannerProps['action'] => ({ label: busy ? t('audioSystem.retrying') : t('audioSystem.retry'), icon: <RefreshCw size={12} aria-hidden="true" className={busy ? 'spinning' : ''} />, onClick: noop, busy });
   const repair = (busy: boolean): BannerProps['action'] => ({ label: busy ? t('audioSystem.repairing') : t('audioSystem.repair'), icon: <Wrench size={12} aria-hidden="true" className={busy ? 'spinning' : ''} />, onClick: noop, busy });
-  const version = '0.43.0';
-  const available: BannerProps = { id: 'update', tone: 'brand', icon: <Download size={14} aria-hidden="true" />, text: t('update.available', { version }), action: { label: t('update.downloadNow'), onClick: noop }, onDismiss: noop, dismissLabel };
   const macDriver = audio(t('audioSystem.macDriverNotLoadedBody'), repair(false));
+  const regionHint: BannerProps = { id: 'region', tone: 'brand', icon: null, text: 'Region suggestion', dismissLabel };
   return [
     [audio(t('audioSystem.unavailableBody'), retry(false))],
     [audio(t('audioSystem.unavailableBody'), retry(true))],
@@ -157,11 +152,7 @@ function bannerCases(t: Translate): BannerProps[][] {
     [macDriver],
     [audio(t('audioSystem.macDriverNotLoadedBody'), repair(true))],
     [audio(t('audioSystem.macRepairFailedBody'), repair(false))],
-    [available],
-    [{ ...available, text: t('update.linuxMigrateTitle', { version }), action: { label: t('update.goToDownload'), onClick: noop } }],
-    [{ id: 'update', tone: 'brand', icon: <RefreshCw size={14} aria-hidden="true" className="spinning" />, text: t('update.downloading', { percent: 42 }), progress: 42, dismissLabel }],
-    [{ id: 'update', tone: 'brand', icon: <RefreshCw size={14} aria-hidden="true" />, text: t('update.downloaded'), action: { label: t('update.restartNow'), onClick: noop }, onDismiss: noop, dismissLabel }],
-    [macDriver, available],
+    [macDriver, regionHint],
   ];
 }
 

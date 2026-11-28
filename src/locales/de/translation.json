@@ -12,6 +12,7 @@
     "signIn": "Anmelden",
     "signUp": "Registrieren",
     "signInRequired": "<signInLink>Melden Sie sich an oder registrieren Sie sich</signInLink>, um Kizuna AI zu nutzen — kein API-Schlüssel nötig.",
+    "checking": "Wird geprüft...",
     "dismiss": "Ausblenden",
     "none": "Keine",
     "retry": "Wiederholen",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Fehler melden oder Hilfe erhalten",
     "diagnosticLogs": "Diagnoseprotokolle",
     "diagnosticLogsTooltip": "Zeichnet auf, was die App tut, damit Sie es einem Fehlerbericht beifügen können. Standardmäßig aus. Solange es aktiv ist, erscheint in der Titelleiste die Schaltfläche „Protokolle“, und die Einstellung bleibt auch nach einem Neustart aktiv.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Erscheinungsbild",
     "appearanceTooltip": "Wie die App aussieht. „System“ übernimmt die Hell-/Dunkel-Einstellung des Betriebssystems.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Benutzerdefinierte Stimme",
     "translateDetectParticipantLanguage": "Chinesisch, Japanisch und Englisch des Gegenübers automatisch erkennen",
     "translateDetectParticipantLanguageHelp": "Wenn die Sprache des Gegenübers Chinesisch, Japanisch oder Englisch ist, wird die Sprache jedes Untertitels anhand des Originals erkannt. Die gewählte Zielsprache bleibt unverändert.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Warten, bis die vorherige Sitzung beendet ist. Klicken Sie, um abzubrechen.",
     "clickToCancel": "Klicken Sie, um abzubrechen",
     "whatIHear": "Was ich höre",
-    "audioSettings": "Audioeinstellungen",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Audioeinstellungen"
   },
   "modePicker": {
     "modeYou": "Ich",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} ist in dieser Version nicht mehr verfügbar.",
     "noCandidate": "Für diese Richtung ist kein Modell für {{stage}} verfügbar."
   },
-  "update": {
-    "available": "Neue Version v{{version}} verfügbar",
-    "downloading": "Update wird heruntergeladen... {{percent}}%",
-    "downloadingIndeterminate": "Update wird heruntergeladen...",
-    "downloaded": "Update bereit, zum Abschließen neu starten",
-    "checkButton": "Nach Updates suchen",
-    "checking": "Wird geprüft...",
-    "upToDate": "Aktuell",
-    "notAvailable": "Sie verwenden die neueste Version",
-    "downloadNow": "Jetzt herunterladen",
-    "later": "Später",
-    "restartNow": "Neu starten und aktualisieren",
-    "goToDownload": "Zum Download",
-    "error": "Fehler beim Suchen nach Updates",
-    "currentVersion": "Aktuelle Version: v{{version}}",
-    "newVersion": "Neue Version: v{{version}}",
-    "autoUpdateNote": "AppImage unterstützt automatische Updates. Die Installation des AppImage ersetzt deine aktuelle Installation direkt – kein separates Deinstallieren erforderlich.",
-    "downloadAppImage": "AppImage herunterladen (empfohlen)",
-    "downloadDeb": ".deb herunterladen",
-    "linuxMigrateTitle": "Neue Version v{{version}} verfügbar"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudio-Kommandozeilenwerkzeuge) wurde nicht gefunden, daher konnte AED Translator sein virtuelles Mikrofon/virtuellen Lautsprecher nicht einrichten. Installiere es und versuche es erneut:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Die Tonausgabe läuft über Lautsprecher. In Onlinebesprechungen kann Ihr Mikrofon die Gegenseite mit aufnehmen. Verwenden Sie Kopfhörer, um Echos zu vermeiden.",
     "ttsEcho": "Ihre Lautsprecher speisen Sokujis übersetzte Sprache zurück ins Mikrofon.",
     "meetingEcho": "Meeting-Audio aus Ihren Lautsprechern erreicht das Mikrofon.",
     "farEndEcho": "Das Gerät eines Teilnehmers wirft Ihre Übersetzung als Echo ins Meeting zurück.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Wählen Sie unter „Sprachen und Aufstellung“ ein Modell für die Übersetzung oder geben Sie seinen Namen ein.",
     "address_missing": "Geben Sie vor dem Start unter „Konten und Schlüssel“ die Adresse des kompatiblen Dienstes ein.",
     "address_invalid": "Die Adresse des kompatiblen Dienstes kann nicht verwendet werden: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Grundeinstellungen",
       "maintenance": "Wartung und Hilfe",
-      "update": "Updates",
-      "updateLine": "Sie haben {{version}}.",
-      "version": "Version",
-      "storeUpdates": "Der Store des Browsers hält die Erweiterung aktuell.",
       "wizard": "Einrichtungsassistent",
       "wizardLine": "Den Assistenten noch einmal durchgehen; Gespeichertes ist vorausgewählt.",
       "rerun": "Erneut ausführen",

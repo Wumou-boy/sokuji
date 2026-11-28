@@ -19,10 +19,10 @@ import { useTurnModeStore } from '../../stores/turnModeStore';
 import { getEnvironment } from '../../utils/environment';
 import { createContextSink } from './contextSink';
 import { createAudioGraph, type SinkElement, type VirtualOutput } from './graph';
-import { OUTLET_NAMES, resolveOutlet, type OutletContext, type OutletName, type OutletSink, type Speak } from './outlets';
+import { OUTLET_NAMES, resolveOutlet, type OutletContext, type OutletName, type Speak } from './outlets';
 import { createPlayback, type Playback, type RoutingSource } from './playback';
 import type { PreviewClip } from './previewClip';
-import type { RoutingSettings } from './routes';
+import type { PlaybackSinks, RoutingSettings } from './routes';
 import { sendToTabs, targetTabIdFromSearch, toPcmDataMessage, type TabsApi } from './tabMicrophone';
 import { earTone } from './earTone';
 import { loadTestTone } from './testTone';
@@ -45,26 +45,35 @@ export interface AppAudio {
 
 /** What `resolveOutlet` needs from the stores; the form-factor log resolves outlets with the same one. */
 export function outletContext(audio: Pick<AudioState, 'selectedMonitorDevice' | 'audioMonitorDevices'>, faceToFace: boolean): OutletContext {
+  const local = audio.audioMonitorDevices.filter((device) => !device.isVirtual);
+  const present = new Set(local.map((device) => device.deviceId));
+  const selected = audio.selectedMonitorDevice?.deviceId;
   return {
-    defaultDevice: audio.selectedMonitorDevice?.deviceId,
-    // A stored outlet device that is the virtual speaker must never route the user's outlet into the meeting.
-    present: new Set(audio.audioMonitorDevices.filter((d) => !d.isVirtual).map((d) => d.deviceId)),
+    defaultDevice: selected && present.has(selected) ? selected
+      : local.length < audio.audioMonitorDevices.length ? local[0]?.deviceId : undefined,
+    present,
     faceToFace,
   };
 }
 
 export function readRouting(
-  audio: Pick<AudioState, 'isRealVoicePassthroughEnabled' | 'realVoicePassthroughVolume' | 'selectedMonitorDevice' | 'audioMonitorDevices' | 'outlets'>,
+  audio: Pick<AudioState, 'isRealVoicePassthroughEnabled' | 'realVoicePassthroughVolume' | 'selectedMonitorDevice' | 'audioMonitorDevices' | 'outlets' | 'devicesLoaded' | 'outputLabelsKnown'>,
   speak: Speak,
   meeting: boolean,
   platform: Platform,
   turnMode: TurnMode,
   faceToFace = false,
 ): RoutingSettings {
-  const context = outletContext(audio, faceToFace);
+  // An unlabeled endpoint may be the meeting cable. Wait for enumeration before
+  // sending local audio, including during startup and device reconfiguration.
+  const awaitingOutputs = platform === 'electron' && (!audio.devicesLoaded || !audio.outputLabelsKnown);
+  const context = awaitingOutputs
+    ? outletContext({ selectedMonitorDevice: null, audioMonitorDevices: [] }, faceToFace)
+    : outletContext(audio, faceToFace);
   const sinks = {
     virtual: platform === 'electron' ? findVirtualSpeaker(audio.audioMonitorDevices) : undefined,
-  } as { virtual?: string } & Record<OutletName, OutletSink>;
+    ...(awaitingOutputs || (platform === 'electron' && audio.audioMonitorDevices.some(device => device.isVirtual)) ? { requireLocalDevice: true } : {}),
+  } as PlaybackSinks;
   for (const name of OUTLET_NAMES) sinks[name] = resolveOutlet(name, audio.outlets[name], context);
   return {
     meeting,
@@ -85,7 +94,10 @@ export function readRouting(
 }
 
 export function createAppRouting(platform: Platform): RoutingSource {
-  const read = () => readRouting(useAudioStore.getState(), speechFromStores(), useRoutingStore.getState().meeting, platform, useTurnModeStore.getState().turnMode, faceToFaceFromStores());
+  const read = () => {
+    const beside = faceToFaceFromStores();
+    return readRouting(useAudioStore.getState(), speechFromStores(), useRoutingStore.getState().meeting, platform, useTurnModeStore.getState().turnMode, beside);
+  };
   return {
     get: read,
     subscribe(listener) {

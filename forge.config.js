@@ -34,7 +34,7 @@ function pruneElectronLocales(buildPath, platform) {
 module.exports = {
   packagerConfig: {
     asar: true,
-    extraResource: ['assets', 'resources'],
+    extraResource: ['assets', 'resources', ...(portableWindows ? ['LICENSE', 'THIRD_PARTY_NOTICES.md'] : [])],
     icon: process.platform === 'win32' ? 'assets/icon.ico' : 'assets/icon',
     appId: 'ai.kizunaai.sokuji',
     // The standalone trial ZIP uses the product name for its launcher.

@@ -1,6 +1,6 @@
-import { meetingTranscriptLanguage } from '../language/meetingTranscript';
+import { multilingualTranscriptLanguage, normalizeTranscriptLanguage } from '../language/meetingTranscript';
 import { useFaceToFaceStore } from '../../stores/faceToFaceStore';
-import { needsTranslation, normalizeFaceToFaceLanguage } from './route';
+import { faceToFaceSourceMatchesTarget, faceToFaceTargets, needsTranslation } from './route';
 import type { FaceToFaceLanguage, FaceToFaceLanguages } from './route';
 import type { FaceToFaceCaption } from '../../stores/faceToFaceStore';
 
@@ -8,42 +8,62 @@ interface Turn {
   id: string;
   source: string;
   sourceLanguage?: string;
+  sourceSpeaker?: string;
   speakerNumber?: number;
+  localSpeakerNumber?: number;
+  speakerUncertain?: boolean;
+  startAt?: number;
+  endAt?: number;
+  timeKind?: 'given' | 'estimated';
   sourceRefs: Set<number>;
-  qwenText: string;
   textFinal: boolean;
-  replayTranslation?: string;
-  translationError?: string;
-  generation: number;
-  replayRequested?: boolean;
-  controller?: AbortController;
+  translations: Partial<Record<FaceToFaceLanguage, string>>;
+  translationErrors: Partial<Record<FaceToFaceLanguage, string>>;
+  replays: Map<FaceToFaceLanguage, AbortController>;
 }
 
-interface RefEntry {
-  turn: Turn;
-  side: 'source' | 'translation';
-}
+type RefEntry = { turn: Turn; side: 'source' } | { turn: Turn; side: 'translation'; target: FaceToFaceLanguage };
+
+type ReplayTurn = (itemId: string, signal: AbortSignal, onText: (text: string) => void, early: boolean,
+  target: FaceToFaceLanguage, transcript: { source: string; sourceLanguage?: string }) => Promise<string>;
 
 const MAX_TURNS = 128;
 const MAX_PENDING_REFS = 256;
 const MAX_PENDING_ORIGINS = 128;
 
-/** Joins Qwen's independent source/translation events and publishes both selected languages. */
+/** Joins original text with each selected target and keeps speaker attribution on the source. */
 export class FaceToFaceCaptions {
   private readonly turns = new Map<string, Turn>();
   private readonly byRef = new Map<number, RefEntry>();
   private readonly byOrigin = new Map<string, Turn>();
   private readonly pendingByOrigin = new Map<string, number[]>();
-  private readonly pendingQwenText = new Map<number, string>();
+  private readonly pendingText = new Map<number, string>();
+  private readonly pendingTargets = new Map<number, FaceToFaceLanguage>();
   private readonly speakerNumbers = new Map<string, number>();
+  private readonly pendingLocalSpeakers = new Map<string, number>();
+  private readonly targets: FaceToFaceLanguage[];
+  private useLocalSpeakers: boolean;
   private stopped = false;
 
   constructor(
     private readonly languages: FaceToFaceLanguages,
-    private readonly replayTurn: (itemId: string, signal: AbortSignal, onText: (text: string) => void, early: boolean) => Promise<string>,
-  ) {}
+    private readonly replayTurn?: ReplayTurn,
+    private readonly options: {
+      replayFromFinal?: boolean;
+      localSpeakers?: boolean;
+      sourceLanguageHints?: readonly string[];
+      /** Absolute wall-clock cue metadata for a provider source item, when it is available. */
+      timingOf?: (origin: string) => { startAt?: number; endAt?: number; timeKind?: 'given' | 'estimated' | 'unknown' };
+      /** Wall-clock fallback used at source open/close, never at translation arrival. */
+      now?: () => number;
+      onCaption?: (caption: FaceToFaceCaption) => void;
+    } = {},
+  ) {
+    this.targets = faceToFaceTargets(languages);
+    this.useLocalSpeakers = Boolean(options.localSpeakers);
+  }
 
-  opened(e: { ref: number; side: 'source' | 'translation'; origin?: string; person?: string }): void {
+  opened(e: { ref: number; side: 'source' | 'translation'; origin?: string; person?: string; target?: FaceToFaceLanguage }): void {
     if (this.stopped) return;
     if (e.side === 'source') {
       const id = e.origin ?? `source:${e.ref}`;
@@ -51,8 +71,9 @@ export class FaceToFaceCaptions {
       let turn = this.turns.get(id) ?? this.byOrigin.get(id);
       if (!turn) {
         turn = {
-          id, source: '', qwenText: '', textFinal: false,
-          sourceRefs: new Set(), generation: 0,
+          id, source: '', textFinal: false, sourceRefs: new Set(),
+          translations: {}, translationErrors: {}, replays: new Map(),
+          ...(this.options.now ? { startAt: this.options.now(), timeKind: 'estimated' as const } : {}),
         };
         this.turns.set(id, turn);
       }
@@ -61,6 +82,8 @@ export class FaceToFaceCaptions {
       if (e.person) this.setSpeaker(turn, e.person);
       if (e.origin) {
         this.byOrigin.set(e.origin, turn);
+        turn.localSpeakerNumber ??= this.pendingLocalSpeakers.get(e.origin);
+        this.pendingLocalSpeakers.delete(e.origin);
         for (const ref of this.pendingByOrigin.get(e.origin) ?? []) {
           if (!this.byRef.has(ref)) this.attachTranslation(turn, ref);
         }
@@ -71,6 +94,10 @@ export class FaceToFaceCaptions {
       return;
     }
 
+    if (e.target) {
+      this.pendingTargets.set(e.ref, e.target);
+      this.capMap(this.pendingTargets, MAX_PENDING_REFS);
+    }
     if (e.origin) {
       const turn = this.byOrigin.get(e.origin);
       if (turn) {
@@ -82,12 +109,16 @@ export class FaceToFaceCaptions {
     }
   }
 
-  text(e: { ref: number; text: string; language?: string; person?: string }): void {
+  text(e: { ref: number; text: string; language?: string; person?: string; target?: FaceToFaceLanguage }): void {
     if (this.stopped) return;
     const entry = this.byRef.get(e.ref);
     if (!entry) {
-      this.pendingQwenText.set(e.ref, e.text);
-      this.capMap(this.pendingQwenText, MAX_PENDING_REFS);
+      this.pendingText.set(e.ref, e.text);
+      this.capMap(this.pendingText, MAX_PENDING_REFS);
+      if (e.target) {
+        this.pendingTargets.set(e.ref, e.target);
+        this.capMap(this.pendingTargets, MAX_PENDING_REFS);
+      }
       return;
     }
 
@@ -95,14 +126,16 @@ export class FaceToFaceCaptions {
     if (side === 'source') {
       if (e.person) this.setSpeaker(turn, e.person);
       turn.source = e.text;
-      const language = e.language && e.language !== 'und' ? e.language : meetingTranscriptLanguage(e.text);
+      const language = normalizeTranscriptLanguage(e.language)
+        ?? multilingualTranscriptLanguage(e.text, this.options.sourceLanguageHints);
       turn.sourceLanguage = language === 'und' ? undefined : language;
       void this.route(turn);
       return;
     }
 
-    turn.qwenText = e.text;
-    if (e.person) this.setSpeaker(turn, e.person);
+    const target = entry.target;
+    turn.translations[target] = e.text;
+    delete turn.translationErrors[target];
     this.publish(turn);
   }
 
@@ -116,6 +149,7 @@ export class FaceToFaceCaptions {
     }
     if (entry?.side === 'source' || turn.sourceRefs.has(ref)) {
       turn.textFinal = true;
+      if (turn.endAt === undefined && this.options.now) turn.endAt = this.options.now();
       void this.route(turn);
       return;
     }
@@ -126,6 +160,37 @@ export class FaceToFaceCaptions {
     }
   }
 
+  setLocalSpeaker(origin: string, number: number): void {
+    if (this.stopped || !this.useLocalSpeakers) return;
+    const turn = this.byOrigin.get(origin);
+    if (turn) {
+      turn.localSpeakerNumber = number;
+      this.publish(turn);
+    } else {
+      this.pendingLocalSpeakers.set(origin, number);
+      this.capMap(this.pendingLocalSpeakers, MAX_PENDING_ORIGINS);
+    }
+  }
+
+  /** Publishes a source turn after out-of-band metadata (such as VAD stop time) changes. */
+  refreshTiming(origin: string): void {
+    if (this.stopped) return;
+    const turn = this.byOrigin.get(origin);
+    if (turn?.sourceRefs.size) this.publish(turn);
+  }
+
+  fallBackToProviderSpeakers(): void {
+    if (this.stopped || !this.useLocalSpeakers) return;
+    this.useLocalSpeakers = false;
+    this.pendingLocalSpeakers.clear();
+    const { captions, upsertCaption } = useFaceToFaceStore.getState();
+    for (const caption of captions) {
+      const turn = this.turns.get(caption.id);
+      if (turn) this.publish(turn);
+      else if (caption.speakerNumber !== undefined) upsertCaption({ ...caption, speakerNumber: undefined });
+    }
+  }
+
   stop(): void {
     this.stopped = true;
     for (const turn of this.turns.values()) this.cancelReplay(turn);
@@ -133,100 +198,120 @@ export class FaceToFaceCaptions {
     this.byRef.clear();
     this.byOrigin.clear();
     this.pendingByOrigin.clear();
-    this.pendingQwenText.clear();
+    this.pendingText.clear();
+    this.pendingTargets.clear();
     this.speakerNumbers.clear();
+    this.pendingLocalSpeakers.clear();
   }
 
   private setSpeaker(turn: Turn, speakerId: string): void {
-    let number = this.speakerNumbers.get(speakerId);
+    const person = speakerId.trim();
+    if (!person || /^(unknown|und|unidentified|-1)$/i.test(person) || turn.speakerUncertain) return;
+    if (turn.sourceSpeaker !== undefined && turn.sourceSpeaker !== person) {
+      // A single source row can cover overlapping or reassigned speech. Do not
+      // attach this uncertainty to later turns with either of the two IDs.
+      turn.speakerUncertain = true;
+      turn.speakerNumber = undefined;
+      return;
+    }
+    turn.sourceSpeaker = person;
+    let number = this.speakerNumbers.get(person);
     if (number === undefined) {
       number = this.speakerNumbers.size + 1;
-      this.speakerNumbers.set(speakerId, number);
+      this.speakerNumbers.set(person, number);
     }
     turn.speakerNumber = number;
   }
 
   private publish(turn: Turn): void {
+    if (turn.sourceRefs.size > 0 && this.options.timingOf) {
+      try {
+        const timing = this.options.timingOf(turn.id);
+        if (timing.startAt !== undefined && Number.isFinite(timing.startAt)) turn.startAt = timing.startAt;
+        if (timing.endAt !== undefined && Number.isFinite(timing.endAt)) turn.endAt = timing.endAt;
+        if (timing.timeKind === 'given' || timing.timeKind === 'estimated') turn.timeKind = timing.timeKind;
+      } catch { /* Optional timing must not interrupt live captions. */ }
+    }
+    const error = this.targets.map((language) => turn.translationErrors[language]).find(Boolean);
+    const speakerNumber = this.useLocalSpeakers ? turn.localSpeakerNumber : turn.speakerNumber;
     const row: FaceToFaceCaption = {
       id: turn.id,
       source: turn.source,
       ...(turn.sourceLanguage ? { sourceLanguage: turn.sourceLanguage } : {}),
-      ...(turn.speakerNumber !== undefined ? { speakerNumber: turn.speakerNumber } : {}),
+      ...(speakerNumber !== undefined ? { speakerNumber } : {}),
+      ...(turn.startAt !== undefined ? { startAt: turn.startAt } : {}),
+      ...(turn.endAt !== undefined ? { endAt: turn.endAt } : {}),
+      ...(turn.timeKind ? { timeKind: turn.timeKind } : {}),
       subtitles: this.subtitlesFor(turn),
-      ...(turn.translationError ? { translationError: turn.translationError } : {}),
+      ...(error ? { translationError: error, translationErrors: { ...turn.translationErrors } } : {}),
       final: turn.textFinal,
     };
     useFaceToFaceStore.getState().upsertCaption(row);
+    try { this.options.onCaption?.(row); } catch { /* History must not interrupt live captions. */ }
   }
 
   private subtitlesFor(turn: Turn): Partial<Record<FaceToFaceLanguage, string>> {
-    const sourceLanguage = normalizeFaceToFaceLanguage(turn.sourceLanguage);
+    const sourceTarget = this.targets.find((target) => faceToFaceSourceMatchesTarget(turn.sourceLanguage, target));
     const subtitles: Partial<Record<FaceToFaceLanguage, string>> = {};
-    for (const target of new Set([this.languages.first, this.languages.second])) {
-      if (sourceLanguage === target && turn.source) subtitles[target] = turn.source;
-      else if (target === this.languages.first && turn.qwenText) subtitles[target] = turn.qwenText;
-      else if (target === this.languages.second && turn.replayTranslation) subtitles[target] = turn.replayTranslation;
+    for (const target of this.targets) {
+      if (sourceTarget === target && turn.source) subtitles[target] = turn.source;
+      else if (turn.translations[target]) subtitles[target] = turn.translations[target];
     }
     return subtitles;
   }
 
-  private async route(turn: Turn): Promise<void> {
+  private route(turn: Turn): void {
     if (this.stopped) return;
-    if (!turn.source.trim() || (!turn.textFinal && !normalizeFaceToFaceLanguage(turn.sourceLanguage))) {
-      this.publish(turn);
-      return;
+    for (const target of this.targets.slice(1)) {
+      if (!needsTranslation(turn.sourceLanguage, target)) {
+        if (turn.textFinal) turn.replays.get(target)?.abort();
+        delete turn.translationErrors[target];
+        continue;
+      }
+      if (!this.replayTurn || !turn.source.trim() || turn.replays.has(target) || turn.translations[target]
+        || (!turn.textFinal && (this.options.replayFromFinal || !turn.sourceLanguage))) continue;
+      void this.replay(turn, target, this.replayTurn);
     }
-
-    if (!needsTranslation(turn.sourceLanguage, this.languages.second)) {
-      if (turn.textFinal && turn.controller) this.cancelReplay(turn);
-      turn.translationError = undefined;
-      this.publish(turn);
-      return;
-    }
-
-    // A Qwen item represents one fixed audio range even if its text is revised.
-    if (turn.replayRequested) {
-      this.publish(turn);
-      return;
-    }
-    const generation = ++turn.generation;
-    turn.replayRequested = true;
-    turn.translationError = undefined;
-    const controller = new AbortController();
-    turn.controller = controller;
     this.publish(turn);
+  }
+
+  private async replay(turn: Turn, target: FaceToFaceLanguage, replayTurn: ReplayTurn): Promise<void> {
+    const controller = new AbortController();
+    turn.replays.set(target, controller);
+    delete turn.translationErrors[target];
     try {
       const update = (text: string) => {
-        if (this.stopped || controller.signal.aborted || generation !== turn.generation || text === turn.replayTranslation) return;
-        turn.replayTranslation = text;
-        turn.translationError = undefined;
+        if (this.stopped || controller.signal.aborted || !text || text === turn.translations[target]) return;
+        turn.translations[target] = text;
+        delete turn.translationErrors[target];
         this.publish(turn);
       };
-      update(await this.replayTurn(turn.id, controller.signal, update, !turn.textFinal));
+      update(await replayTurn(turn.id, controller.signal, update, !turn.textFinal, target,
+        { source: turn.source, sourceLanguage: turn.sourceLanguage }));
     } catch (error) {
-      if (this.stopped || controller.signal.aborted || generation !== turn.generation) return;
-      if (needsTranslation(turn.sourceLanguage, this.languages.second)) {
-        turn.translationError = error instanceof Error ? error.message : 'Subtitle translation failed.';
+      if (this.stopped || controller.signal.aborted) return;
+      if (needsTranslation(turn.sourceLanguage, target)) {
+        turn.translationErrors[target] = error instanceof Error ? error.message : 'Subtitle translation failed.';
       }
       this.publish(turn);
     } finally {
-      if (generation === turn.generation) turn.controller = undefined;
       this.pruneTurns();
     }
   }
 
   private cancelReplay(turn: Turn): void {
-    turn.controller?.abort();
-    turn.controller = undefined;
-    turn.generation += 1;
+    for (const controller of turn.replays.values()) controller.abort();
+    turn.replays.clear();
   }
 
   private attachTranslation(turn: Turn, ref: number): void {
-    this.byRef.set(ref, { turn, side: 'translation' });
-    const pending = this.pendingQwenText.get(ref);
+    const target = this.pendingTargets.get(ref) ?? this.languages.first;
+    this.pendingTargets.delete(ref);
+    this.byRef.set(ref, { turn, side: 'translation', target });
+    const pending = this.pendingText.get(ref);
     if (pending !== undefined) {
-      turn.qwenText = pending;
-      this.pendingQwenText.delete(ref);
+      turn.translations[target] = pending;
+      this.pendingText.delete(ref);
     }
   }
 

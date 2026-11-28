@@ -25,7 +25,10 @@ export interface HistoryPort {
   /** A transcript that could not be written whole, by its id: the record and its other transcripts stay. */
   deleteTranscript(args: { transcriptId: number }): Promise<void>;
   appendSentences(args: { transcriptId: number; sentences: HistorySentenceInput[] }): Promise<{ added: number }>;
-  reviseSentences(args: { transcriptId: number; revisions: Array<{ n: number; text: string }> }): Promise<void>;
+  reviseSentences(args: { transcriptId: number; revisions: Array<{
+    n: number; text: string; translation?: string | null; speaker?: string; language?: string | null;
+    startMs?: number; endMs?: number; timeKind?: 'given' | 'spread' | 'estimated';
+  }> }): Promise<void>;
   /** A finished record's sentences rewritten by hand; each keeps what was heard (design §5.2). */
   editSentences(args: { transcriptId: number; edits: Array<{ n: number; text: string }> }): Promise<void>;
   /** One fix of a misheard word: its sentences (and notes version) as found and as written; returns its id (§5.1). */

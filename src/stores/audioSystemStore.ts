@@ -30,7 +30,7 @@ interface AudioSystemActions {
 
 type AudioSystemStore = AudioSystemState & AudioSystemActions;
 
-// Store handler reference for cleanup (mirrors updateStore.ts pattern)
+// Store handler reference for cleanup
 let statusHandler: ((...args: any[]) => void) | null = null;
 
 const useAudioSystemStore = create<AudioSystemStore>()((set, get) => ({

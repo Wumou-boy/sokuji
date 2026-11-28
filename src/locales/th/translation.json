@@ -12,6 +12,7 @@
     "signIn": "เข้าสู่ระบบ",
     "signUp": "ลงทะเบียน",
     "signInRequired": "<signInLink>เข้าสู่ระบบหรือสมัครสมาชิก</signInLink> เพื่อใช้ Kizuna AI — ไม่ต้องใช้ API key",
+    "checking": "กำลังตรวจสอบ...",
     "dismiss": "ปิด",
     "none": "ไม่มี",
     "retry": "ลองใหม่",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "รายงานข้อบกพร่องหรือขอความช่วยเหลือ",
     "diagnosticLogs": "บันทึกการวินิจฉัย",
     "diagnosticLogsTooltip": "บันทึกการทำงานของแอป เพื่อให้คุณแนบไปกับรายงานข้อบกพร่องได้ ปิดไว้เป็นค่าเริ่มต้น เมื่อเปิด ปุ่ม “บันทึก” จะปรากฏในแถบชื่อ และการตั้งค่านี้จะยังเปิดอยู่หลังรีสตาร์ท",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "ลักษณะ",
     "appearanceTooltip": "รูปลักษณ์ของแอป “ระบบ” ใช้การตั้งค่าสว่างหรือมืดของระบบปฏิบัติการ",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "เสียงที่กำหนดเอง",
     "translateDetectParticipantLanguage": "ตรวจจับภาษาจีน ญี่ปุ่น และอังกฤษของอีกฝ่ายโดยอัตโนมัติ",
     "translateDetectParticipantLanguageHelp": "เมื่ออีกฝ่ายใช้ภาษาจีน ญี่ปุ่น หรืออังกฤษ ระบบจะระบุภาษาของคำบรรยายแต่ละช่วงจากต้นฉบับ โดยคงภาษาเป้าหมายที่เลือกไว้",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "กำลังรอให้เซสชันก่อนหน้าสิ้นสุด คลิกเพื่อยกเลิก",
     "clickToCancel": "คลิกเพื่อยกเลิก",
     "whatIHear": "สิ่งที่ฉันได้ยิน",
-    "audioSettings": "การตั้งค่าเสียง",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "การตั้งค่าเสียง"
   },
   "modePicker": {
     "modeYou": "ฉัน",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} ไม่มีให้ใช้งานแล้วในเวอร์ชันนี้",
     "noCandidate": "ไม่มีโมเดล{{stage}}ที่ใช้งานได้สำหรับทิศทางนี้"
   },
-  "update": {
-    "available": "เวอร์ชันใหม่ v{{version}} พร้อมใช้งาน",
-    "downloading": "กำลังดาวน์โหลดอัปเดต... {{percent}}%",
-    "downloadingIndeterminate": "กำลังดาวน์โหลดอัปเดต...",
-    "downloaded": "อัปเดตพร้อมแล้ว รีสตาร์ทเพื่อเสร็จสิ้น",
-    "checkButton": "ตรวจสอบอัปเดต",
-    "checking": "กำลังตรวจสอบ...",
-    "upToDate": "เป็นเวอร์ชันล่าสุดแล้ว",
-    "notAvailable": "คุณใช้เวอร์ชันล่าสุดอยู่แล้ว",
-    "downloadNow": "ดาวน์โหลดตอนนี้",
-    "later": "ภายหลัง",
-    "restartNow": "รีสตาร์ทและอัปเดต",
-    "goToDownload": "ไปที่ดาวน์โหลด",
-    "error": "ตรวจสอบอัปเดตล้มเหลว",
-    "currentVersion": "เวอร์ชันปัจจุบัน: v{{version}}",
-    "newVersion": "เวอร์ชันใหม่: v{{version}}",
-    "autoUpdateNote": "AppImage รองรับการอัปเดตอัตโนมัติ การติดตั้ง AppImage จะแทนที่การติดตั้งปัจจุบันของคุณ — ไม่ต้องถอนการติดตั้งแยกต่างหาก",
-    "downloadAppImage": "ดาวน์โหลด AppImage (แนะนำ)",
-    "downloadDeb": "ดาวน์โหลด .deb",
-    "linuxMigrateTitle": "เวอร์ชันใหม่ v{{version}} พร้อมใช้งาน"
-  },
   "audioSystem": {
     "pactlMissingBody": "ไม่พบ pactl (เครื่องมือบรรทัดคำสั่งของ PulseAudio) ทำให้ AED Translator ไม่สามารถตั้งค่าไมโครโฟน/ลำโพงเสมือนได้ โปรดติดตั้งแล้วลองใหม่:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "ระบบกำลังเล่นเสียงผ่านลำโพง ระหว่างประชุมออนไลน์ ไมโครโฟนอาจรับเสียงของคู่สนทนาด้วย ควรใช้หูฟังเพื่อหลีกเลี่ยงเสียงสะท้อน",
     "ttsEcho": "ลำโพงของคุณกำลังส่งเสียงแปลของ AED Translator กลับเข้าไมโครโฟน",
     "meetingEcho": "เสียงการประชุมจากลำโพงกำลังเข้าสู่ไมโครโฟน",
     "farEndEcho": "อุปกรณ์ของผู้เข้าร่วมคนหนึ่งสะท้อนคำแปลของคุณกลับเข้าที่ประชุม",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "เลือกโมเดลสำหรับการแปล หรือพิมพ์ชื่อโมเดล ใน “ภาษาและชุดบริการ”",
     "address_missing": "ป้อนที่อยู่ของบริการที่เข้ากันได้ใน “บัญชีและคีย์” ก่อนเริ่ม",
     "address_invalid": "ใช้ที่อยู่ของบริการที่เข้ากันได้ไม่ได้: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "การตั้งค่าพื้นฐาน",
       "maintenance": "การดูแลและความช่วยเหลือ",
-      "update": "การอัปเดต",
-      "updateLine": "ตอนนี้เป็น {{version}}",
-      "version": "เวอร์ชัน",
-      "storeUpdates": "สโตร์ของเบราว์เซอร์อัปเดตส่วนขยายให้เอง",
       "wizard": "วิซาร์ดการตั้งค่า",
       "wizardLine": "ทำวิซาร์ดอีกครั้ง สิ่งที่บันทึกไว้จะถูกเลือกไว้ให้",
       "rerun": "เรียกใช้อีกครั้ง",

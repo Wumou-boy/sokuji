@@ -12,6 +12,7 @@
     "signIn": "登入",
     "signUp": "註冊",
     "signInRequired": "<signInLink>登入或註冊</signInLink>即可使用 Kizuna AI，無需 API 金鑰。",
+    "checking": "檢查中...",
     "dismiss": "關閉",
     "none": "無",
     "retry": "重試",
@@ -22,10 +23,6 @@
   },
   "settings": {
     "title": "設定",
-    "autoMeetingResolved": "自動選擇正在監聽 {{app}}",
-    "autoMeetingWaiting": "可以先啟動工作階段，不必等會議音訊出現。自動選擇會持續檢查有聲音的應用程式，偵測到會議音訊後便開始擷取。瀏覽器來源可能包含其他分頁；若選錯音訊，請手動選擇會議應用程式。",
-    "autoMeetingWaitingShort": "自動（等待會議音訊）",
-    "autoMeetingLabel": "自動（會議應用程式）",
     "tabs": {
       "general": "一般",
       "audio": "音訊",
@@ -118,6 +115,8 @@
     "helpEmailTooltip": "回報問題或取得協助",
     "diagnosticLogs": "診斷日誌",
     "diagnosticLogsTooltip": "記錄應用程式的執行情況，方便附在問題回報中。預設關閉；開啟後標題列會出現「日誌」按鈕，重新啟動後仍保持開啟。",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "外觀",
     "appearanceTooltip": "應用程式的配色。「跟隨系統」採用作業系統的淺色或深色設定。",
     "appearanceMode": {
@@ -672,9 +671,6 @@
     "logsCopied": "已複製！"
   },
   "mainPanel": {
-    "autoAudioReady": "自動音訊",
-    "autoAudioWaiting": "自動音訊 · 正在搜尋",
-    "autoAudioCapturing": "自動音訊：{{app}} · {{db}}",
     "subtitleTakeover": "翻譯內容正在字幕浮層中顯示",
     "payer": {
       "paidBy": "由 {{name}} 付費",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} 在此版本中已不再提供。",
     "noCandidate": "此方向沒有可用的{{stage}}模型。"
   },
-  "update": {
-    "available": "新版本 v{{version}} 可用",
-    "downloading": "正在下載更新... {{percent}}%",
-    "downloadingIndeterminate": "正在下載更新...",
-    "downloaded": "更新已就緒，重新啟動以完成",
-    "checkButton": "檢查更新",
-    "checking": "檢查中...",
-    "upToDate": "已是最新",
-    "notAvailable": "您正在使用最新版本",
-    "downloadNow": "立即下載",
-    "later": "稍後",
-    "restartNow": "重新啟動並更新",
-    "goToDownload": "前往下載",
-    "error": "檢查更新失敗",
-    "currentVersion": "目前版本：v{{version}}",
-    "newVersion": "新版本：v{{version}}",
-    "autoUpdateNote": "AppImage 支援自動更新。安裝新版 AppImage 會直接取代目前版本 — 無需先解除安裝。",
-    "downloadAppImage": "下載 AppImage（推薦）",
-    "downloadDeb": "下載 .deb",
-    "linuxMigrateTitle": "有新版本 v{{version}}"
-  },
   "audioSystem": {
     "pactlMissingBody": "未偵測到 pactl（PulseAudio 命令列工具），AED Translator 無法建立虛擬麥克風/喇叭。請安裝後重試：",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "目前系統聲音透過喇叭播放。線上會議時，麥克風可能會收到對方的聲音，建議使用耳機。",
     "ttsEcho": "您的喇叭正把 AED Translator 的翻譯語音送回麥克風。",
     "meetingEcho": "喇叭播放的會議聲音正進入麥克風。",
     "farEndEcho": "某位與會者的裝置正把您的翻譯回聲傳回會議。",
@@ -1592,7 +1568,6 @@
     "no_legs": "開始前請選擇要翻譯的內容。",
     "turn_mode_unsupported": "此提供商不支援所選的通話模式。",
     "participant_source_unavailable": "此處無法翻譯對方。",
-    "auto_meeting_not_detected": "自動選擇未能偵測到會議應用程式的聲音。請讓對方先說話後重試，或手動選擇會議應用程式。",
     "participant_unsupported": "此提供商無法為此語言對翻譯對方。",
     "credentials_missing": "開始前請在設定中輸入您的API金鑰。",
     "not_ready": "提供商尚未就緒：{{detail}}",
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "基本設定",
       "maintenance": "維護與說明",
-      "update": "更新",
-      "updateLine": "現在是 {{version}}。",
-      "version": "版本",
-      "storeUpdates": "擴充功能由瀏覽器的商店自動更新。",
       "wizard": "設定精靈",
       "wizardLine": "從頭再走一遍精靈；已經存好的選擇會預先選上。",
       "rerun": "重新執行",

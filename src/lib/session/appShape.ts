@@ -223,13 +223,16 @@ export function readShapeFromStores(auth: AuthContext): RunShape | null {
     faceToFace,
     ...(faceToFaceAskedFromStores() ? { faceToFaceAsked: true } : {}),
     keepReplayAudio: st.keepReplayAudio,
-    shared: buildSharedSettings(
-      reversedPair(heard, accountOf(found, heard).settings, entry.pair),
-      { sourceSeconds: st.segmentationSourcePause, translationSeconds: st.segmentationTranslationPause },
-      { mode: st.segmentationMode, sentencesPerRow: st.sentenceSegmentationChunkSentences },
-      faceToFace,
-      { entries: useWordList.getState().entries, background: useWordList.getState().background },
-    ),
+    shared: {
+      ...buildSharedSettings(
+        reversedPair(heard, accountOf(found, heard).settings, entry.pair),
+        { sourceSeconds: st.segmentationSourcePause, translationSeconds: st.segmentationTranslationPause },
+        { mode: st.segmentationMode, sentencesPerRow: st.sentenceSegmentationChunkSentences },
+        faceToFace,
+        { entries: useWordList.getState().entries, background: useWordList.getState().background },
+      ),
+      ...(st.localSpeakerRecognition ? { localSpeakerRecognition: true } : {}),
+    },
     auth,
     account,
     // Who pays is read here, once, at Start; a member's choice, nothing for anyone else.

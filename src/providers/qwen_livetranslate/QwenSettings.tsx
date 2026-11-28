@@ -60,7 +60,7 @@ export function QwenVoiceSummary({ settings, leg }: VoiceSummaryProps<S>) {
  */
 export function QwenSettingsView({ settings, update, disabled = false, participantSpeaks = false, models = [], account, legs, managed = false }: SettingsProps<S> & { managed?: boolean }) {
   const { t } = useTranslation();
-  const endpoint = models[0]?.id;
+  const endpoint = isEndpointId(settings.connection) ? settings.connection : models[0]?.id;
   const bailianSelected = settings.connection === BAILIAN_ENDPOINT_ID || endpoint === BAILIAN_ENDPOINT_ID;
   const workspaceSelected = settings.connection === BAILIAN_WORKSPACE_CONNECTION;
   const workspaceAvailable = isBailianWorkspaceAvailable();
@@ -71,10 +71,10 @@ export function QwenSettingsView({ settings, update, disabled = false, participa
         <div className="settings-section">
           <div className="models-info">
             {workspaceSelected
-              ? t('providers.qwen_livetranslate.bailianWorkspaceEndpoint', 'Endpoint: Alibaba Bailian (dedicated Beijing workspace)')
+              ? t('providers.qwen_livetranslate.bailianWorkspaceEndpoint', 'Endpoint: Alibaba Bailian (dedicated Beijing workspace) · Available in mainland China')
               : bailianSelected
-                ? t('providers.qwen_livetranslate.bailianEndpoint', 'Endpoint: Alibaba Bailian (Beijing shared)')
-              : t('providers.qwen_livetranslate.keyRegion', 'Key region: {{region}}', { region: QWEN_REGION_LABELS[ENDPOINTS[endpoint as keyof typeof ENDPOINTS].region] })}
+                ? t('providers.qwen_livetranslate.bailianEndpoint', 'Endpoint: Alibaba Bailian (Beijing shared) · Available in mainland China')
+              : t('providers.qwen_livetranslate.keyRegion', 'Key region: {{region}} · {{availability}}', { region: QWEN_REGION_LABELS[ENDPOINTS[endpoint as keyof typeof ENDPOINTS].region], availability: ENDPOINTS[endpoint as keyof typeof ENDPOINTS].region === 'cn' ? t('settingsPage.accounts.endpointDomestic', 'Available in mainland China') : t('settingsPage.accounts.endpointInternational', 'International availability (only in regions supported by the provider)') })}
           </div>
           {workspaceSelected && (
             <div className="qwen-workspace-settings" data-testid="qwen-workspace-settings">
@@ -113,7 +113,7 @@ export function QwenSettingsView({ settings, update, disabled = false, participa
           <h2>
             {t('providers.qwen_livetranslate.speakerLabels', 'Speaker labels')}
             <Tooltip
-              content={t('providers.qwen_livetranslate.speakerLabelsTooltip', "Numbers the other side's people — Speaker 1, Speaker 2… — once more than one voice is heard.\n\nIt can mistake one person for several. Disabled: no numbers are shown.\n\nApplies from the next session.")}
+              content={t('providers.qwen_livetranslate.speakerLabelsTooltip', "Numbers the speakers heard on supported automatic meeting streams — Speaker 1, Speaker 2… — once more than one voice is heard. With local speaker recognition enabled, this also applies to people sharing your microphone.\n\nIt can mistake one person for several. Disabled: no numbers are shown.\n\nApplies from the next session.")}
               position="top"
             >
               <CircleHelp className="tooltip-trigger" size={14} style={{ marginLeft: '8px' }} />

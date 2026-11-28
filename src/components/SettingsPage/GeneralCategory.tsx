@@ -5,17 +5,17 @@
 // wizard, the guide) — each with its name and a line about it on the left and a real control on the right; the
 // support address and the discussion board last, as two quiet links. What each control does is today's help
 // section's, through the same helpers.
-import type { ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
+import { SPEAKER_MODEL, ModelIntegrityError, verifiedSpeakerModel } from '../../lib/faceToFace/speakerModel';
 import { useTranslation } from 'react-i18next';
-import { isElectron, isExtension } from '../../utils/environment';
 import { useStartBasicsTour } from '../Tour/useStartBasicsTour';
 import { useSetSetupWizardOpen } from '../../stores/layoutStore';
-import { useDiagnosticLogs, useSetDiagnosticLogs, useThemeSetting, useSetThemeSetting } from '../../stores/settingsStore';
+import { useDiagnosticLogs, useSetDiagnosticLogs, useLocalSpeakerRecognition, useSetLocalSpeakerRecognition, useThemeSetting, useSetThemeSetting } from '../../stores/settingsStore';
 import { useAnalytics } from '../../lib/analytics';
 import type { ThemeSetting } from '../../lib/theme/theme';
 import ToggleSwitch from '../Settings/shared/ToggleSwitch';
 import { INTERFACE_LANGUAGES } from '../Settings/sections/interfaceLanguages';
-import { openExternalUrl, useInterfaceLanguageChange, useUpdateCheck } from '../Settings/sections/helpActions';
+import { openExternalUrl, useInterfaceLanguageChange } from '../Settings/sections/helpActions';
 import type { CategoryBodyProps } from './SettingsPage';
 
 // The mock's order: the system's, then dark, then light.
@@ -37,14 +37,29 @@ export function GeneralCategory({ locked }: CategoryBodyProps) {
   const { t, i18n } = useTranslation();
   const { trackEvent } = useAnalytics();
   const changeLanguage = useInterfaceLanguageChange('GeneralCategory');
-  const update = useUpdateCheck();
   const theme = useThemeSetting();
   const setTheme = useSetThemeSetting();
   const logs = useDiagnosticLogs();
   const setLogs = useSetDiagnosticLogs();
+  const localSpeakerRecognition = useLocalSpeakerRecognition();
+  const setLocalSpeakerRecognition = useSetLocalSpeakerRecognition();
+  const speakerFile = useRef<HTMLInputElement>(null);
+  const [modelState, setModelState] = useState<'idle' | 'loading' | 'ready' | 'invalid' | 'error'>('idle');
+  async function importSpeakerModel(file?: File) {
+    if (!file) return;
+    setModelState('loading');
+    try {
+      await verifiedSpeakerModel(file);
+      const { storeFile } = await import('../../lib/local-inference/modelStorage');
+      await storeFile(SPEAKER_MODEL.id, SPEAKER_MODEL.filename, file);
+      setModelState('ready');
+    } catch (err) {
+      setModelState(err instanceof ModelIntegrityError ? 'invalid' : 'error');
+    }
+  }
+  const speakerRecognitionName = t('settings.localSpeakerRecognition', 'Local speaker recognition');
   const setWizardOpen = useSetSetupWizardOpen();
   const startTour = useStartBasicsTour();
-  const version = __APP_RELEASE__;
   const logsName = t('settings.diagnosticLogs', 'Diagnostic logs');
 
   return (
@@ -70,6 +85,22 @@ export function GeneralCategory({ locked }: CategoryBodyProps) {
             ))}
           </span>
         </Row>
+        <Row name={speakerRecognitionName} line={t('settings.localSpeakerRecognitionHint', 'Use local speaker recognition with Qwen automatic turns in online meetings and Face to Face.')}>
+          <ToggleSwitch checked={localSpeakerRecognition} onChange={() => void setLocalSpeakerRecognition(!localSpeakerRecognition)} label="" ariaLabel={speakerRecognitionName} disabled={locked} />
+        </Row>
+        {localSpeakerRecognition && (
+          <Row name={t('settings.speakerModelFile', 'Offline speaker model')} line={modelState === 'ready' ? t('settings.speakerModelReady', 'Verified and available on this computer.')
+            : modelState === 'invalid' ? t('settings.speakerModelInvalid', 'This file does not match the supported CAM++ model.')
+            : modelState === 'error' ? t('settings.speakerModelError', 'Could not read or save the model on this computer.') : SPEAKER_MODEL.filename}>
+            <input hidden ref={speakerFile} type="file" accept=".onnx" onChange={event => {
+              const file = event.currentTarget.files?.[0];
+              event.currentTarget.value = '';
+              void importSpeakerModel(file);
+            }} />
+            <button type="button" className="model-row__btn" disabled={locked || modelState === 'loading'}
+              onClick={() => speakerFile.current?.click()}>{t('settings.speakerModelImport', 'Import ONNX file')}</button>
+          </Row>
+        )}
       </div>
 
       <h3 className="settings-subhead">{t('settingsPage.general.maintenance', 'Maintenance and help')}</h3>
@@ -77,21 +108,6 @@ export function GeneralCategory({ locked }: CategoryBodyProps) {
         <Row name={logsName} line={t('settings.diagnosticLogsTooltip', 'Record what the app does, so you can attach it to a bug report. Off by default. While on, a “Logs” button appears in the title bar, and the setting stays on after a restart.')}>
           <ToggleSwitch checked={logs} onChange={() => void setLogs(!logs)} label="" ariaLabel={logsName} />
         </Row>
-        {isElectron() && !__AED_PORTABLE__ ? (
-          <Row name={t('settingsPage.general.update', 'Updates')} line={t('settingsPage.general.updateLine', 'You have {{version}}.', { version })}>
-            <button type="button" className="model-row__btn" disabled={update.status === 'checking'} onClick={update.check}>
-              {update.status === 'checking' ? t('update.checking', 'Checking…')
-                : update.result === 'not-available' ? t('update.upToDate', 'Up to date')
-                  : update.result === 'error' ? t('update.error', 'Failed to check')
-                    : t('update.checkButton', 'Check for updates')}
-            </button>
-          </Row>
-        ) : (
-          <Row name={t('settingsPage.general.version', 'Version')}
-            line={isExtension() ? t('settingsPage.general.storeUpdates', "The browser's store keeps the extension up to date.") : undefined}>
-            <span className="general-row__value">{version}</span>
-          </Row>
-        )}
         <Row name={t('settingsPage.general.wizard', 'Setup wizard')} line={t('settingsPage.general.wizardLine', 'Go through the wizard again; what you have saved comes pre-selected.')}>
           <button type="button" className="model-row__btn" disabled={locked} title={locked ? t('settings.sessionActiveNotice') : undefined}
             onClick={() => setWizardOpen(true)}>

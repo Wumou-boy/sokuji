@@ -7,7 +7,7 @@ import { useProviderStore } from '../../stores/providerStore';
 import { CredentialForm } from '../providers/CredentialForm';
 import { useAuthContext } from '../providers/useAuthContext';
 import type { CategoryBodyProps } from './SettingsPage';
-import { ACCOUNT_SERVICES, accountAnchor, providerOfTarget } from './accountRows';
+import { ACCOUNT_SERVICES, accountAnchor, accountKeyOf, providerOfTarget } from './accountRows';
 import { FindModels } from './FindModels';
 
 export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps) {
@@ -20,11 +20,12 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
   }, []);
   const entries = useProviderStore((s) => s.entries);
   const readiness = useProviderStore((s) => s.readiness);
+  const models = useProviderStore((s) => s.models);
   const [open, setOpen] = useState<string | null>(null);
 
   useEffect(() => {
     const id = openedBy === 'provider' ? stageProviderId('transcription') : providerOfTarget(openedBy);
-    if (id && providers.some((provider) => provider.id === id)) setOpen(id);
+    if (id && providers.some((provider) => provider.id === accountKeyOf(id))) setOpen(accountKeyOf(id));
   }, [openedBy, providers]);
 
   useEffect(() => {
@@ -38,10 +39,12 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
       {providers.map((provider) => {
         const { id, icon: Icon } = provider;
         const compatible = id === 'openai_compatible';
-        const name = compatible ? t('providers.openai_compatible.name', 'OpenAI-Compatible Service') : 'Qwen LiveTranslate';
+        const official = id === 'openai';
+        const name = compatible ? t('providers.openai_compatible.name', 'OpenAI-Compatible Service') : official ? 'OpenAI' : 'Qwen LiveTranslate';
         const description = compatible
           ? t('settingsPage.accounts.internalModel', 'Company network and PGX text models')
-          : t('settingsPage.accounts.bailianModel', 'Alibaba Cloud Model Studio · real-time translation');
+          : official ? t('settingsPage.accounts.endpointInternational', 'International availability (only in regions supported by the provider)')
+            : t('settingsPage.accounts.bailianModel', 'Alibaba Cloud Model Studio · real-time translation');
         const entry = entries[id];
         const fields = provider.credentials.fields((entry?.settings ?? provider.settings.defaults) as never);
         const emptyRequired = fields.filter((field) => !field.optional && !String(entry?.credentials[field.key] ?? '').trim());
@@ -73,6 +76,7 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
                 fields={fields}
                 values={entry.credentials}
                 readiness={answer}
+                endpointRegion={compatible ? 'custom' : official ? 'official' : undefined}
                 onChange={(key, value) => useProviderStore.getState().setCredential(provider, key, value)}
                 choice={provider.credentials.choice && {
                   options: provider.credentials.choice.options,
@@ -92,6 +96,17 @@ export function AccountsCategory({ locked, openedBy = null }: CategoryBodyProps)
                 disabled={locked}
               />
             )}
+            {isOpen && id === 'qwen_livetranslate' && (() => {
+              const connection = String((entry?.settings as { connection?: unknown } | undefined)?.connection ?? '');
+              const endpoint = connection === 'cn' || connection === 'intl' ? connection : models[id]?.[0]?.id;
+              const bailian = connection.startsWith('bailian') || endpoint === 'bailian-cn';
+              const domestic = bailian || endpoint === 'cn';
+              return <p className="api-key-endpoint-region">{domestic
+                ? t('settingsPage.accounts.endpointDomestic', 'Available in mainland China')
+                : endpoint === 'intl'
+                  ? t('settingsPage.accounts.endpointInternational', 'International availability (only in regions supported by the provider)')
+                  : t('settingsPage.accounts.qwenRegionDetected', 'QwenCloud key region is detected when you check the key.')}</p>;
+            })()}
             {isOpen && entry && compatible && (
               <>
                 <FindModels service="compatible" credentials={entry.credentials} disabled={locked} />

@@ -3,6 +3,9 @@
  * `speech_started` / `speech_stopped` are relative to the audio stream that
  * reached the socket, so callers must append only successfully sent PCM.
  */
+import { realClock, type Clock } from '../contract/clock';
+import { createSentClock, type SentClock } from '../contract/sentClock';
+
 export const QWEN_AUDIO_HISTORY_MS = 120_000;
 export const QWEN_AUDIO_READ_WAIT_MS = 3_000;
 export const QWEN_AUDIO_MAX_SEGMENT_MS = 30_000;
@@ -18,7 +21,14 @@ export class QwenTurnAudioError extends Error {
 }
 
 interface AudioChunk { start: number; end: number; offset: number; used: number; pcm: Int16Array }
-interface Turn { start?: number; end?: number; failure?: QwenTurnAudioError }
+interface Turn {
+  start?: number;
+  end?: number;
+  estimatedStartAt?: number;
+  estimatedEndAt?: number;
+  timing: 'server' | 'estimated';
+  failure?: QwenTurnAudioError;
+}
 interface Waiter {
   resolve(pcm: Int16Array): void;
   reject(error: QwenTurnAudioError): void;
@@ -42,15 +52,18 @@ export class QwenTurnAudioBuffer {
   private disposed = false;
   private readonly historySamples: number;
   private readonly maxSegmentSamples: number;
+  private sentClock: SentClock;
 
   constructor(
     private readonly sampleRate = 24_000,
     historyMs = QWEN_AUDIO_HISTORY_MS,
     private readonly readWaitMs = QWEN_AUDIO_READ_WAIT_MS,
     private readonly maxSegmentMs = QWEN_AUDIO_MAX_SEGMENT_MS,
+    private readonly clock: Pick<Clock, 'now'> = realClock,
   ) {
     this.historySamples = Math.floor(sampleRate * historyMs / 1000);
     this.maxSegmentSamples = Math.floor(sampleRate * maxSegmentMs / 1000);
+    this.sentClock = createSentClock(clock);
   }
 
   /** Called only after appendFrame(pcm) has been accepted by WebSocket.send. */
@@ -72,6 +85,7 @@ export class QwenTurnAudioBuffer {
     }
     const end = start + pcm.length;
     this.sampleOffset = end;
+    this.sentClock.sent(pcm.length, this.sampleRate);
     this.trimHistory();
     this.notifyStreams();
   }
@@ -80,8 +94,9 @@ export class QwenTurnAudioBuffer {
     if (this.disposed || !itemId) return;
     const turn = this.turn(itemId);
     const start = this.toSampleOffset(audioStartMs);
-    if (start === undefined) turn.failure = new QwenTurnAudioError('Qwen did not provide audio_start_ms for this source item.', 'missing_timestamp');
-    else turn.start = start;
+    turn.timing = start === undefined ? 'estimated' : turn.timing;
+    turn.start = this.clipOffset(start ?? this.sampleOffset);
+    turn.estimatedStartAt = start === undefined ? this.clock.now() : undefined;
     this.settle(itemId);
     this.notifyStreams(itemId);
   }
@@ -90,10 +105,40 @@ export class QwenTurnAudioBuffer {
     if (this.disposed || !itemId) return;
     const turn = this.turn(itemId);
     const end = this.toSampleOffset(audioEndMs);
-    if (end === undefined) turn.failure = new QwenTurnAudioError('Qwen did not provide audio_end_ms for this source item.', 'missing_timestamp');
-    else turn.end = end;
+    turn.timing = end === undefined ? 'estimated' : turn.timing;
+    // Qwen timestamps can race the outbound audio queue. Keep only PCM that
+    // has actually been accepted by WebSocket.send at the time of the event.
+    turn.end = end === undefined ? this.sampleOffset : end;
+    turn.estimatedEndAt = end === undefined ? this.clock.now() : undefined;
     this.settle(itemId);
     this.notifyStreams(itemId);
+  }
+
+  /** Whether a source range uses Qwen offsets or arrival-time fallback offsets. */
+  timingOf(itemId: string): 'server' | 'estimated' | 'unknown' {
+    return this.turns.get(itemId)?.timing ?? 'unknown';
+  }
+
+  /** Maps a Qwen source item's server/fallback stream range back to absolute wall-clock times. */
+  timeRange(itemId: string): {
+    startAt?: number;
+    endAt?: number;
+    timeKind: 'given' | 'estimated' | 'unknown';
+  } {
+    const turn = this.turns.get(itemId);
+    if (!turn) return { timeKind: 'unknown' };
+    const startAt = turn.estimatedStartAt
+      ?? (turn.start === undefined ? undefined : this.sentClock.at((turn.start * 1000) / this.sampleRate));
+    const endAt = turn.estimatedEndAt
+      ?? (turn.end === undefined ? undefined : this.sentClock.at((turn.end * 1000) / this.sampleRate));
+    const timeKind = startAt === undefined && endAt === undefined
+      ? 'unknown'
+      : turn.timing === 'server' && startAt !== undefined && endAt !== undefined ? 'given' : 'estimated';
+    return {
+      ...(startAt !== undefined ? { startAt } : {}),
+      ...(endAt !== undefined ? { endAt } : {}),
+      timeKind,
+    };
   }
 
   /**
@@ -172,8 +217,7 @@ export class QwenTurnAudioBuffer {
             if (cursor < earliest) throw new QwenTurnAudioError('The Qwen audio range has expired from the bounded history.', 'history_expired');
             if (turn.end !== undefined) {
               if (turn.end <= turn.start!) throw new QwenTurnAudioError('Qwen returned an invalid audio range.', 'invalid_range');
-              if (turn.end - turn.start! > buffer.maxSegmentSamples) throw new QwenTurnAudioError(`The Qwen audio range exceeds ${buffer.maxSegmentMs} ms.`, 'too_long');
-              if (turn.end < cursor) throw new QwenTurnAudioError('Qwen returned an invalid audio range behind PCM already streamed.', 'invalid_range');
+              if (turn.end < cursor) return;
               if (turn.end === cursor) return;
               if (turn.end <= buffer.sampleOffset) {
                 while (cursor < turn.end) {
@@ -187,7 +231,6 @@ export class QwenTurnAudioBuffer {
               }
             } else {
               const safeEnd = Math.max(0, buffer.sampleOffset - Math.floor(buffer.sampleRate * STREAM_TRAILING_GUARD_MS / 1000));
-              if (safeEnd - turn.start! > buffer.maxSegmentSamples) throw new QwenTurnAudioError(`The Qwen audio range exceeds ${buffer.maxSegmentMs} ms.`, 'too_long');
               if (cursor < safeEnd) {
                 const next = Math.min(safeEnd, cursor + PCM_BLOCK_SAMPLES);
                 const piece = buffer.copySamples(cursor, next);
@@ -231,6 +274,7 @@ export class QwenTurnAudioBuffer {
     this.chunks = [];
     this.turns.clear();
     this.sampleOffset = 0;
+    this.sentClock = createSentClock(this.clock);
   }
 
   /** Releases retained PCM and rejects reads that have not completed. */
@@ -242,12 +286,13 @@ export class QwenTurnAudioBuffer {
     this.chunks = [];
     this.turns.clear();
     this.sampleOffset = 0;
+    this.sentClock = createSentClock(this.clock);
   }
 
   private turn(itemId: string): Turn {
     const existing = this.turns.get(itemId);
     if (existing) return existing;
-    const created: Turn = {};
+    const created: Turn = { timing: 'server' };
     this.turns.set(itemId, created);
     this.pruneTurns();
     return created;
@@ -256,6 +301,11 @@ export class QwenTurnAudioBuffer {
   private toSampleOffset(value: unknown): number | undefined {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return undefined;
     return Math.round(value * this.sampleRate / 1000);
+  }
+
+  private clipOffset(offset: number): number {
+    const earliest = this.chunks[0]?.start ?? this.sampleOffset;
+    return Math.max(earliest, Math.min(this.sampleOffset, offset));
   }
 
   private settle(itemId: string): void {

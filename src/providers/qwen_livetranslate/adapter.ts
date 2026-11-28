@@ -41,6 +41,8 @@ import { framePayload } from '../../lib/contract/framePayload';
 import { HeaderSocketError, ruleFor, type OpenHeaderSocket } from '../../lib/contract/headerSocket';
 import { WS_OPEN } from '../../lib/contract/socket';
 import { describeCause } from '../../lib/diagnostics/describeCause';
+import { QwenTurnAudioBuffer } from '../../lib/faceToFace/audioBuffer';
+import { startLocalDiarization } from '../../lib/faceToFace/localDiarization';
 import { closeCodeAction, createReconnector, refusalResult, reissueFailed, type AttemptResult, type DropInfo, type GiveUp, type Reconnector } from '../../lib/session/reconnect';
 import { isVoiced } from '../../lib/session/turn';
 import type { DetectEndpoint, Detection } from './check';
@@ -230,6 +232,10 @@ class QwenLeg implements AdapterSession {
   private letGoSession: () => void = () => {};
   /** Each connection's own: a reconnect's segments start afresh, their refs carrying on. */
   private segments: QwenSegments;
+  private readonly turnAudio?: QwenTurnAudioBuffer;
+  private readonly localDiarization?: ReturnType<typeof startLocalDiarization>;
+  /** Attribution namespace stays fixed across reconnects for this run. */
+  private useLocalSpeakerIds = false;
   /** Which connection of the run this is, 1 for the first: speaker labels carry it (a reconnect numbers people from 1 again). */
   private connection = 1;
   /** What the next connection dials with: the request's key or token, then each token the lease answers. */
@@ -299,12 +305,18 @@ class QwenLeg implements AdapterSession {
   ) {
     this.sessionVoice = request.config.voice;
     this.targetLanguage = request.config.target;
+    const localSpeakers = request.config.activity === 'meeting' && request.config.localSpeakerRecognition === true;
+    this.useLocalSpeakerIds = localSpeakers;
+    const meetingAudio = localSpeakers ? new QwenTurnAudioBuffer() : undefined;
+    this.turnAudio = meetingAudio;
     if (!request.credentials.lease) this.setTargetLanguage = (language) => this.switchTarget(language);
     this.segments = new QwenSegments({
       sink: events,
       person: request.config.person,
+      localSpeakers,
       connection: this.connection,
       detectIncomingLanguage: request.config.detectIncomingLanguage,
+      sourceLanguageHints: request.config.sourceLanguageHints,
       skipSameLanguageText: request.config.skipSameLanguageText,
       targetLanguage: request.config.target,
     });
@@ -318,6 +330,27 @@ class QwenLeg implements AdapterSession {
       gaveUp: (e) => this.gaveUp(e),
       attempt: ({ signal }) => this.attempt(signal),
     });
+    if (meetingAudio) {
+      let assignedLocally = false;
+      this.localDiarization = startLocalDiarization(
+        meetingAudio, request.signal,
+        (status) => {
+          // Before the first local label, falling back to Qwen is coherent for
+          // the whole stream. After that point, do not mix provider IDs into
+          // the same leg: leave uncertain turns unnumbered instead.
+          if (status === 'unavailable' && !assignedLocally) {
+            this.segments.fallBackToProviderSpeakers();
+            this.useLocalSpeakerIds = false;
+            meetingAudio.dispose();
+          }
+          this.frame('in', 'session.local_speakers', { status });
+        },
+        (itemId, number) => {
+          assignedLocally = true;
+          this.segments.localSpeaker(itemId, number);
+        },
+      );
+    }
   }
 
   async open(): Promise<AdapterSession> {
@@ -441,7 +474,12 @@ class QwenLeg implements AdapterSession {
   /** Writes one append frame, then accounts for exactly the PCM accepted by the socket. */
   private sendPcm(ws: WebSocket, pcm: Int16Array): void {
     ws.send(appendFrame(pcm));
-    this.request.config.turnAudio?.append(pcm);
+    this.sourceTurnAudio()?.append(pcm);
+  }
+
+  /** Face-to-face replay may attach its bounded buffer after the session starts. */
+  private sourceTurnAudio(): QwenTurnAudioBuffer | undefined {
+    return this.turnAudio ?? this.request.config.turnAudio;
   }
 
   /** The screen source's subscription, when the request has one: frames are kept or sent by `onFrame`, a loss and a return are said. */
@@ -872,9 +910,9 @@ class QwenLeg implements AdapterSession {
     switch (e.type) {
       case 'input_audio_buffer.speech_started': {
         const speaker = typeof e.speaker_id === 'number' ? e.speaker_id : null;
-        this.frame('in', e.type, { itemId, speaker });
+        this.frame('in', e.type, { itemId, speaker, audioStartMs: e.audio_start_ms });
         if (itemId) {
-          this.request.config.turnAudio?.speechStarted(itemId, e.audio_start_ms);
+          this.sourceTurnAudio()?.speechStarted(itemId, e.audio_start_ms);
           this.segments.heard(itemId, speaker);
         }
         return;
@@ -901,7 +939,12 @@ class QwenLeg implements AdapterSession {
       case 'response.text.delta': {
         const delta = str(e.delta);
         this.frame('in', e.type, { itemId, delta });
-        if (itemId && delta) this.segments.text(itemId, e.type.startsWith('conversation.') ? 'source' : 'translation', delta);
+        if (itemId && delta) this.segments.text(
+          itemId,
+          e.type.startsWith('conversation.') ? 'source' : 'translation',
+          delta,
+          str(e.language) ?? undefined,
+        );
         return;
       }
       case 'conversation.item.input_audio_transcription.completed':
@@ -909,7 +952,12 @@ class QwenLeg implements AdapterSession {
       case 'response.text.done': {
         const final = str(e.transcript) ?? str(e.text);
         this.frame('in', e.type, { itemId, text: final });
-        if (itemId) this.segments.done(itemId, e.type.startsWith('conversation.') ? 'source' : 'translation', final);
+        if (itemId) this.segments.done(
+          itemId,
+          e.type.startsWith('conversation.') ? 'source' : 'translation',
+          final,
+          str(e.language) ?? undefined,
+        );
         return;
       }
       case 'response.audio.delta':
@@ -949,8 +997,11 @@ class QwenLeg implements AdapterSession {
         this.probeCleared();
         return;
       case 'input_audio_buffer.speech_stopped':
-        if (itemId) this.request.config.turnAudio?.speechStopped(itemId, e.audio_end_ms);
-        this.frame('in', e.type, { itemId });
+        if (itemId) {
+          this.sourceTurnAudio()?.speechStopped(itemId, e.audio_end_ms);
+          this.localDiarization?.speechStopped(itemId);
+        }
+        this.frame('in', e.type, { itemId, audioEndMs: e.audio_end_ms });
         return;
       case 'response.created':
       case 'response.content_part.added':
@@ -1047,7 +1098,7 @@ class QwenLeg implements AdapterSession {
   }
 
   private disconnectLive(): void {
-    this.request.config.turnAudio?.resetStream();
+    this.sourceTurnAudio()?.resetStream();
     this.segments.abandon();
     this.resetTurnState();
     this.stopKeepalive();
@@ -1100,9 +1151,11 @@ class QwenLeg implements AdapterSession {
     this.segments = new QwenSegments({
       sink: this.events,
       person: this.request.config.person,
+      localSpeakers: this.useLocalSpeakerIds,
       firstRef: this.segments.nextRef,
       connection: this.connection,
       detectIncomingLanguage: this.request.config.detectIncomingLanguage,
+      sourceLanguageHints: this.request.config.sourceLanguageHints,
       skipSameLanguageText: this.request.config.skipSameLanguageText,
       targetLanguage: this.targetLanguage,
       labelTranslationLanguage: this.targetLanguage !== this.request.config.target,
@@ -1224,6 +1277,10 @@ class QwenLeg implements AdapterSession {
     this.stopFrames = () => {};
     this.latest = null;
     this.segments.stop();
+    if (this.localDiarization) {
+      this.localDiarization.dispose();
+      this.turnAudio?.dispose();
+    }
     const ws = this.socket;
     this.socket = null;
     if (ws) {

@@ -46,6 +46,8 @@ export type EchoCancellation = 'app' | 'all';
 
 /** The settings a microphone follows, read live. */
 export interface MicSettings {
+  /** Whether the shared audio store has finished restoring the saved device and mute settings. */
+  devicesLoaded(): boolean;
   /** The selected device; undefined while none is, and the source waits for one. */
   deviceId(): string | undefined;
   /** The selected device's name, for the notices. */

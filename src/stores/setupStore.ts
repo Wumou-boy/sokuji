@@ -24,7 +24,7 @@ export interface SetupStore {
    *  flash on every launch. */
   loaded: boolean;
   hydrate: () => Promise<void>;
-  completeSetup: (r: { scenario: ScenarioId; providerPath: ProviderPath; provider: string }) => Promise<void>;
+  completeSetup: (r: { scenario: ScenarioId; providerPath: ProviderPath | null; provider: string }) => Promise<void>;
   completeTour: (chapter: TourChapter, method: 'finished' | 'skipped') => Promise<void>;
 }
 

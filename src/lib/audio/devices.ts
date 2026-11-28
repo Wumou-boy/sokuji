@@ -9,6 +9,7 @@ import type { AudioDevice } from '../../stores/audioStore';
 import { isVirtualMic, isVirtualSpeaker } from '../../utils/audioDevices';
 import { matchOutputForm, UNKNOWN_FORM, type OutputDeviceInfo, type OutputForm } from './formFactor';
 import { currentNativeOutputs } from './nativeOutputs';
+import { isDedicatedMeetingInput } from './virtualSpeaker';
 
 // Declare chrome namespace for extension messaging (the permission toast's link).
 declare const chrome: any;
@@ -149,7 +150,17 @@ export async function listSystemAudioSources(): Promise<AudioDevice[]> {
     }
 
     // Get list of audio sinks from the main process
-    const sources = await window.electron.invoke('list-system-audio-sources');
+    const sources = await window.electron.invoke('list-system-audio-sources') ?? [];
+    if (window.electron.osInfo?.platform === 'win32') {
+      const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+      for (const device of devices) {
+        if (device.kind === 'audioinput' && device.deviceId !== 'default' && device.deviceId !== 'communications'
+            && isDedicatedMeetingInput(device.label)) {
+          const id = `cable:${device.deviceId}`;
+          sources.push({ deviceId: id, appKey: id, label: device.label });
+        }
+      }
+    }
     console.info('[Sokuji] [AudioDevices] Found system audio sources:', sources?.length || 0);
     return sources || [];
   } catch (error) {

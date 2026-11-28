@@ -15,7 +15,7 @@ const DISPATCH_TIMEOUT_MS = 40_000;
 const DEFAULT_CLIENT_TIMEOUT_MS = 45_000;
 const MAX_CLIENT_TIMEOUT_MS = 60_000;
 const COMMANDS = new Set([
-  'status', 'view.set-mode', 'audio.inputs', 'audio.system-check', 'audio.echo-check', 'session.start', 'session.stop', 'logs.enable', 'logs.list', 'captions.list',
+  'status', 'view.set-mode', 'audio.inputs', 'audio.system-check', 'session.start', 'session.stop', 'logs.enable', 'logs.list', 'captions.list',
   'provider.configure-qwen-beijing', 'provider.configure-qwen-workspace', 'provider.configure-qwen-defaults', 'credentials.status', 'notes.check',
   'voice.benchmark', 'face-to-face.start', 'face-to-face.stop', 'face-to-face.replay', 'usage.summary',
 ]);
@@ -34,6 +34,10 @@ function ownKeysOnly(value, allowed) {
   return isPlainObject(value) && Object.keys(value).every((key) => allowed.includes(key));
 }
 
+function isReplayLanguageTag(value) {
+  return typeof value === 'string' && value.length <= 35 && /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(value);
+}
+
 function normalizeWorkspaceId(value) {
   if (typeof value !== 'string') return null;
   const id = value.trim().toLowerCase();
@@ -48,15 +52,10 @@ function normalizeArgs(command, args) {
   if (args === undefined) args = {};
   if (!isPlainObject(args)) return { error: failure('BAD_ARGS', 'Command arguments must be an object.') };
   if (command === 'audio.system-check') {
-    if (!ownKeysOnly(args, ['auto']) || (args.auto !== undefined && typeof args.auto !== 'boolean')) {
-      return { error: failure('BAD_ARGS', 'The audio check accepts only a boolean auto option.') };
-    }
-    return { args };
-  }
-  if (command === 'audio.echo-check') {
-    if (!ownKeysOnly(args, ['micLabel']) || (args.micLabel !== undefined &&
-      (typeof args.micLabel !== 'string' || args.micLabel.length < 1 || args.micLabel.length > 180))) {
-      return { error: failure('BAD_ARGS', 'The echo check accepts only an exact microphone label.') };
+    if (!ownKeysOnly(args, ['endpointLabel']) ||
+        (args.endpointLabel !== undefined && (typeof args.endpointLabel !== 'string' ||
+          args.endpointLabel.trim().length < 1 || args.endpointLabel.length > 180))) {
+      return { error: failure('BAD_ARGS', 'Use one exact Windows playback source label.') };
     }
     return { args };
   }
@@ -68,10 +67,10 @@ function normalizeArgs(command, args) {
     return { args };
   }
   if (command === 'voice.benchmark') {
-    if (!ownKeysOnly(args, ['round']) || !Number.isInteger(args.round) || args.round < 1 || args.round > 9) {
+    if (!ownKeysOnly(args, ['round', 'firstSpeakerOnly']) || (args.firstSpeakerOnly !== undefined && typeof args.firstSpeakerOnly !== 'boolean') || !Number.isInteger(args.round) || args.round < 1 || args.round > 9) {
       return { error: failure('BAD_ARGS', 'Choose a benchmark round from 1 to 9.') };
     }
-    return { args: { round: args.round } };
+    return { args: { round: args.round, ...(args.firstSpeakerOnly ? { firstSpeakerOnly: true } : {}) } };
   }
   if (command === 'view.set-mode') {
     if (!ownKeysOnly(args, ['mode']) || !['meeting', 'face-to-face'].includes(args.mode)) {
@@ -120,6 +119,17 @@ function normalizeArgs(command, args) {
     }
     if (args.limit === undefined) return { args: { limit: 20, includeText: args.includeText ?? false } };
     return { args: { limit: Math.min(args.limit, 100), includeText: args.includeText ?? false } };
+  }
+  if (command === 'face-to-face.replay') {
+    if (!ownKeysOnly(args, ['localSpeakers', 'thirdLanguage']) ||
+        (args.localSpeakers !== undefined && typeof args.localSpeakers !== 'boolean') ||
+        (args.thirdLanguage !== undefined && !isReplayLanguageTag(args.thirdLanguage))) {
+      return { error: failure('BAD_ARGS', 'Face-to-face replay accepts localSpeakers and an optional subtitle language code.') };
+    }
+    return { args: {
+      ...(args.localSpeakers === true ? { localSpeakers: true } : {}),
+      ...(args.thirdLanguage ? { thirdLanguage: args.thirdLanguage } : {}),
+    } };
   }
   if (Object.keys(args).length !== 0) return { error: failure('BAD_ARGS', `${command} does not accept arguments.`) };
   return { args: {} };
@@ -221,7 +231,19 @@ async function removeStaleControlFile(profileDir) {
     throw Object.assign(new Error('Existing agent-control metadata cannot be verified.'), { code: 'AGENT_CONTROL_METADATA_INVALID' });
   }
   if (await pidIsAlive(previous.pid)) {
-    throw Object.assign(new Error('Another agent-control endpoint may still be active.'), { code: 'AGENT_CONTROL_ALREADY_ACTIVE' });
+    // Windows reuses process IDs. Metadata is published only after listen(),
+    // so a definitively missing per-run pipe also proves the owner is stale.
+    const validPipe = previous.version === VERSION && typeof previous.pipe === 'string'
+      && previous.pipe.startsWith(PIPE_PREFIX) && /^[a-f0-9]{32}$/.test(previous.pipe.slice(PIPE_PREFIX.length))
+      && /^[a-f0-9]{64}$/.test(previous.token ?? '');
+    const missing = validPipe && await new Promise((resolve) => {
+      const probe = net.createConnection(previous.pipe);
+      const finish = (gone) => { probe.destroy(); resolve(gone); };
+      probe.setTimeout(500, () => finish(false));
+      probe.once('connect', () => finish(false));
+      probe.once('error', (error) => finish(error.code === 'ENOENT'));
+    });
+    if (!missing) throw Object.assign(new Error('Another agent-control endpoint may still be active.'), { code: 'AGENT_CONTROL_ALREADY_ACTIVE' });
   }
   const current = await fs.readFile(file).catch((error) => error && error.code === 'ENOENT' ? null : Promise.reject(error));
   if (current && current.equals(contents)) await fs.unlink(file);
@@ -396,4 +418,4 @@ async function agentControlCommunicate({ profileDir, command, args = {}, timeout
   });
 }
 
-module.exports = { startAgentControl, agentControlCommunicate, normalizeWorkspaceId, isWorkspaceKey };
+module.exports = { startAgentControl, agentControlCommunicate, normalizeWorkspaceId, isWorkspaceKey, isReplayLanguageTag };

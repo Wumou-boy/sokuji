@@ -4,8 +4,7 @@
 // sitting at the top of the panel next to *Translation* languages, two
 // adjacent blocks both called "language". But it is set once and never
 // revisited, and by its own description it does NOT affect what you can
-// translate. That makes it a fact about the application, like the version
-// number and the update check, not a feature setting.
+// translate. It is not a feature setting.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 
@@ -37,17 +36,6 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('../../Tour/useStartBasicsTour', () => ({ useStartBasicsTour: () => vi.fn() }));
 
-let electron = false;
-vi.mock('../../../utils/environment', () => ({ isElectron: () => electron }));
-
-let updateStatus: 'idle' | 'checking' | 'not-available' | 'error' | 'available' = 'idle';
-const checkForUpdates = vi.fn();
-vi.mock('../../../stores/updateStore', () => ({
-  useUpdateStatus: () => updateStatus,
-  useCheckForUpdates: () => checkForUpdates,
-  useOpenUpdateDialog: () => vi.fn(),
-}));
-
 // Records suppression so the picker's interaction with it can be asserted;
 // renders children either way, as the real one does.
 //
@@ -74,17 +62,12 @@ vi.mock('../../Tooltip/Tooltip', () => ({
   },
 }));
 
-// Injected by vite's `define` at build time, so it does not exist here.
-vi.stubGlobal('__APP_RELEASE__', 'V0.2.3');
-vi.stubGlobal('__AED_PORTABLE__', false);
 
 const { default: HelpSection } = await import('./HelpSection');
 const { INTERFACE_LANGUAGES } = await import('./interfaceLanguages');
 
 beforeEach(() => {
   cleanup();
-  electron = false;
-  updateStatus = 'idle';
   changeLanguageWithLoad.mockReset();
   changeLanguageWithLoad.mockResolvedValue(undefined);
   setUILanguage.mockReset();
@@ -358,46 +341,6 @@ describe('diagnostic logs switch in Help', () => {
     expect(toggle().getAttribute('aria-checked')).toBe('true');
     fireEvent.click(toggle());
     expect(setDiagnosticLogs).toHaveBeenCalledWith(false);
-  });
-});
-
-describe('the update check’s result on its link (spec 2026-10-05 §5)', () => {
-  beforeEach(() => { electron = true; vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); });
-
-  const link = () => screen.getByText(/update\.(checkButton|checking|upToDate|error)/).closest('button') as HTMLButtonElement;
-
-  it('says Up to date for five seconds, then offers the check again', () => {
-    updateStatus = 'checking';
-    const { rerender } = render(<HelpSection />);
-    updateStatus = 'not-available'; rerender(<HelpSection />);
-    expect(link().className).toContain('help-link--ok');
-    expect(link().textContent).toBe('update.upToDate');
-    act(() => { vi.advanceTimersByTime(5000); });
-    rerender(<HelpSection />);
-    expect(link().textContent).toBe('update.checkButton');
-  });
-
-  // Review Focus 5: a second failure shows again although the status returns to the same value.
-  it('says the check failed, in red, every time it fails', () => {
-    updateStatus = 'checking';
-    const { rerender } = render(<HelpSection />);
-    updateStatus = 'error'; rerender(<HelpSection />);
-    expect(link().className).toContain('help-link--error');
-    expect(link().textContent).toBe('update.error');
-    act(() => { vi.advanceTimersByTime(5000); });
-    rerender(<HelpSection />);
-    expect(link().textContent).toBe('update.checkButton');
-    updateStatus = 'checking'; rerender(<HelpSection />);
-    updateStatus = 'error'; rerender(<HelpSection />);
-    expect(link().textContent).toBe('update.error');
-  });
-
-  it.each(['error', 'not-available'] as const)('mounting with a stale %s status shows the idle link', (stale) => {
-    updateStatus = stale;
-    render(<HelpSection />);
-    expect(link().textContent).toBe('update.checkButton');
-    expect(link().className).not.toContain('help-link--');
   });
 });
 

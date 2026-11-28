@@ -12,6 +12,7 @@
     "signIn": "サインイン",
     "signUp": "サインアップ",
     "signInRequired": "<signInLink>サインインまたはサインアップ</signInLink>すると、APIキーなしでKizuna AIを利用できます。",
+    "checking": "確認中...",
     "dismiss": "閉じる",
     "none": "なし",
     "retry": "再試行",
@@ -21,11 +22,12 @@
     "translatedBothWays": "相互翻訳"
   },
   "settings": {
+    "speakerModelFile": "オフライン話者モデル",
+    "speakerModelReady": "検証済み。この端末に保存しました。",
+    "speakerModelInvalid": "対応する CAM++ モデルと一致しません。",
+    "speakerModelError": "モデルの読み込みまたは保存に失敗しました。",
+    "speakerModelImport": "ONNX ファイルを読み込む",
     "title": "設定",
-    "autoMeetingResolved": "自動選択は {{app}} の音声を取得しています",
-    "autoMeetingWaiting": "会議音声がなくても先にセッションを開始できます。自動選択は音声のあるアプリを定期的に確認し、会議音声を検出するとキャプチャを開始します。ブラウザーの音声には他のタブが含まれる場合があります。誤った音声が選ばれた場合は会議アプリを手動で選択してください。",
-    "autoMeetingWaitingShort": "自動（会議音声を待機中）",
-    "autoMeetingLabel": "自動（会議アプリ）",
     "tabs": {
       "general": "一般",
       "audio": "オーディオ",
@@ -118,6 +120,8 @@
     "helpEmailTooltip": "バグの報告やヘルプの取得",
     "diagnosticLogs": "診断ログ",
     "diagnosticLogsTooltip": "アプリの動作を記録し、不具合報告に添付できるようにします。既定ではオフです。オンにするとタイトルバーに「ログ」ボタンが表示され、再起動後もオンのままです。",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "外観",
     "appearanceTooltip": "アプリの配色。「システム」は OS のライト／ダーク設定に合わせます。",
     "appearanceMode": {
@@ -608,6 +612,8 @@
       "speakerLabels": "話者ラベル",
       "speakerLabelsTooltip": "相手側の人に番号を付けます（話者 1、話者 2…）。2 人以上の声が聞こえたときに表示されます。\n\n1 人を複数人と誤認することがあります。無効：番号は表示されません。\n\n次回のセッションから適用されます。",
       "connectionPersonal": "Personal QwenCloud",
+      "connectionQwenBeijing": "QwenCloud · 北京（中国本土）",
+      "connectionQwenInternational": "QwenCloud · シンガポール（海外）",
       "connectionBailianShared": "Bailian shared",
       "connectionBailianWorkspace": "Company workspace",
       "workspaceApiKey": "Company workspace API key",
@@ -672,9 +678,6 @@
     "logsCopied": "コピー完了！"
   },
   "mainPanel": {
-    "autoAudioReady": "自動音声",
-    "autoAudioWaiting": "自動音声 · 検索中",
-    "autoAudioCapturing": "自動音声: {{app}} · {{db}}",
     "subtitleTakeover": "翻訳は字幕オーバーレイに表示されています",
     "payer": {
       "paidBy": "{{name}} が支払い",
@@ -1079,27 +1082,6 @@
     "notInCatalog": "{{from}}はこのバージョンでは利用できなくなりました。",
     "noCandidate": "この方向で利用できる{{stage}}モデルがありません。"
   },
-  "update": {
-    "available": "新しいバージョン v{{version}} が利用可能です",
-    "downloading": "アップデートをダウンロード中... {{percent}}%",
-    "downloadingIndeterminate": "アップデートをダウンロード中...",
-    "downloaded": "アップデート準備完了、再起動して完了してください",
-    "checkButton": "アップデートを確認",
-    "checking": "確認中...",
-    "upToDate": "最新です",
-    "notAvailable": "最新バージョンを使用しています",
-    "downloadNow": "今すぐダウンロード",
-    "later": "後で",
-    "restartNow": "再起動してアップデート",
-    "goToDownload": "ダウンロードページへ",
-    "error": "アップデートの確認に失敗しました",
-    "currentVersion": "現在のバージョン: v{{version}}",
-    "newVersion": "新しいバージョン: v{{version}}",
-    "autoUpdateNote": "AppImage は自動更新に対応しています。新しい AppImage をインストールすると現在のバージョンをその場で置き換えます — 個別にアンインストールする必要はありません。",
-    "downloadAppImage": "AppImage をダウンロード（推奨）",
-    "downloadDeb": ".deb をダウンロード",
-    "linuxMigrateTitle": "新しいバージョン v{{version}} が利用できます"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl（PulseAudio のコマンドラインツール）が見つからなかったため、AED Translator は仮想マイク/スピーカーを設定できませんでした。インストールしてから再試行してください：",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1325,7 @@
     }
   },
   "echoNotice": {
+    "startupSpeakers": "システムの出力はスピーカーです。オンライン会議ではマイクが相手の声も拾うことがあるため、ヘッドホンの使用をおすすめします。",
     "ttsEcho": "スピーカーから出た AED Translator の翻訳音声がマイクに回り込んでいます。",
     "meetingEcho": "スピーカーから出た会議の音声がマイクに届いています。",
     "farEndEcho": "参加者のデバイスがあなたの翻訳を会議にエコーとして返しています。",
@@ -1592,7 +1575,6 @@
     "no_legs": "開始する前に翻訳する対象を選択してください。",
     "turn_mode_unsupported": "このプロバイダーは選択した会話モードに対応していません。",
     "participant_source_unavailable": "ここでは相手の翻訳はできません。",
-    "auto_meeting_not_detected": "会議アプリの音声を検出できませんでした。相手に話してもらってから自動選択を再試行するか、会議アプリを手動で選択してください。",
     "participant_unsupported": "このプロバイダーはこの言語ペアで相手を翻訳できません。",
     "credentials_missing": "開始する前に設定でAPIキーを入力してください。",
     "not_ready": "プロバイダーの準備ができていません: {{detail}}",
@@ -1778,8 +1760,15 @@
     "errorListen": "共有を開始できませんでした：{{reason}}"
   },
   "faceToFace": {
+    "singleMicSetup": "マイクを1本使い、字幕を2言語または3言語選びます。",
+    "openSubtitles": "対面字幕を開く",
     "modeGroup": "翻訳モード",
     "onlineMeeting": "オンライン会議",
+    "confirmModeSwitch": "現在のセッションを終了してモードを切り替えますか？",
+    "sharedServiceUnsupported": "対面字幕を使うには、設定で Qwen LiveTranslate または OpenAI Realtime Translate を選択してください。",
+    "openTranslationSettings": "翻訳設定を開く",
+    "sharedMicrophoneOff": "集音するには、音声設定で使用するマイクを選択してください。",
+    "openMicrophoneSettings": "マイク設定を開く",
     "title": "対面",
     "intro": "字幕の言語を 2 つ選び、1 つのマイクで交互に話します。",
     "backToMeeting": "オンライン会議",
@@ -1808,6 +1797,10 @@
     "assignSpeakers": "誰が話していますか？",
     "detectedSpeaker": "検出された話者 {{id}}",
     "captions": "会話字幕",
+    "recordingFailed": "マイクの録音を最後まで保存できませんでした。",
+    "recordingNotice": "聞き取りを開始すると、マイクの録音と字幕がこの PC の履歴に保存されます。",
+    "historyPartial": "一部の字幕を保存できませんでした。セッション終了までは現在の画面で確認できます。",
+    "historyNotKept": "保存する字幕や録音がありませんでした。",
     "waiting": "話し始めると、ここに字幕が表示されます。",
     "speakerUnknown": "話者が未確定",
     "languageUnknown": "言語不明",
@@ -1822,7 +1815,13 @@
     "playedRight": "右耳で再生",
     "notPlayed": "再生されません：この翻訳は {{target}} ではなく {{language}} のため、誰にも読み上げられません。",
     "legendMe": "{{language}} · 自分",
-    "legendOther": "{{language}} · 相手"
+    "legendOther": "{{language}} · 相手",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -1922,6 +1921,10 @@
     },
     "accounts": {
       "internalModel": "社内ネットワークと PGX のテキストモデル",
+      "endpointDomestic": "中国本土で利用可能",
+      "endpointInternational": "国際エンドポイント（サービス提供地域のみ）",
+      "endpointDependsOnUrl": "利用可能な地域は接続先 URL によって異なります。",
+      "qwenRegionDetected": "キーの確認時に QwenCloud のリージョンを自動判定します。",
       "bailianModel": "Alibaba Cloud Model Studio · リアルタイム翻訳",
       "internalModelHint": "「言語と構成」でモデル名を選択または入力します。",
       "addKey": "キーを追加",
@@ -2084,10 +2087,6 @@
     "general": {
       "basics": "基本設定",
       "maintenance": "メンテナンスとヘルプ",
-      "update": "アップデート",
-      "updateLine": "現在は {{version}} です。",
-      "version": "バージョン",
-      "storeUpdates": "拡張機能はブラウザのストアが自動で更新します。",
       "wizard": "セットアップウィザード",
       "wizardLine": "ウィザードをもう一度たどります。保存済みの選択は最初から選ばれています。",
       "rerun": "もう一度実行",
@@ -2130,6 +2129,9 @@
     }
   },
   "history": {
+    "notesChooseBailian": "「アカウントとキー」で百錬の共有エンドポイントまたは会社のワークスペースを選んでください。",
+    "notesWorkspaceApi": "会社のワークスペース API",
+    "notesSharedApi": "百錬の共有エンドポイント · 通常の API キー",
     "title": "履歴",
     "back": "戻る",
     "search": "履歴を検索",

@@ -12,6 +12,7 @@
     "signIn": "Giriş Yap",
     "signUp": "Kayıt Ol",
     "signInRequired": "<signInLink>Giriş yapın veya kayıt olun</signInLink> — API anahtarı olmadan Kizuna AI kullanın.",
+    "checking": "Kontrol ediliyor...",
     "dismiss": "Kapat",
     "none": "Yok",
     "retry": "Yeniden dene",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Hataları bildirin veya yardım alın",
     "diagnosticLogs": "Tanılama günlükleri",
     "diagnosticLogsTooltip": "Uygulamanın ne yaptığını kaydeder, böylece bir hata raporuna ekleyebilirsiniz. Varsayılan olarak kapalıdır. Açıkken başlık çubuğunda “Günlükler” düğmesi görünür ve ayar yeniden başlatmadan sonra da açık kalır.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Görünüm",
     "appearanceTooltip": "Uygulamanın görünümü. “Sistem” işletim sisteminin açık veya koyu ayarını kullanır.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Özel ses",
     "translateDetectParticipantLanguage": "Karşı tarafın Çince, Japonca ve İngilizcesini otomatik algıla",
     "translateDetectParticipantLanguageHelp": "Karşı tarafın dili Çince, Japonca veya İngilizce olduğunda her altyazının dili orijinal metinden belirlenir. Seçilen çeviri hedefi aynı kalır.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Önceki oturumun sona ermesi bekleniyor. İptal etmek için tıklayın.",
     "clickToCancel": "İptal etmek için tıklayın",
     "whatIHear": "Duyduklarım",
-    "audioSettings": "Ses ayarları",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Ses ayarları"
   },
   "modePicker": {
     "modeYou": "Ben",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} bu sürümde artık kullanılamıyor.",
     "noCandidate": "Bu yön için kullanılabilir {{stage}} modeli yok."
   },
-  "update": {
-    "available": "Yeni sürüm v{{version}} mevcut",
-    "downloading": "Güncelleme indiriliyor... {{percent}}%",
-    "downloadingIndeterminate": "Güncelleme indiriliyor...",
-    "downloaded": "Güncelleme hazır, tamamlamak için yeniden başlatın",
-    "checkButton": "Güncellemeleri Kontrol Et",
-    "checking": "Kontrol ediliyor...",
-    "upToDate": "Güncel",
-    "notAvailable": "En son sürümü kullanıyorsunuz",
-    "downloadNow": "Şimdi İndir",
-    "later": "Daha Sonra",
-    "restartNow": "Yeniden Başlat ve Güncelle",
-    "goToDownload": "İndirmeye Git",
-    "error": "Güncellemeler kontrol edilemedi",
-    "currentVersion": "Mevcut sürüm: v{{version}}",
-    "newVersion": "Yeni sürüm: v{{version}}",
-    "autoUpdateNote": "AppImage otomatik güncellemeleri destekler. AppImage'i kurmak mevcut kurulumunuzun yerini alır — ayrıca kaldırmanıza gerek yoktur.",
-    "downloadAppImage": "AppImage İndir (önerilen)",
-    "downloadDeb": ".deb İndir",
-    "linuxMigrateTitle": "Yeni sürüm v{{version}} mevcut"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudio komut satırı araçları) bulunamadığı için AED Translator sanal mikrofonunu/hoparlörünü kuramadı. Kurun ve ardından yeniden deneyin:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Sistem sesi hoparlörlerden geliyor. Çevrimiçi toplantıda mikrofon karşı tarafın sesini de alabilir. Yankıyı önlemek için kulaklık kullanın.",
     "ttsEcho": "Hoparlörleriniz AED Translator'nin çevrilmiş sesini mikrofona geri besliyor.",
     "meetingEcho": "Hoparlörlerinizden gelen toplantı sesi mikrofona ulaşıyor.",
     "farEndEcho": "Bir katılımcının cihazı çevirinizi toplantıya yankı olarak geri gönderiyor.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "“Diller ve düzen” bölümünde çeviri için bir model seçin veya adını yazın.",
     "address_missing": "Başlamadan önce “Hesaplar ve anahtarlar” bölümünde uyumlu hizmetin adresini girin.",
     "address_invalid": "Uyumlu hizmetin adresi kullanılamıyor: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Temel ayarlar",
       "maintenance": "Bakım ve yardım",
-      "update": "Güncellemeler",
-      "updateLine": "Sizdeki sürüm {{version}}.",
-      "version": "Sürüm",
-      "storeUpdates": "Uzantıyı tarayıcının mağazası güncel tutar.",
       "wizard": "Kurulum sihirbazı",
       "wizardLine": "Sihirbazdan yeniden geçin; kaydettikleriniz önceden seçili gelir.",
       "rerun": "Yeniden çalıştır",

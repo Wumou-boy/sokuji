@@ -38,6 +38,7 @@ describe('settingsStore', () => {
     useSettingsStore.setState({
       provider: Provider.OPENAI,
       isValidating: false,
+      localSpeakerRecognition: false,
     });
     vi.clearAllMocks();
   });
@@ -495,6 +496,28 @@ describe('settingsStore', () => {
 
       expect(useLogStore.getState().enabled).toBe(true);
       mockGetSetting.mockReset();
+    });
+  });
+
+  describe('localSpeakerRecognition', () => {
+    it('defaults off, persists changes, and restores the saved value', async () => {
+      expect(useSettingsStore.getState().localSpeakerRecognition).toBe(false);
+      mockSetSetting.mockResolvedValue(undefined);
+      await useSettingsStore.getState().setLocalSpeakerRecognition(true);
+      expect(useSettingsStore.getState().localSpeakerRecognition).toBe(true);
+      expect(mockSetSetting).toHaveBeenCalledWith('settings.common.localSpeakerRecognition', true);
+
+      mockGetSetting.mockImplementation(async (key: string, fallback: unknown) =>
+        key === 'settings.common.localSpeakerRecognition' ? true : fallback);
+      await useSettingsStore.getState().loadSettings();
+      expect(useSettingsStore.getState().localSpeakerRecognition).toBe(true);
+    });
+
+    it('rolls back when persistence fails', async () => {
+      useSettingsStore.setState({ localSpeakerRecognition: false });
+      mockSetSetting.mockRejectedValueOnce(new Error('disk full'));
+      await useSettingsStore.getState().setLocalSpeakerRecognition(true);
+      expect(useSettingsStore.getState().localSpeakerRecognition).toBe(false);
     });
   });
 

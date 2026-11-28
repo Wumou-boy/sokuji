@@ -12,6 +12,7 @@
     "signIn": "Iniciar Sesión",
     "signUp": "Registrarse",
     "signInRequired": "<signInLink>Inicia sesión o regístrate</signInLink> para usar Kizuna AI — sin clave API.",
+    "checking": "Comprobando...",
     "dismiss": "Descartar",
     "none": "Ninguno",
     "retry": "Reintentar",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Informa de errores u obtén ayuda",
     "diagnosticLogs": "Registros de diagnóstico",
     "diagnosticLogsTooltip": "Registra lo que hace la aplicación para que puedas adjuntarlo a un informe de errores. Desactivado de forma predeterminada. Mientras esté activado, aparece un botón «Registros» en la barra de título, y la opción sigue activada tras reiniciar.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Apariencia",
     "appearanceTooltip": "El aspecto de la aplicación. «Sistema» usa el ajuste claro u oscuro del sistema operativo.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Voz personalizada",
     "translateDetectParticipantLanguage": "Detectar automáticamente el chino, japonés e inglés de la otra persona",
     "translateDetectParticipantLanguageHelp": "Si la otra persona habla chino, japonés o inglés, identifica el idioma de cada subtítulo a partir del original. El idioma de destino se mantiene como se haya elegido.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Esperando a que termine la sesión anterior. Haz clic para cancelar.",
     "clickToCancel": "Haz clic para cancelar",
     "whatIHear": "Lo que oigo",
-    "audioSettings": "Configuración de audio",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Configuración de audio"
   },
   "modePicker": {
     "modeYou": "Yo",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} ya no está disponible en esta versión.",
     "noCandidate": "No hay ningún modelo de {{stage}} disponible para esta dirección."
   },
-  "update": {
-    "available": "Nueva versión v{{version}} disponible",
-    "downloading": "Descargando actualización... {{percent}}%",
-    "downloadingIndeterminate": "Descargando actualización...",
-    "downloaded": "Actualización lista, reinicia para completar",
-    "checkButton": "Buscar actualizaciones",
-    "checking": "Comprobando...",
-    "upToDate": "Actualizado",
-    "notAvailable": "Estás usando la última versión",
-    "downloadNow": "Descargar ahora",
-    "later": "Más tarde",
-    "restartNow": "Reiniciar y actualizar",
-    "goToDownload": "Ir a descarga",
-    "error": "Error al buscar actualizaciones",
-    "currentVersion": "Versión actual: v{{version}}",
-    "newVersion": "Nueva versión: v{{version}}",
-    "autoUpdateNote": "AppImage admite actualizaciones automáticas. Instalar el AppImage reemplaza tu instalación actual directamente — no es necesario desinstalar por separado.",
-    "downloadAppImage": "Descargar AppImage (recomendado)",
-    "downloadDeb": "Descargar .deb",
-    "linuxMigrateTitle": "Nueva versión v{{version}} disponible"
-  },
   "audioSystem": {
     "pactlMissingBody": "No se encontró pactl (herramientas de línea de comandos de PulseAudio), por lo que AED Translator no pudo configurar su micrófono/altavoz virtual. Instálalo y vuelve a intentarlo:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "El sonido sale por los altavoces. En una reunión, el micrófono puede captar la voz de la otra persona. Usa auriculares para evitar el eco.",
     "ttsEcho": "Sus altavoces devuelven la voz traducida de AED Translator al micrófono.",
     "meetingEcho": "El audio de la reunión desde sus altavoces está llegando al micrófono.",
     "farEndEcho": "El dispositivo de un participante devuelve su traducción como eco a la reunión.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Elige un modelo para la traducción, o escribe su nombre, en «Idiomas y combinación».",
     "address_missing": "Introduce la dirección del servicio compatible en «Cuentas y claves» antes de empezar.",
     "address_invalid": "No se puede usar la dirección del servicio compatible: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Lo básico",
       "maintenance": "Mantenimiento y ayuda",
-      "update": "Actualizaciones",
-      "updateLine": "Tienes la {{version}}.",
-      "version": "Versión",
-      "storeUpdates": "La tienda del navegador mantiene la extensión al día.",
       "wizard": "Asistente de configuración",
       "wizardLine": "Recorre el asistente otra vez; lo que tienes guardado viene seleccionado.",
       "rerun": "Ejecutar de nuevo",

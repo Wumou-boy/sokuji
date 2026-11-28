@@ -12,6 +12,7 @@
     "signIn": "Mag-sign In",
     "signUp": "Mag-sign Up",
     "signInRequired": "<signInLink>Mag-sign in o mag-sign up</signInLink> para gamitin ang Kizuna AI — hindi kailangan ng API key.",
+    "checking": "Sinusuri...",
     "dismiss": "I-dismiss",
     "none": "Wala",
     "retry": "Subukang muli",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Mag-report ng bug o humingi ng tulong",
     "diagnosticLogs": "Mga diagnostic log",
     "diagnosticLogsTooltip": "Itinatala ang ginagawa ng app para mailakip mo ito sa isang ulat ng bug. Naka-off bilang default. Habang naka-on, may lalabas na button na “Mga Log” sa title bar, at mananatili itong naka-on pagkatapos mag-restart.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Itsura",
     "appearanceTooltip": "Kung paano mukhang ang app. Ang “System” ay gumagamit ng light o dark na setting ng operating system.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Custom na boses",
     "translateDetectParticipantLanguage": "Awtomatikong tukuyin ang Chinese, Japanese, at English ng kausap",
     "translateDetectParticipantLanguageHelp": "Kapag Chinese, Japanese, o English ang wika ng kausap, tukuyin mula sa orihinal ang wika ng bawat caption. Mananatili ang napiling target na wika ng salin.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Hinihintay na matapos ang nakaraang session. I-click upang kanselahin.",
     "clickToCancel": "I-click upang kanselahin",
     "whatIHear": "Ang naririnig ko",
-    "audioSettings": "Mga setting ng audio",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Mga setting ng audio"
   },
   "modePicker": {
     "modeYou": "Ako",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "Hindi na available ang {{from}} sa bersyong ito.",
     "noCandidate": "Walang available na modelo ng {{stage}} para sa direksyong ito."
   },
-  "update": {
-    "available": "Bagong bersyon v{{version}} ay magagamit na",
-    "downloading": "Dina-download ang update... {{percent}}%",
-    "downloadingIndeterminate": "Dina-download ang update...",
-    "downloaded": "Handa na ang update, i-restart para makumpleto",
-    "checkButton": "Suriin ang mga Update",
-    "checking": "Sinusuri...",
-    "upToDate": "Napapanahon",
-    "notAvailable": "Ginagamit mo na ang pinakabagong bersyon",
-    "downloadNow": "I-download Ngayon",
-    "later": "Mamaya",
-    "restartNow": "I-restart at I-update",
-    "goToDownload": "Pumunta sa Download",
-    "error": "Hindi nagawang suriin ang mga update",
-    "currentVersion": "Kasalukuyang bersyon: v{{version}}",
-    "newVersion": "Bagong bersyon: v{{version}}",
-    "autoUpdateNote": "Sinusuportahan ng AppImage ang mga awtomatikong update. Pinapalitan ng pag-install ng AppImage ang kasalukuyan mong installation — hindi na kailangang mag-uninstall nang hiwalay.",
-    "downloadAppImage": "I-download ang AppImage (inirerekomenda)",
-    "downloadDeb": "I-download ang .deb",
-    "linuxMigrateTitle": "Bagong bersyon v{{version}} ay magagamit na"
-  },
   "audioSystem": {
     "pactlMissingBody": "Hindi nahanap ang pactl (mga command-line tool ng PulseAudio), kaya hindi ma-set up ng AED Translator ang virtual na mikropono/speaker nito. I-install ito, pagkatapos ay subukang muli:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Sa speaker lumalabas ang tunog ng system. Maaaring masagap ng mikropono ang boses ng kausap sa online na pulong. Gumamit ng headphones para maiwasan ang echo.",
     "ttsEcho": "Ibinabalik ng iyong speaker ang isinaling boses ng AED Translator sa mikropono.",
     "meetingEcho": "Umaabot sa mikropono ang audio ng meeting mula sa iyong speaker.",
     "farEndEcho": "Ini-echo ng device ng isang kalahok ang iyong salin pabalik sa meeting.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Pumili ng modelo para sa pagsasalin, o i-type ang pangalan nito, sa “Mga wika at line-up”.",
     "address_missing": "Ilagay ang address ng compatible na serbisyo sa “Mga account at key” bago magsimula.",
     "address_invalid": "Hindi magagamit ang address ng compatible na serbisyo: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Mga pangunahing setting",
       "maintenance": "Pagpapanatili at tulong",
-      "update": "Mga update",
-      "updateLine": "Nasa {{version}} ka.",
-      "version": "Bersyon",
-      "storeUpdates": "Ang store ng browser ang nag-a-update sa extension.",
       "wizard": "Setup wizard",
       "wizardLine": "Daanan muli ang wizard; nakapili na ang mga naka-save mo.",
       "rerun": "Patakbuhin muli",

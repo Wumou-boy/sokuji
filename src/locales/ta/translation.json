@@ -12,6 +12,7 @@
     "signIn": "உள்ளிட வருக",
     "signUp": "பதிவு செய்யவும்",
     "signInRequired": "<signInLink>உள்நுழையவும் அல்லது பதிவு செய்யவும்</signInLink> — API விசை இல்லாமல் Kizuna AI ஐப் பயன்படுத்தலாம்.",
+    "checking": "சரிபார்க்கிறது...",
     "dismiss": "நிராகரி",
     "none": "எதுவுமில்லை",
     "retry": "மீண்டும் முயற்சி",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "பிழைகளைப் புகாரளிக்கவும் அல்லது உதவி பெறவும்",
     "diagnosticLogs": "கண்டறிதல் பதிவுகள்",
     "diagnosticLogsTooltip": "பிழை அறிக்கையுடன் இணைக்க, பயன்பாடு என்ன செய்கிறது என்பதைப் பதிவுசெய்கிறது. இயல்பாக முடக்கப்பட்டுள்ளது. இயக்கத்தில் இருக்கும்போது தலைப்புப் பட்டியில் “பதிவுகள்” பொத்தான் தோன்றும், மறுதொடக்கத்திற்குப் பிறகும் இயக்கத்திலேயே இருக்கும்.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "தோற்றம்",
     "appearanceTooltip": "செயலியின் தோற்றம். “கணினி” இயக்க முறைமையின் வெளிர் அல்லது இருண்ட அமைப்பை எடுக்கும்.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "தனிப்பயன் குரல்",
     "translateDetectParticipantLanguage": "மறுபுறம் பேசுபவரின் சீனம், ஜப்பானியம், ஆங்கிலம் ஆகியவற்றைத் தானாகக் கண்டறி",
     "translateDetectParticipantLanguageHelp": "மறுபுறம் பேசுபவரின் மொழி சீனம், ஜப்பானியம் அல்லது ஆங்கிலமாக இருந்தால், ஒவ்வொரு வசன வரியின் மொழியையும் மூல உரையிலிருந்து கண்டறியும். தேர்ந்தெடுத்த மொழிபெயர்ப்பு இலக்கு மாறாது.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "முந்தைய அமர்வு முடிவடையக் காத்திருக்கிறது. ரத்து செய்ய கிளிக் செய்யவும்.",
     "clickToCancel": "ரத்து செய்ய கிளிக் செய்யவும்",
     "whatIHear": "நான் கேட்பது",
-    "audioSettings": "ஒலி அமைப்புகள்",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "ஒலி அமைப்புகள்"
   },
   "modePicker": {
     "modeYou": "நான்",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} இந்த பதிப்பில் இனி கிடைக்கவில்லை.",
     "noCandidate": "இந்த திசைக்கு {{stage}} மாதிரி எதுவும் கிடைக்கவில்லை."
   },
-  "update": {
-    "available": "புதிய பதிப்பு v{{version}} கிடைக்கிறது",
-    "downloading": "புதுப்பிப்பைப் பதிவிறக்குகிறது... {{percent}}%",
-    "downloadingIndeterminate": "புதுப்பிப்பைப் பதிவிறக்குகிறது...",
-    "downloaded": "புதுப்பிப்பு தயார், முடிக்க மறுதொடக்கம் செய்யுங்கள்",
-    "checkButton": "புதுப்பிப்புகளைச் சரிபார்க்கவும்",
-    "checking": "சரிபார்க்கிறது...",
-    "upToDate": "புதுப்பித்தது",
-    "notAvailable": "நீங்கள் சமீபத்திய பதிப்பைப் பயன்படுத்துகிறீர்கள்",
-    "downloadNow": "இப்போதே பதிவிறக்கவும்",
-    "later": "பின்னர்",
-    "restartNow": "மறுதொடக்கம் செய்து புதுப்பிக்கவும்",
-    "goToDownload": "பதிவிறக்கத்திற்குச் செல்லவும்",
-    "error": "புதுப்பிப்புகளைச் சரிபார்க்க இயலவில்லை",
-    "currentVersion": "தற்போதைய பதிப்பு: v{{version}}",
-    "newVersion": "புதிய பதிப்பு: v{{version}}",
-    "autoUpdateNote": "AppImage தானியங்கு புதுப்பிப்புகளை ஆதரிக்கிறது. AppImage ஐ நிறுவினால் அது உங்கள் தற்போதைய நிறுவலை மாற்றியமைக்கும் — தனியாக நிறுவல் நீக்கம் தேவையில்லை.",
-    "downloadAppImage": "AppImage பதிவிறக்கு (பரிந்துரை)",
-    "downloadDeb": ".deb பதிவிறக்கு",
-    "linuxMigrateTitle": "புதிய பதிப்பு v{{version}} கிடைக்கிறது"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudio கட்டளை-வரி கருவிகள்) கிடைக்கவில்லை, எனவே AED Translator தனது மெய்நிகர் மைக்ரோஃபோன்/ஸ்பீக்கரை அமைக்க முடியவில்லை. அதை நிறுவிய பிறகு மீண்டும் முயற்சிக்கவும்:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "கணினியின் ஒலி ஒலிபெருக்கியில் கேட்கிறது. இணையச் சந்திப்பில் எதிரில் பேசுபவரின் குரலையும் மைக்ரோஃபோன் பதிவுசெய்யலாம். எதிரொலியைத் தவிர்க்க ஹெட்ஃபோனைப் பயன்படுத்துங்கள்.",
     "ttsEcho": "உங்கள் ஸ்பீக்கர்கள் AED Translator-யின் மொழிபெயர்ப்புக் குரலை மைக்ரோஃபோனுக்குத் திருப்பி அனுப்புகின்றன.",
     "meetingEcho": "ஸ்பீக்கர்களில் இருந்து கூட்ட ஒலி மைக்ரோஃபோனை அடைகிறது.",
     "farEndEcho": "ஒரு பங்கேற்பாளரின் சாதனம் உங்கள் மொழிபெயர்ப்பை எதிரொலியாகக் கூட்டத்திற்குத் திருப்புகிறது.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "“மொழிகளும் வரிசையும்” என்பதில் மொழிபெயர்ப்புக்கு ஒரு மாதிரியைத் தேர்வுசெய்யவும், அல்லது அதன் பெயரைத் தட்டச்சு செய்யவும்.",
     "address_missing": "தொடங்குவதற்கு முன் “கணக்குகளும் விசைகளும்” என்பதில் இணக்கமான சேவையின் முகவரியை உள்ளிடவும்.",
     "address_invalid": "இணக்கமான சேவையின் முகவரியைப் பயன்படுத்த முடியாது: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "அடிப்படை அமைப்புகள்",
       "maintenance": "பராமரிப்பும் உதவியும்",
-      "update": "புதுப்பிப்புகள்",
-      "updateLine": "உங்களிடம் {{version}} உள்ளது.",
-      "version": "பதிப்பு",
-      "storeUpdates": "உலாவியின் அங்காடி நீட்டிப்பைப் புதுப்பித்து வைக்கும்.",
       "wizard": "அமைவு வழிகாட்டி",
       "wizardLine": "வழிகாட்டியை மீண்டும் செல்லுங்கள்; சேமித்தவை முன்பே தேர்ந்தெடுக்கப்பட்டிருக்கும்.",
       "rerun": "மீண்டும் இயக்கு",

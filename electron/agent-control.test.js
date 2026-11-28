@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import net from 'node:net';
@@ -8,6 +9,20 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 const { startAgentControl, agentControlCommunicate } = require('./agent-control.js');
 const isWindows = process.platform === 'win32';
+
+function runSokujiAgent(profileDir, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [path.resolve('scripts/sokuji-agent.cjs'), '--profile', profileDir, ...args], {
+      cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8').on('data', (chunk) => { stdout += chunk; });
+    child.stderr.setEncoding('utf8').on('data', (chunk) => { stderr += chunk; });
+    child.once('error', reject);
+    child.once('close', (code) => resolve({ code, stdout, stderr }));
+  });
+}
 
 function rawCall(pipe, request, timeoutMs = 4_000) {
   return new Promise((resolve, reject) => {
@@ -92,6 +107,8 @@ describe('agent control transport', () => {
       .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
     await expect(rawCall(pipe, { token, command: 'usage.summary', args: { month: '2026-13' } }))
       .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
+    await expect(rawCall(pipe, { token, command: 'face-to-face.replay', args: { localSpeakers: 'true' } }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
     expect(dispatch).not.toHaveBeenCalled();
   });
 
@@ -110,10 +127,34 @@ describe('agent control transport', () => {
       .resolves.toEqual({ ok: true, data: { command: 'captions.list', args: { limit: 100, includeText: true } } });
     await expect(agentControlCommunicate({ profileDir, command: 'usage.summary', args: { month: '2026-11' } }))
       .resolves.toEqual({ ok: true, data: { command: 'usage.summary', args: { month: '2026-11' } } });
-    await expect(agentControlCommunicate({ profileDir, command: 'audio.echo-check', args: { micLabel: 'Realtek Microphone' } }))
-      .resolves.toEqual({ ok: true, data: { command: 'audio.echo-check', args: { micLabel: 'Realtek Microphone' } } });
-    await expect(agentControlCommunicate({ profileDir, command: 'audio.echo-check', args: { micLabel: 'Realtek Microphone', deviceId: 'other' } }))
+    await expect(agentControlCommunicate({ profileDir, command: 'face-to-face.replay', args: { localSpeakers: true } }))
+      .resolves.toEqual({ ok: true, data: { command: 'face-to-face.replay', args: { localSpeakers: true } } });
+    await expect(agentControlCommunicate({ profileDir, command: 'face-to-face.replay', args: { thirdLanguage: 'de' } }))
+      .resolves.toEqual({ ok: true, data: { command: 'face-to-face.replay', args: { thirdLanguage: 'de' } } });
+    await expect(agentControlCommunicate({ profileDir, command: 'face-to-face.replay', args: { localSpeakers: true, thirdLanguage: 'ja' } }))
+      .resolves.toEqual({ ok: true, data: { command: 'face-to-face.replay', args: { localSpeakers: true, thirdLanguage: 'ja' } } });
+    await expect(agentControlCommunicate({ profileDir, command: 'face-to-face.replay', args: { thirdLanguage: 'bad tag' } }))
       .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
+    await expect(agentControlCommunicate({ profileDir, command: 'audio.system-check', args: { auto: true } }))
+      .resolves.toMatchObject({ ok: false, error: { code: 'BAD_ARGS' } });
+  });
+
+  it.skipIf(!isWindows)('parses the CLI temporary third-language option only for face replay', async () => {
+    profileDir = await mkdtemp(path.join(os.tmpdir(), 'sokuji-agent-third-language-'));
+    const dispatch = vi.fn(async (command, args) => ({ ok: true, data: { command, args } }));
+    endpoint = await startAgentControl({ profileDir, dispatch });
+
+    const valid = await runSokujiAgent(profileDir, ['face', 'replay', '--local-speakers', '--third-language', 'de']);
+    expect(valid.code).toBe(0);
+    expect(JSON.parse(valid.stdout)).toEqual({ ok: true, data: {
+      command: 'face-to-face.replay', args: { localSpeakers: true, thirdLanguage: 'de' },
+    } });
+    expect(dispatch).toHaveBeenCalledWith('face-to-face.replay', { localSpeakers: true, thirdLanguage: 'de' });
+
+    const invalid = await runSokujiAgent(profileDir, ['face', 'replay', '--third-language', 'de/']);
+    expect(invalid.code).toBe(1);
+    expect(JSON.parse(invalid.stdout)).toMatchObject({ ok: false, error: { code: 'invalid_arguments' } });
+    expect(dispatch).toHaveBeenCalledOnce();
   });
 
   it.skipIf(!isWindows)('allows one credential only for the explicit Bailian configuration command', async () => {
@@ -149,6 +190,19 @@ describe('agent control transport', () => {
     await expect(agentControlCommunicate({ profileDir, command, args: { apiKey, workspaceId } }))
       .resolves.toEqual({ ok: true, data: { configured: true } });
     expect(dispatch).toHaveBeenCalledExactlyOnceWith(command, { apiKey, workspaceId });
+  });
+
+  it.skipIf(!isWindows)('recovers a reused PID only when the previous per-run pipe is gone', async () => {
+    profileDir = await mkdtemp(path.join(os.tmpdir(), 'sokuji-agent-control-'));
+    const file = path.join(profileDir, 'agent-control.json');
+    const previous = await startAgentControl({ profileDir, dispatch: vi.fn() });
+    const metadata = await readFile(file, 'utf8');
+    try {
+      await expect(startAgentControl({ profileDir, dispatch: vi.fn() })).rejects.toMatchObject({ code: 'AGENT_CONTROL_ALREADY_ACTIVE' });
+    } finally { await previous.close(); }
+    await writeFile(file, metadata);
+    endpoint = await startAgentControl({ profileDir, dispatch: vi.fn() });
+    expect(await readFile(file, 'utf8')).not.toBe(metadata);
   });
 
   it.skipIf(!isWindows)('does not overwrite an active endpoint metadata file', async () => {

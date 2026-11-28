@@ -14,7 +14,6 @@ const { isOwnAppSource, currentSelfIdentity } = require('./own-app-source.js');
 
 // At most one capture runs at a time; switching sources kills the previous one.
 let current = null;
-
 /**
  * Turn a stream of stderr chunks into whole JSON lines.
  * Chunk boundaries fall mid-line often enough that naive per-chunk parsing
@@ -54,32 +53,34 @@ function pidOfId(id) {
   return match ? Number(match[1]) : null;
 }
 
-/** Briefly tap one app's own process-loopback stream and report its PCM peak. */
-function probeAppSource(deviceId, { spawn = nodeSpawn, resolvePath = resolveAudioHostPath, durationMs = 300 } = {}) {
+/** List active physical render endpoints from the native --devices metadata. */
+function listRenderDevices({ spawn = nodeSpawn, resolvePath = resolveAudioHostPath, timeoutMs = 3000 } = {}) {
   const exe = resolvePath();
-  const target = String(deviceId).replace(/^app:/, '');
-  if (!exe || !/^pid:\d+$/.test(target)) return Promise.resolve(0);
+  if (!exe) return Promise.resolve([]);
   return new Promise((resolve) => {
-    let peak = 0;
-    let child;
+    let out = '';
     let settled = false;
-    const finish = () => {
+    let child;
+    let timer;
+    const finish = (rows) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      try { child?.kill(); } catch {}
-      resolve(peak);
+      resolve(rows);
     };
-    try { child = spawn(exe, ['--target', target]); } catch { return resolve(0); }
-    const timer = setTimeout(finish, Math.max(100, Math.min(1000, durationMs)));
-    child.stdout.on('data', (chunk) => {
-      for (let i = 0; i + 1 < chunk.length; i += 2) {
-        const value = Math.abs(chunk.readInt16LE(i)) / 32768;
-        if (value > peak) peak = value;
-      }
+    try { child = spawn(exe, ['--devices']); } catch { return finish([]); }
+    timer = setTimeout(() => { try { child.kill(); } catch {} finish([]); }, timeoutMs);
+    child.stdout.on('data', (d) => { out += d.toString('utf8'); });
+    child.once('error', () => finish([]));
+    child.once('close', (code) => {
+      if (code !== 0) return finish([]);
+      try {
+        const rows = JSON.parse(out);
+        finish(Array.isArray(rows) ? rows.filter((row) => row && row.physical === true
+          && typeof row.id === 'string' && row.id.length > 0
+          && typeof row.label === 'string' && row.label.trim()) : []);
+      } catch { finish([]); }
     });
-    child.on('error', finish);
-    child.on('close', finish);
   });
 }
 
@@ -202,7 +203,10 @@ function startCapture(deviceId, onPcm, onEvent, {
   // capture uses a global Core Audio tap, which needs only the audio-capture
   // permission - getDisplayMedia would demand Screen Recording as well.
   const raw = String(deviceId);
-  const target = raw === 'desktop-audio-loopback' ? 'system' : raw.replace(/^app:/, '');
+  const endpointId = raw.startsWith('endpoint:') ? raw.slice('endpoint:'.length) : null;
+  if (endpointId !== null && (platform !== 'win32' || !endpointId)) return false;
+  const target = endpointId !== null ? `endpoint:${endpointId}`
+    : raw === 'desktop-audio-loopback' ? 'system' : raw.replace(/^app:/, '');
   const args = ['--target', target];
   // The macOS helper decides "the target is rendering yet every sample is
   // zero" (its silent_no_permission warning) by asking Core Audio which
@@ -226,6 +230,7 @@ function startCapture(deviceId, onPcm, onEvent, {
     return false;
   }
 
+  const isCurrent = () => current === child;
   current = child;
 
   // Only the helper that is still the current one may speak. kill() is
@@ -238,7 +243,6 @@ function startCapture(deviceId, onPcm, onEvent, {
   // application to another therefore captured every application, with the
   // picker still naming the one the user picked. Same for stdout: whatever was
   // buffered in the old pipe would be mixed into the new application's audio.
-  const isCurrent = () => current === child;
   child.stdout.on('data', (d) => { if (isCurrent()) onPcm(d); });
   child.stderr.on('data', makeLineParser((evt) => { if (isCurrent()) onEvent(evt); }));
   child.on('error', (err) => {
@@ -337,4 +341,4 @@ async function ensureUnityGain(deviceName, { spawn = nodeSpawn, resolvePath = re
   });
 }
 
-module.exports = { listAppSources, probeAppSource, startCapture, stopCapture, ensureUnityGain };
+module.exports = { listAppSources, listRenderDevices, startCapture, stopCapture, ensureUnityGain };

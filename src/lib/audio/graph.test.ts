@@ -143,6 +143,25 @@ describe('createAudioGraph — routes', () => {
 });
 
 describe('createAudioGraph — outputs', () => {
+  it('isolates local replay from the Windows default cable until its physical output binds, including failure and removal', async () => {
+    const { graph, me, virtualSink, on, destinationOf, clip } = await setup();
+    const select = (id?: string) => graph.setSinks({ ...on(id, 'cable'), requireLocalDevice: true });
+    await select();
+    graph.route([{ from: 'replay', to: 'me', gain: 1 }, { from: 'speaker', to: 'virtual', gain: 1 }]);
+    const replay = clip('replay');
+    expect(reaches(replay, destinationOf(me))).toBe(false);
+    expect(reaches(clip('speaker'), destinationOf(virtualSink))).toBe(true);
+    const bind = select('headphones');
+    expect(reaches(replay, destinationOf(me))).toBe(false);
+    await bind;
+    expect(reaches(replay, destinationOf(me))).toBe(true);
+    me.setSinkId = async () => { throw new Error('device gone'); };
+    const unplugged = select('speakers');
+    expect(reaches(replay, destinationOf(me))).toBe(false);
+    await unplugged;
+    await select();
+    expect(reaches(replay, destinationOf(me))).toBe(false);
+  });
   it('tells createSink which bus each output is for', async () => {
     const { buses } = await setup('device');
     expect(buses).toEqual(['other', 'me', 'them', 'virtual']);

@@ -13,26 +13,19 @@ import { DeviceCaptureRecorder } from '../../modern-audio/DeviceCaptureRecorder'
 import { LoopbackRecorder } from '../../modern-audio/LoopbackRecorder';
 import { SourceOpenError, type Source } from '../../session/source';
 import { createSourceCore } from './core';
+import { isDedicatedMeetingInput } from '../virtualSpeaker';
 
 export const APP_CAPTURE_LOST = 'app_capture_lost_using_system_audio';
 export const APP_MONITOR_MISSING = 'app_capture_monitor_missing';
 export const SILENT_NO_PERMISSION = 'silent_no_permission';
 export const LOOPBACK_DENIED = 'loopback_denied';
 export const LOOPBACK_MEETING_OUTPUT = 'loopback_meeting_output';
-export const AUTO_MEETING_SOURCE = 'auto-meeting-audio';
-const AUTO_PROBE_INTERVAL_MS = 1_500;
-
+export const LOOPBACK_ENDPOINT_UNAVAILABLE = 'loopback_endpoint_unavailable';
 const LOOPBACK_MEETING_OUTPUT_MESSAGE = 'Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source.';
-
-interface ResolvedApp {
-  deviceId: string;
-  label: string;
-  appKey?: string | null;
-}
 
 /** The settings a system-audio source follows, read live. */
 export interface SystemAudioSettings {
-  /** The chosen participant source: 'desktop-audio-loopback' (the whole system) or an 'app:…' id. */
+  /** The chosen participant source: system mix, an application, or one Windows render endpoint. */
   sourceId(): string;
   muted(): boolean;
   subscribe(listener: () => void): () => void;
@@ -43,7 +36,6 @@ export interface SystemAudioSettings {
   /** Windows playback device carrying our outgoing translation during this meeting, when enabled. */
   meetingOutput?(): string | undefined;
   captureStarted?(backend: Connection['mode']): void;
-  autoResolved?(source: ResolvedApp | null): void;
 }
 
 /** The part of a participant recorder this source drives. */
@@ -67,7 +59,7 @@ export interface SystemAudioDeps {
   app(): ParticipantCapture;
   device(): ParticipantCapture;
   loopback(): ParticipantCapture;
-  /** Windows-only shared-mode loopback on the same default render endpoint. */
+  /** Windows-only shared-mode loopback recorder. */
   nativeLoopback?(): ParticipantCapture;
   /** Hears the main process say the application a PipeWire tap follows has quit; returns the unsubscribe. */
   appLost(listener: () => void): () => void;
@@ -100,7 +92,12 @@ export const electronSystemAudio = (): SystemAudioDeps => ({
   },
 });
 
-type Connection = { mode: 'app' } | { mode: 'device'; monitorId: string } | { mode: 'loopback' } | { mode: 'native-loopback'; makeRecorder(): ParticipantCapture };
+type Connection =
+  | { mode: 'app' }
+  | { mode: 'device'; monitorId: string; dedicated?: boolean }
+  | { mode: 'loopback' }
+  | { mode: 'native-loopback'; makeRecorder(): ParticipantCapture }
+  | { mode: 'endpoint'; endpointId: string; makeRecorder(): ParticipantCapture };
 
 interface ConnectAnswer {
   success?: boolean;
@@ -133,7 +130,6 @@ export async function openSystemAudio(
   let unsubscribe = () => {};
   let chain: Promise<void> = Promise.resolve();
   let selection = 0;
-  let probeTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** Ends the recorder: its `onLost` detached first, since its own teardown kills the helper. */
   const stopRecorder = async () => {
@@ -153,7 +149,6 @@ export async function openSystemAudio(
   };
 
   const close = async () => {
-    settings.autoResolved?.(null);
     await stopRecorder();
     settings.widened(false);
     if (!connected) return;
@@ -168,7 +163,6 @@ export async function openSystemAudio(
   const core = createSourceCore({
     muted: () => settings.muted(),
     release: async () => {
-      clearTimeout(probeTimer);
       signal.removeEventListener('abort', stop);
       unsubscribe();
       await chain;
@@ -188,16 +182,33 @@ export async function openSystemAudio(
     return undefined;
   };
 
-  const connect = async (id: string, requireApp = false): Promise<Connection> => {
+  const connect = async (id: string, generation = selection): Promise<Connection> => {
     captureSourceId = id;
+    if (id.startsWith('cable:')) {
+      const monitorId = id.slice('cable:'.length);
+      const match = deps.nativeLoopback && (await deps.enumerateDevices()).some((d) =>
+        d.kind === 'audioinput' && d.deviceId === monitorId && isDedicatedMeetingInput(d.label));
+      if (!match) throw new SourceOpenError('The selected meeting audio cable is unavailable.', LOOPBACK_ENDPOINT_UNAVAILABLE);
+      return { mode: 'device', monitorId, dedicated: true };
+    }
     const answer = (await deps.invoke('connect-system-audio-source', id)) as ConnectAnswer | undefined;
+    if (id.startsWith('endpoint:')) {
+      if (!answer?.success || answer.capture !== 'endpoint' || !deps.nativeLoopback) {
+        throw new SourceOpenError('The selected Windows playback device is unavailable.', LOOPBACK_ENDPOINT_UNAVAILABLE);
+      }
+      connected = true;
+      return { mode: 'endpoint', endpointId: id, makeRecorder: deps.nativeLoopback };
+    }
     if (answer?.success === false) throw new Error(answer.error || 'The system audio source did not connect.');
-    if (requireApp && answer?.capture !== 'app') throw new Error('Auto requires application audio capture.');
     connected = true;
     if (answer?.capture === 'app') return { mode: 'app' };
     if (answer?.monitorLabel) {
       const monitorId = await findMonitor(answer.monitorLabel);
       if (monitorId) return { mode: 'device', monitorId };
+      // The asynchronous monitor lookup can finish after a manual source
+      // change. Its result belongs to the old selection and must not change
+      // the current UI or report a degradation for it.
+      if (!current(generation)) return { mode: 'loopback' };
       // Widening from one application to the whole system must be visible.
       settings.widened(true);
       core.degrade({ code: APP_MONITOR_MISSING, message: 'The application capture did not appear, so all system audio is being translated instead.' });
@@ -205,37 +216,8 @@ export async function openSystemAudio(
     return { mode: 'loopback' };
   };
 
-  // Probe one round at a time. A silent or closed meeting app leaves this
-  // leg waiting, and a source change invalidates any probe already in flight.
-  const scheduleProbe = (id: number, delay = 0) => {
-    clearTimeout(probeTimer);
-    probeTimer = setTimeout(() => {
-      probeTimer = undefined;
-      chain = chain.then(() => probe(id));
-    }, delay);
-  };
-  const probe = async (id: number) => {
-    if (!current(id)) return;
-    try {
-      const resolution = await deps.invoke('resolve-auto-system-audio-source') as { success?: boolean; source?: ResolvedApp } | undefined;
-      if (!current(id)) return;
-      const source = resolution?.success === true ? resolution.source : undefined;
-      if (source?.deviceId?.startsWith('app:')) {
-        const connection = await connect(source.deviceId, true);
-        if (!current(id)) return;
-        await record(connection);
-        if (current(id)) settings.autoResolved?.(source);
-        return;
-      }
-    } catch (error) {
-      reportWarning('SystemAudio', 'Automatic meeting audio could not connect yet.', { cause: error, dedupeKey: 'system:auto-connect' });
-      await close();
-    }
-    if (current(id)) scheduleProbe(id, AUTO_PROBE_INTERVAL_MS);
-  };
-
-  const record = async (connection: Connection): Promise<void> => {
-    const id = selection;
+  const record = async (connection: Connection, generation = selection): Promise<void> => {
+    const id = generation;
     if (deps.nativeLoopback && (connection.mode === 'loopback' || connection.mode === 'native-loopback')) {
       const meetingOutput = settings.meetingOutput?.();
       if (meetingOutput) {
@@ -256,7 +238,7 @@ export async function openSystemAudio(
       throw new SourceOpenError('Screen Recording permission is denied, so the whole system cannot be captured.', LOOPBACK_DENIED);
     }
     const next = connection.mode === 'app' ? deps.app() : connection.mode === 'device' ? deps.device()
-      : connection.mode === 'native-loopback' ? connection.makeRecorder() : deps.loopback();
+      : connection.mode === 'native-loopback' || connection.mode === 'endpoint' ? connection.makeRecorder() : deps.loopback();
     const lose = () => {
       // Captured now: by the time this runs, a queued switch may have already
       // made `recorder` point elsewhere, and this death is then stale (M1).
@@ -273,12 +255,16 @@ export async function openSystemAudio(
     if (connection.mode === 'native-loopback') {
       next.onLost = () => core.end('Windows system audio capture stopped.');
     }
+    if (connection.mode === 'endpoint') {
+      next.onLost = () => core.end('The selected Windows playback device stopped.');
+    }
     // A PipeWire tap's monitor device outlives the application it follows (its
     // sink is Sokuji's), so the main process says when the application quit (#617).
-    if (connection.mode === 'device') unlisten = deps.appLost(lose);
+    if (connection.mode === 'device' && !connection.dedicated) unlisten = deps.appLost(lose);
     recorder = next;
     const options = connection.mode === 'app' ? { deviceId: captureSourceId } : connection.mode === 'device' ? { deviceId: connection.monitorId }
-      : connection.mode === 'native-loopback' ? { deviceId: 'desktop-audio-loopback' } : undefined;
+      : connection.mode === 'native-loopback' ? { deviceId: 'desktop-audio-loopback' }
+        : connection.mode === 'endpoint' ? { deviceId: connection.endpointId } : undefined;
     let begun = await next.begin(options);
     if (!begun && isTransientCaptureOpenFailure(next.beginFailure) && !signal.aborted && !core.stopped && !core.ended) {
       // Retry the exact same selected capture once. In particular, an
@@ -311,7 +297,11 @@ export async function openSystemAudio(
       throw new Error(`The system audio capture did not start${why}.`);
     }
     unwatch = core.watch(next.getStream?.() ?? null);
-    await next.record((data) => { if (current(id)) core.deliver(data.mono); });
+    await next.record((data) => {
+      if (!current(id)) return;
+      if (settings.muted()) return;
+      core.deliver(data.mono);
+    });
     if (current(id)) settings.captureStarted?.(connection.mode);
   };
 
@@ -323,25 +313,19 @@ export async function openSystemAudio(
    */
   const fallBack = async (lost: ParticipantCapture) => {
     if (core.stopped || core.ended || recorder !== lost) return;
-    if (sourceId === AUTO_MEETING_SOURCE) {
-      const id = selection;
-      await close();
-      if (current(id)) scheduleProbe(id);
-      return;
-    }
+    const id = selection;
     settings.widened(true);
     await stopRecorder();
-    await record({ mode: 'loopback' });
-    core.degrade({ code: APP_CAPTURE_LOST, message: 'The application capture stopped, so all system audio is being translated instead.' });
+    if (!current(id)) return;
+    await record({ mode: 'loopback' }, id);
+    if (current(id)) core.degrade({ code: APP_CAPTURE_LOST, message: 'The application capture stopped, so all system audio is being translated instead.' });
   };
 
-  if (sourceId !== AUTO_MEETING_SOURCE) {
-    try {
-      await record(await connect(sourceId));
-    } catch (error) {
-      await close();
-      throw error;
-    }
+  try {
+    await record(await connect(sourceId));
+  } catch (error) {
+    await close();
+    throw error;
   }
   if (signal.aborted) {
     await core.stop();
@@ -353,24 +337,21 @@ export async function openSystemAudio(
     if (next === sourceId) return;
     sourceId = next;
     const id = ++selection;
-    clearTimeout(probeTimer);
+    settings.widened(false);
     chain = chain
       .then(async () => {
         if (!current(id)) return;
         await close();
         if (!current(id)) return;
-        if (next === AUTO_MEETING_SOURCE) scheduleProbe(id);
-        else {
-          const connection = await connect(next);
-          if (current(id)) await record(connection);
-        }
+        const connection = await connect(next, id);
+        if (current(id)) await record(connection, id);
       })
-      .catch((error: unknown) => core.end(`The participant source could not switch: ${describeCause(error)}`));
+      .catch((error: unknown) => {
+        // A rejected IPC/device lookup from a superseded selection must not
+        // end the source that the user has already moved to.
+        if (current(id)) core.end(`The participant source could not switch: ${describeCause(error)}`);
+      });
   });
   signal.addEventListener('abort', stop, { once: true });
-  if (sourceId === AUTO_MEETING_SOURCE) {
-    settings.autoResolved?.(null);
-    scheduleProbe(selection);
-  }
   return core;
 }

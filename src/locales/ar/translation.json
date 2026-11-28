@@ -12,6 +12,7 @@
     "signIn": "تسجيل الدخول",
     "signUp": "تسجيل",
     "signInRequired": "<signInLink>سجّل الدخول أو أنشئ حساباً</signInLink> لاستخدام Kizuna AI — لا حاجة إلى مفتاح API.",
+    "checking": "جارٍ التحقق...",
     "dismiss": "تجاهل",
     "none": "بدون",
     "retry": "إعادة المحاولة",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "الإبلاغ عن الأخطاء أو الحصول على مساعدة",
     "diagnosticLogs": "سجلات التشخيص",
     "diagnosticLogsTooltip": "يسجّل ما يفعله التطبيق لتتمكن من إرفاقه ببلاغ عن خطأ. متوقف افتراضيًا. عند تشغيله يظهر زر «السجلات» في شريط العنوان، ويبقى الإعداد مفعّلًا بعد إعادة التشغيل.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "المظهر",
     "appearanceTooltip": "شكل التطبيق. «النظام» يعتمد إعداد الفاتح أو الداكن في نظام التشغيل.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "صوت مخصص",
     "translateDetectParticipantLanguage": "اكتشاف الصينية واليابانية والإنجليزية لدى الطرف الآخر تلقائيًا",
     "translateDetectParticipantLanguageHelp": "عندما تكون لغة الطرف الآخر الصينية أو اليابانية أو الإنجليزية، حدّد لغة كل تسمية توضيحية من النص الأصلي. تظل لغة الترجمة هي اللغة المختارة.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "في انتظار انتهاء الجلسة السابقة. انقر للإلغاء.",
     "clickToCancel": "انقر للإلغاء",
     "whatIHear": "ما أسمعه",
-    "audioSettings": "إعدادات الصوت",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "إعدادات الصوت"
   },
   "modePicker": {
     "modeYou": "أنا",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "لم يعد {{from}} متوفرًا في هذا الإصدار.",
     "noCandidate": "لا يتوفر نموذج {{stage}} لهذا الاتجاه."
   },
-  "update": {
-    "available": "إصدار جديد v{{version}} متاح",
-    "downloading": "جارٍ تنزيل التحديث... {{percent}}%",
-    "downloadingIndeterminate": "جارٍ تنزيل التحديث...",
-    "downloaded": "التحديث جاهز، أعد التشغيل للإكمال",
-    "checkButton": "التحقق من التحديثات",
-    "checking": "جارٍ التحقق...",
-    "upToDate": "محدّث",
-    "notAvailable": "أنت تستخدم أحدث إصدار",
-    "downloadNow": "تنزيل الآن",
-    "later": "لاحقاً",
-    "restartNow": "إعادة التشغيل والتحديث",
-    "goToDownload": "انتقل إلى التنزيل",
-    "error": "فشل التحقق من التحديثات",
-    "currentVersion": "الإصدار الحالي: v{{version}}",
-    "newVersion": "الإصدار الجديد: v{{version}}",
-    "autoUpdateNote": "يدعم AppImage التحديثات التلقائية. تثبيت AppImage يستبدل التثبيت الحالي — لا حاجة إلى إلغاء تثبيت منفصل.",
-    "downloadAppImage": "تنزيل AppImage (موصى به)",
-    "downloadDeb": "تنزيل .deb",
-    "linuxMigrateTitle": "إصدار جديد v{{version}} متاح"
-  },
   "audioSystem": {
     "pactlMissingBody": "لم يتم العثور على pactl (أدوات سطر أوامر PulseAudio)، لذا لم يتمكن AED Translator من إعداد الميكروفون/مكبر الصوت الافتراضي. قم بتثبيته ثم أعد المحاولة:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "يستخدم النظام مكبرات الصوت. قد يلتقط الميكروفون صوت الطرف الآخر في الاجتماع. استخدم سماعات الرأس لتجنب الصدى.",
     "ttsEcho": "مكبرات الصوت لديك تعيد كلام AED Translator المترجم إلى الميكروفون.",
     "meetingEcho": "صوت الاجتماع من مكبرات الصوت يصل إلى الميكروفون.",
     "farEndEcho": "جهاز أحد المشاركين يعيد ترجمتك صدىً إلى الاجتماع.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "اختر نموذجًا للترجمة، أو اكتب اسمه، في «اللغات والتشكيلة».",
     "address_missing": "أدخل عنوان الخدمة المتوافقة في «الحسابات والمفاتيح» قبل البدء.",
     "address_invalid": "لا يمكن استخدام عنوان الخدمة المتوافقة: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "الأساسيات",
       "maintenance": "الصيانة والمساعدة",
-      "update": "التحديثات",
-      "updateLine": "لديك {{version}}.",
-      "version": "الإصدار",
-      "storeUpdates": "يحدّث متجر المتصفح الإضافة تلقائيًا.",
       "wizard": "معالج الإعداد",
       "wizardLine": "المرور بالمعالج مجددًا؛ ما حفظته يأتي محددًا مسبقًا.",
       "rerun": "تشغيل مجددًا",

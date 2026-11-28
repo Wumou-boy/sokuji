@@ -330,6 +330,19 @@ describe('audioStore - participant source selection', () => {
       .toEqual(['desktop-audio-loopback', 'app:pid:205']);
   });
 
+  it.each(['auto-meeting-audio', 'auto-meeting-audio-endpoint'])('migrates the saved %s preference to System', async (legacyKey) => {
+    const settings = ServiceFactory.getSettingsService();
+    const key = 'audio.selectedParticipantAppKey';
+    await settings.setSetting(key, legacyKey);
+    mockListAudioDevices.mockResolvedValueOnce({ inputs: [], outputs: [] });
+    mockListSystemAudioSources.mockResolvedValueOnce([DEFAULT_PARTICIPANT_SOURCE]);
+
+    await useAudioStore.getState().refreshDevices();
+
+    expect(useAudioStore.getState().selectedParticipantSource).toEqual(DEFAULT_PARTICIPANT_SOURCE);
+    expect(await settings.getSetting(key, '')).toBe('');
+  });
+
   it('refreshDevices survives a platform with no per-application sources', async () => {
     // The web build and the browser extension have none: listSystemAudioSources
     // itself answers [] off Electron.
@@ -403,6 +416,13 @@ describe('audioStore - participant source survives a restart', () => {
     expect(useAudioStore.getState().selectedParticipantSource?.deviceId).toBe('app:pid:8271');
   });
 
+  it.each(['auto-meeting-audio', 'auto-meeting-audio-endpoint'])('restores the old %s preference to whole-system capture', (legacyKey) => {
+    useAudioStore.setState({ persistedParticipantAppKey: legacyKey });
+    useAudioStore.getState().setParticipantSources([DEFAULT_PARTICIPANT_SOURCE, CHROME_RUN_2]);
+    expect(useAudioStore.getState().selectedParticipantSource).toEqual(DEFAULT_PARTICIPANT_SOURCE);
+    expect(useAudioStore.getState().persistedParticipantAppKey).toBeNull();
+  });
+
   it('does not choose an arbitrary process when multiple instances share the saved key', () => {
     useAudioStore.setState({ persistedParticipantAppKey: 'com.google.Chrome' });
     const second: AudioDevice = { deviceId: 'app:pid:8271', label: 'Google Chrome', appKey: 'com.google.Chrome' };
@@ -421,6 +441,53 @@ describe('audioStore - participant source survives a restart', () => {
     const other: AudioDevice = { deviceId: 'app:pid:99', label: 'Google Chrome', appKey: 'org.chromium.Chromium' };
     useAudioStore.getState().setParticipantSources([DEFAULT_PARTICIPANT_SOURCE, other]);
     expect(useAudioStore.getState().selectedParticipantSource?.deviceId).toBe('desktop-audio-loopback');
+  });
+});
+
+describe('audioStore - Windows endpoint participant selection', () => {
+  const ENDPOINT_ID = 'endpoint:\\\\?\\SWD#MMDEVAPI#{0.0.0.00000000}.{native-endpoint-id}';
+  const ENDPOINT: AudioDevice = {
+    deviceId: ENDPOINT_ID,
+    label: 'Headphones (USB Audio)',
+    appKey: ENDPOINT_ID,
+  };
+
+  beforeEach(() => {
+    useAudioStore.setState({
+      participantSources: [],
+      selectedParticipantSource: DEFAULT_PARTICIPANT_SOURCE,
+      persistedParticipantAppKey: null,
+    });
+  });
+
+  it('persists the native endpoint identity as both deviceId and appKey', () => {
+    useAudioStore.getState().selectParticipantSource(ENDPOINT);
+    expect(useAudioStore.getState().selectedParticipantSource).toEqual(ENDPOINT);
+    expect(useAudioStore.getState().persistedParticipantAppKey).toBe(ENDPOINT_ID);
+  });
+
+  it('keeps the selected endpoint as unavailable when it disappears, then restores its live label when it returns', () => {
+    useAudioStore.getState().selectParticipantSource(ENDPOINT);
+    useAudioStore.getState().setParticipantSources([DEFAULT_PARTICIPANT_SOURCE]);
+
+    const unavailable = useAudioStore.getState().selectedParticipantSource;
+    expect(unavailable).toMatchObject({ deviceId: ENDPOINT_ID, appKey: ENDPOINT_ID });
+    expect(unavailable?.label).toMatch(/Headphones \(USB Audio\).*unavailable/i);
+    expect(useAudioStore.getState().participantSources).toContainEqual(unavailable);
+
+    useAudioStore.getState().setParticipantSources([DEFAULT_PARTICIPANT_SOURCE, { ...ENDPOINT, label: 'Headphones (USB Audio) - Ready' }]);
+    expect(useAudioStore.getState().selectedParticipantSource?.label).toBe('Headphones (USB Audio) - Ready');
+  });
+
+  it('restores a persisted endpoint on startup and retains it while missing', () => {
+    useAudioStore.setState({ persistedParticipantAppKey: ENDPOINT_ID });
+    useAudioStore.getState().setParticipantSources([DEFAULT_PARTICIPANT_SOURCE]);
+
+    expect(useAudioStore.getState().selectedParticipantSource).toMatchObject({
+      deviceId: ENDPOINT_ID,
+      appKey: ENDPOINT_ID,
+    });
+    expect(useAudioStore.getState().selectedParticipantSource?.label).toMatch(/endpoint unavailable/i);
   });
 });
 

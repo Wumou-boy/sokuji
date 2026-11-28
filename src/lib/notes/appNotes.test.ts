@@ -261,6 +261,21 @@ describe('the notes service from the stores', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer qwen-secret');
     expect(JSON.parse(init.body as string)).toMatchObject({ model: 'qwen-plus', enable_thinking: false });
   });
+
+  it('uses only the selected company workspace credential and never falls back to the personal key', async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: '{}' } }] })));
+    const entry = { settings: { connection: 'bailian-workspace', workspaceId: 'llm-test' }, credentials: { apiKey: 'personal-test', workspaceApiKey: '' } };
+    useProviderStore.setState({ entries: { qwen_livetranslate: entry } as never });
+    expect(await notesChatForService(BAILIAN_NOTES, undefined, { fetch })).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    entry.credentials.workspaceApiKey = 'workspace-test';
+    const route = await notesChatForService(BAILIAN_NOTES, undefined, { fetch });
+    expect(route?.usageProvider).toBe('bailian-workspace-beijing');
+    await route!.chat({ system: 'S', prompt: 'whole-meeting', promptVersion: 2, user: {}, effort: 'none', maxTokens: 10, signal: new AbortController().signal });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://llm-test.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer workspace-test');
+  });
 });
 
 describe('the language of the notes', () => {

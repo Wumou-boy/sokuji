@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect, Activity } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MeetingHeadphonesNotice } from '../Banner/useBanners';
 import MainPanel from '../MainPanel/MainPanel';
 import LogsPanel from '../LogsPanel/LogsPanel';
 import { SettingsPage } from '../SettingsPage/SettingsPage';
@@ -167,12 +168,16 @@ const MainLayout: React.FC = () => {
 
   const switchWorkspaceMode = async (next: 'meeting' | 'faceToFace') => {
     if (next === workspaceMode || switchingMode || (next === 'faceToFace' && subtitleActive)) return;
+    const busy = workspaceMode === 'meeting'
+      ? getAppSession().runner.state.getState().phase !== 'idle'
+      : ['starting', 'live', 'stopping'].includes(useFaceToFaceStore.getState().phase);
+    if (busy && !window.confirm(t('faceToFace.confirmModeSwitch', 'End the current session and switch modes?'))) return;
     setSwitchingMode(true);
     try {
       if (next === 'faceToFace') {
         const runner = getAppSession().runner;
         if (runner.state.getState().phase !== 'idle') await runner.stop('button');
-      } else if (workspaceMode === 'faceToFace') await stopFaceToFaceRuntime();
+      } else if (workspaceMode === 'faceToFace') await stopFaceToFaceRuntime({ normalEnd: true });
       setWorkspaceMode(next === 'faceToFace' ? 'face-to-face' : 'meeting');
     } finally {
       setSwitchingMode(false);
@@ -183,9 +188,9 @@ const MainLayout: React.FC = () => {
   // control turns it on while the standalone face-to-face mode is selected,
   // leave that mode so its one-mic session closes before the takeover mounts.
   useEffect(() => {
-    if (workspaceMode !== 'faceToFace' || !(subtitleActive || pageInPlace || historyInPlace)) return;
+    if (workspaceMode !== 'faceToFace' || !subtitleActive) return;
     void stopFaceToFaceRuntime().finally(() => setWorkspaceMode('meeting'));
-  }, [workspaceMode, subtitleActive, pageInPlace, historyInPlace, setWorkspaceMode]);
+  }, [workspaceMode, subtitleActive, setWorkspaceMode]);
 
   // Listen for navigation requests from settings context
   useEffect(() => {
@@ -234,10 +239,11 @@ const MainLayout: React.FC = () => {
           <button type="button" aria-pressed={workspaceMode === 'meeting'} disabled={switchingMode} onClick={() => void switchWorkspaceMode('meeting')}>{t('faceToFace.onlineMeeting', 'Online meeting')}</button>
           <button type="button" aria-pressed={workspaceMode === 'faceToFace'} disabled={switchingMode} onClick={() => void switchWorkspaceMode('faceToFace')}>{t('faceToFace.title', 'Face to Face')}</button>
         </nav>
+        <MeetingHeadphonesNotice visible={workspaceMode === 'meeting'} />
         <div className="main-panel-container">
           {workspaceMode === 'meeting'
             ? <MainPanel liveNotes={<LiveNotesPanel onOpenHistory={(id) => { setHistoryRecord(id); setHistoryOpen(true); }} />} />
-            : (subtitleActive || pageInPlace || historyInPlace) ? null : <FaceToFaceMode onExit={() => void switchWorkspaceMode('meeting')} />}
+            : subtitleActive ? null : <FaceToFaceMode />}
         </div>
       </div>
       {/* Kept mounted behind an <Activity> boundary, like the side panels, so its open category and scroll survive a close. */}

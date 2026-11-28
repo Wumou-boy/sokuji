@@ -1,14 +1,18 @@
 import { SAMPLE_RATE, type AdapterEvents, type AdapterSession } from '../../lib/contract/adapter';
+import type { FaceToFaceLanguage } from '../../stores/faceToFaceStore';
 
 /** Keep one replay below Qwen's documented/probed 30-second audio turn ceiling. */
 export const QWEN_FACE_REPLAY_MAX_SAMPLES = SAMPLE_RATE * 30;
 const REPLAY_FRAME_SAMPLES = SAMPLE_RATE / 10;
+const REPLAY_STREAM_WINDOW_SAMPLES = QWEN_FACE_REPLAY_MAX_SAMPLES - REPLAY_FRAME_SAMPLES;
 /** The adapter reports its own 10 s manual-turn timeout first; this is a final bounded fallback. */
 export const QWEN_FACE_REPLAY_RESPONSE_TIMEOUT_MS = 12_000;
 
 export interface QwenFaceReplayOptions {
   /** Starts the app-configured, text-only Qwen adapter. This is called lazily on the first replay. */
-  start: (events: AdapterEvents, signal: AbortSignal) => Promise<AdapterSession>;
+  start: (events: AdapterEvents, signal: AbortSignal, targetLanguage?: FaceToFaceLanguage) => Promise<AdapterSession>;
+  /** Optional per-target output language selected by the face-to-face runtime. */
+  targetLanguage?: FaceToFaceLanguage;
   /** Owns the lifetime of this auxiliary connection. */
   signal: AbortSignal;
   /** Injectable for deterministic tests; production leaves the bounded default. */
@@ -189,7 +193,7 @@ export function createQwenFaceReplay(options: QwenFaceReplayOptions): QwenFaceRe
     if (!opening) {
       const id = ++generation;
       let attempt!: Promise<AdapterSession>;
-      attempt = options.start(eventsFor(id), lifetime.signal).then(async (opened) => {
+      attempt = options.start(eventsFor(id), lifetime.signal, options.targetLanguage).then(async (opened) => {
         if (stopped || lifetime.signal.aborted || generation !== id) {
           await opened.stop();
           throw abortError(lifetime.signal);
@@ -218,6 +222,7 @@ export function createQwenFaceReplay(options: QwenFaceReplayOptions): QwenFaceRe
     source: AsyncIterable<Int16Array> | undefined,
     requestSignal: AbortSignal | undefined,
     onText?: (text: string) => void,
+    onSourceEndedEarly?: () => void,
   ): Promise<string> => {
     if (requestSignal?.aborted) throw abortError(requestSignal);
     if (options.signal.aborted || lifetime.signal.aborted || stopped) throw abortError(options.signal.aborted ? options.signal : lifetime.signal);
@@ -288,6 +293,7 @@ export function createQwenFaceReplay(options: QwenFaceReplayOptions): QwenFaceRe
             if (next.kind === 'done') {
               streaming = false;
               responseEndedEarly = true;
+              onSourceEndedEarly?.();
               break;
             }
             if (next.kind === 'aborted') throw abortError(requestSignal!);
@@ -374,8 +380,60 @@ export function createQwenFaceReplay(options: QwenFaceReplayOptions): QwenFaceRe
     });
   };
   const translate = (pcm: Int16Array, signal?: AbortSignal): Promise<string> => enqueue(pcm, undefined, signal);
-  const translateStream = (source: AsyncIterable<Int16Array>, signal: AbortSignal, onText: (text: string) => void): Promise<string> =>
-    enqueue(undefined, source, signal, onText);
+  const translateStream = (source: AsyncIterable<Int16Array>, signal: AbortSignal, onText: (text: string) => void): Promise<string> => {
+    const work = tail.then(async () => {
+      const iterator = source[Symbol.asyncIterator]();
+      const translations: string[] = [];
+      let exhausted = false;
+      let carry: Int16Array | undefined;
+      while (!exhausted) {
+        let windowSamples = 0;
+        const window: AsyncIterable<Int16Array> = {
+          [Symbol.asyncIterator]: async function* () {
+            while (windowSamples < REPLAY_STREAM_WINDOW_SAMPLES) {
+              if (signal.aborted) throw abortError(signal);
+              let chunk = carry;
+              carry = undefined;
+              if (!chunk) {
+                const next = await iterator.next();
+                if (next.done) {
+                  exhausted = true;
+                  return;
+                }
+                chunk = next.value;
+              }
+              if (!chunk.length) continue;
+              const count = Math.min(chunk.length, REPLAY_STREAM_WINDOW_SAMPLES - windowSamples);
+              windowSamples += count;
+              yield chunk.subarray(0, count);
+              if (count < chunk.length) {
+                carry = chunk.subarray(count);
+                return;
+              }
+            }
+          },
+        };
+        const publishWindow = (text: string) => onText([...translations, text].join(' '));
+        translations.push(await runTurn(undefined, window, signal, publishWindow, () => {
+          exhausted = true;
+          void iterator.return?.().catch(() => {});
+        }));
+        if (!exhausted && !carry) {
+          const next = await iterator.next();
+          if (next.done) exhausted = true;
+          else carry = next.value;
+        }
+      }
+      return translations.join(' ');
+    });
+    tail = work.then(() => undefined, () => undefined);
+    if (signal.aborted) return Promise.reject(abortError(signal));
+    return new Promise<string>((resolve, reject) => {
+      const onAbort = () => reject(abortError(signal));
+      signal.addEventListener('abort', onAbort, { once: true });
+      work.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+    });
+  };
 
   const stop = (): Promise<void> => {
     if (stopping) return stopping;

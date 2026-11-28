@@ -12,6 +12,7 @@
     "signIn": "Log Masuk",
     "signUp": "Daftar",
     "signInRequired": "<signInLink>Log masuk atau daftar</signInLink> untuk menggunakan Kizuna AI — tiada kunci API diperlukan.",
+    "checking": "Menyemak...",
     "dismiss": "Ketepikan",
     "none": "Tiada",
     "retry": "Cuba lagi",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Laporkan pepijat atau dapatkan bantuan",
     "diagnosticLogs": "Log diagnostik",
     "diagnosticLogsTooltip": "Merekod perkara yang dilakukan oleh aplikasi supaya anda boleh melampirkannya pada laporan pepijat. Dimatikan secara lalai. Apabila dihidupkan, butang “Log” muncul di bar tajuk, dan tetapan kekal hidup selepas dimulakan semula.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Penampilan",
     "appearanceTooltip": "Rupa aplikasi. “Sistem” menggunakan tetapan cerah atau gelap sistem pengendalian.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Suara tersuai",
     "translateDetectParticipantLanguage": "Kesan bahasa Cina, Jepun dan Inggeris pihak satu lagi secara automatik",
     "translateDetectParticipantLanguageHelp": "Jika bahasa pihak satu lagi ialah bahasa Cina, Jepun atau Inggeris, bahasa setiap sari kata dikenal pasti daripada teks asal. Bahasa sasaran terjemahan kekal seperti yang dipilih.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Menunggu sesi sebelumnya tamat. Klik untuk membatalkan.",
     "clickToCancel": "Klik untuk membatalkan",
     "whatIHear": "Apa yang saya dengar",
-    "audioSettings": "Tetapan audio",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Tetapan audio"
   },
   "modePicker": {
     "modeYou": "Saya",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} tidak lagi tersedia dalam versi ini.",
     "noCandidate": "Tiada model {{stage}} tersedia untuk arah ini."
   },
-  "update": {
-    "available": "Versi baharu v{{version}} tersedia",
-    "downloading": "Memuat turun kemas kini... {{percent}}%",
-    "downloadingIndeterminate": "Memuat turun kemas kini...",
-    "downloaded": "Kemas kini sedia, mulakan semula untuk selesaikan",
-    "checkButton": "Semak Kemas Kini",
-    "checking": "Menyemak...",
-    "upToDate": "Terkini",
-    "notAvailable": "Anda menggunakan versi terkini",
-    "downloadNow": "Muat Turun Sekarang",
-    "later": "Kemudian",
-    "restartNow": "Mulakan Semula dan Kemas Kini",
-    "goToDownload": "Pergi ke Muat Turun",
-    "error": "Gagal menyemak kemas kini",
-    "currentVersion": "Versi semasa: v{{version}}",
-    "newVersion": "Versi baharu: v{{version}}",
-    "autoUpdateNote": "AppImage menyokong kemas kini automatik. Memasang AppImage menggantikan pemasangan semasa anda — tidak perlu menyahpasang secara berasingan.",
-    "downloadAppImage": "Muat turun AppImage (disyorkan)",
-    "downloadDeb": "Muat turun .deb",
-    "linuxMigrateTitle": "Versi baharu v{{version}} tersedia"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (alat baris arahan PulseAudio) tidak dijumpai, jadi AED Translator tidak dapat menyediakan mikrofon/pembesar suara maya. Pasang, kemudian cuba semula:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Bunyi sistem dimainkan melalui pembesar suara. Semasa mesyuarat dalam talian, mikrofon mungkin menangkap suara pihak lain. Gunakan fon kepala untuk mengelakkan gema.",
     "ttsEcho": "Pembesar suara anda memulangkan suara terjemahan AED Translator ke mikrofon.",
     "meetingEcho": "Audio mesyuarat daripada pembesar suara anda sampai ke mikrofon.",
     "farEndEcho": "Peranti seorang peserta menggemakan terjemahan anda kembali ke mesyuarat.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Pilih model untuk terjemahan, atau taip namanya, dalam “Bahasa dan susunan”.",
     "address_missing": "Masukkan alamat perkhidmatan serasi dalam “Akaun dan kunci” sebelum bermula.",
     "address_invalid": "Alamat perkhidmatan serasi tidak boleh digunakan: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Tetapan asas",
       "maintenance": "Penyelenggaraan dan bantuan",
-      "update": "Kemas kini",
-      "updateLine": "Anda menggunakan {{version}}.",
-      "version": "Versi",
-      "storeUpdates": "Kedai pelayar mengemas kini sambungan secara automatik.",
       "wizard": "Wizard persediaan",
       "wizardLine": "Lalui wizard sekali lagi; apa yang disimpan sudah dipilih terlebih dahulu.",
       "rerun": "Jalankan semula",

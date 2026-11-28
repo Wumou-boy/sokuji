@@ -26,9 +26,9 @@ describe('StepScenario', () => {
     platform.electron = true;
   });
 
-  it('offers the LAN caption page on the face-to-face subtitles card in the desktop app', () => {
+  it('describes the single microphone and subtitle languages of the desktop face-to-face workspace', () => {
     render(<StepScenario draft={initialDraft()} dispatch={vi.fn()} />);
-    expect(faceToFaceText().textContent).toContain('the LAN caption page');
+    expect(faceToFaceText().textContent).toContain('one microphone and choose two or three subtitle languages');
   });
 
   it('leaves the LAN caption page out where caption sharing does not exist', () => {

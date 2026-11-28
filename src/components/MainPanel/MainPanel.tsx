@@ -23,10 +23,10 @@ import { currentAuth } from '../../app/currentAuth';
 import { isPanelNoteId, noticeActionSpec, panelNoteEntries } from '../../lib/view/panelNotes';
 import {
   useIsMicMuted,
-  useAutoMeetingResolvedSource,
   useMode,
   useParticipantSources,
   useSelectedParticipantSource,
+  useParticipantCaptureWidened,
   useSetMode,
   useBothPopoverSeen,
   useSetBothPopoverSeen,
@@ -45,7 +45,6 @@ import {
   useSubtitleModeActive,
 } from '../../stores/settingsStore';
 import { useSetSubtitleEntryHint } from '../../stores/subtitleStore';
-import { useCleanupUpdateListeners, useInitUpdateListeners } from '../../stores/updateStore';
 import { getEnvironment, isElectron, isExtension } from '../../utils/environment';
 import { useReadingTargets } from '../../lib/reading/useReadingTargets';
 import { ConversationList, type NoticeAction } from '../Conversation/ConversationList';
@@ -57,7 +56,6 @@ import { echoSource, useEchoNotice } from '../EchoNotice/useEchoNotice';
 import WarningModal from '../Settings/shared/WarningModal';
 import { openTtsSlot } from '../providers/openTtsSlot';
 import { Banners } from '../Banner/useBanners';
-import UpdateDialog from '../UpdateDialog/UpdateDialog';
 import ModeDevicePopover from './ModeDevicePopover';
 import { PanelFooter } from './panel/PanelFooter';
 import { earsLegend, useFaceToFace, voicedEars } from './useFaceToFace';
@@ -75,8 +73,6 @@ import { useStatusLine } from './useStatusLine';
 import { toneOf } from '../../lib/view/tone';
 import { useLiveNotesShows } from '../../lib/notes/live/livePanel';
 import { useSessionTokenStore } from '../../lib/usage/sessionTokens';
-import { AUTO_MEETING_PARTICIPANT_SOURCE_ID } from '../../lib/modern-audio/participantSource';
-import type { AutoAudioSourceStatus } from './AutoAudioSourceMeter';
 import './MainPanel.scss';
 
 /**
@@ -99,8 +95,6 @@ function useLoadedAudio(session: AppSession, phase: RunState['phase']): LoadedAu
   }, [session, phase, loaded]);
   return audio;
 }
-
-const silentPeak = () => 0;
 
 /**
  * The development test tone (1e-3 ruling 16): a press plays it, a second
@@ -135,16 +129,8 @@ function useTestTone(audio: LoadedAudio | null): { playing: boolean; toggle(): v
   return isDevelopment() ? { playing, toggle } : undefined;
 }
 
-/** Today's update and audio-system listener inits (pre-switch MainPanel.tsx:1111-1125), verbatim. */
-function useUpdateAndAudioSystemListeners(): void {
-  // Initialize auto-update listeners
-  const initUpdateListeners = useInitUpdateListeners();
-  const cleanupUpdateListeners = useCleanupUpdateListeners();
-  useEffect(() => {
-    initUpdateListeners();
-    return () => cleanupUpdateListeners();
-  }, [initUpdateListeners, cleanupUpdateListeners]);
-
+/** Initialize virtual audio device status listeners (e.g. missing pactl on Linux). */
+function useAudioSystemListeners(): void {
   // Initialize virtual audio device status listeners (e.g. missing pactl on Linux)
   const initAudioSystemListeners = useInitAudioSystemListeners();
   const cleanupAudioSystemListeners = useCleanupAudioSystemListeners();
@@ -189,7 +175,7 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   const micMuted = useIsMicMuted();
   const participantSources = useParticipantSources();
   const participantSource = useSelectedParticipantSource();
-  const autoMeetingApp = useAutoMeetingResolvedSource();
+  const captureWidened = useParticipantCaptureWidened();
   // The unit that transcribes, once the plan is ready: whether typed text reaches it.
   const transcription = useStageUnit('transcription');
   // Face-to-face and whether each leg is voiced, from one source: the replay gate, the strip and the tags.
@@ -228,11 +214,7 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
     () => new Set<LegName>(keepReplayAudio ? [...(speakerVoiced ? ['speaker' as const] : []), ...(participantVoiced ? ['participant' as const] : [])] : []),
     [keepReplayAudio, speakerVoiced, participantVoiced],
   );
-  const participantNoticeCodes = useMemo(
-    () => viewState.legs.find((leg) => leg.leg === 'participant')?.notices.flatMap((n) => (n.code ? [n.code] : [])) ?? [],
-    [viewState.legs],
-  );
-  const blocked = replayBlocked({ run, platform: getEnvironment(), participantSourceId: participantSource?.deviceId, participantNoticeCodes, faceToFace: f2f.active })
+  const blocked = replayBlocked({ run, platform: getEnvironment(), participantSourceId: participantSource?.deviceId, captureWidened, faceToFace: f2f.active })
     ? t('mainPanel.replayBlockedWholeSystem', "Replay is off while Other's audio captures all system sound: it would be translated again.")
     : null;
 
@@ -316,7 +298,7 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
     if (what === 'echo') dismissEcho(); else setEntryHint(null);
   }, [dismissEcho, setEntryHint]);
   const testTone = useTestTone(audio);   // dev only: { playing, toggle } | undefined
-  useUpdateAndAudioSystemListeners();    // today's two listener inits, pre-switch MainPanel.tsx:1111-1125
+  useAudioSystemListeners();
   // The source picker the session asks before a run, and the chip while one holds a source (spec 2026-10-22).
   const screenContext = useScreenContext(session);
 
@@ -335,12 +317,6 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   }, [runner]);
   // Out of render (review Minor 8): the first call wires an AnalyserNode into the graph.
   const outputMeter = useMemo(() => audio?.playback.meter('virtual') ?? null, [audio]);
-  let autoAudioSource: AutoAudioSourceStatus | undefined;
-  if (isElectron() && !f2f.active && mode !== 'speaker' && participantSource?.deviceId === AUTO_MEETING_PARTICIPANT_SOURCE_ID) {
-    if (run.phase === 'idle' || run.phase === 'stopping') autoAudioSource = { state: 'ready' };
-    else if (!autoMeetingApp) autoAudioSource = { state: 'waiting' };
-    else autoAudioSource = { state: 'capturing', appName: autoMeetingApp.label, readPeak: audio?.capture.levels.participant.readPeak ?? silentPeak };
-  }
   const footer = (site: 'basic' | 'advanced') => (
     <PanelFooter
       site={site} run={run} mode={mode} missingDevice={missingDevice}
@@ -348,14 +324,13 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
       holdToTalk={speakerLive && subtitle.holdToTalk} held={ptt.held} micMuted={micMuted}
       pair={subtitle.pair} duration={duration} faceToFace={f2f.active} faceToFaceOffered={f2f.offered} ears={ears}
       sessionTokens={sessionTokens}
-      autoAudioSource={autoAudioSource}
       // Ruling 11: `session.start` is the one start every surface calls — never a start while the gate is shut, the button is off then; this also holds for a click that beat its render (as the takeover's Start).
       onStart={() => void session.start('button')}
       onStop={() => void runner.stop('button')}
       onPress={ptt.press} onRelease={ptt.release}
       onModeSegment={onModeSegment} onLanguages={() => navigateToSettings('languages')}
       testTone={site === 'advanced' ? testTone : undefined}
-      waveforms={site === 'advanced' ? { input: <InputWaveforms mode={mode} levels={audio?.capture.levels ?? null} hideParticipant={autoAudioSource !== undefined} />, output: <OutputWaveform meter={outputMeter} /> } : undefined}
+      waveforms={site === 'advanced' ? { input: <InputWaveforms mode={mode} levels={audio?.capture.levels ?? null} />, output: <OutputWaveform meter={outputMeter} /> } : undefined}
       // The name only in the advanced layout of the desktop app: the side panel is as narrow as the basic footer.
       screenContext={screenContext.chip && { ...screenContext.chip, iconOnly: site === 'basic' || isExtension() }}
       preparing={screenContext.preparing}
@@ -365,7 +340,6 @@ export default function MainPanel({ liveNotes }: MainPanelProps) {
   return (
     <div className="main-panel-wrapper" style={{ '--conversation-bg-color': colours.bgColor, '--conversation-source-color': colours.sourceTextColor, '--conversation-translation-color': colours.translationTextColor } as CSSProperties}>
       <Banners />
-      <UpdateDialog />
       <div className="main-panel">
         {(!takeover || run.phase !== 'idle' || hasConversation) && (
           <PanelToolbar legs={subtitle.legs} exporter={exporter} hasConversation={hasConversation} onClear={onClear} />

@@ -62,9 +62,6 @@ const listenerMap = new WeakMap();
 const validReceiveChannels = [
   'fromMain',
   'audio-status',
-  // Auto-update channels (main → renderer)
-  'update-status',
-  'update-progress',
   // Subtitle window bounds change events
   'subtitle:window-bounds-changed',
   'subtitle:fullscreen-changed',
@@ -73,6 +70,7 @@ const validReceiveChannels = [
   // Per-application audio capture: PCM chunks and helper lifecycle events
   'app-audio:pcm',
   'app-audio:event',
+  // AED physical playback reference capture
   // Linux per-application capture: the tapped application quit
   'system-audio:lost',
   // Window close / app quit: end the session before the window goes

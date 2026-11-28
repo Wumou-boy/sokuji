@@ -24,12 +24,13 @@
  */
 import type { AdapterEvents, Ref, Side, TextRange } from '../../lib/contract/adapter';
 import { SpeechPace, tileSpan } from '../../lib/contract/ranges';
-import { meetingTranscriptLanguage } from '../../lib/language/meetingTranscript';
+import { meetingTranscriptLanguage, multilingualTranscriptLanguage, normalizeTranscriptLanguage } from '../../lib/language/meetingTranscript';
 
 export interface QwenSegmentsOptions {
-  sink: Pick<AdapterEvents, 'segmentOpened' | 'segmentText' | 'segmentClosed' | 'audio' | 'speechRanges'>;
+  sink: Pick<AdapterEvents, 'segmentOpened' | 'segmentSpeaker' | 'segmentText' | 'segmentClosed' | 'audio' | 'speechRanges'>;
   /** Label each turn with its speaker (D7): the participant leg only. */
   person: boolean;
+  localSpeakers?: boolean;
   /** The first ref handed out; 1 by default. A reconnect's segments carry on from the dropped connection's (spec 2026-11-05 reconnect §4.3). */
   firstRef?: Ref;
   /**
@@ -39,6 +40,8 @@ export interface QwenSegmentsOptions {
   connection?: number;
   /** Infer a lightweight EN/JA/ZH badge from the final source transcript. */
   detectIncomingLanguage?: boolean;
+  /** Face-to-face output languages may gently disambiguate local source-language ties. */
+  sourceLanguageHints?: readonly string[];
   /** For text-only Chinese captions, omit zh→zh and stream once a partial indicates another language. */
   skipSameLanguageText?: boolean;
   targetLanguage?: string;
@@ -69,6 +72,7 @@ interface Item {
   spoken: boolean;
   finished: boolean;
   language?: string;
+  providerLanguage?: string;
   suppressed: boolean;
   foreignPartial: boolean;
   /** The current phrase's samples so far, and where its provisional ranges reached, from the phrase's start. */
@@ -81,12 +85,15 @@ export class QwenSegments {
   private readonly items = new Map<string, Item>();
   /** `speaker_id` by heard item, from `speech_started` (automatic turns only). */
   private readonly speakers = new Map<string, string>();
+  private readonly localSpeakers = new Map<string, string>();
+  private useLocalSpeakers: boolean;
   private stopped = false;
   /** The leg's speech rate, learned from its fill-ins. */
   private readonly pace = new SpeechPace();
 
   constructor(private readonly o: QwenSegmentsOptions) {
     this.next = o.firstRef ?? 1;
+    this.useLocalSpeakers = o.localSpeakers === true;
   }
 
   /** The ref the next segment would open with. */
@@ -98,6 +105,19 @@ export class QwenSegments {
   heard(itemId: string, speaker: number | null = null): void {
     if (speaker !== null) this.speakers.set(itemId, String(speaker));
     this.item(itemId, 'source');
+  }
+
+  localSpeaker(itemId: string, number: number): void {
+    if (this.stopped || !this.useLocalSpeakers || this.items.get(itemId)?.side === 'translation') return;
+    this.localSpeakers.set(itemId, `local.${number}`);
+    if (this.items.has(itemId)) this.publishSpeakerFor(itemId);
+  }
+
+  fallBackToProviderSpeakers(): void {
+    if (this.stopped || !this.useLocalSpeakers) return;
+    this.useLocalSpeakers = false;
+    this.localSpeakers.clear();
+    for (const [id, item] of this.items) this.publishSpeaker(id, item);
   }
 
   /**
@@ -120,12 +140,22 @@ export class QwenSegments {
     const heard = this.items.get(previous);
     if (heard?.side !== 'source') return;
     it.source = previous;
+    if (this.useLocalSpeakers) this.publishSpeaker(itemId, it);
     if (this.suppressedBySource(heard)) this.suppress(itemId, it);
   }
 
-  text(itemId: string, side: Side, delta: string): void {
+  text(itemId: string, side: Side, delta: string, sourceLanguage?: string): void {
     const it = this.item(itemId, side);
     if (!it || it.closed || it.suppressed) return;
+    if (side === 'source' && this.o.detectIncomingLanguage) {
+      const reported = normalizeTranscriptLanguage(sourceLanguage);
+      if (reported) it.providerLanguage = reported;
+      if (it.providerLanguage) it.language = it.providerLanguage;
+      else if (this.o.sourceLanguageHints) {
+        const inferred = this.detectLanguage(it.text + delta);
+        it.language = inferred === 'und' ? undefined : inferred;
+      }
+    }
     // Words after the phrase's audio begin the next phrase: the one before is whole. A blank delta adds no word.
     if (side === 'translation' && delta.trim() !== '' && it.samples.length > it.phraseAudio && it.shown.length > it.phraseText) this.fill(it);
     it.text += delta;
@@ -142,14 +172,15 @@ export class QwenSegments {
   }
 
   /** The final text replaces what the deltas built, unless it is empty; then the segment closes. */
-  done(itemId: string, side: Side, final: string | null): void {
+  done(itemId: string, side: Side, final: string | null, sourceLanguage?: string): void {
     const it = this.item(itemId, side);
     if (!it || it.closed || it.suppressed) return;
     if (final !== null && final.trim() !== '') it.text = final;
     it.finished = true;
     if (side === 'source' && this.o.detectIncomingLanguage) {
-      const language = meetingTranscriptLanguage(it.text);
-      if (language !== 'und') it.language = language;
+      it.providerLanguage ??= normalizeTranscriptLanguage(sourceLanguage);
+      const language = it.providerLanguage ?? this.detectLanguage(it.text);
+      it.language = language === 'und' ? undefined : language;
     }
     const pendingSource = side === 'translation' ? this.pendingSource(it) : undefined;
     if (pendingSource && !pendingSource.foreignPartial) return;
@@ -228,6 +259,12 @@ export class QwenSegments {
 
   private get filtersChinese(): boolean {
     return this.o.skipSameLanguageText === true && this.o.targetLanguage === 'zh';
+  }
+
+  private detectLanguage(text: string): string | 'und' {
+    return this.o.sourceLanguageHints
+      ? multilingualTranscriptLanguage(text, this.o.sourceLanguageHints)
+      : meetingTranscriptLanguage(text);
   }
 
   private pendingSource(it: Item): Item | undefined {
@@ -338,7 +375,18 @@ export class QwenSegments {
   private person(itemId: string, it: Item): string | undefined {
     if (!this.o.person) return undefined;
     const heard = it.side === 'source' ? itemId : it.source;
+    if (this.useLocalSpeakers) return heard === undefined ? undefined : this.localSpeakers.get(heard);
     const speaker = heard === undefined ? undefined : this.speakers.get(heard);
     return speaker === undefined || this.o.connection === undefined ? speaker : `${this.o.connection}.${speaker}`;
+  }
+
+  private publishSpeakerFor(heard: string): void {
+    for (const [id, item] of this.items) {
+      if (id === heard || item.source === heard) this.publishSpeaker(id, item);
+    }
+  }
+
+  private publishSpeaker(id: string, item: Item): void {
+    if (item.ref !== undefined) this.o.sink.segmentSpeaker?.({ ref: item.ref, person: this.person(id, item) });
   }
 }

@@ -2,10 +2,9 @@
 //
 // What the help section and the settings page's "General" both do: switch the interface language, check for an
 // update and show the result for a moment, open a link outside the app.
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isElectron } from '../../../utils/environment';
-import { useUpdateStatus, useCheckForUpdates } from '../../../stores/updateStore';
 import { useSetUILanguage } from '../../../stores/settingsStore';
 import { useAnalytics } from '../../../lib/analytics';
 import { changeLanguageWithLoad } from '../../../locales';
@@ -92,31 +91,4 @@ export function useInterfaceLanguageChange(source: string): (newLanguage: string
       });
     });
   };
-}
-
-/**
- * The update check: its status, the result of a check the user started (shown for five seconds: "Up to date" or
- * "Failed to check"), and the check itself. An update found opens the update dialog: the store does that.
- */
-export function useUpdateCheck(): { status: ReturnType<typeof useUpdateStatus>; result: 'not-available' | 'error' | null; check: () => void } {
-  const status = useUpdateStatus();
-  const checkForUpdates = useCheckForUpdates();
-  // A new check passes through 'checking' first, so a second failure re-runs this.
-  const [result, setResult] = useState<'not-available' | 'error' | null>(null);
-  // Only a check the user started shows a result: a stale status held by the
-  // store (or the one present at mount) must not flash on every reopen.
-  const previousStatusRef = useRef(status);
-  useEffect(() => {
-    const previous = previousStatusRef.current;
-    previousStatusRef.current = status;
-    if (previous !== 'checking' || (status !== 'not-available' && status !== 'error')) {
-      setResult(null);
-      return;
-    }
-    setResult(status);
-    const timer = setTimeout(() => setResult(null), 5000);
-    return () => clearTimeout(timer);
-  }, [status]);
-
-  return { status, result, check: () => { if (status !== 'checking') checkForUpdates(); } };
 }

@@ -45,7 +45,7 @@ const StepScenario: React.FC<Props> = ({ draft, dispatch }) => {
       <h2>{t('setup.steps.scenario.title', 'What do you want to do?')}</h2>
       <p>{t('setup.steps.scenario.desc', 'Pick the closest match. You can change any of this later.')}</p>
       <div className="setup-cards" role="radiogroup" aria-label={t('setup.steps.scenario.title', 'What do you want to do?')}>
-        {SCENARIOS.map((s) => (
+        {SCENARIOS.filter(s => !isElectron() || s.id !== 'face-to-face-voice').map((s) => (
           <label key={s.id} className={`setup-card${draft.scenario === s.id ? ' is-selected' : ''}`}>
             <input
               type="radio" name="scenario" value={s.id} checked={draft.scenario === s.id}
@@ -57,15 +57,17 @@ const StepScenario: React.FC<Props> = ({ draft, dispatch }) => {
             <span className="setup-card__title">{t(`setup.scenarios.${s.id}.title`, TITLES[s.id])}</span>
             <span className="setup-card__desc">
               {/* Caption sharing is desktop-only (PanelToolbar), so elsewhere this card offers the shared screen alone. */}
-              {s.id === 'face-to-face-text' && !isElectron()
+              {s.id === 'face-to-face-text' && isElectron()
+                ? t('faceToFace.singleMicSetup', 'Use one microphone and choose two or three subtitle languages.')
+                : s.id === 'face-to-face-text' && !isElectron()
                 ? t('setup.scenarios.face-to-face-text.descScreenOnly', 'Both read the same screen.')
                 : t(`setup.scenarios.${s.id}.desc`, DESCS[s.id])}
             </span>
-            <span className="setup-card__sets">
+            {!(isElectron() && s.id === 'face-to-face-text') && <span className="setup-card__sets">
               {s.otherSide === 'beside'
                 ? t('setup.scenarios.setsBeside', 'Sets: {{mode}} mode, other side beside me · {{output}}', { mode: modeLabel(s.mode), output: outputLabel(s.textOnly) })
                 : t('setup.scenarios.sets', 'Sets: {{mode}} mode · {{output}}', { mode: modeLabel(s.mode), output: outputLabel(s.textOnly) })}
-            </span>
+            </span>}
           </label>
         ))}
       </div>

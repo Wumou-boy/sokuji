@@ -47,12 +47,12 @@ export const INVOKE_CHANNELS = [
   // System audio capture
   'supports-system-audio-capture',
   'list-system-audio-sources',
-  'resolve-auto-system-audio-source',
   'connect-system-audio-source',
   'disconnect-system-audio-source',
   // Per-application capture (Windows): start/stop the capture helper
   'start-app-audio-capture',
   'stop-app-audio-capture',
+  // AED physical playback reference capture (independent helper slot)
   // Deep-link into the macOS privacy pane a denied capture needs
   'open-privacy-settings',
   'get-tcc-display-name',
@@ -92,11 +92,6 @@ export const INVOKE_CHANNELS = [
   'sidecar-bundle:manifest',
   'sidecar-bundle:remove',
   'sidecar-bundle:usage',
-  // Auto-update
-  'update-check',
-  'update-download',
-  'update-install',
-  'get-app-version',
   'get-audio-status',
   // Window controls (custom title bar)
   'window:minimize',

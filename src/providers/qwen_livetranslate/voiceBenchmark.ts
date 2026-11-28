@@ -16,7 +16,7 @@ const FRAME_SAMPLES = RATE / 50; // 20 ms at the provider's input rate.
 const SESSION_TIMEOUT_MS = 15_000;
 const RESPONSE_TIMEOUT_MS = 15_000;
 
-export type QwenVoiceBenchmarkMode = 'preset_tina' | 'clone_always' | 'fixed_never';
+export type QwenVoiceBenchmarkMode = 'preset_tina' | 'clone_always' | 'clone_once' | 'fixed_never';
 export type QwenVoiceBenchmarkResult = 'completed' | 'incomplete' | 'failed' | 'aborted';
 
 export interface QwenVoiceBenchmarkTrial {
@@ -61,6 +61,7 @@ export interface QwenVoiceBenchmarkArgs {
   clips: readonly QwenVoiceBenchmarkClip[];
   /** Defaults to one round so callers can keep each app IPC request bounded. */
   rounds?: number;
+  firstSpeakerOnly?: boolean;
   /** Initial profile rotation; 0/1/2 can be used for successive CLI requests. */
   startRound?: number;
   targetLanguage?: string;
@@ -137,8 +138,8 @@ function responseStatus(value: unknown): string | null {
 function updateFor(mode: QwenVoiceBenchmarkMode, fixedVoice: string, target: string) {
   const voice = mode === 'preset_tina'
     ? { kind: 'preset' as const, name: 'Tina' }
-    : mode === 'clone_always'
-      ? { kind: 'clone' as const, frequency: 'always' as const }
+    : mode === 'clone_always' || mode === 'clone_once'
+      ? { kind: 'clone' as const, frequency: mode === 'clone_once' ? 'once' as const : 'always' as const }
       : { kind: 'fixed' as const, id: fixedVoice, ownerHash: '' };
   return sessionUpdate({
     target,
@@ -289,19 +290,20 @@ async function runTrial(args: QwenVoiceBenchmarkArgs, round: number, clipIndex: 
 /** Run matched clips in three interleaved voice modes through Qwen's real wire. */
 export async function runQwenVoiceBenchmark(args: QwenVoiceBenchmarkArgs): Promise<QwenVoiceBenchmarkReport> {
   if (!args.apiKey.trim()) throw new Error('A configured Qwen API key is required.');
-  if (!args.fixedVoice.trim()) throw new Error('A fixed voice profile is required.');
+  if (!args.firstSpeakerOnly && !args.fixedVoice.trim()) throw new Error('A fixed voice profile is required.');
   if (!args.clips.length) throw new Error('At least one benchmark clip is required.');
   const rounds = Math.max(1, Math.min(4, Math.floor(args.rounds ?? 1)));
   const now = args.now ?? (() => performance.now());
   const sleep = args.sleep ?? defaultSleep;
   const trials: QwenVoiceBenchmarkTrial[] = [];
-  const start = ((Math.floor(args.startRound ?? 0) % MODES.length) + MODES.length) % MODES.length;
+  const modes: readonly QwenVoiceBenchmarkMode[] = args.firstSpeakerOnly ? ['clone_once'] : MODES;
+  const start = ((Math.floor(args.startRound ?? 0) % modes.length) + modes.length) % modes.length;
   let aborted = false;
   for (let round = 0; round < rounds; round += 1) {
-    const rotation = (start + round) % MODES.length;
+    const rotation = (start + round) % modes.length;
     for (let clip = 0; clip < args.clips.length; clip += 1) {
-      for (let offset = 0; offset < MODES.length; offset += 1) {
-        const mode = MODES[(rotation + offset) % MODES.length];
+      for (let offset = 0; offset < modes.length; offset += 1) {
+        const mode = modes[(rotation + offset) % modes.length];
         const result = await runTrial(args, round + 1, clip, mode, now, sleep);
         trials.push(result);
         if (result.result === 'aborted') { aborted = true; break; }

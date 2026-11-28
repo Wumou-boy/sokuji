@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState, type ComponentType } from 
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Lock, Search } from 'lucide-react';
 import { useSessionLocked } from '../../app/useRun';
+import { useFaceToFaceStore } from '../../stores/faceToFaceStore';
 import useSettingsStore, { useNavigateToSettings, useSettingsNavigationTarget } from '../../stores/settingsStore';
 import { isExtension } from '../../utils/environment';
 import { CATEGORIES, GROUPS, filterCategories, targetToCategory, type Category, type CategoryId } from './categories';
@@ -74,7 +75,9 @@ const isVisibleDialogOpen = (): boolean => {
 
 export function SettingsPage({ onClose, bodies = CATEGORY_BODIES }: { onClose(): void; bodies?: CategoryBodies }): React.JSX.Element {
   const { t } = useTranslation();
-  const locked = useSessionLocked();
+  const meetingLocked = useSessionLocked();
+  const facePhase = useFaceToFaceStore(s => s.phase);
+  const locked = meetingLocked || (facePhase !== 'idle' && facePhase !== 'error');
   const root = useRef<HTMLDivElement>(null);
   const wide = useWideForm(root);
   const target = useSettingsNavigationTarget();

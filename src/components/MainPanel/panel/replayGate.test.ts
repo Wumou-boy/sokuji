@@ -12,7 +12,7 @@ describe('replayBlocked', () => {
       run: running,
       platform: 'electron',
       participantSourceId: 'desktop-audio-loopback',
-      participantNoticeCodes: [],
+      captureWidened: false,
     })).toBe(true);
   });
 
@@ -21,16 +21,16 @@ describe('replayBlocked', () => {
       run: running,
       platform: 'electron',
       participantSourceId: undefined,
-      participantNoticeCodes: [],
+      captureWidened: false,
     })).toBe(true);
   });
 
-  it('allows an application source with no fallback notice this run', () => {
+  it('allows an application again once a previous fallback is over', () => {
     expect(replayBlocked({
       run: running,
       platform: 'electron',
       participantSourceId: 'app:42',
-      participantNoticeCodes: [],
+      captureWidened: false,
     })).toBe(false);
   });
 
@@ -39,16 +39,7 @@ describe('replayBlocked', () => {
       run: running,
       platform: 'electron',
       participantSourceId: 'app:42',
-      participantNoticeCodes: ['app_capture_lost_using_system_audio'],
-    })).toBe(true);
-  });
-
-  it('blocks an application source that fell back to the whole system (monitor missing)', () => {
-    expect(replayBlocked({
-      run: running,
-      platform: 'electron',
-      participantSourceId: 'app:42',
-      participantNoticeCodes: ['app_capture_monitor_missing'],
+      captureWidened: true,
     })).toBe(true);
   });
 
@@ -57,7 +48,7 @@ describe('replayBlocked', () => {
       run: idle,
       platform: 'electron',
       participantSourceId: undefined,
-      participantNoticeCodes: [],
+      captureWidened: false,
     })).toBe(false);
   });
 
@@ -66,7 +57,7 @@ describe('replayBlocked', () => {
       run: speakerOnly,
       platform: 'electron',
       participantSourceId: undefined,
-      participantNoticeCodes: [],
+      captureWidened: false,
     })).toBe(false);
   });
 
@@ -75,7 +66,7 @@ describe('replayBlocked', () => {
       run: running,
       platform,
       participantSourceId: undefined,
-      participantNoticeCodes: [],
+      captureWidened: false,
     })).toBe(false);
   });
 
@@ -84,7 +75,7 @@ describe('replayBlocked', () => {
       run: running,
       platform: 'electron',
       participantSourceId: 'desktop-audio-loopback',
-      participantNoticeCodes: [],
+      captureWidened: false,
       faceToFace: true,
     })).toBe(false);
   });

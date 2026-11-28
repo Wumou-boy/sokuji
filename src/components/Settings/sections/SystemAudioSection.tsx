@@ -5,7 +5,6 @@ import ToggleSwitch from '../shared/ToggleSwitch';
 import {
   useIsParticipantMuted, useSetParticipantMuted,
   useParticipantSources, useSelectedParticipantSource, useSelectParticipantSource,
-  useAutoMeetingResolvedSource,
   useRefreshDevices, useIsAudioLoading, useMode,
   type AudioDevice,
 } from '../../../stores/audioStore';
@@ -45,7 +44,6 @@ const SystemAudioSection: React.FC<SystemAudioSectionProps> = ({
   const setParticipantMuted = useSetParticipantMuted();
   const participantSources = useParticipantSources();
   const selectedParticipantSource = useSelectedParticipantSource();
-  const autoResolvedSource = useAutoMeetingResolvedSource();
   const selectParticipantSource = useSelectParticipantSource();
   const { trackEvent } = useAnalytics();
   const refreshDevices = useRefreshDevices();
@@ -54,12 +52,6 @@ const SystemAudioSection: React.FC<SystemAudioSectionProps> = ({
   const mode = useMode();
   const faceToFace = useFaceToFace();
   const besideMe = faceToFace.active;
-  const participantSourceChoices = participantSources.map((source) => source.deviceId === 'auto-meeting-audio'
-    ? { ...source, label: t('settings.autoMeetingLabel', 'Auto (Meeting app)') }
-    : source);
-  const selectedSourceChoice = selectedParticipantSource?.deviceId === 'auto-meeting-audio'
-    ? { ...selectedParticipantSource, label: t('settings.autoMeetingLabel', 'Auto (Meeting app)') }
-    : selectedParticipantSource;
 
   // On Electron the source list replaces the on/off toggle entirely: its own
   // "Off" row is the control, so it must render even when the only source is
@@ -126,8 +118,8 @@ const SystemAudioSection: React.FC<SystemAudioSectionProps> = ({
             <span className="settings-field__label">{t('settingsPage.audio.source', 'Source')}</span>
             <DeviceSelect
               label={t('settingsPage.audio.source', 'Source')}
-              devices={participantSourceChoices}
-              selectedDevice={selectedSourceChoice}
+              devices={participantSources}
+              selectedDevice={selectedParticipantSource}
               isDeviceOn={!isParticipantMuted}
               onSelect={handleSourceSelect}
               onToggleOff={() => { if (!locked) setParticipantMuted(true); }}
@@ -135,13 +127,6 @@ const SystemAudioSection: React.FC<SystemAudioSectionProps> = ({
               showVirtualIndicators={false}
             />
           </label>
-          {selectedParticipantSource?.deviceId === 'auto-meeting-audio' && (
-            <p className="setting-description" role="status">
-              {autoResolvedSource
-                ? t('settings.autoMeetingResolved', 'Auto is listening to {{app}}', { app: autoResolvedSource.label })
-                : t('settings.autoMeetingWaiting', 'Auto will select an audible meeting app when the session starts.')}
-            </p>
-          )}
         </>
       ) : (
         // Nothing to pick (the extension's tab, or no source list): a row that says what is captured, and its switch.

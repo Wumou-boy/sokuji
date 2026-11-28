@@ -25,6 +25,7 @@ import { isBailianWorkspaceAvailable } from './workspace';
 export const DETECT_TIMEOUT_MS = 15_000;
 
 export interface DetectDeps {
+  regionEndpoint?: 'cn' | 'intl';
   fetch?: typeof fetch;
   clock?: Pick<Clock, 'setTimeout'>;
   signal?: AbortSignal;
@@ -127,7 +128,7 @@ export const detectEndpoint: DetectEndpoint = async (apiKey, o) => {
   const clock = o.clock ?? realClock;
   const late = `Qwen did not answer the key check within ${DETECT_TIMEOUT_MS / 1000} s.`;
   let status = 0;
-  for (const id of ENDPOINT_ORDER) {
+  for (const id of o.regionEndpoint ? [o.regionEndpoint] : ENDPOINT_ORDER) {
     status = await boundedFetch({ clock, ms: DETECT_TIMEOUT_MS, signal: o.signal, late }, async (signal) => {
       const response = await doFetch(`${ENDPOINTS[id].tokens}?expire_in_seconds=60`, { method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, signal });
       return response.status;
@@ -136,6 +137,7 @@ export const detectEndpoint: DetectEndpoint = async (apiKey, o) => {
     if (status === 429) return { refused: `Qwen's ${QWEN_REGION_LABELS[ENDPOINTS[id].region]} region is limiting requests (HTTP 429).`, code: 'rate_limit' };
     if (status !== 401 && status !== 403) throw new Error(`Qwen answered the key check with HTTP ${status}.`);
   }
+  if (o.regionEndpoint) return { refused: `Qwen's ${QWEN_REGION_LABELS[ENDPOINTS[o.regionEndpoint].region]} region refused this key (HTTP ${status}).`, code: 'auth' };
   return { refused: `Neither Qwen's ${QWEN_REGION_LABELS.sg} nor its ${QWEN_REGION_LABELS.cn} region accepted this key (HTTP ${status}).`, code: 'auth' };
 };
 
@@ -149,7 +151,8 @@ export function createQwenCheck(deps: Omit<DetectDeps, 'signal'> = {}) {
       const found = await checkBailianEndpoint(k.apiKey, { ...deps, signal: ctx.signal });
       return 'endpoint' in found ? { ok: true, models: [{ id: found.endpoint }] } : { ok: false, reason: found.refused, code: found.code };
     }
-    const found = await detectEndpoint(k.apiKey, { ...deps, signal: ctx.signal });
+    const pinned = s.connection === 'cn' || s.connection === 'intl' ? s.connection : undefined;
+    const found = await detectEndpoint(k.apiKey, { ...deps, signal: ctx.signal, regionEndpoint: pinned });
     // The one model entry names the endpoint: `build` reads it from `shared.models`, the settings view from `models`.
     return 'endpoint' in found ? { ok: true, models: [{ id: found.endpoint }] } : { ok: false, reason: found.refused, code: found.code };
   };

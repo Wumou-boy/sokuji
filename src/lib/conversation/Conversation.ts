@@ -83,6 +83,7 @@ export class Conversation {
   private dispatch(event: AdapterEvent): void {
     switch (event.kind) {
       case 'segmentOpened': return this.open(event.payload.ref, event.payload.side, event.payload.origin, event.payload.person);
+      case 'segmentSpeaker': return this.setSpeaker(event.payload.ref, event.payload.person);
       case 'segmentText': return this.text(event.payload.ref, event.payload.text, event.payload.timing, event.payload.language, event.payload.person, event.payload.heard);
       case 'segmentClosed': return this.close(event.payload.ref, event.payload.origin);
       case 'audio': return this.audio(event.payload.ref, event.payload.range, event.payload.pcm, event.payload.voice);
@@ -227,6 +228,13 @@ export class Conversation {
     const revision = seg.final;
     this.replaceText(i, text, { timing, language, person, heard, mark: seg.text !== text });
     if (revision) this.clampRanges(i);
+  }
+
+  private setSpeaker(ref: number, person: string | undefined): void {
+    const index = this.indexByRef.get(ref);
+    if (index === undefined) return; // The user may have cleared the row while recognition was running.
+    const segment = this.segments[index];
+    if (segment.person !== person) this.replace(index, { ...segment, person });
   }
 
   private close(ref: number, origin?: string): void {

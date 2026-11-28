@@ -25,6 +25,8 @@ export interface TranslateConfig {
   noiseReduction: 'near_field' | 'far_field' | null;
   /** A source-caption hint for incoming EN/JA/ZH speech, local to the adapter. */
   detectParticipantLanguage: boolean;
+  /** Face-to-face output languages may gently disambiguate local source-language ties. */
+  sourceLanguageHints?: readonly string[];
   /** Translate sealed incoming captions as text and attach the result to their source. */
   translateParticipantCaptions?: true;
   /** Each side's silence timer and the mid-sentence deferral, as Gemini's Live Translate (choice 4). */

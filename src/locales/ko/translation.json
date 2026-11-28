@@ -12,6 +12,7 @@
     "signIn": "로그인",
     "signUp": "가입",
     "signInRequired": "<signInLink>로그인 또는 회원가입</signInLink> 후 API 키 없이 Kizuna AI를 사용하세요.",
+    "checking": "확인 중...",
     "dismiss": "닫기",
     "none": "없음",
     "retry": "재시도",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "버그 신고 또는 도움 받기",
     "diagnosticLogs": "진단 로그",
     "diagnosticLogsTooltip": "앱의 동작을 기록하여 버그 신고에 첨부할 수 있게 합니다. 기본값은 꺼짐입니다. 켜면 제목 표시줄에 ‘로그’ 버튼이 나타나며, 다시 시작한 후에도 켜진 상태로 유지됩니다.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "모양",
     "appearanceTooltip": "앱의 색상 테마입니다. '시스템'은 운영 체제의 라이트/다크 설정을 따릅니다.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "사용자 정의 음성",
     "translateDetectParticipantLanguage": "상대방의 중국어·일본어·영어를 자동 감지",
     "translateDetectParticipantLanguageHelp": "상대방의 언어가 중국어, 일본어 또는 영어인 경우 원문에서 자막별 언어를 감지합니다. 번역 대상 언어는 선택한 대로 유지됩니다.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "이전 세션이 끝나기를 기다리는 중입니다. 취소하려면 클릭하세요.",
     "clickToCancel": "취소하려면 클릭",
     "whatIHear": "내가 듣는 소리",
-    "audioSettings": "오디오 설정",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "오디오 설정"
   },
   "modePicker": {
     "modeYou": "나",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}}은(는) 이 버전에서 더 이상 사용할 수 없습니다.",
     "noCandidate": "이 방향에 사용할 수 있는 {{stage}} 모델이 없습니다."
   },
-  "update": {
-    "available": "새 버전 v{{version}} 사용 가능",
-    "downloading": "업데이트 다운로드 중... {{percent}}%",
-    "downloadingIndeterminate": "업데이트 다운로드 중...",
-    "downloaded": "업데이트 준비 완료, 다시 시작하여 완료하세요",
-    "checkButton": "업데이트 확인",
-    "checking": "확인 중...",
-    "upToDate": "최신 상태",
-    "notAvailable": "최신 버전을 사용 중입니다",
-    "downloadNow": "지금 다운로드",
-    "later": "나중에",
-    "restartNow": "다시 시작하고 업데이트",
-    "goToDownload": "다운로드로 이동",
-    "error": "업데이트 확인 실패",
-    "currentVersion": "현재 버전: v{{version}}",
-    "newVersion": "새 버전: v{{version}}",
-    "autoUpdateNote": "AppImage 는 자동 업데이트를 지원합니다. 새 AppImage 를 설치하면 현재 설치본이 그대로 교체됩니다 — 별도 제거가 필요 없습니다.",
-    "downloadAppImage": "AppImage 다운로드 (권장)",
-    "downloadDeb": ".deb 다운로드",
-    "linuxMigrateTitle": "새 버전 v{{version}} 사용 가능"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl(PulseAudio 명령줄 도구)를 찾을 수 없어 Sokuji가 가상 마이크/스피커를 설정하지 못했습니다. 설치한 후 다시 시도하세요:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "시스템 소리가 스피커로 재생됩니다. 온라인 회의 중 마이크에 상대방의 목소리가 들어갈 수 있으니 이어폰이나 헤드폰을 사용하세요.",
     "ttsEcho": "스피커에서 나온 Sokuji의 번역 음성이 마이크로 되돌아오고 있습니다.",
     "meetingEcho": "스피커의 회의 오디오가 마이크에 들어오고 있습니다.",
     "farEndEcho": "한 참가자의 기기가 회의에 번역을 에코로 되돌리고 있습니다.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "‘언어와 구성’에서 번역 모델을 고르거나 모델 이름을 입력하세요.",
     "address_missing": "시작하기 전에 ‘계정과 키’에서 호환 서비스의 주소를 입력하세요.",
     "address_invalid": "호환 서비스의 주소를 사용할 수 없습니다: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "기본 설정",
       "maintenance": "유지 관리와 도움말",
-      "update": "업데이트",
-      "updateLine": "지금은 {{version}}입니다.",
-      "version": "버전",
-      "storeUpdates": "확장 프로그램은 브라우저 스토어가 최신으로 유지합니다.",
       "wizard": "설정 마법사",
       "wizardLine": "마법사를 다시 진행합니다. 저장해 둔 선택은 미리 골라져 있습니다.",
       "rerun": "다시 실행",

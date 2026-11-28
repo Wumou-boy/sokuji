@@ -36,38 +36,37 @@ It opens the selected provider using the app's existing configuration.
 The status includes the app mode and the face-to-face phase. Incoming-audio
 `start` is available from the Online Meeting mode.
 Use `mode meeting` or `mode face-to-face` to open a mode while idle.
-In Face to Face, use `face start` to open the selected microphone and
-`face stop` to release it. `status` shows the startup stage, audio frame
-count, subtitle coverage and speaker numbers without returning audio or conversation
-text. With `--face-replay-pcm=<path>` at launch, `face replay` uses a 1–30 second
+With a synthetic PCM fixture supplied at launch via `--face-replay-pcm`,
+`face replay --local-speakers` exercises local speaker attribution for that
+Qwen session. This does not save a preference or change the selected provider.
+Face to Face uses the translation service from the meeting line-up and the microphone
+selected under Settings → Audio. Choose two or three of that service's text output
+languages in Face to Face. For fixture playback, `face replay --third-language de`
+temporarily adds German when the service supports it and the first two slots use other languages.
+Use `face start` to open that microphone and
+`face stop` to release it. `status` shows the startup stage, audio frame count,
+subtitle coverage and speaker numbers. In Face to Face, `faceToFace.inputPeak`
+is the latest input peak on a 0–1 scale. It returns to zero after 300 ms without
+audio or when capture stops. `faceToFace.peak` retains the highest PCM16
+sample magnitude in the run (0–32768). With `--face-replay-pcm=<path>` at launch, `face replay` uses a 1–180 second
 synthetic 24 kHz mono PCM16LE fixture with the same translation runtime. Use
 `face stop` after the captions finish. The status reports how many source
 turns needed a second Qwen LiveTranslate direction and the submitted PCM sample
-count, alongside the recent subtitle and speaker metadata.
+count, alongside the recent subtitle and speaker metadata. For Qwen fixture
+replays it also reports the primary connection count and each speech range's
+timestamps, provider speaker ID, and displayed AED number.
 Use `audio inputs` to read the selected microphone, Windows default devices,
 virtual microphone output, and configured speech routes without opening an
 audio stream. `participantApplications` lists the applications Windows discovered
 with audio sessions. `microphoneEchoMode` reports the configured echo mode.
-`participantCaptureWidened` reports whether application capture
-fell back to the system mix.
-`audio system-check` briefly opens the current participant source in idle
-Online Meeting and releases it. It runs locally and does not play audio or
-contact a translation provider.
-`audio system-check --auto` starts sampling meeting applications immediately
-and waits up to 12 seconds for audio to appear. It reports the app it opened
-and its local PCM peak (`peakLevel`, 0–1) without changing the saved source.
-`audio echo-check` runs a local 5.5-second comparison between automatically
-detected application audio and the configured microphone. It reports only the
-selected app, configured and applied browser AEC, reference and microphone RMS
-before and after Sokuji's software echo reduction, and the count of correlated
-microphone chunks. It stores no audio, starts no session, contacts no provider,
-and does not change saved devices. `--mic-label "Realtek Microphone"` captures
-an exact listed device for this check only; omit it to use the configured mic.
-If that microphone cannot open, the check fails instead of switching to another
-device. Both sources are released when the check ends or fails.
+`participantCaptureWidened` indicates a capture covering more than one application.
+The system playback mix is the default participant source. A specific app or endpoint can be selected manually.
+`audio system-check` briefly opens the selected input. Pass `--endpoint-label` to measure a named physical playback device without changing the saved source.
+`systemOutputForm` in `audio inputs` reports the detected system output form and transport used for the startup headphone reminder.
 
 `voice benchmark --round 1` compares a preset, the selected fixed Qwen
-voice, and per-turn voice cloning against the same synthetic sample.
+voice, and per-turn voice cloning against the same synthetic sample. Add
+`--first-speaker-only` to measure the first utterance with first-speaker cloning in a separate run.
 Start the app with `--agent-control --voice-benchmark-pcm=<path>` and supply
 one to eight seconds of 24 kHz mono PCM16LE. Use rounds 1, 2, and 3 to rotate
 the order. It uses the saved Bailian key, sends the sample for translation,
@@ -96,7 +95,7 @@ same profile. Pipe the company workspace key to standard input. Use
 `credentials status` to check the workspace key's presence.
 
 `sokuji-agent configure qwen-defaults` selects Qwen 3.8 LiveTranslate and
-Bailian notes with `qwen3.8-flash` in the current profile while Sokuji is idle.
+Bailian API notes in the current profile while AED is idle. It preserves the selected notes model.
 It keeps the selected Qwen connection and saved credentials. `status` reports
 the selected translation and notes services and the Qwen models when selected.
 

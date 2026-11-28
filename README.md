@@ -2,7 +2,7 @@
 
 AED Translator is an internal Windows translation tool based on [Sokuji](https://github.com/kizuna-ai-lab/sokuji). The upstream project and this derivative are licensed under [AGPL-3.0](LICENSE).
 
-AED Translator **V0.2.3** is based on Sokuji **0.51.2**. The Windows executable uses the version number `0.2.3`.
+AED Translator is distributed as a Windows ZIP. To install a new build, extract the package and launch `AED Translator.exe`.
 
 ## Upstream project documentation
 

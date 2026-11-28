@@ -12,6 +12,7 @@
     "signIn": "Logga in",
     "signUp": "Registrera",
     "signInRequired": "<signInLink>Logga in eller registrera dig</signInLink> för att använda Kizuna AI — ingen API-nyckel behövs.",
+    "checking": "Söker...",
     "dismiss": "Avfärda",
     "none": "Ingen",
     "retry": "Försök igen",
@@ -114,6 +115,8 @@
     "helpEmailTooltip": "Rapportera fel eller få hjälp",
     "diagnosticLogs": "Diagnostikloggar",
     "diagnosticLogsTooltip": "Loggar vad appen gör så att du kan bifoga det till en felrapport. Av som standard. När det är på visas knappen ”Loggar” i namnlisten, och inställningen förblir på efter en omstart.",
+    "localSpeakerRecognition": "Local speaker recognition",
+    "localSpeakerRecognitionHint": "Runs locally when Qwen automatic turns are used in online meetings or Face to Face.",
     "appearance": "Utseende",
     "appearanceTooltip": "Hur appen ser ut. ”System” använder operativsystemets ljusa eller mörka inställning.",
     "appearanceMode": {
@@ -352,10 +355,6 @@
     "voiceCustom": "Anpassad röst",
     "translateDetectParticipantLanguage": "Identifiera automatiskt motpartens kinesiska, japanska och engelska",
     "translateDetectParticipantLanguageHelp": "Om motpartens språk är kinesiska, japanska eller engelska identifieras varje undertextspråk från originalet. Det valda målspråket för översättningen förblir oförändrat.",
-    "autoMeetingResolved": "Auto is listening to {{app}}",
-    "autoMeetingWaiting": "You can start the session before meeting audio is available. Auto keeps checking for audible apps and starts capturing when it detects meeting audio. Browser sources can include other tabs; choose the meeting app manually if Auto picks the wrong audio.",
-    "autoMeetingWaitingShort": "Auto (waiting for meeting audio)",
-    "autoMeetingLabel": "Auto (Meeting app)",
     "incomingLanguage": "Incoming language",
     "languageAuto": "Auto detect"
   },
@@ -785,10 +784,7 @@
     "waitingForPreviousSessionTitle": "Väntar på att den föregående sessionen ska avslutas. Klicka för att avbryta.",
     "clickToCancel": "Klicka för att avbryta",
     "whatIHear": "Det jag hör",
-    "audioSettings": "Ljudinställningar",
-    "autoAudioReady": "Auto audio",
-    "autoAudioWaiting": "Auto · waiting",
-    "autoAudioCapturing": "Auto audio from {{app}} · {{db}}"
+    "audioSettings": "Ljudinställningar"
   },
   "modePicker": {
     "modeYou": "Jag",
@@ -1079,27 +1075,6 @@
     "notInCatalog": "{{from}} är inte längre tillgänglig i den här versionen.",
     "noCandidate": "Ingen {{stage}}-modell är tillgänglig för den här riktningen."
   },
-  "update": {
-    "available": "Ny version v{{version}} tillgänglig",
-    "downloading": "Laddar ner uppdatering... {{percent}}%",
-    "downloadingIndeterminate": "Laddar ner uppdatering...",
-    "downloaded": "Uppdatering klar, starta om för att slutföra",
-    "checkButton": "Sök efter uppdateringar",
-    "checking": "Söker...",
-    "upToDate": "Uppdaterad",
-    "notAvailable": "Du använder den senaste versionen",
-    "downloadNow": "Ladda ner nu",
-    "later": "Senare",
-    "restartNow": "Starta om och uppdatera",
-    "goToDownload": "Gå till nedladdning",
-    "error": "Kunde inte söka efter uppdateringar",
-    "currentVersion": "Nuvarande version: v{{version}}",
-    "newVersion": "Ny version: v{{version}}",
-    "autoUpdateNote": "AppImage stöder automatiska uppdateringar. Att installera AppImage ersätter din nuvarande installation — ingen separat avinstallation behövs.",
-    "downloadAppImage": "Ladda ner AppImage (rekommenderas)",
-    "downloadDeb": "Ladda ner .deb",
-    "linuxMigrateTitle": "Ny version v{{version}} tillgänglig"
-  },
   "audioSystem": {
     "pactlMissingBody": "pactl (PulseAudios kommandoradsverktyg) hittades inte, så AED Translator kunde inte konfigurera sin virtuella mikrofon/högtalare. Installera det och försök igen:",
     "installCommand": "sudo apt install pulseaudio-utils",
@@ -1343,6 +1318,7 @@
     "microphoneLevel": "Microphone input level"
   },
   "echoNotice": {
+    "startupSpeakers": "Systemljudet spelas upp genom högtalarna. Under ett möte kan mikrofonen fånga upp den andres röst. Använd hörlurar för att undvika eko.",
     "ttsEcho": "Dina högtalare matar tillbaka Sokujis översatta tal in i mikrofonen.",
     "meetingEcho": "Mötesljud från dina högtalare når mikrofonen.",
     "farEndEcho": "En deltagares enhet ekar tillbaka din översättning in i mötet.",
@@ -1664,7 +1640,6 @@
     "text_model_unset": "Välj en modell för översättningen, eller skriv dess namn, under ”Språk och uppsättning”.",
     "address_missing": "Ange den kompatibla tjänstens adress under ”Konton och nycklar” innan du startar.",
     "address_invalid": "Den kompatibla tjänstens adress kan inte användas: {{detail}}",
-    "auto_meeting_not_detected": "Auto could not hear a meeting app. Let the other side speak, then retry Auto, or choose the meeting app manually.",
     "outgoing_language_switch_failed": "Could not change the outgoing language. The previous language is still selected.",
     "loopback_meeting_output": "Windows is using the meeting’s virtual microphone cable as its default playback device. Set Windows playback to your headphones or speakers, or select the meeting application as the participant audio source."
   },
@@ -1822,7 +1797,13 @@
     "speakerUnknown": "Speaker unassigned",
     "languageUnknown": "Language unknown",
     "textRoute": "Text translation",
-    "assignToTranslate": "Assign this speaker to choose the translation direction."
+    "assignToTranslate": "Assign this speaker to choose the translation direction.",
+    "provider": "Translation service",
+    "microphone": "Microphone",
+    "selectMic": "Select microphone",
+    "thirdLanguage": "Third subtitle language",
+    "speakerModelLoading": "Loading local speaker recognition…",
+    "speakerRecognitionUnavailable": "Local speaker recognition unavailable for this session."
   },
   "screenContext": {
     "picker": {
@@ -2084,10 +2065,6 @@
     "general": {
       "basics": "Grundinställningar",
       "maintenance": "Underhåll och hjälp",
-      "update": "Uppdateringar",
-      "updateLine": "Du har {{version}}.",
-      "version": "Version",
-      "storeUpdates": "Webbläsarens butik håller tillägget uppdaterat.",
       "wizard": "Installationsguide",
       "wizardLine": "Gå igenom guiden igen; det du har sparat är redan valt.",
       "rerun": "Kör igen",
